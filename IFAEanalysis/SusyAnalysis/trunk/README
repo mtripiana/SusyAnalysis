@@ -35,7 +35,7 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
 3) Getting the analysis code:
    =====================
    cd $ANALYSISCODE
-   svn co svn+ssh://$USER@svn.cern.ch/reps/IfaeAnaRepo/IFAEanalysis/SusyAnalysis/trunk code
+   svn co svn+ssh://$USER@svn.cern.ch/reps/IfaeAnaRepo/IFAEanalysis/SusyAnalysis/trunk SusyAnalysis
 
 
 4) Getting extra packages (not included in the Analysis release):
