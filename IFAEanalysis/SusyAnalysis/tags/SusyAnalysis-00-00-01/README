@@ -1,0 +1,100 @@
+
+SETUP
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+1) Analysis release:
+   =====================
+
+The first thing you need to do is to set the Analysis release, so to have access to all packages used by our code.
+
+For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
+
+     >  rcSetup Base,2.0.6
+ 
+     Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
+
+     Then everytime you login, you just need to do:
+
+     > rcSetup
+
+
+2) Env variables:
+   =====================
+
+   Please make sure to add these variables to your environment (.bash_profile or .bashrc or .profile), so the code knows where to fund some stuff:
+
+   > export ANALYSISCODE="<your analysis folder>"      # where your code will be, from where you did the rcSetup above.
+   > export HISTFITTERDIR="<your HistFitter folder>"   # where you have (or gonna place) the HistFitter code.
+   > export LHAPATH=/nfs/at3users/users/vgiangio/MonoJet_00-03-12-04/code/scripts/pdfsets/
+   > export FASTJET_DIR=$ANALYSISCODE"/fastjet-install/"
+   > export PATH="$PATH:$FASTJET_DIR/bin"
+   > export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$FASTJET_DIR/lib"
+
+
+3) Getting the analysis code:
+   =====================
+   cd $ANALYSISCODE
+   svn co svn+ssh://$USER@svn.cern.ch/reps/IfaeAnaRepo/IFAEanalysis/SusyAnalysis/trunk SusyAnalysis
+
+
+4) Getting extra packages (not included in the Analysis release):
+   =====================
+   source $ANALYSISCODE/SusyAnalysis/scripts/get_extra_packages.sh
+
+
+5) Compile everything:
+   =====================
+   rc find_packages	
+   rc compile
+
+
+6) To run the analysis:
+   =====================
+
+   *** This needs to be updated!
+       For now you can run it by doing:
+
+       run_chorizo <systematic> <outDir>
+   
+       where <systematic> is the systematic to be considered [comma-separated list] 
+             <outDir> is where all the output is saved [if left empty is reads the path from the xml jobOption]. 	
+
+   *** 
+   
+   a) Create batch submission scripts (only once! Might take some time though...):
+
+   root generate_qsub_files.C
+
+   b) Untar the lists files (containing the paths to all configured samples) if needed:
+
+   cd scripts/
+   tar zxfv Lists_all.tar.gz
+
+   NOTE:   if your xml jobOption is not pointing to your local area for this ('ListFolderPath'), you can skip this step!
+   	   
+   b) Run
+      e.g. to produce the mini-ntuples for X-sample:
+
+   $ANALYSISCODE/SusyAnalysis/scripts/qsubFiles/X-sample.sub
+
+
+
+
+
+---------------- EXTRAS --------------------------
+
+ROOT version:
+=============
+
+If you have problems setting ROOT (although the rcSetup should do it for you) you can write this in your .bash_profile:
+
+export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+echo "ATLAS_LOCAL_ROOT_BASE "$ATLAS_LOCAL_ROOT_BASE
+source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
+localSetupROOT
+
+
+
+
+
