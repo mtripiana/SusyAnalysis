@@ -1253,12 +1253,8 @@ EL::StatusCode chorizo :: execute ()
 
   //  wk()->tree()->GetEntry (wk()->treeEntry());
 
-  //TEST ONLY!!
-  output->setFilterPassed ();
-  return EL::StatusCode::SUCCESS;
-
   if(systListOnly){  //just print systematics list and leave!
-    printSystList();
+    this->printSystList();
     output->setFilterPassed ();
     return EL::StatusCode::SUCCESS;
   }

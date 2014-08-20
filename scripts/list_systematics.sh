@@ -11,7 +11,8 @@ tmpFile='tmp.tmpKj1234'
 
 run_chorizo slist > $tmpFile
 
-grep 'List of recommended' $tmpFile
+echo 'SYSTEMATICS'
+#grep 'List of recommended' $tmpFile
 sed -n '/~~~~~~~~~~~~~~~~~~~~~/,/~~~~~~~~~~~~~~~~/p' $tmpFile
 
 rm $tmpFile

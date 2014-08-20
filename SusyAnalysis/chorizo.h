@@ -28,6 +28,7 @@
 #include "SusyAnalysis/PDFTool.h"
 #include "SusyAnalysis/utility.h"
 #include "SusyAnalysis/particles.h"
+#include "SusyAnalysis/Systematics.h"
 
 // std includes
 #include <iostream>
@@ -114,33 +115,6 @@ using namespace Particles;
 using namespace xAOD;
 using namespace std;
 using namespace fastjet;
-
-namespace pileupErr
-{
-  typedef enum  {
-    NONE,
-    PileupHigh,
-    PileupLow
-  } pileupSyste;
-}
-
-namespace JvfUncErr
-{
-  typedef enum  {
-    NONE,
-    JvfUncHigh,
-    JvfUncLow
-  } JvfSyste;
-}
-
-namespace BCHCorrMediumErr
-{
-  typedef enum  {
-    NONE,
-    BCHCorrHigh,
-    BCHCorrLow
-  } BCHSyste;
-}
 
 typedef std::pair<std::vector<float>, std::vector<float> > VFloatPair;     
 typedef std::vector<std::vector<float> > VVFloat;                          
