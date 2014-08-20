@@ -3,10 +3,11 @@
 
        - should we create a CP::SystematicSet() , and call SUSYObjDef_xAOD::applySystematicVariation(...)  with it? (so it seems!)
 
-       - Move systematics handling to new Class.
+       - Move systematics handling to new Class. DONE!  -->   Systematics class for uncertainties handling.
 
        - Connect to list_systematics.sh script for auto-update (perhaps)
 
+** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?
 
 ** Determine EBeam for input samples. from SampleHandler ?  It'd allow to get the right xsection file from ST.
    'ECMEnergy' field in pyami output
