@@ -32,9 +32,11 @@ class Particle : public TLorentzVector {
     float  SFu;
     float  SFd;
 
+    bool gev;
 
-    TLorentzVector GiveVector();
-    void GetVector(TLorentzVector vec); 
+    TLorentzVector GetVector();
+    void SetVector(TLorentzVector vec, bool inGeV = false);
+    void SetVector(float ,float, float ,float, bool inGeV = false);
     void PrintInfo();
 
     ClassDef(Particle,1);
@@ -47,6 +49,13 @@ class Jet : public Particle {
     ~Jet();
     int                     id;
     float                   MV1;
+    float                   SV1plusIP3D;
+    float                   SV1_pb;
+    float                   SV1_pc;
+    float                   SV1_pu;
+    float                   IP3D_pb;
+    float                   IP3D_pc;
+    float                   IP3D_pu;
     float                   JetFitterCombNN;
     float                   JetFitterCombNNc;
     float                   JetFitterCu;
@@ -95,7 +104,7 @@ class MET : public TVector2{
     TVector2  met_ecorr;
     bool      m_hasMuons;
 
-    void SetVector(TVector2 vec, TString which=""); 
+    void SetVector(TVector2 vec, TString which="", bool inGeV=false); 
 
     TVector2 GetVector(TString which="");
     TVector3 GetMET_Razor();

@@ -18,16 +18,28 @@ Particle::Particle(){
   SF = 1;
   SFu = 0;
   SFd = 0;
+  gev=false; //4mom in GeV?
 }
 
 Particle::~Particle(){}
 
-TLorentzVector Particle::GiveVector(){
+TLorentzVector Particle::GetVector(){
   return TLorentzVector(*this);
 }
 
-void Particle::GetVector(TLorentzVector vec){
-  this->SetPtEtaPhiE(vec.Pt()/1000., vec.Eta(), vec.Phi(), vec.E()/1000.);
+void Particle::SetVector(TLorentzVector vec, bool inGeV){
+  if(inGeV)
+    this->SetPtEtaPhiE(vec.Pt()*0.001, vec.Eta(), vec.Phi(), vec.E()*0.001);
+  else
+    this->SetPtEtaPhiE(vec.Pt()*0.001, vec.Eta(), vec.Phi(), vec.E()*0.001);
+
+  this->gev=true;
+}
+
+void Particle::SetVector(float pt, float eta, float phi, float e, bool inGeV){
+  TLorentzVector tlv;
+  tlv.SetPtEtaPhiE(pt, eta, phi, e);
+  this->SetVector(tlv, inGeV);
 }
 
 void Particle::PrintInfo(){
@@ -41,6 +53,13 @@ void Particle::PrintInfo(){
 Jet::Jet(){
   id = -1;
   MV1 = -1;
+  SV1plusIP3D = -1;
+  SV1_pb = -1;
+  SV1_pc = -1;
+  SV1_pu = -1;
+  IP3D_pb = -1;
+  IP3D_pc = -1;
+  IP3D_pu = -1;
   JetFitterCombNN = -100;
   JetFitterCombNNc = -100;
   JetFitterCu = -100;
@@ -128,28 +147,30 @@ MET::MET(){
 
 MET::~MET(){}
 
-void MET::SetVector(TVector2 vec, TString which){
+void MET::SetVector(TVector2 vec, TString which, bool inGeV){
+  
+  float sf = (inGeV ? 1. : 0.001); 
 
   if(which=="met_trk"){
-    this->met_trk.Set(vec.X()/1000., vec.Y()/1000.);
+    this->met_trk.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_mu"){
-    this->met_mu.Set(vec.X()/1000., vec.Y()/1000.);
+    this->met_mu.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_refFinal"){
-    this->met_reffinal.Set(vec.X()/1000., vec.Y()/1000.);
+    this->met_reffinal.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_refFinal_mu"){
-    this->met_reffinal_mu.Set(vec.X()/1000., vec.Y()/1000.);
+    this->met_reffinal_mu.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_locHadTopo"){
-    this->met_lochadtopo.Set(vec.X()/1000., vec.Y()/1000.);
+    this->met_lochadtopo.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_ecorr"){
-    this->met_ecorr.Set(vec.X()/1000., vec.Y()/1000.);
+    this->met_ecorr.Set(vec.X() * sf, vec.Y() * sf);
   }
   else { //re-computed flavor
-    this->met.Set(vec.X()/1000., vec.Y()/1000.);
+    this->met.Set(vec.X() * sf, vec.Y() * sf);
   }
 }
 

@@ -1,21 +1,197 @@
 #include "xAODRootAccess/Init.h"
+#include "SampleHandler/Sample.h"
 #include "SampleHandler/SampleHandler.h"
 #include "SampleHandler/ToolsDiscovery.h"
+#include "SampleHandler/ToolsMeta.h"
+#include "SampleHandler/DiskListLocal.h"
+#include "SampleHandler/MetaFields.h"
+#include "SampleHandler/fetch.h"
 #include "EventLoop/Job.h"
 #include "EventLoop/DirectDriver.h"
 #include "EventLoop/OutputStream.h"
 #include "EventLoopAlgs/NTupleSvc.h"
 
 #include "SusyAnalysis/chorizo.h"
+#include "SusyAnalysis/RunsMap.h"
+#include "SusyAnalysis/tadd.h"
+
+#include <iostream>
+#include <stdio.h>
+#include <string>
+
+// Systematics includes
+#include "PATInterfaces/SystematicList.h"
+#include "PATInterfaces/SystematicVariation.h"
+#include "PATInterfaces/SystematicRegistry.h"
+#include "PATInterfaces/SystematicCode.h"
+#include "boost/unordered_map.hpp"
+
+using namespace SH;
+
+#define LumFactor 1000. //in nb-1
+
+void usage(){
+
+  cout << endl;
+  cout << "run_chorizo <Sample> [Syst]" << endl;
+  cout << endl;
+  cout << " <Sample> : The sample name to run over. " << endl;
+  cout << "            To list the implemented samples do: 'run_chorizo samples'" << endl;
+  cout << endl;
+  cout << " [Syst]   : systematics to be considered (comma-separated list) [optional]. " << endl;
+  cout << "            Just nominal is run by default (Nom)." << endl;       
+  cout << "            To list the available (recommended) systematic variations do: 'run_chorizo slist'" << endl;
+  cout << "            or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
+  cout << endl;
+}
+
+std::string getCmdOutput(const std::string& mStr)
+{
+  std::string result, file;
+  FILE* pipe{popen((mStr+" 2>/dev/null").c_str(), "r")};
+  if (!pipe) return " ERROR something went wrong with command : %s \n"+mStr;
+  char buffer[256];
+
+  while(fgets(buffer, sizeof(buffer), pipe) != NULL)
+    {
+      file = buffer;
+      result += file.substr(0, file.size() - 1);
+    }
+  pclose(pipe);
+  return result;
+}
+
+std::string tmpdirname(){
+  std::string ret = getCmdOutput("mktemp -d");
+  system(("rmdir "+ret).c_str());
+  return ret;
+}
+
+float getLumiWeight(Sample* sample){
+
+  if( sample->getMetaDouble( MetaFields::isData ) ) //don't weight data!
+    return 1.;
+
+  return sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor ) * sample->getMetaDouble( MetaFields::filterEfficiency ) / sample->getMetaDouble( MetaFields::numEvents ); 
+  
+}
+
+bool type_consistent(SampleHandler sh){
+  
+  bool isData=false;
+  bool isMC=false;
+  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
+    isMC     |= ((*iter)->getMetaDouble( MetaFields::isData)==0);
+    isData   |= ((*iter)->getMetaDouble( MetaFields::isData)==1);
+
+    if(isData && isMC)
+      return false;
+  } 
+  return true;
+}
+
+void printSampleMeta(Sample* sample){
+  cout << endl;
+  cout << "---- Sample metadata ----------------" << endl;
+  cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
+  cout << " isData          = " << (sample->getMetaDouble( MetaFields::isData )==0 ? "No" : "Yes") << endl;
+  cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
+  cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
+  cout << " kfactor         = " << sample->getMetaDouble( MetaFields::kfactor ) << endl;
+  cout << " filterEff       = " << sample->getMetaDouble( MetaFields::filterEfficiency ) << endl;
+  cout << " N               = " << sample->getMetaDouble( MetaFields::numEvents ) << endl;
+  cout << " Lumi            = " << sample->getMetaDouble( MetaFields::lumi ) << endl;
+  cout << endl;  
+}
+
+void printSamplesList(){
+  RunsMap rmap;
+  std::vector<TString> samples = rmap.getKeys();
+
+  std::cout << "\n List of samples" << std::endl; 
+  std::cout << "--------------------------------------------------" << std::endl;
+  for(unsigned int i=0; i<samples.size(); i++)
+    cout << samples[i] << endl;
+
+}
+
+void printSystList(){
+  //FIX THIS! It has to happen *after* all tools' initialization!
+
+  const CP::SystematicRegistry& registry = CP::SystematicRegistry::getInstance();
+  const CP::SystematicSet& recommendedSystematics = registry.recommendedSystematics();
+  std::vector<CP::SystematicSet> sysList;
+
+  std::cout << "\n List of recommended systematics" << std::endl; 
+  std::cout << "--------------------------------------------------" << std::endl;
+
+  // this is the nominal set
+  sysList.push_back(CP::SystematicSet());
+  for(CP::SystematicSet::const_iterator sysItr = recommendedSystematics.begin(); sysItr != recommendedSystematics.end(); ++sysItr){
+    std::cout << sysItr->basename();
+    if (*sysItr == CP::SystematicVariation (sysItr->basename(), CP::SystematicVariation::CONTINUOUS)){
+      std::cout << "\t +-" ;
+    }
+    std::cout << std::endl;
+  }
+}
 
 void SystTranslate(   TString syste,
+		      CP::SystematicSet& syst_CP,
 		      SystErr::Syste &syst_ST,
 		      ScaleVariatioReweighter::variation &syst_Scale,
 		      pileupErr::pileupSyste &syst_PU,
 		      JvfUncErr::JvfSyste &syst_JVF,
 		      BCHCorrMediumErr::BCHSyste &syst_BCH0 );
 
+
+
 int main( int argc, char* argv[] ) {
+
+  //check if enough arguments
+  bool systListOnly=false;
+  if( argc < 2 ){
+    usage();
+    return 0;
+  }
+  else if (strcmp(argv[1], "samples") == 0){ //just print samples list?
+    printSamplesList();
+    return 0;
+  }
+  else if (strcmp(argv[1], "slist") == 0){ //just print systematics list?
+    systListOnly=true;
+    gErrorIgnoreLevel = kFatal;
+    argv[1] = (char*)"TestMClocal"; //rename to test sample to get systematics list
+    // printSystList();
+    // return 0;
+  }
+
+  //check for needed setup 
+  std::string ami_check = getCmdOutput(R"( which ami )");
+  if (ami_check.empty()){
+    cout << "\n Ups! You need to setup a few things first!" << endl;
+    cout << " Please do: " << endl;
+    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh" << endl;
+    cout << "\n and get back! :)" << endl;
+    return 0;
+  }
+
+
+  //*** obsolete
+  //--- path to the file containing the list of dataset                                 
+  //  std::string listDirectory = xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/ListFolderPath");
+
+  //***Get map of runs  
+  RunsMap mapOfRuns;
+  //check if sample is mapped
+  RMap mymap = mapOfRuns.getMap();
+  RMap::iterator it = mymap.find( argv[1] );
+  if(it == mymap.end()){
+    cout << "\n Sample '" << argv[1] << "' not found in current map. Please pick another one." << endl;
+    cout << "            To list the implemented samples do: 'run_chorizo samples'" << endl;
+    return 0;
+  }
+
 
   // Set up the job for xAOD access:
   xAOD::Init().ignore();
@@ -33,38 +209,68 @@ int main( int argc, char* argv[] ) {
   bool GeneratePUfiles = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
 
   TString FinalPath      = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
-  if( argc > 2 ) FinalPath = argv[ 2 ];    // Take the submit directory from the input if provided:
+  if( argc > 3 ) FinalPath = argv[ 3 ];    // Take the submit directory from the input if provided:
 
   TString CollateralPath = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
 
-  //--- path to the file containing the list of dataset                                                                                                                             
-  std::string listDirectory = xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/ListFolderPath");
 
+  // Get patterns/paths to load for this sample
+  std::vector<TString> run_pattern = mapOfRuns.getPatterns( argv[1] );
+  std::vector<int>     run_ids     = mapOfRuns.getIDs( argv[1] );
 
   // Construct the samples to run on:
-  SH::SampleHandler sh;
-  //SH::scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5534/" );
-  SH::scanDir( sh, "/nfs/at3/scratch/tripiana/xAOD/"); //mc14_8TeV.117050.PowhegPythia_P2011C_ttbar.recon.AOD.e1727_s1933_s1911_r5591/");
+  SampleHandler sh;
+  bool mgd=false;
+  for(unsigned int p=0; p < run_pattern.size(); p++){
+    
+    bool runLocal = (run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || systListOnly); //Can we refine this?
+    
+    //** Run on local samples
+    //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
+    if(runLocal || systListOnly){
+      scanDir( sh, run_pattern[p].Data() );
+    }
+    else{
+      //** Run on PIC samples
+      //   e.g. scanDQ2 (sh, "user.eifert.mc12_13TeV.110090*");
+      scanDQ2 (sh, run_pattern[p].Data() );
+      mgd=true;
+    }    
+  }
+  if(mgd)
+    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
 
-  // Set the name of the input TTree. It's always "CollectionTree"
-  // for xAOD files.
-  sh.setMetaString( "nc_tree", "CollectionTree" );
+  sh.print(); //print what we found
 
-  // Print what we found:
-  sh.print();
+  //Handle Meta-Data
+  sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
 
-  // Create an EventLoop job:
-  EL::Job job;
-  job.sampleHandler( sh );
+  //  First try reading meta-data from SUSYTools
+  //   readSusyMetaDir(sh,"$ROOTCOREBIN/data/SUSYTools");
+  //   readSusyMeta(sh,"$ROOTCOREBIN/data/SUSYTools/susy_crosssections_13TeV.txt");
+  readSusyMeta(sh,"$ROOTCOREBIN/data/SUSYTools/susy_crosssections_14TeV.txt");
 
-  //Add NtupleSvc
-  EL::OutputStream output  ("output");
-  job.outputAdd (output);
-  EL::NTupleSvc *ntuple = new EL::NTupleSvc ("output");
-  ntuple->treeName("AnalysisTree");
-  job.algsAdd (ntuple);
+  //  then fetch missing meta-data from AMI
+  fetchMetaData (sh, false); //do not override as default. Trust xsection in SUSYTools for the moment.
+
+  //Print meta-data and save weights+names for later use
+  std::vector<TString> mergeList; 
+  std::vector<double> weights;
+  bool isData = (sh.size() ? (sh.at(0)->getMetaDouble( MetaFields::isData ))==1 : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
   
+  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
+      printSampleMeta( *iter );
+      weights.push_back( getLumiWeight(*iter) );
+  }
+
+  //Check data type consistency (e.g. don't mix MC with data!)
+  if( ! type_consistent(sh) ){
+    cout << "\nERROR :: You are mixing MC and data samples!! The current implementation does not support this! Sorry...\n" << endl;
+    return 0;
+  }
+
   //Systematics
+  CP::SystematicSet syst_CP = CP::SystematicSet();
   SystErr::Syste syst_ST = SystErr::NONE;
   ScaleVariatioReweighter::variation syst_Scale = ScaleVariatioReweighter::None;
   pileupErr::pileupSyste syst_PU = pileupErr::NONE;
@@ -72,57 +278,123 @@ int main( int argc, char* argv[] ) {
   BCHCorrMediumErr::BCHSyste syst_BCH = BCHCorrMediumErr::NONE;
   
   TString systematic="Nom";
-    if(argc > 1) 
-      systematic = argv[1];
+  if(argc > 2) 
+    systematic = argv[2];
   
-  SystTranslate(systematic, syst_ST, syst_Scale, syst_PU, syst_JVF, syst_BCH);
-  
-  
+  SystTranslate(systematic, syst_CP, syst_ST, syst_Scale, syst_PU, syst_JVF, syst_BCH);
+
+  //Create an EventLoop job:
+  EL::Job job;
+  job.useXAOD();
+  job.sampleHandler( sh );
+    
+  //Add NtupleSvc
+  EL::OutputStream output  ("output");
+  job.outputAdd (output);
+  EL::NTupleSvc *ntuple = new EL::NTupleSvc ("output");
+  ntuple->treeName("AnalysisTree");
+  job.algsAdd (ntuple);
+    
   chorizo *alg = new chorizo();
-  
+    
   //Alg config options here
   alg->outputName = "output";
   alg->Region = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
-
-  alg->defaultRegion = "SR"; //get it from the XML!!
+    
+  alg->defaultRegion = "SR"; //from XML?
   alg->xmlPath = xmlPath;
-
+    
   alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
   alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
   alg->isQCD      = false;   //get it from D3PDReader-like code (add metadata to SH)
   alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
   alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
   alg->isNCBG     = false;   //get it from the XML!!
-
+    
   alg->doAnaTree  = doAnaTree;     // Output trees
   alg->doFlowTree = doFlowTree;
   alg->doPUTree   = false;         //get it from the XML!!
   alg->genPUfile  = GeneratePUfiles;
-
-  alg->syst_ST    = syst_ST;      // Systematics
+    
+  alg->syst_CP    = syst_CP;      // Systematics
+  alg->syst_ST    = syst_ST;      
   alg->syst_Scale = syst_Scale;
   alg->syst_PU    = syst_PU;
   alg->syst_JVF   = syst_JVF;
   alg->syst_BCH   = syst_BCH;
-
-
+    
+    
   alg->printMet      = false;     //debug printing
   alg->printJet      = false;
   alg->printElectron = false;
   alg->printMuon     = false;
+  alg->errIgnoreLevel = (systListOnly ? kFatal : kInfo);
+    
+  alg->systListOnly  = systListOnly;
+
 
   //Load alg to job
   job.algsAdd( alg );
 
+  //Set Max number of events (for testing)
+  //  job.options()->setDouble (EL::Job::optMaxEvents, 10);
+  if(systListOnly)
+    job.options()->setDouble (EL::Job::optMaxEvents, 1);
+
+  //TTreeCache use
+  job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
+
+
+  //create tmp output dir
+  string tmpdir = tmpdirname();
+    
   // Run the job using the local/direct driver:
   EL::DirectDriver driver;
-  driver.submit( job, TString(CollateralPath+"/test/").Data() );
+    
+  //submit the job
+  driver.submit( job, tmpdir );
+
+  if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
+
+  //move output to collateral files' path
+  TString sampleName,targetName;
+  int isample=0;
+  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
+
+    sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
+    targetName = Form("%s_%s_%d.root", systematic.Data(), argv[1], run_ids[isample]);
+    system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+    
+    mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+    isample++;
+  }
+
+
+  //** after-burner to merge samples, add weights and anti-SF
+  cout << "\n\n*** AFTER-BURNER *** " << endl;
+  cout << "\n >> merging "<< mergeList.size() << " samples ..." << endl;
+  for (unsigned int i=0; i < mergeList.size(); i++){
+    cout<<"\t\t" << i << ": " << mergeList[i] << endl;
+  }      
+  
+  TString mergedName = Form("%s_%s.root",systematic.Data(), argv[1]);
+  
+  if (!GeneratePUfiles){
+    if (!doAnaTree) {
+      //--- Case where we run on 1 file
+      //... 
+    } 
+    else {
+      tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
+    }
+  }
 
   return 0;
 }
 
 
 void SystTranslate( TString syste,
+		    CP::SystematicSet &syst_CP,
 		    SystErr::Syste &syst_ST,
 		    ScaleVariatioReweighter::variation &syst_Scale,
 		    pileupErr::pileupSyste &syst_PU,
@@ -130,7 +402,11 @@ void SystTranslate( TString syste,
 		    BCHCorrMediumErr::BCHSyste &syst_BCH )
 {
 
-  if(syste=="Nom")                                                    syst_ST = SystErr::NONE;
+  
+
+
+  if(syste=="Nom")                                                    return;
+  else if(syste=="MUONS_ID__1up")                                     syst_CP = CP::SystematicSet(syste.Data()); //new scheme test!
   else if(syste=="JESHigh")                                           syst_ST = SystErr::JESUP;
   else if(syste=="JESLow")                                            syst_ST = SystErr::JESDOWN;
 
