@@ -43,11 +43,20 @@
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
 //#include "MissingETUtility/METUtility.h"
 #include "PileupReweighting/TPileupReweighting.h"
-#include "GoodRunsLists/TGoodRunsListReader.h"
-#include "GoodRunsLists/TGRLCollection.h"
+//#include "GoodRunsLists/GoodRunsListSelectionTool.h"
+/* #include "GoodRunsLists/TGoodRunsListReader.h" */
+/* #include "GoodRunsLists/TGRLCollection.h" */
 #include "SUSYTools/BTagCalib.h"
 
 #include "fastjet/ClusterSequence.hh"
+
+// Systematics includes
+#include "PATInterfaces/SystematicList.h"
+#include "PATInterfaces/SystematicVariation.h"
+#include "PATInterfaces/SystematicRegistry.h"
+#include "PATInterfaces/SystematicCode.h"
+//#include "boost/unordered_map.hpp"
+
 
 /* #include "METSmearing/MissingETSmearing.h" */
 /* #include "TruthToRecoFunctions/ElectronParam.h" */
@@ -63,6 +72,10 @@
 /* class xAODElectron; */
 /* class xAODMuon; */
 /* class xAODTruth; */
+
+#ifndef __MAKECINT__
+#include "xAODMissingET/MissingETContainer.h"
+#endif // not __MAKECINT__
 
 /* #include "xAODMuon/MuonContainer.h" */
 /* #include "xAODJet/JetContainer.h" */
@@ -90,6 +103,8 @@
 /* namespace METSmear{ */
 /*   class MissingETSmearing; */
 /* } */
+
+class GoodRunsListSelectionTool;
 
 namespace ST{
   class SUSYObjDef_xAOD;
@@ -171,6 +186,7 @@ public:
   bool doFlowTree; 
   bool genPUfile;
 
+  CP::SystematicSet syst_CP;
   SystErr::Syste syst_ST;
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
@@ -182,11 +198,16 @@ public:
   bool printElectron;
   bool printMuon;
 
+  bool systListOnly;
+  int  errIgnoreLevel;
+
   // this is a standard constructor
   chorizo ();
 
   // Own methods
   virtual void SetTruthSmearing(bool doit=false){ doTTR=doit; }; //to overwrite xml option.
+
+  virtual void printSystList(); //systematics list
 
   // these are the functions inherited from Algorithm
   virtual EL::StatusCode setupJob (EL::Job& job);
@@ -225,11 +246,12 @@ private:
   BTagCalib*     tool_calib1; //!
   BTagCalib*     tool_calib2; //!
   Root::TPileupReweighting* tool_purw; //!
-  Root::TGoodRunsListReader grl_reader; //!
-  Root::TGRLCollection      grlist; //!
   JVFUncertaintyTool* tool_jvf; //!
   PDFTool*       tool_pdf; //!
   JetCleaningTool *tool_jClean; //!  
+#ifndef __CINT__
+  GoodRunsListSelectionTool *tool_grl;
+#endif // not __CINT__
 
   //Member Functions
   virtual void InitVars();
@@ -287,6 +309,11 @@ private:
   virtual bool  isStableP(int status){ return (status==1); };
   virtual bool  isHardP(int status){ return (status==3); };
 
+
+#ifndef __MAKECINT__
+  TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
+#endif // not __MAKECINT__
+
   /* virtual bool  isLepton(xAOD::TruthParticle* p); */
   /* virtual bool  isNeutrino(xAOD::TruthParticle* p); */
   /* virtual bool  isLepNeut(xAOD::TruthParticle* p); */
@@ -294,7 +321,11 @@ private:
   /* virtual bool  isStableP(xAOD::TruthParticle* p); */
   /* virtual bool  isHardP(xAOD::TruthParticle* p); */
 
-  /* virtual void  fillTLV( TLorentzVector &v, xAOD::TruthParticle* p, bool inGeV=false ); */
+  template <class xAODPart>
+  void  fillTLV( TLorentzVector &v, xAODPart* p, bool inGeV=false ); 
+
+  template <class xAODPart>
+  TLorentzVector getTLV( xAODPart* p, bool inGeV=false ); 
 
   virtual bool  isSignal_WIMP(int mc_id); //move to RunsMap.h or so? //CHECK_ME
   virtual bool  isSignal_ADD(int mc_id); //move to RunsMap.h or so? //CHECK_ME
@@ -431,10 +462,10 @@ private:
   bool Met_doSoftTerms; //!
 
   //btag weights & systematics
-  std::vector<float> btag_weight_first;
-  std::vector<float> btag_weight_first_80eff;
-  std::vector<float> btag_weight;
-  std::vector<float> btag_weight_80eff;
+  std::vector<float> btag_weight_first;//!
+  std::vector<float> btag_weight_first_80eff;//!
+  std::vector<float> btag_weight;//!
+  std::vector<float> btag_weight_80eff;//!
 
   std::vector<float> btag_weight_B_down; //!
   std::vector<float> btag_weight_B_down_80eff; //!
@@ -625,7 +656,7 @@ private:
   float electronSFd;
 
   //- Muon Info
-  int m_N;
+  int   m_N;
   float m_pt;
   float m_eta;
   float m_phi;

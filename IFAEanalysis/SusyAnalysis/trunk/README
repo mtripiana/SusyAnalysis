@@ -10,7 +10,7 @@ The first thing you need to do is to set the Analysis release, so to have access
 
 For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
 
-     >  rcSetup Base,2.0.4
+     >  rcSetup Base,2.0.6
  
      Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
 
@@ -40,7 +40,7 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
 
 4) Getting extra packages (not included in the Analysis release):
    =====================
-   source $ANALYSISCODE/code/scripts/get_extra_packages.sh
+   source $ANALYSISCODE/SusyAnalysis/scripts/get_extra_packages.sh
 
 
 5) Compile everything:
@@ -76,7 +76,7 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
    b) Run
       e.g. to produce the mini-ntuples for X-sample:
 
-   $ANALYSISCODE/code/scripts/qsubFiles/X-sample.sub
+   $ANALYSISCODE/SusyAnalysis/scripts/qsubFiles/X-sample.sub
 
 
 
