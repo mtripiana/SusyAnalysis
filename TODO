@@ -6,11 +6,6 @@ HIGH PRIORITY
 
 ** Allow for multiple input samples and systematics. Comma-separated lists.
 
-** Determine EBeam for input samples. from SampleHandler ?  It'd allow to get the right xsection file from ST.
-   'ECMEnergy' field in pyami output
-
-   We could get rid of 'beamE_from' in the jobOption then. (for PDFRW)
-
 ** Overlap removal. Can we just use ST-one?
 
 **  MET rebuilding
@@ -23,11 +18,6 @@ HIGH PRIORITY
 
 ** truth navigation
 
-** metadata
-
-      use this!!  https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SampleHandler#Reading_SUSY_meta_data_files ---> almost DONE
-
-      use EBeam (above) info to pick the right xsection file.
 
 ** btagging
        review current setup, variables and ops.
@@ -46,7 +36,6 @@ LOW priority
 
        - Connect to list_systematics.sh script for auto-update (perhaps)
 
-** Format log output (already Started. bold() function in run_chorizo. Move it to an aux class?)
 
 
 Errors/Warning to take care of (at least understand if we can safely ignore these)
