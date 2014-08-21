@@ -15,6 +15,7 @@
 #include "SusyAnalysis/RunsMap.h"
 //#include "SusyAnalysis/Systematics.h"
 #include "SusyAnalysis/tadd.h"
+#include "SusyAnalysis/utility.h"
 
 #include <iostream>
 #include <stdio.h>
@@ -34,7 +35,7 @@ using namespace SH;
 void usage(){
 
   cout << endl;
-  cout << "run_chorizo <Sample> [Syst]" << endl;
+  cout << bold("run_chorizo <Sample> [Syst]") << endl;
   cout << endl;
   cout << " <Sample> : The sample name to run over. " << endl;
   cout << "            To list the implemented samples do: 'run_chorizo samples'" << endl;
@@ -50,7 +51,7 @@ std::string getCmdOutput(const std::string& mStr)
 {
   std::string result, file;
   FILE* pipe{popen((mStr+" 2>/dev/null").c_str(), "r")};
-  if (!pipe) return " ERROR something went wrong with command : %s \n"+mStr;
+  if (!pipe) return std::string(red("ERROR").Data())+" something went wrong with command : %s \n"+mStr;
   char buffer[256];
 
   while(fgets(buffer, sizeof(buffer), pipe) != NULL)
@@ -77,6 +78,15 @@ float getLumiWeight(Sample* sample){
   
 }
 
+float getECM(Sample* sample){ //in TeV
+  std::string s_ecm = getCmdOutput( "ami dataset info "+sample->getMetaString( MetaFields::sampleName )+" | grep ECM | awk '{print $2}'");
+  return atof(s_ecm.c_str())/1000.;
+}
+
+float getEBeam(Sample* sample){ //in TeV
+  return getECM(sample)/2.;
+}
+
 bool type_consistent(SampleHandler sh){
   
   bool isData=false;
@@ -91,17 +101,20 @@ bool type_consistent(SampleHandler sh){
   return true;
 }
 
+
 void printSampleMeta(Sample* sample){
   cout << endl;
-  cout << "---- Sample metadata ----------------" << endl;
+  cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " isData          = " << (sample->getMetaDouble( MetaFields::isData )==0 ? "No" : "Yes") << endl;
+  cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
   cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
   cout << " kfactor         = " << sample->getMetaDouble( MetaFields::kfactor ) << endl;
   cout << " filterEff       = " << sample->getMetaDouble( MetaFields::filterEfficiency ) << endl;
   cout << " N               = " << sample->getMetaDouble( MetaFields::numEvents ) << endl;
   cout << " Lumi            = " << sample->getMetaDouble( MetaFields::lumi ) << endl;
+  cout << bold("--------------------------------------------------------------------------------------------------------------") << endl;
   cout << endl;  
 }
 
@@ -109,8 +122,8 @@ void printSamplesList(){
   RunsMap rmap;
   std::vector<TString> samples = rmap.getKeys();
 
-  std::cout << "\n List of samples" << std::endl; 
-  std::cout << "--------------------------------------------------" << std::endl;
+  std::cout << bold("\n List of samples") << std::endl; 
+  std::cout << bold("------------------------------------------------------------") << std::endl;
   for(unsigned int i=0; i<samples.size(); i++)
     cout << samples[i] << endl;
 
@@ -121,36 +134,6 @@ void printSystList(){
   Smap.LoadList();
   Smap.printSystList();
 }
-
-//void printSystList(){
-//   //FIX THIS! It has to happen *after* all tools' initialization!
-
-//   const CP::SystematicRegistry& registry = CP::SystematicRegistry::getInstance();
-//   const CP::SystematicSet& recommendedSystematics = registry.recommendedSystematics();
-//   std::vector<CP::SystematicSet> sysList;
-
-//   std::cout << "\n List of recommended systematics" << std::endl; 
-//   std::cout << "--------------------------------------------------" << std::endl;
-
-//   // this is the nominal set
-//   sysList.push_back(CP::SystematicSet());
-//   for(CP::SystematicSet::const_iterator sysItr = recommendedSystematics.begin(); sysItr != recommendedSystematics.end(); ++sysItr){
-//     std::cout << sysItr->basename();
-//     if (*sysItr == CP::SystematicVariation (sysItr->basename(), CP::SystematicVariation::CONTINUOUS)){
-//       std::cout << "\t +-" ;
-//     }
-//     std::cout << std::endl;
-//   }
-// }
-
-// void SystTranslate(   TString syste,
-// 		      CP::SystematicSet& syst_CP,
-// 		      SystErr::Syste &syst_ST,
-// 		      ScaleVariatioReweighter::variation &syst_Scale,
-// 		      pileupErr::pileupSyste &syst_PU,
-// 		      JvfUncErr::JvfSyste &syst_JVF,
-// 		      BCHCorrMediumErr::BCHSyste &syst_BCH );
-
 
 
 int main( int argc, char* argv[] ) {
@@ -176,17 +159,13 @@ int main( int argc, char* argv[] ) {
   //check for needed setup 
   std::string ami_check = getCmdOutput(R"( which ami )");
   if (ami_check.empty()){
-    cout << "\n Ups! You need to setup a few things first!" << endl;
+    cout << bold(red("\n Ups! "));
+    cout << "You need to setup a few things first!" << endl;
     cout << " Please do: " << endl;
     cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh" << endl;
-    cout << "\n and get back! :)" << endl;
+    cout << "\n and get back! :) \n" << endl;
     return 0;
   }
-
-
-  //*** obsolete
-  //--- path to the file containing the list of dataset                                 
-  //  std::string listDirectory = xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/ListFolderPath");
 
   //***Get map of runs  
   RunsMap mapOfRuns;
@@ -194,8 +173,9 @@ int main( int argc, char* argv[] ) {
   RMap mymap = mapOfRuns.getMap();
   RMap::iterator it = mymap.find( argv[1] );
   if(it == mymap.end()){
-    cout << "\n Sample '" << argv[1] << "' not found in current map. Please pick another one." << endl;
-    cout << "            To list the implemented samples do: 'run_chorizo samples'" << endl;
+    cout << bold(red("\n Ups! "));    
+    cout << " Sample '" << argv[1] << "' not found in current map. Please pick another one." << endl;
+    cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
     return 0;
   }
 
@@ -252,10 +232,28 @@ int main( int argc, char* argv[] ) {
   //Handle Meta-Data
   sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
 
+  //set EBeam field
+  TString s_ecm  = "8"; //default is 8TeV 
+  TString s_ecm_tmp = "";
+  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
+    (*iter)->setMetaDouble ("ebeam", (double)getEBeam(*iter));
+    
+    s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
+    if(s_ecm_tmp.IsNull()){ 
+      s_ecm_tmp = s_ecm;
+    }
+    else if( ! s_ecm_tmp.EqualTo(s_ecm) ){ // All ECM set by first sample for now. WARNING: we can't mix MC at diff ecm for now!!
+      cout << bold(red("\n Ups! "));
+      cout << "You are not supposed to merge diff ecm samples !! (for the moment anyways)" << endl;
+      cout << "Check the implementation for '" << argv[1] << "' in RunsMap class and get back...\n" << endl;
+      return 0;
+    }
+  }
+  
   //  First try reading meta-data from SUSYTools
   //   readSusyMetaDir(sh,"$ROOTCOREBIN/data/SUSYTools");
   //   readSusyMeta(sh,"$ROOTCOREBIN/data/SUSYTools/susy_crosssections_13TeV.txt");
-  readSusyMeta(sh,"$ROOTCOREBIN/data/SUSYTools/susy_crosssections_14TeV.txt");
+  readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
 
   //  then fetch missing meta-data from AMI
   fetchMetaData (sh, false); //do not override as default. Trust xsection in SUSYTools for the moment.
@@ -272,7 +270,7 @@ int main( int argc, char* argv[] ) {
 
   //Check data type consistency (e.g. don't mix MC with data!)
   if( ! type_consistent(sh) ){
-    cout << "\nERROR :: You are mixing MC and data samples!! The current implementation does not support this! Sorry...\n" << endl;
+    cout << "\n" << bold(red("ERROR :: ")) << "You are mixing MC and data samples!! The current implementation does not support this! Sorry...\n" << endl;
     return 0;
   }
 
@@ -380,8 +378,8 @@ int main( int argc, char* argv[] ) {
 
 
   //** after-burner to merge samples, add weights and anti-SF
-  cout << "\n\n*** AFTER-BURNER *** " << endl;
-  cout << "\n >> merging "<< mergeList.size() << " samples ..." << endl;
+  cout << bold("\n\n*** AFTER-BURNER *** ") << endl;
+  cout << "\n >> merging "<< mergeList.size() << " sample(s) ..." << endl;
   for (unsigned int i=0; i < mergeList.size(); i++){
     cout<<"\t\t" << i << ": " << mergeList[i] << endl;
   }      
@@ -402,103 +400,3 @@ int main( int argc, char* argv[] ) {
 }
 
 
-// void SystTranslate( TString syste,
-// 		    CP::SystematicSet &syst_CP,
-// 		    SystErr::Syste &syst_ST,
-// 		    ScaleVariatioReweighter::variation &syst_Scale,
-// 		    pileupErr::pileupSyste &syst_PU,
-// 		    JvfUncErr::JvfSyste &syst_JVF,
-// 		    BCHCorrMediumErr::BCHSyste &syst_BCH )
-// {
-
-  
-
-
-//   if(syste=="Nom")                                                    return;
-//   else if(syste=="MUONS_ID__1up")                                     syst_CP = CP::SystematicSet(syste.Data()); //new scheme test!
-//   else if(syste=="JESHigh")                                           syst_ST = SystErr::JESUP;
-//   else if(syste=="JESLow")                                            syst_ST = SystErr::JESDOWN;
-
-//   else if(syste=="EffectiveNP_1Low")                                  syst_ST = SystErr::EffectiveNP_1_Down;
-//   else if(syste=="EffectiveNP_1High")                                 syst_ST = SystErr::EffectiveNP_1_Up;
-//   else if(syste=="EffectiveNP_2Low")                                  syst_ST = SystErr::EffectiveNP_2_Down;
-//   else if(syste=="EffectiveNP_2High")                                 syst_ST = SystErr::EffectiveNP_2_Up;
-//   else if(syste=="EffectiveNP_3Low")                                  syst_ST = SystErr::EffectiveNP_3_Down;
-//   else if(syste=="EffectiveNP_3High")                                 syst_ST = SystErr::EffectiveNP_3_Up;
-//   else if(syste=="EffectiveNP_4Low")                                  syst_ST = SystErr::EffectiveNP_4_Down;
-//   else if(syste=="EffectiveNP_4High")                                 syst_ST = SystErr::EffectiveNP_4_Up;
-//   else if(syste=="EffectiveNP_5Low")                                  syst_ST = SystErr::EffectiveNP_5_Down;
-//   else if(syste=="EffectiveNP_5High")                                 syst_ST = SystErr::EffectiveNP_5_Up;
-//   else if(syste=="EffectiveNP_6Low")                                  syst_ST = SystErr::EffectiveNP_6_Down;
-//   else if(syste=="EffectiveNP_6High")                                 syst_ST = SystErr::EffectiveNP_6_Up;
-//   else if(syste=="EtaIntercalibration_ModellingLow")                  syst_ST = SystErr::EtaIntercalibration_Modelling_Down;
-//   else if(syste=="EtaIntercalibration_ModellingHigh")                 syst_ST = SystErr::EtaIntercalibration_Modelling_Up;
-//   else if(syste=="EtaIntercalibration_StatAndMethodLow")              syst_ST = SystErr::EtaIntercalibration_StatAndMethod_Down;
-//   else if(syste=="EtaIntercalibration_StatAndMethodHigh")             syst_ST = SystErr::EtaIntercalibration_StatAndMethod_Up;
-//   else if(syste=="SingleParticle_HighPtLow")                          syst_ST = SystErr::SingleParticle_HighPt_Down;
-//   else if(syste=="SingleParticle_HighPtHigh")                         syst_ST = SystErr::SingleParticle_HighPt_Up;
-//   else if(syste=="RelativeNonClosure_Pythia8Low")                     syst_ST = SystErr::RelativeNonClosure_Pythia8_Down;
-//   else if(syste=="RelativeNonClosure_Pythia8High")                    syst_ST = SystErr::RelativeNonClosure_Pythia8_Up;
-//   else if(syste=="PileupOffsetTermMuLow")                             syst_ST = SystErr::PileupOffsetTermMuDown;
-//   else if(syste=="PileupOffsetTermMuHigh")                            syst_ST = SystErr::PileupOffsetTermMuUp;
-//   else if(syste=="PileupOffsetTermNPVLow")                            syst_ST = SystErr::PileupOffsetTermNPVDown;
-//   else if(syste=="PileupOffsetTermNPVHigh")                           syst_ST = SystErr::PileupOffsetTermNPVUp;
-//   else if(syste=="PileupPtTermLow")                                   syst_ST = SystErr::PileupPtTermDown;
-//   else if(syste=="PileupPtTermHigh")                                  syst_ST = SystErr::PileupPtTermUp;
-//   else if(syste=="PileupRhoTopologyLow")                              syst_ST = SystErr::PileupRhoTopologyDown;
-//   else if(syste=="PileupRhoTopologyHigh")                             syst_ST = SystErr::PileupRhoTopologyUp;
-//   else if(syste=="CloseByLow")                                        syst_ST = SystErr::CloseByDown;
-//   else if(syste=="CloseByHigh")                                       syst_ST = SystErr::CloseByUp;
-//   else if(syste=="FlavorCompUncertLow")                               syst_ST = SystErr::FlavorCompUncertDown;
-//   else if(syste=="FlavorCompUncertHigh")                              syst_ST = SystErr::FlavorCompUncertUp;
-//   else if(syste=="FlavorResponseUncertLow")                           syst_ST = SystErr::FlavorResponseUncertDown;
-//   else if(syste=="FlavorResponseUncertHigh")                          syst_ST = SystErr::FlavorResponseUncertUp;
-//   else if(syste=="BJesLow")                                           syst_ST = SystErr::BJesDown;
-//   else if(syste=="BJesHigh")                                          syst_ST = SystErr::BJesUp; //Break down of the JES uncertainties                                           
-
-//   else if(syste=="JER")                                               syst_ST = SystErr::JER;
-//   else if(syste=="EGZEEHigh")                                         syst_ST = SystErr::EGZEEUP;
-//   else if(syste=="EGZEELow")                                          syst_ST = SystErr::EGZEEDOWN;
-//   else if(syste=="EGMATHigh")                                         syst_ST = SystErr::EGMATUP;
-//   else if(syste=="EGMATLow")                                          syst_ST = SystErr::EGMATDOWN;
-//   else if(syste=="EGPSHigh")                                          syst_ST = SystErr::EGPSUP;
-//   else if(syste=="EGPSLow")                                           syst_ST = SystErr::EGPSDOWN;
-//   else if(syste=="EGLOWHigh")                                         syst_ST = SystErr::EGLOWUP;
-//   else if(syste=="EGLOWLow")                                          syst_ST = SystErr::EGLOWDOWN;
-//   else if(syste=="EGRESHigh")                                         syst_ST = SystErr::EGRESUP;
-//   else if(syste=="EGRESLow")                                          syst_ST = SystErr::EGRESDOWN;
-//   else if(syste=="EEFFHigh")                                          syst_ST = SystErr::EEFFUP;
-//   else if(syste=="EEFFLow")                                           syst_ST = SystErr::EEFFDOWN;
-//   else if(syste=="MSCALEHigh")                                        syst_ST = SystErr::MSCALEUP;
-//   else if(syste=="MSCALELow")                                         syst_ST = SystErr::MSCALELOW;
-//   else if(syste=="MMSHigh")                                           syst_ST = SystErr::MMSUP;
-//   else if(syste=="MMSLow")                                            syst_ST = SystErr::MMSLOW;
-//   else if(syste=="MIDHigh")                                           syst_ST = SystErr::MIDUP;
-//   else if(syste=="MIDLow")                                            syst_ST = SystErr::MIDLOW;
-//   else if(syste=="MEFFHigh")                                          syst_ST = SystErr::MEFFUP;
-//   else if(syste=="MEFFLow")                                           syst_ST = SystErr::MEFFDOWN;
-//   else if(syste=="SCALESTHigh")                                       syst_ST = SystErr::SCALESTUP;
-//   else if(syste=="SCALESTLow")                                        syst_ST = SystErr::SCALESTDOWN;
-//   else if(syste=="BJETHigh")                                          syst_ST = SystErr::BJETUP;
-//   else if(syste=="BJETLow")                                           syst_ST = SystErr::BJETDOWN;
-//   else if(syste=="CJETHigh")                                          syst_ST = SystErr::CJETUP;
-//   else if(syste=="CJETLow")                                           syst_ST = SystErr::CJETDOWN;
-//   else if(syste=="BMISTAGHigh")                                       syst_ST = SystErr::BMISTAGUP;
-//   else if(syste=="BMISTAGLow")                                        syst_ST = SystErr::BMISTAGDOWN;
-//   else if(syste=="RESOST")                                            syst_ST = SystErr::RESOST;
-//   else if(syste=="PileupHigh") {                                      syst_ST = SystErr::NONE; syst_PU = pileupErr::PileupHigh;}
-//   else if(syste=="PileupLow")  {                                      syst_ST = SystErr::NONE; syst_PU = pileupErr::PileupLow;}
-//   else if(syste=="JvfUncHigh") {                                      syst_ST = SystErr::NONE; syst_JVF = JvfUncErr::JvfUncHigh;}
-//   else if(syste=="JvfUncLow")  {                                      syst_ST = SystErr::NONE; syst_JVF = JvfUncErr::JvfUncLow;}
-//   //--- for Z/W+jet Sherpa                                                                                                                                                          
-//   else if(syste=="ktfacHigh")  {                                      syst_ST = SystErr::NONE; syst_Scale = ScaleVariatioReweighter::ktfacUP;}
-//   else if(syste=="ktfacLow")   {                                      syst_ST = SystErr::NONE; syst_Scale = ScaleVariatioReweighter::ktfacDOWN;}
-//   else if(syste=="qfacHigh")   {                                      syst_ST = SystErr::NONE; syst_Scale = ScaleVariatioReweighter::qfacUP;}
-//   else if(syste=="qfacLow")    {                                      syst_ST = SystErr::NONE; syst_Scale = ScaleVariatioReweighter::qfacDOWN;}
-//   //--- For BCH medium correction                                                                                                                                                   
-//   else if(syste=="BCHCorrHigh") {                                     syst_ST = SystErr::NONE; syst_BCH = BCHCorrMediumErr::BCHCorrHigh; }
-//   else if(syste=="BCHCorrLow") {                                      syst_ST = SystErr::NONE; syst_BCH = BCHCorrMediumErr::BCHCorrLow; }
-
-//   else Fatal("run_chorizo", Form("No systematic named like this: %s",syste.Data()));
-
-// }

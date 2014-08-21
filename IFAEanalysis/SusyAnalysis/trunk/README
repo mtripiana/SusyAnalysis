@@ -80,6 +80,9 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
 
 
 
+---------------- Caveats & Warnings --------------------------
+- it is not possible to mix samples at diff e.c.m.  
+- it is not possible to put MC and data within the same sample (= runs map key) (code prevents this anyways)
 
 
 ---------------- EXTRAS --------------------------

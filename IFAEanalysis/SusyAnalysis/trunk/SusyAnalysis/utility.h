@@ -3,6 +3,10 @@
 #include <TROOT.h>
 #include "TMath.h"
 
+TString bold(TString t);
+
+TString red(TString t);
+
 float MinimumOf(float, float);
 
 bool checkNonFiltered(int);

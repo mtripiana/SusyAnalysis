@@ -11,8 +11,6 @@
 	<Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
         <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
         <Path name="GRLxmlFile">SUSYTools/data/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
-	<!--       <Path name="ListFolderPath">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/util/ListsFinal/</Path>  -->
-        <Path name="ListFolderPath">/nfs/at3users/users/tripiana/StopAnalysis/</Path> 
 	<Pileup>
             <Mode name="ApplyPileupReweighting">false</Mode>
             <Path name="PileupReweightingConfigFolder">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/data/PileupReweighting/</Path>
@@ -30,7 +28,6 @@
 
         <PdfRw>
 	  <Enable>false</Enable> 
-	  <FromBeamE>4</FromBeamE> <!-- Initial beam energy (in TeV) -->
 	  <ToBeamE>6.5</ToBeamE> <!-- Final beam energy (in TeV) -->
         </PdfRw>
         

@@ -160,8 +160,8 @@ public:
   bool doFlowTree; 
   bool genPUfile;
 
-  CP::SystematicSet syst_CP;
-  SystErr::Syste syst_ST;
+  CP::SystematicSet syst_CP; 
+  SystErr::Syste syst_ST;    
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
   JvfUncErr::JvfSyste syst_JVF;

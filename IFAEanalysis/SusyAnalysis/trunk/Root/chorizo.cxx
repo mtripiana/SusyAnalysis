@@ -4,6 +4,7 @@
 #include <EventLoop/Worker.h>
 #include <SusyAnalysis/chorizo.h>
 
+
 //EDM includes:
 #include "xAODEventInfo/EventInfo.h"
 #include "xAODCore/ShallowCopy.h"
@@ -847,7 +848,6 @@ void chorizo :: ReadXML(){
   //------ Define and read global variables from the XML
   Info(whereAmI, Form(" - PDF reweighting") );
   doPDFrw = xmlJobOption->retrieveBool("AnalysisOptions$ObjectDefinition$PdfRw$Enable");
-  beamE_from = xmlJobOption->retrieveFloat("AnalysisOptions$ObjectDefinition$PdfRw$FromBeamE");
   beamE_to = xmlJobOption->retrieveFloat("AnalysisOptions$ObjectDefinition$PdfRw$ToBeamE");
 
   Info(whereAmI, Form(" - GRL") );
@@ -1202,6 +1202,7 @@ EL::StatusCode chorizo :: initialize ()
   }
 
   // scale beam energy from 8 TeV to 13 TeV
+  beamE_from = (float)  wk()->metaData()->getDouble("ebeam", 4.); //default is 8TeV!
   tool_pdf = new PDFTool(beamE_from * TEV, beamE_to/beamE_from, -1, original_pdfset);   
 
   // initialize and configure the jet cleaning tool
@@ -1228,7 +1229,7 @@ void chorizo :: printSystList(){
   const CP::SystematicRegistry& registry = CP::SystematicRegistry::getInstance();
   const CP::SystematicSet& recommendedSystematics = registry.recommendedSystematics();
 
-  std::cout << "\n\n\n List of recommended/implemented systematics" << std::endl;
+  std::cout << bold("\n\n\n List of recommended/implemented systematics") << std::endl;
   std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
 
   // this is the nominal set
@@ -1240,7 +1241,7 @@ void chorizo :: printSystList(){
     // }
     std::cout << std::endl;
   }
-  std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+  std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" << std::endl;
 }
 
 

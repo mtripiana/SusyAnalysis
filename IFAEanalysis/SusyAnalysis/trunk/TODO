@@ -1,13 +1,10 @@
 
-** Systematics:
-
-       - should we create a CP::SystematicSet() , and call SUSYObjDef_xAOD::applySystematicVariation(...)  with it? (so it seems!)
-
-       - Move systematics handling to new Class. DONE!  -->   Systematics class for uncertainties handling.
-
-       - Connect to list_systematics.sh script for auto-update (perhaps)
+HIGH PRIORITY
+--------------------------------------------------------------------------------------------------------
 
 ** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?
+
+** Allow for multiple input samples and systematics. Comma-separated lists.
 
 ** Determine EBeam for input samples. from SampleHandler ?  It'd allow to get the right xsection file from ST.
    'ECMEnergy' field in pyami output
@@ -35,13 +32,21 @@
 ** btagging
        review current setup, variables and ops.
 
-** after-burner to merge samples, adding FileWeights and anti-SF .  Done --> validate
+** after-burner to merge samples, adding FileWeights and anti-SF .  Done --> validate it!
 
-** move to Asg_FastJet ?
-   https://svnweb.cern.ch/trac/atlasoff/browser/AsgExternal/Asg_FastJet
+
+
+LOW priority
+--------------------------------------------------------------------------------------------------------
+** clean-up RegionIdentifier
 
 ** templatize hist handling methods. (TH1F, TH1D, ...)
 
+** Systematics:
+
+       - Connect to list_systematics.sh script for auto-update (perhaps)
+
+** Format log output (already Started. bold() function in run_chorizo. Move it to an aux class?)
 
 
 Errors/Warning to take care of (at least understand if we can safely ignore these)
