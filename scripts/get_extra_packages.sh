@@ -39,9 +39,7 @@ svn co svn+ssh://$USER@svn.cern.ch/reps/atlasphys/Physics/SUSY/Analyses/HistFitt
 
 # FastJet
 #
-source $ANALYSISCODE/code/scripts/install_fastjet.sh 
-# move to AsgExternal/Asg_FastJet ?
-#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet
 
 # PdfReweighting package
 # Move to AsgExternal/Asg_Lhapdf ?
