@@ -48,7 +48,6 @@
 /* #include "GoodRunsLists/TGoodRunsListReader.h" */
 /* #include "GoodRunsLists/TGRLCollection.h" */
 #include "SUSYTools/BTagCalib.h"
-
 #include "fastjet/ClusterSequence.hh"
 
 // Systematics includes
@@ -76,6 +75,7 @@
 
 #ifndef __MAKECINT__
 #include "xAODMissingET/MissingETContainer.h"
+#include "xAODTruth/TruthParticle.h"
 #endif // not __MAKECINT__
 
 /* #include "xAODMuon/MuonContainer.h" */
@@ -210,7 +210,7 @@ private:
   //--- Tools
   XMLReader*     xmlJobOption; //!
 #ifndef __CINT__
-  ST::SUSYObjDef_xAOD* tool_st; //!
+  ST::SUSYObjDef_xAOD* tool_st; 
 #endif // not __CINT__
   
 
@@ -280,19 +280,20 @@ private:
   virtual bool  isNeutrino(int pid){ return (fabs(pid)==12 || fabs(pid)==14 || fabs(pid)==16); };
   virtual bool  isLepNeut(int pid){ return (isLepton(pid) || isNeutrino(pid)); };
   virtual bool  isHF(int pid){ return (fabs(pid)==4 || fabs(pid)==5); };
-  virtual bool  isStableP(int status){ return (status==1); };
-  virtual bool  isHardP(int status){ return (status==3); };
+  virtual bool  isStable(int status){ return (status==1); };
+  virtual bool  isHard(int status){ return (status==3); };
 
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
+
+  virtual bool  isStable(const xAOD::TruthParticle* p);
 #endif // not __MAKECINT__
 
   /* virtual bool  isLepton(xAOD::TruthParticle* p); */
   /* virtual bool  isNeutrino(xAOD::TruthParticle* p); */
   /* virtual bool  isLepNeut(xAOD::TruthParticle* p); */
   /* virtual bool  isHF(xAOD::TruthParticle* p); */
-  /* virtual bool  isStableP(xAOD::TruthParticle* p); */
   /* virtual bool  isHardP(xAOD::TruthParticle* p); */
 
   template <class xAODPart>

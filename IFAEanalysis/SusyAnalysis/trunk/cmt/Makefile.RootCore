@@ -28,7 +28,7 @@ PACKAGE_BINFLAGS = -g -lXMLParser
 PACKAGE_LIBFLAGS = 
 
 # the list of packages we depend on:
-PACKAGE_DEP = EventLoop EventLoopAlgs xAODRootAccess AsgTools SUSYTools JVFUncertaintyTool RootCoreLhapdf xAODEventInfo xAODEgamma xAODMuon xAODJet xAODTau xAODMissingET xAODTruth xAODTracking JetSelectorTools PhotonEfficiencyCorrection
+PACKAGE_DEP = EventLoop EventLoopAlgs xAODRootAccess AsgTools SUSYTools JVFUncertaintyTool RootCoreLhapdf xAODEventInfo xAODEgamma xAODMuon xAODJet xAODTau xAODMissingET xAODTruth xAODTracking JetSelectorTools PhotonEfficiencyCorrection GoodRunsLists 
 
 #
 #PileupReweighting GoodRunsLists MuonEfficiencyCorrections

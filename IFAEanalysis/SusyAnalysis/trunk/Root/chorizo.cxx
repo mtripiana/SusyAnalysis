@@ -1102,6 +1102,8 @@ EL::StatusCode chorizo :: initialize ()
   // input events.
   m_event = wk()->xaodEvent();
 
+  xAOD::TStore store;
+
   //Read XML options
   ReadXML();
 
@@ -1254,16 +1256,18 @@ EL::StatusCode chorizo :: execute ()
 
   //  wk()->tree()->GetEntry (wk()->treeEntry());
 
+  // Create a transient object store. Needed for the tools.
+  xAOD::TStore store; 
+
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
-    output->setFilterPassed ();
-    return EL::StatusCode::SUCCESS;
+    wk()->skipEvent();
+    // output->setFilterPassed ();
+    // return EL::StatusCode::SUCCESS;
   }
 
   InitVars();
 
-  // Create a transient object store. Needed for the tools.
-  xAOD::TStore store; 
 
   if ( m_eventCounter%50==0 ){ //put back to 2000 or so!
     printf("\r %6d/%lld\t[%3.0f]",m_eventCounter,m_event->getEntries(),100*m_eventCounter/float(m_event->getEntries()));
@@ -1567,13 +1571,18 @@ EL::StatusCode chorizo :: execute ()
     xAOD::Electron el = **el_itr;
     el.makePrivateStore(**el_itr);
     
-    tool_st->FillElectron( el, iEl );
+    tool_st->FillElectron( el, iEl ); //, El_DefinPtCut, El_DefinEtaCut ); //FIX_ME! not possible in ST as of now...
+    tool_st->IsSignalElectron( el, iEl, El_PreselPtCut, -1 ); //thight ID + d0 & z0 no isolation applied for now! //CHECK ME
     
     //pre-book baseline electrons
     if( el.auxdata< int >("baseline") ){ 
-          
+
+      //define preselected electron                
       Particle recoElectron;
       recoElectron.SetVector( tool_st->m_SUSYObjDef->GetElecTLV(iEl) );
+      if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
+      if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
+
       recoElectron.ptcone20 = el.auxdata<float>("ptcone20")/1000.;
       recoElectron.etcone20 = el.auxdata<float>("etcone20")/1000.;
       recoElectron.ptcone30 = el.auxdata<float>("ptcone30")/1000.;
@@ -1582,15 +1591,27 @@ EL::StatusCode chorizo :: execute ()
 
       //get electron scale factors
       if(this->isMC){
-	recoElectron.SF  = tool_st->m_SUSYObjDef->GetSignalElecSF( el.caloCluster()->eta(), recoElectron.Pt(), El_recoSF, El_idSF, El_triggerSF, RunNumber, this->syst_ST);
-	recoElectron.SF  = tool_st->m_SUSYObjDef->GetSignalElecSF( el.caloCluster()->eta(), recoElectron.Pt(), El_recoSF, El_idSF, El_triggerSF, RunNumber, SystErr::EEFFUP);
-	recoElectron.SF  = tool_st->m_SUSYObjDef->GetSignalElecSF( el.caloCluster()->eta(), recoElectron.Pt(), El_recoSF, El_idSF, El_triggerSF, RunNumber, SystErr::EEFFDOWN);
+	//nominal
+	recoElectron.SF = tool_st->GetSignalElecSF( el );
+
+	if (tool_st->m_effi_corr->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	  Error("execute()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
+	}
+	recoElectron.SFu = tool_st->GetSignalElecSF( el );
+
+	//+1 sys down
+	if (tool_st->m_effi_corr->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	  Error("execute()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
+	}
+	recoElectron.SFd = tool_st->GetSignalElecSF( el );
+
+	tool_st->m_effi_corr->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+
+	// recoElectron.SF  = tool_st->m_SUSYObjDef->GetSignalElecSF( el.caloCluster()->eta(), recoElectron.Pt(), El_recoSF, El_idSF, El_triggerSF, RunNumber, this->syst_ST);
+	// recoElectron.SF  = tool_st->m_SUSYObjDef->GetSignalElecSF( el.caloCluster()->eta(), recoElectron.Pt(), El_recoSF, El_idSF, El_triggerSF, RunNumber, SystErr::EEFFUP);
+	// recoElectron.SF  = tool_st->m_SUSYObjDef->GetSignalElecSF( el.caloCluster()->eta(), recoElectron.Pt(), El_recoSF, El_idSF, El_triggerSF, RunNumber, SystErr::EEFFDOWN);
       }
 
-      //define preselected electron
-      if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
-      if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
-      
       electronCandidates.push_back(recoElectron);
 
       iEl++;
@@ -1608,6 +1629,8 @@ EL::StatusCode chorizo :: execute ()
     truthP_end = truthP->end();
     for( ; truthP_itr != truthP_end; ++truthP_itr ) {
       
+      if( !isStable( *truthP_itr ) || (*truthP_itr)->absPdgId()!=11 ) continue;  //->isElectron() ? 
+
       Particle electron;
       electron.SetVector( getTLV( *truthP_itr ) ); 
       truthElectrons.push_back(electron);
@@ -1624,40 +1647,47 @@ EL::StatusCode chorizo :: execute ()
   xAOD::MuonContainer::iterator mu_itr = (muons_sc.first)->begin();
   xAOD::MuonContainer::iterator mu_end = (muons_sc.first)->end();
   
-  int iMu = 0;
   for( ; mu_itr != mu_end; ++mu_itr ) {
     
-    tool_st->FillMuon( **mu_itr );      //'baseline' decoration
-    tool_st->IsSignalMuon( **mu_itr );  //'signal'   decoration
+    tool_st->FillMuon( **mu_itr, Mu_DefinPtCut, Mu_DefinEtaCut);      //'baseline' decoration
+    tool_st->IsSignalMuon( **mu_itr, Mu_PreselPtCut, -1);  //'signal' decoration  . NOTE: no Isolation applied before overlap removal!
     tool_st->IsCosmicMuon( **mu_itr );  //'cosmic'   decoration
 
     //pre-book baseline muons
-    if( (**mu_itr).auxdata< int >("baseline") ){ 
+    if( (**mu_itr).auxdata< int >("signal") ){  //in isolation applied though
     
       Particle recoMuon;
       recoMuon.SetVector( getTLV( &(**mu_itr) ));
 
-      recoMuon.ptcone20 = (**mu_itr).auxdata<float>("ptcone20")/1000.;
-      recoMuon.etcone20 = (**mu_itr).auxdata<float>("etcone20")/1000.;
-      recoMuon.ptcone30 = (**mu_itr).auxdata<float>("ptcone30")/1000.;
-      recoMuon.etcone30 = (**mu_itr).auxdata<float>("etcone30")/1000.;
+      recoMuon.ptcone20 = (**mu_itr).auxdata<float>("ptcone20")*0.001;
+      recoMuon.etcone20 = (**mu_itr).auxdata<float>("etcone20")*0.001;
+      recoMuon.ptcone30 = (**mu_itr).auxdata<float>("ptcone30")*0.001;
+      recoMuon.etcone30 = (**mu_itr).auxdata<float>("etcone30")*0.001;
       recoMuon.charge   = (float) (**mu_itr).charge();
-      //(float)input.primaryTrackParticle()->charge()  in SUSYTools. //CHECK_ME
+      //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
       
       //get muon scale factors
       if(this->isMC){
-	recoMuon.SF  = tool_st->m_SUSYObjDef->GetSignalMuonSF( iMu, this->syst_ST);
-	recoMuon.SF  = tool_st->m_SUSYObjDef->GetSignalMuonSF( iMu, SystErr::MEFFUP);
-	recoMuon.SF  = tool_st->m_SUSYObjDef->GetSignalMuonSF( iMu, SystErr::MEFFDOWN);
+	//nominal 
+	tool_st->m_effi_corr->getEfficiencyScaleFactor( **mu_itr, recoMuon.SF );
+
+	//+1 sys up
+	if (tool_st->m_effi_corr->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
+	  Error("execute()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
+	}
+	tool_st->m_effi_corr->getEfficiencyScaleFactor( **mu_itr, recoMuon.SFu );
+
+	//+1 sys down
+	if (tool_st->m_effi_corr->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
+	  Error("execute()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
+	}
+	tool_st->m_effi_corr->getEfficiencyScaleFactor( **mu_itr, recoMuon.SFd );
+
+
+	tool_st->m_effi_corr->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
       }
 
-      //define preselected muon
-      if (recoMuon.Pt() < Mu_PreselPtCut/1000.)   continue;
-      if (fabs(recoMuon.Eta()) > Mu_PreselEtaCut) continue;
-      
       muonCandidates.push_back(recoMuon);
-
-      iMu++;
     }//if baseline 
   }//muon loop
 
@@ -1778,7 +1808,7 @@ EL::StatusCode chorizo :: execute ()
 	  TLorentzVector v1(0, 0, 0, 0);
 	  v1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m() );
 
-	  if( isStableP( (*truthP_itr)->status() ) && RecoUnmatchedTracksElMu.at(itrk).DeltaR(v1) < 0.4){
+	  if( isStable( (*truthP_itr) ) && RecoUnmatchedTracksElMu.at(itrk).DeltaR(v1) < 0.4){
 	  
 	    if ( (*truthP_itr)->absPdgId()==11 && hasElectron && !hasMuon ) { //--- Forbid muon decaying to electron. Allow tau->el and other electrons
 	      trackUnmatched_truthObject.push_back(11);
@@ -2123,7 +2153,7 @@ EL::StatusCode chorizo :: execute ()
       truthP_end = truthP->end();
       for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 
-	if ( isHardP( (*truthP_itr)->status() ) ) continue;
+	if ( isHard( (*truthP_itr)->status() ) ) continue;
 	if ( abs((*truthP_itr)->pdgId()) != 13 ) continue;
 	TLorentzVector v1(0, 0, 0, 0);
 	v1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m() );
@@ -2282,7 +2312,7 @@ EL::StatusCode chorizo :: execute ()
 	  truthP_end = truthP->end();
 	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 	    
-	    if ( ! isHardP( (*truthP_itr)->status() ) ) continue; //CHECK_ME
+	    if ( ! isHard( (*truthP_itr)->status() ) ) continue; //CHECK_ME
 	    if ( (*truthP_itr)->absPdgId() != 13) continue;
 	    truthMuon.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m() );
 	    if ( truthMuon.DeltaR(jetCandidates.at(iJet))<0.2 ) {
@@ -2681,7 +2711,7 @@ EL::StatusCode chorizo :: execute ()
 	truthP_end = truthP->end();
 	for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 	  
-	  if ( isHardP((*truthP_itr)->status()) && abs((*truthP_itr)->pdgId())==15 ){
+	  if ( isHard((*truthP_itr)->status()) && abs((*truthP_itr)->pdgId())==15 ){
 	    TruthTau3.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m() );
 
 	    dR_truthTau_j3 = TruthTau3.DeltaR(recoJets.at(2));
@@ -2696,7 +2726,7 @@ EL::StatusCode chorizo :: execute ()
 	  truthP_end = truthP->end();
 	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 	    
-	    if ( isHardP((*truthP_itr)->status()) && abs((*truthP_itr)->pdgId())==15 ){
+	    if ( isHard((*truthP_itr)->status()) && abs((*truthP_itr)->pdgId())==15 ){
 	      
 	      TruthTau4.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m() );
 	      
@@ -3478,16 +3508,14 @@ bool chorizo :: passMCor(){
       
       for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 	
-	if( isLepNeut( (*truthP_itr)->pdgId() ) && isStableP( (*truthP_itr)->status() ) ){
+	if( isLepNeut( (*truthP_itr)->pdgId() ) && isStable( (*truthP_itr)->status() ) ){
 	  bos_pdgId = (*truthP_itr)->pdgId(); //CHECK_ME
 	  lep_count++;
 	  if(lep_count==1){
-	    //	    fillTLV(v1, (*truthP_itr));
-	    v1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	    fillTLV(v1, (*truthP_itr));
 	  }
 	  else if(lep_count==2){
-	    //	    fillTLV(v2, (*truthP_itr));
-	    v2.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	    fillTLV(v2, (*truthP_itr));
 	    break;
 	  }
 	}//if                                                                                   
@@ -3553,11 +3581,6 @@ bool chorizo :: passMCor(){
   return true;
 }
 
-// void chorizo :: fillTLV( TLorentzVector &v, xAOD::TruthParticle* p, bool inGeV){
-//   float factor=(inGeV ? 0.001 : 1.);
-
-//   v.SetPtEtaPhiM( p->pt()*factor, p->eta(), p->phi(), p->m()*factor );
-// }
 
 float chorizo :: GetTruthEtmiss(bool noEleTau){
 
@@ -3578,10 +3601,9 @@ float chorizo :: GetTruthEtmiss(bool noEleTau){
   
   for( ; truthP_itr != truthP_end; ++truthP_itr ) {
     int apid = (*truthP_itr)->absPdgId();
-    if( isStableP( (*truthP_itr)->status() ) && isLepNeut( apid )){
+    if( isStable( (*truthP_itr)->status() ) && isLepNeut( apid )){
       if( noEleTau && (apid==11 || apid==15) ) continue;
-      l1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
-      //      this->fillTLV(l1, (*truthP_itr) );
+      this->fillTLV(l1, (*truthP_itr) );
       V = V + l1;
     }
   }
@@ -3624,18 +3646,16 @@ std::vector<float> chorizo :: GetTruthBosonPt(float &_M, float &_MT, bool &_Muon
   
   for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 
-    if( isHardP( (*truthP_itr)->status() ) && isLepNeut( (*truthP_itr)->pdgId() ) ){
+    if( isHard( (*truthP_itr)->status() ) && isLepNeut( (*truthP_itr)->pdgId() ) ){
       if (!foundFirst){
-	//        this->fillTLV( l1, (*truthP_itr) );
-	l1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	this->fillTLV( l1, (*truthP_itr) );
 	foundFirst = true;
         _pt1 = l1.Pt()/1000.;
         _Muon_pt  = l1.Pt()/1000.;
         _Muon_eta = l1.Eta();
 
       } else if(!foundSecond){
-	//	this->fillTLV( l2, (*truthP_itr) );
-	l2.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	this->fillTLV( l2, (*truthP_itr) );
 	foundSecond = true;
         _pt2 = l2.Pt()/1000.;
 
@@ -3701,15 +3721,13 @@ float chorizo :: GetTTbarReweight(float &Top_truth_pt, float &Topbar_truth_pt, f
 
     if ( (*truthP_itr)->status()==3 && (*truthP_itr)->pdgId()==6 ){
       if (!foundTop){
-	//        this->fillTLV(Top, (*truthP_itr));
-	Top.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	this->fillTLV(Top, (*truthP_itr));
 	foundTop = true;
       } 
     }
     else if ( (*truthP_itr)->status()==3 && (*truthP_itr)->pdgId()==-6 ){
       if (!foundTopbar){
-	//        this->fillTLV(Topbar, (*truthP_itr));
-	Topbar.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	this->fillTLV(Topbar, (*truthP_itr));
 	foundTopbar = true;
       }       
       
@@ -3856,10 +3874,9 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
   if (sigSamPdgId==1000022){ //--- For WIMPs (produced in pairs)
     for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 
-      if( isStableP( (*truthP_itr)->status()) && (*truthP_itr)->absPdgId() == sigSamPdgId ){
+      if( isStable( (*truthP_itr)->status()) && (*truthP_itr)->absPdgId() == sigSamPdgId ){
         i++;
-	//        this->fillTLV(l1, (*truthP_itr), true);
-	l1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	this->fillTLV(l1, (*truthP_itr), true);
 	V += l1;
 
         if(i==1){
@@ -3885,8 +3902,8 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
     for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 
       if( (*truthP_itr)->absPdgId() == sigSamPdgId ){ //--- Assuming they are ordered
-	//        this->fillTLV(l1, (*truthP_itr), true);
-	l1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
+	this->fillTLV(l1, (*truthP_itr), true);
+	
 	V = l1;
 
         sigSam_pt1=l1.Pt();
@@ -3896,8 +3913,7 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
 
 	xAOD::TruthParticleContainer::const_iterator truthP_itr_2 = truthP_itr;
 	truthP_itr_2++;
-	l2.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m());
-	//this->fillTLV(l2, (*truthP_itr_2), true);
+	this->fillTLV(l2, (*truthP_itr_2), true);
 	//        fillTV(l2, (*(std::next(truthP_itr,1))), true);
         V += l2;
         break;
@@ -4081,7 +4097,24 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
  
  // bool  isHF(xAOD::TruthParticle* p){ return isHF( p->pdgId() ); };
 
- // bool  isStableP(xAOD::TruthParticle* p){ return isStableP( p->status() ); };
+
+// Implement HepMC isGenStable
+bool chorizo :: isStable(const xAOD::TruthParticle* p){ 
+  //*** from CPAnalysisExamples::isGenStable( p );
+  if( p->barcode() > 200000 ) return false;
+  if( p->pdgId() == 21 && p->e() == 0 ) return false;
+  if( p->status()%1000 == 1 ) return true;
+  if( p->hasDecayVtx() ){
+    const xAOD::TruthVertex* dvtx = p->decayVtx();
+    if( dvtx ){
+      if( p->status() == 2 && dvtx->barcode() < -200000 ) return true;
+    }
+  }
+  if( p->status()%1000 == 2 && p->status() > 1000 ) return true;
+  return false;
+    
+  //  return isStableP( p->status() ); };
+}
 
  // bool  isHardP(xAOD::TruthParticle* p){ return isHardP( p->status() ); };
  

@@ -14,10 +14,12 @@ svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/MET/METUtilities
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/MET/METInterface/tags/METInterface-00-00-04 METInterface
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Control/xAODRootAccess/trunk xAODRootAccess
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonMomentumCorrections/tags/MuonMomentumCorrections-01-00-08 MuonMomentumCorrections
+svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/TauID/TauAnalysisTools/tags/TauAnalysisTools-00-00-06 TauAnalysisTools
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/xAODBTaggingEfficiency/tags/xAODBTaggingEfficiency-00-00-02 xAODBTaggingEfficiency
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/CalibrationDataInterface/tags/CalibrationDataInterface-00-05-00 CalibrationDataInterface
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Tools/PathResolver/trunk PathResolver
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_Boost/trunk Asg_Boost
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/CPAnalysisExamples/tags/CPAnalysisExamples-00-00-18/ CPAnalysisExamples
 
 # JetSmearing
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-00-01-25 JetSmearing
