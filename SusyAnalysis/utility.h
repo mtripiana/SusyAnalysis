@@ -2,10 +2,15 @@
 #include <math.h>
 #include <TROOT.h>
 #include "TMath.h"
+#include "TObjArray.h"
+#include "TObjString.h"
+#include "TString.h"
 
 TString bold(TString t);
 
 TString red(TString t);
+
+std::vector<TString> getTokens(TString line, TString delim);
 
 float MinimumOf(float, float);
 

@@ -282,119 +282,129 @@ int main( int argc, char* argv[] ) {
   JvfUncErr::JvfSyste syst_JVF = JvfUncErr::NONE;
   BCHCorrMediumErr::BCHSyste syst_BCH = BCHCorrMediumErr::NONE;
   
-  TString systematic="Nom";
-  if(argc > 2) 
-    systematic = argv[2];
-  
+  std::vector<TString> systematic; 
+  if(argc > 2){ 
+    systematic = getTokens(argv[2], ",");
+  }
+  else
+    systematic.push_back("Nom");
+
   Systematics Sobj;
   Sobj.LoadList();
-  Sobj.SystTranslate(systematic, syst_CP, syst_ST, syst_Scale, syst_PU, syst_JVF, syst_BCH);
 
-  //Create an EventLoop job:
-  EL::Job job;
-  job.useXAOD();
-  job.sampleHandler( sh );
-    
-  //Add NtupleSvc
-  EL::OutputStream output  ("output");
-  job.outputAdd (output);
-  EL::NTupleSvc *ntuple = new EL::NTupleSvc ("output");
-  ntuple->treeName("AnalysisTree");
-  job.algsAdd (ntuple);
-    
-  chorizo *alg = new chorizo();
-    
-  //Alg config options here
-  alg->outputName = "output";
-  alg->Region = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
-    
-  alg->defaultRegion = "SR"; //from XML?
-  alg->xmlPath = xmlPath;
-    
-  alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
-  alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
-  alg->isQCD      = false;   //get it from D3PDReader-like code (add metadata to SH)
-  alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
-  alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
-  alg->isNCBG     = false;   //get it from the XML!!
-    
-  alg->doAnaTree  = doAnaTree;     // Output trees
-  alg->doFlowTree = doFlowTree;
-  alg->doPUTree   = false;         //get it from the XML!!
-  alg->genPUfile  = GeneratePUfiles;
-    
-  alg->syst_CP    = syst_CP;      // Systematics
-  alg->syst_ST    = syst_ST;      
-  alg->syst_Scale = syst_Scale;
-  alg->syst_PU    = syst_PU;
-  alg->syst_JVF   = syst_JVF;
-  alg->syst_BCH   = syst_BCH;
-    
-    
-  alg->printMet      = false;     //debug printing
-  alg->printJet      = false;
-  alg->printElectron = false;
-  alg->printMuon     = false;
-  alg->errIgnoreLevel = (systListOnly ? kFatal : kInfo);
-    
-  alg->systListOnly  = systListOnly;
+  //Loop over systematics
+  for (unsigned int isys=0; isys  < systematic.size(); isys++){
 
-
-  //Load alg to job
-  job.algsAdd( alg );
-
-  //Set Max number of events (for testing)
-  job.options()->setDouble (EL::Job::optMaxEvents, 10);
-  if(systListOnly)
-    job.options()->setDouble (EL::Job::optMaxEvents, 1);
-
-  //TTreeCache use
-  job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
-
-
-  //create tmp output dir
-  string tmpdir = tmpdirname();
+    //fill systematics
+    Sobj.SystTranslate(systematic[isys], syst_CP, syst_ST, syst_Scale, syst_PU, syst_JVF, syst_BCH);
     
-  // Run the job using the local/direct driver:
-  EL::DirectDriver driver;
+    //Create an EventLoop job:
+    EL::Job job;
+    job.useXAOD();
+    job.sampleHandler( sh );
     
-  //submit the job
-  driver.submit( job, tmpdir );
-
-  if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
-
-  //move output to collateral files' path
-  TString sampleName,targetName;
-  int isample=0;
-  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
-
-    sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-    targetName = Form("%s_%s_%d.root", systematic.Data(), argv[1], run_ids[isample]);
-    system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+    //Add NtupleSvc
+    EL::OutputStream output  ("output");
+    job.outputAdd (output);
+    EL::NTupleSvc *ntuple = new EL::NTupleSvc ("output");
+    ntuple->treeName("AnalysisTree");
+    job.algsAdd (ntuple);
     
-    mergeList.push_back(TString(CollateralPath)+"/"+targetName);
-    isample++;
-  }
-
-
-  //** after-burner to merge samples, add weights and anti-SF
-  cout << bold("\n\n*** AFTER-BURNER *** ") << endl;
-  cout << "\n >> merging "<< mergeList.size() << " sample(s) ..." << endl;
-  for (unsigned int i=0; i < mergeList.size(); i++){
-    cout<<"\t\t" << i << ": " << mergeList[i] << endl;
-  }      
-  
-  TString mergedName = Form("%s_%s.root",systematic.Data(), argv[1]);
-  
-  if (!GeneratePUfiles){
-    if (!doAnaTree) {
-      //--- Case where we run on 1 file
-      //... 
-    } 
-    else {
-      tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
+    chorizo *alg = new chorizo();
+    
+    //Alg config options here
+    alg->outputName = "output";
+    alg->Region = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
+    
+    alg->defaultRegion = "SR"; //from XML?
+    alg->xmlPath = xmlPath;
+    
+    alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
+    alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
+    alg->isQCD      = false;   //get it from D3PDReader-like code (add metadata to SH)
+    alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
+    alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
+    alg->isNCBG     = false;   //get it from the XML!!
+    
+    alg->doAnaTree  = doAnaTree;     // Output trees
+    alg->doFlowTree = doFlowTree;
+    alg->doPUTree   = false;         //get it from the XML!!
+    alg->genPUfile  = GeneratePUfiles;
+    
+    alg->syst_CP    = syst_CP;      // Systematics
+    alg->syst_ST    = syst_ST;      
+    alg->syst_Scale = syst_Scale;
+    alg->syst_PU    = syst_PU;
+    alg->syst_JVF   = syst_JVF;
+    alg->syst_BCH   = syst_BCH;
+    
+    
+    alg->printMet      = false;     //debug printing
+    alg->printJet      = false;
+    alg->printElectron = false;
+    alg->printMuon     = false;
+    alg->errIgnoreLevel = (systListOnly ? kFatal : kInfo);
+    
+    alg->systListOnly  = systListOnly;
+    
+    
+    //Load alg to job
+    job.algsAdd( alg );
+    
+    //Set Max number of events (for testing)
+    job.options()->setDouble (EL::Job::optMaxEvents, 10);
+    if(systListOnly)
+      job.options()->setDouble (EL::Job::optMaxEvents, 1);
+    
+    //TTreeCache use
+    job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
+    
+    
+    //create tmp output dir
+    string tmpdir = tmpdirname();
+    
+    // Run the job using the local/direct driver:
+    EL::DirectDriver driver;
+    
+    //submit the job
+    driver.submit( job, tmpdir );
+    
+    if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
+    
+    //move output to collateral files' path
+    TString sampleName,targetName;
+    int isample=0;
+    for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
+      
+      sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
+      targetName = Form("%s_%s_%d.root", systematic[isys].Data(), argv[1], run_ids[isample]);
+      system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+      
+      mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+      isample++;
     }
-  }
+  
+
+    //** after-burner to merge samples, add weights and anti-SF
+    cout << bold("\n\n*** AFTER-BURNER *** ") << endl;
+    cout << "\n >> merging "<< mergeList.size() << " sample(s) ...\n" << endl;
+    for (unsigned int i=0; i < mergeList.size(); i++){
+      cout<<"\t\t" << i << ": " << mergeList[i] << endl;
+    }      
+    
+    TString mergedName = Form("%s_%s.root",systematic[isys].Data(), argv[1]);
+    
+    if (!GeneratePUfiles){
+      if (!doAnaTree) {
+	//--- Case where we run on 1 file
+	//... 
+      } 
+      else {
+	tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
+      }
+    }
+  
+  }//end systematics list
 
   return 0;
 }

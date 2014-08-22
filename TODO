@@ -2,19 +2,22 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
-** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?
+** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...)
 
-** Allow for multiple input samples and systematics. Comma-separated lists.
+** Allow for multiple input samples and systematics. Comma-separated lists.   --> DONE for systematics (provided we fix the item above).
 
 ** Overlap removal. Can we just use ST-one?
 
 **  MET rebuilding
+
+** check 'baseline' selection in SUSYTools suits our needs
 
 **  modulate some actions into xAOD-methods, bypassing the CINT compilation.
 
 **  PileUp Reweighting ntuples. What's this?
      https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/EventLoop#Solution_for_TPileupReweighting
 
+** revisite matching everywhere. Use Links? ghost association? 
 
 ** truth navigation
 
@@ -29,6 +32,8 @@ HIGH PRIORITY
 LOW priority
 --------------------------------------------------------------------------------------------------------
 ** clean-up RegionIdentifier
+
+** move to new truthParticle/Event aliases once it is all updated.
 
 ** templatize hist handling methods. (TH1F, TH1D, ...)
 

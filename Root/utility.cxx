@@ -10,6 +10,22 @@ TString red(TString t){
   return "\x1b[31m"+t+"\x1b[0m";
 }
 
+std::vector<TString> getTokens(TString line, TString delim){
+  std::vector<TString> vtokens;
+  TObjArray* tokens = line.Tokenize(","); //delimiters
+  if(tokens->GetEntriesFast()) {
+      TIter iString(tokens);
+      TObjString* os=0;
+      while ((os=(TObjString*)iString())) {
+	vtokens.push_back( os->GetString() );
+      }
+  }
+  delete tokens;
+
+  return vtokens;
+}
+
+
 float MinimumOf(float a, float b){
   float min=0.;
   (a < b) ? min=a : min=b;
