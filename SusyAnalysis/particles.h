@@ -32,7 +32,8 @@ class Particle : public TLorentzVector {
     float  SFu;
     float  SFd;
 
-    bool gev;
+    int    id;
+    bool   gev;
 
     TLorentzVector GetVector();
     void SetVector(TLorentzVector vec, bool inGeV = false);
@@ -47,7 +48,6 @@ class Jet : public Particle {
   public:
     Jet();
     ~Jet();
-    int                     id;
     float                   MV1;
     float                   SV1plusIP3D;
     float                   SV1_pb;

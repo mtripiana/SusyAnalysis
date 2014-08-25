@@ -19,6 +19,7 @@ Particle::Particle(){
   SFu = 0;
   SFd = 0;
   gev=false; //4mom in GeV?
+  id = -1;
 }
 
 Particle::~Particle(){}
@@ -51,7 +52,6 @@ void Particle::PrintInfo(){
 
 // Default constructor for Jet
 Jet::Jet(){
-  id = -1;
   MV1 = -1;
   SV1plusIP3D = -1;
   SV1_pb = -1;

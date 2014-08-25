@@ -120,12 +120,12 @@
                 <Collection>Egamma10NoTau</Collection>
                 <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
                 <doFakeEtmiss>true</doFakeEtmiss>
+
                 <Term name="doRefEle">true</Term>
                 <Term name="doRefGamma">true</Term>
                 <Term name="doRefTau">false</Term>
                 <Term name="doRefJet">true</Term>
-                <Term name="doRefMuon">false</Term>
-                <Term name="doMuonTotal">false</Term>
+                <Term name="doMuons">false</Term>
                 <Term name="doSoftTerms">true</Term>
             </region>
         </Etmiss>

@@ -124,8 +124,7 @@
                 <Term name="doRefGamma">true</Term>
                 <Term name="doRefTau">false</Term>
                 <Term name="doRefJet">true</Term>
-                <Term name="doRefMuon">false</Term>
-                <Term name="doMuonTotal">false</Term>
+                <Term name="doMuons">false</Term>
                 <Term name="doSoftTerms">true</Term>
             </region>
         </Etmiss>

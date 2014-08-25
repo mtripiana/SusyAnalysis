@@ -2,25 +2,27 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
-** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...)
+** set drivers for batch and grid modes
+
+** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...) --> 'run' wrapper for now
+    *** CHECK CASE for multi-samples+multi-systs
 
 ** Allow for multiple input samples and systematics. Comma-separated lists.   --> DONE for systematics (provided we fix the item above).
 
 ** Overlap removal. Can we just use ST-one?
 
-**  MET rebuilding
+** MET rebuilding
 
 ** check 'baseline' selection in SUSYTools suits our needs
 
 **  modulate some actions into xAOD-methods, bypassing the CINT compilation.
 
-**  PileUp Reweighting ntuples. What's this?
+**  PileUp Reweighting ntuples. 
      https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/EventLoop#Solution_for_TPileupReweighting
 
 ** revisite matching everywhere. Use Links? ghost association? 
 
 ** truth navigation
-
 
 ** btagging
        review current setup, variables and ops.
@@ -33,6 +35,8 @@ LOW priority
 --------------------------------------------------------------------------------------------------------
 ** clean-up RegionIdentifier
 
+** add configuration for debug printing, in JO (printMET, printElectron, ...)
+ 
 ** move to new truthParticle/Event aliases once it is all updated.
 
 ** templatize hist handling methods. (TH1F, TH1D, ...)

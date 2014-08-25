@@ -4,6 +4,7 @@
 // Infrastructure include(s):
 #include "xAODRootAccess/Init.h"
 #include "xAODRootAccess/TEvent.h"
+#include "xAODRootAccess/TStore.h"
 
 #include <EventLoop/Algorithm.h>
 #include <EventLoopAlgs/NTupleSvc.h>
@@ -160,7 +161,7 @@ public:
   bool doFlowTree; 
   bool genPUfile;
 
-  CP::SystematicSet syst_CP; 
+  CP::SystematicSet syst_CP; //!
   SystErr::Syste syst_ST;    
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
@@ -199,6 +200,7 @@ public:
 
 private:
   xAOD::TEvent *m_event;  //!
+  xAOD::TStore store;  //!
 
   //--- Containers  //IT can't be done in ROOT5!
   /* const xAOD::JetContainer* jets; */
@@ -286,6 +288,7 @@ private:
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
+  //  TVector2 getMET( const xAOD::MissingETContainer METcon, TString name );
 
   virtual bool  isStable(const xAOD::TruthParticle* p);
 #endif // not __MAKECINT__
@@ -432,8 +435,7 @@ private:
   bool Met_doRefGamma; //!
   bool Met_doRefTau; //!
   bool Met_doRefJet; //!
-  bool Met_doRefMuon; //!
-  bool Met_doMuonTotal; //!
+  bool Met_doMuons; //!
   bool Met_doSoftTerms; //!
 
   //btag weights & systematics
