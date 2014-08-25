@@ -2,6 +2,7 @@
 #include <EventLoop/Job.h>
 #include <EventLoop/StatusCode.h>
 #include <EventLoop/Worker.h>
+#include "SampleHandler/MetaFields.h"
 #include <SusyAnalysis/chorizo.h>
 
 
@@ -1018,8 +1019,7 @@ void chorizo :: ReadXML(){
     Met_doRefGamma       = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", cRegion));
     Met_doRefTau         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", cRegion));
     Met_doRefJet         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", cRegion));
-    Met_doRefMuon        = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefMuon", cRegion));
-    Met_doMuonTotal      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuonTotal", cRegion));
+    Met_doMuons          = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", cRegion));
     Met_doSoftTerms      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", cRegion));
   }
   catch(...){
@@ -1032,8 +1032,7 @@ void chorizo :: ReadXML(){
     Met_doRefGamma       = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", defRegion));
     Met_doRefTau         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", defRegion));
     Met_doRefJet         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", defRegion));
-    Met_doRefMuon        = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefMuon", defRegion));
-    Met_doMuonTotal      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuonTotal", defRegion));
+    Met_doMuons          = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", defRegion));
     Met_doSoftTerms      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", defRegion));
   }
 
@@ -1102,7 +1101,7 @@ EL::StatusCode chorizo :: initialize ()
   // input events.
   m_event = wk()->xaodEvent();
 
-  xAOD::TStore store;
+  //  xAOD::TStore store;
 
   //Read XML options
   ReadXML();
@@ -1145,9 +1144,6 @@ EL::StatusCode chorizo :: initialize ()
   tool_DPeriod.initialize();
 
   //--- MET
-  //    --- Access and modify the METUtility object inside SUSYTools. //*** UPDATE: NO MET_UTILITY ACCESS IN XAOD FOR NOW. FIX_ME
-  //  tool_metutil = tool_st->GetMETUtility();
-
   //    --- Used in the SmartVeto function.
   tool_fakeMet = new FakeMetEstimator((TString(this->DirectoryPath)+Met_FakeMetEstimator).Data());
 
@@ -1257,7 +1253,7 @@ EL::StatusCode chorizo :: execute ()
   //  wk()->tree()->GetEntry (wk()->treeEntry());
 
   // Create a transient object store. Needed for the tools.
-  xAOD::TStore store; 
+  store.clear(); 
 
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
@@ -1323,15 +1319,20 @@ EL::StatusCode chorizo :: execute ()
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;
 
-  //New containers for MET recalculation!
-  xAOD::JetContainer* goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-  xAOD::JetAuxContainer* goodJetsAux ;
-  goodJets->setStore( goodJetsAux ); //< Connect the two                               
-  
+  //  -- New containers for MET recalculation!
+  xAOD::JetContainer* goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS); 
+  if( ! store.record( goodJets, "MySelJets" ) ) { 
+      Error("execute()", "Failed to store 'MySelJets' container. Exiting." );
+      return EL::StatusCode::FAILURE; 
+  }
+
   xAOD::MissingETContainer* recMETcont = new xAOD::MissingETContainer();
   xAOD::MissingETAuxContainer* recMETcontAux = new xAOD::MissingETAuxContainer();
   recMETcont->setStore( recMETcontAux ); //< Connect the two                
-  //  CHECK( event.record(recMETcont, "MET_MyRefFinal") );
+  if( ! store.record( recMETcont, "MET_MyRefFinal" ) ) { 
+      Error("execute()", "Failed to store 'MET_MyRefFinal' container. Exiting." );
+      return EL::StatusCode::FAILURE; 
+  }
 
 
   //--- Analysis Code 
@@ -1583,6 +1584,7 @@ EL::StatusCode chorizo :: execute ()
       if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
       if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
 
+      recoElectron.id = iEl;
       recoElectron.ptcone20 = el.auxdata<float>("ptcone20")/1000.;
       recoElectron.etcone20 = el.auxdata<float>("etcone20")/1000.;
       recoElectron.ptcone30 = el.auxdata<float>("ptcone30")/1000.;
@@ -1613,7 +1615,6 @@ EL::StatusCode chorizo :: execute ()
       }
 
       electronCandidates.push_back(recoElectron);
-
       iEl++;
     }//if baseline 
   }//electron loop
@@ -1646,7 +1647,7 @@ EL::StatusCode chorizo :: execute ()
   std::pair< xAOD::MuonContainer*, xAOD::ShallowAuxContainer* > muons_sc = xAOD::shallowCopyContainer( *muons );
   xAOD::MuonContainer::iterator mu_itr = (muons_sc.first)->begin();
   xAOD::MuonContainer::iterator mu_end = (muons_sc.first)->end();
-  
+  int iMu=0;
   for( ; mu_itr != mu_end; ++mu_itr ) {
     
     tool_st->FillMuon( **mu_itr, Mu_DefinPtCut, Mu_DefinEtaCut);      //'baseline' decoration
@@ -1659,6 +1660,7 @@ EL::StatusCode chorizo :: execute ()
       Particle recoMuon;
       recoMuon.SetVector( getTLV( &(**mu_itr) ));
 
+      recoMuon.id = iMu;
       recoMuon.ptcone20 = (**mu_itr).auxdata<float>("ptcone20")*0.001;
       recoMuon.etcone20 = (**mu_itr).auxdata<float>("etcone20")*0.001;
       recoMuon.ptcone30 = (**mu_itr).auxdata<float>("ptcone30")*0.001;
@@ -1688,6 +1690,7 @@ EL::StatusCode chorizo :: execute ()
       }
 
       muonCandidates.push_back(recoMuon);
+      iMu++;
     }//if baseline 
   }//muon loop
 
@@ -1779,6 +1782,7 @@ EL::StatusCode chorizo :: execute ()
     if(isMC){
       xAOD::TruthParticleContainer::const_iterator truthP2_itr;
       xAOD::TruthParticleContainer::const_iterator truthP2_end;
+      TLorentzVector v1;
     
       for (unsigned int itrk=0; itrk < RecoUnmatchedTracksElMu.size(); ++itrk){
 	bool hasElectron=false;
@@ -1805,8 +1809,8 @@ EL::StatusCode chorizo :: execute ()
 	truthP_itr = truthP->begin();
 	truthP_end = truthP->end();
 	for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	  TLorentzVector v1(0, 0, 0, 0);
-	  v1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m() );
+
+	  fillTLV( v1, (*truthP_itr));
 
 	  if( isStable( (*truthP_itr) ) && RecoUnmatchedTracksElMu.at(itrk).DeltaR(v1) < 0.4){
 	  
@@ -1830,10 +1834,10 @@ EL::StatusCode chorizo :: execute ()
 	
 	  truthP_itr = truthP->begin();
 	  truthP_end = truthP->end();
+	  TLorentzVector v1(0, 0, 0, 0);
 	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 	  
-	    TLorentzVector v1(0, 0, 0, 0);
-	    v1.SetPtEtaPhiM( (*truthP_itr)->pt(), (*truthP_itr)->eta(), (*truthP_itr)->phi(), (*truthP_itr)->m() );
+	    fillTLV(v1, (*truthP_itr));
 
 	    if( (*truthP_itr)->absPdgId()==15 && RecoUnmatchedTracksElMu.at(itrk).DeltaR(v1) < 0.4){
 
@@ -1903,77 +1907,111 @@ EL::StatusCode chorizo :: execute ()
 
   //--- Get Jets
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
-
+  
   std::pair< xAOD::JetContainer*, xAOD::ShallowAuxContainer* > jets_sc = xAOD::shallowCopyContainer( *jets );
   xAOD::JetContainer::iterator jet_itr = (jets_sc.first)->begin();
   xAOD::JetContainer::iterator jet_end = (jets_sc.first)->end();
-
-  //jets for met recalculation of qcd
+  
+  // record calibrated jets to the store for MET rebuilding                                  
+  store.record(jets_sc.first, "CalibratedAntiKt4LCTopoJets");
+  
+  //jets for met recalculation of qcd  //CHECK_ME couldn't I just read the 'CalibratedAntiKt4LCTopoJets' now?
   smr_met_jets_pt.clear();
   smr_met_jets_eta.clear();
   smr_met_jets_phi.clear();
   smr_met_jets_E.clear();
   
-
-  int iJet = 0;
+  
   Particles::Jet recoJet;
   xAOD::Jet jet;
   for( ; jet_itr != jet_end; ++jet_itr ) {
-
+    
     tool_st->FillJet( **jet_itr );
-    tool_st->IsGoodJet( **jet_itr );
-    tool_st->IsBJet( **jet_itr );
+    tool_st->IsGoodJet( **jet_itr, Jet_PreselPtCut, Jet_PreselEtaCut ); //pt eta cuts
+    tool_st->IsBJet( **jet_itr ); //CHECK ME! replace decoration with our own?
 
-    recoJet.SetVector( getTLV( &(**jet_itr) ) );
-    recoJet.id = iJet;
-    iJet++;
-
-    //book it for smearing
+    //book it for smearing (before overlap removal)
     smr_met_jets_pt.push_back( recoJet.Pt() ); //in GeV!
     smr_met_jets_eta.push_back( recoJet.Eta() );
     smr_met_jets_phi.push_back( recoJet.Phi() );
     smr_met_jets_E.push_back( recoJet.E() );  //in GeV!
+    
+    typedef ElementLink< xAOD::IParticleContainer > Link_t;
+    static const char* linkName = "originalObjectLink";
+    const xAOD::IParticleContainer* cont = dynamic_cast< const xAOD::IParticleContainer* >( (*jet_itr)->container() );
+    if( ! cont ) {
+      Warning( "execute()", "Input object not part of a container, 'originalObjectLink' ElementLink not established" );
+    } else {
+      const Link_t link( *jets, (*jet_itr)->index() );
+      Link_t& auxLink = (*jet_itr)->auxdata< Link_t >( linkName );
+      auxLink = link;
+      auxLink.toPersistent();
+    }
+  }
+  
+  //--- Do overlap removal   
+  tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
+
+  // Get good jets now (after overlap removal!)
+  jet_itr = (jets_sc.first)->begin();
+  jet_end = (jets_sc.first)->end();
+  for( ; jet_itr != jet_end; ++jet_itr ) {
+
+    (**jet_itr).auxdata< int >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
+
+    if( (*jet_itr)->auxdata< int >("baseline")==1  &&
+	(*jet_itr)->auxdata< int >("passOR")==1  &&
+	(*jet_itr)->pt() > Jet_PreselPtCut  && 
+	( fabs( (*jet_itr)->eta()) < Jet_PreselEtaCut) ) {
+      goodJets->push_back (*jet_itr);
+    }
+  }
+
+  // book good jet candidates container (after overlap removal!)
+  int iJet = 0;
+  jet_itr = goodJets->begin();
+  jet_end = goodJets->end();
+
+  for( ; jet_itr != jet_end; ++jet_itr ) {
+
+    recoJet.SetVector( getTLV( &(**jet_itr) ) );
+    recoJet.id = iJet;
+    iJet++;
 
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC )
       (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME
     //      (*jet_itr)->getAttribute(xAOD::JetAttribute::TruthLabelID, local_truth_flavor); 
 
-    bool setSystematic = tool_st->m_SUSYObjDef->ApplyJetSystematics(iJet,
-								    (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).eta(),
-								    local_truth_flavor,
-								    averageIntPerXing, 
-								    vx_nTrk, 
-								    this->syst_ST
-								    );
+    // //check overlap removal with electrons 
+    // bool isoverlap = false;
+    // for(unsigned int iEl=0; iEl < electronCandidates.size(); ++iEl){
+    //   if ( electronCandidates.at(iEl).DeltaR(recoJet) < 0.2 ) {
+    // 	isoverlap = true;
+    // 	break;
+    //   }
+    // }
+    // if (isoverlap) continue;
 
-    bool isGoodJet = tool_jClean->accept( **jet_itr ); //only keep good clean jets
-
-    //define preselected jets    
-    if ( recoJet.Pt() < (Jet_PreselPtCut/1000.) ) continue;
-    if ( fabs(recoJet.Eta()) > Jet_PreselEtaCut ) continue;
-    
-    //check overlap removal with electrons 
-    bool isoverlap = false;
-    for(unsigned int iEl=0; iEl < electronCandidates.size(); ++iEl){
-      if ( electronCandidates.at(iEl).DeltaR(recoJet) < 0.2 ) {
-	isoverlap = true;
-	break;
-      }
-    }
-    if (isoverlap) continue;
-    
     //flag event if bad jet is found
-    this->isBadID |= (!isGoodJet);
+    this->isBadID |= (*jet_itr)->auxdata< int >("bad");
 
-    //--- Get some jet attributes
-    // 'SG::ExcAuxTypeMismatch' for SumPtTrkPt1000 . Put it back when fixed!        //FIX_ME
-    //(*jet_itr)->getAttribute(xAOD::JetAttribute::SumPtTrkPt1000, recoJet.sumPtTrk); //SumPtTrkPt500? //CHECK_ME
-    recoJet.sumPtTrk *= 0.001;
+    //--- Get some other jet attributes
+    std::vector<float> sumpttrk_vec;                                                   
+    (*jet_itr)->getAttribute(xAOD::JetAttribute::SumPtTrkPt1000, sumpttrk_vec); //SumPtTrkPt500? //CHECK_ME                                                                     
+    if (sumpttrk_vec.size()>0)                                                    
+      recoJet.sumPtTrk = sumpttrk_vec[0]*0.001; // assume the 0th vertex is the primary one (in GeV)
+    else                                                                          
+      recoJet.sumPtTrk = 0;                                                           
+        
     recoJet.chf = recoJet.sumPtTrk/recoJet.Pt(); 
-    
-    // 'SG::ExcAuxTypeMismatch' for NumTrkPt1000 . Put it back when fixed!          //FIX_ME                                                                         
-    //    (*jet_itr)->getAttribute(xAOD::JetAttribute::NumTrkPt1000, recoJet.nTrk); //NumTrkPt500? CHECK_ME
+
+    std::vector<int> ntrk_vec;
+    (*jet_itr)->getAttribute(xAOD::JetAttribute::NumTrkPt1000, ntrk_vec); //NumTrkPt500? CHECK_ME
+    if (ntrk_vec.size()>0)                                                    
+      recoJet.nTrk = ntrk_vec[0]*0.001; // assume the 0th vertex is the primary one (in GeV)
+    else                                                                          
+      recoJet.nTrk = 0;                                                              
 
     (*jet_itr)->getAttribute(xAOD::JetAttribute::EMFrac, recoJet.emf);
     (*jet_itr)->getAttribute(xAOD::JetAttribute::Timing, recoJet.time);
@@ -2056,16 +2094,11 @@ EL::StatusCode chorizo :: execute ()
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
 
 
-  //Get MissingEt
-  const xAOD::MissingETContainer* cmet_reffinal;
-  if( ! m_event->retrieve( cmet_reffinal, "MET_RefFinal").isSuccess() ){
-    Error("execute()", "Failed to retrieve MET_RefFinal container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
-  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"]; 
+  //--- Get (recalculated) MissingEt
+  xAOD::MissingETContainer metRFc;
+  tool_st->GetMET(metRFc);   //doMuons here?
+  TVector2 metRF(0.,0.);// = getMET(&metRFc, "Final"); 
 
-  //  TVector2 metRF = getMET(cmet_reffinal, "Final"); //FIX_ME!   //MET RefFinal. Get the Rebuilt MET !
-  TVector2 metRF = TVector2( mrf->mpx(), mrf->mpy() );
 
   //--- Remove events with fake Etmiss
   if (Met_doFakeEtmiss && !this->isTruth){
@@ -2080,6 +2113,7 @@ EL::StatusCode chorizo :: execute ()
 
 
   //--- Overlap removals with leptons.
+  //*** THIS IS REDUNDANT AT THE MOMENT! the OR has been done already within ST. //CHECK ME
   // 1) electrons : put a flag IsElectron=false if an electrons is closer by DR=0.4 to a jet 
   //                - this probably never happens : how can we identify an electron inside a jet ?
   float DeltaR=10;      
@@ -2429,14 +2463,14 @@ EL::StatusCode chorizo :: execute ()
   // For the moment only the official flavors are available.
   // Re-computing MET will be possible in the future though, once the METUtility interface is updated!!
 
-  //  const xAOD::MissingETContainer* cmet_reffinal;
+  const xAOD::MissingETContainer* cmet_reffinal;
   const xAOD::MissingETContainer* cmet_lhtopo;
   const xAOD::MissingETContainer* cmet_track;
 
-  // if( ! m_event->retrieve( cmet_reffinal, "MET_RefFinal").isSuccess() ){
-  //   Error("execute()", "Failed to retrieve MET_RefFinal container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
+  if( ! m_event->retrieve( cmet_reffinal, "MET_RefFinal").isSuccess() ){
+    Error("execute()", "Failed to retrieve MET_RefFinal container. Exiting." );
+    return EL::StatusCode::FAILURE;
+  }
   if( ! m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo").isSuccess() ){
     Error("execute()", "Failed to retrieve MET_LocHadTopo container. Exiting." );
     return EL::StatusCode::FAILURE;
@@ -2446,7 +2480,7 @@ EL::StatusCode chorizo :: execute ()
     return EL::StatusCode::FAILURE;
   }
 
-  //  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
+  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
   const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];
   const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
 
@@ -2463,21 +2497,13 @@ EL::StatusCode chorizo :: execute ()
   //  const xAOD::MissingET* mrf_refpvstrk = (*cmet_reffinal)["PVSoftTrk"]; 
 
   //- Recomputed MET via SUSYTools (MetUtility)
-  //- usually muons are treated as invisible particles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
-  TVector2 v_met_ST;  
-
-  //configure MetUtility
-  //tool_metutil->defineMissingET( Met_doRefEle, Met_doRefGamma, Met_doRefTau, Met_doRefJet, Met_doRefMuon, Met_doMuonTotal,  Met_doSoftTerms );
+  //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
   
-  //-- Set if muons enter into the MET computation
-  met_obj.SetHasMuons( (Met_doRefMuon==true || Met_doMuonTotal==true) );
+  tool_st->GetMET(metRFc, Met_doMuons);
+  TVector2 v_met_ST(0.,0.); // = getMET(&metRFc, "Final");
 
-  v_met_ST = TVector2( mrf->mpx(), mrf->mpy() );
-  //tool_st->GetMET( v_met_ST ); //this is MetRefFinal for now!! WARNING //FIX_ME
-  //                             WE SHOULD REMOVE THE MUON TERMS FROM THIS ONE!!
-
-  //- Copy met vector to the met data member
-  met_obj.SetVector(v_met_ST,"");
+  met_obj.SetVector(v_met_ST,"");  //- Copy met vector to the met data member
+  met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
 
   //- Track met
   TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
@@ -2496,15 +2522,13 @@ EL::StatusCode chorizo :: execute ()
   TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); 
   met_obj.SetVector(v_met_lochadtopo, "met_locHadTopo");
   
-  //--- Met RefFinal, visible muons (from the branches)
-  TVector2 v_met_rfinal;
-  v_met_rfinal = TVector2( mrf->mpx(), mrf->mpy() );
-
-  met_obj.SetVector(v_met_rfinal, "met_refFinal_mu");
+  //--- Met RefFinal, visible muons (from the branches) [retrieved above]
+  TVector2 v_met_rfinal_mu(mrf->mpx(), mrf->mpy());
+  met_obj.SetVector(v_met_rfinal_mu, "met_refFinal");
 
 
   //--- Met RefFinal, invisible muons (from the branches)
-  TVector2 v_met_rfinal_muinv = v_met_rfinal;
+  TVector2 v_met_rfinal_muinv = v_met_rfinal_mu;
   for (unsigned int iMu=0; iMu < recoMuons.size(); iMu++){
     TVector2 muon_vector2(recoMuons.at(iMu).GetVector().Px(), recoMuons.at(iMu).GetVector().Py());
     v_met_rfinal_muinv += muon_vector2;
@@ -2526,14 +2550,14 @@ EL::StatusCode chorizo :: execute ()
   if (Met_doMetCleaning){
     const xAOD::MissingET* mrf_refmuon = (*cmet_reffinal)["Muons"];
     TVector2 myMetMuon( mrf_refmuon->mpx(), mrf_refmuon->mpy() ); //MET_MuonBoy in run1
-    isMetCleaned = ( ( (myMetMuon.Mod() / v_met_rfinal.Mod()) * cos(v_met_rfinal.Phi() - myMetMuon.Phi()) ) < 0.8);
+    isMetCleaned = ( ( (myMetMuon.Mod() / v_met_rfinal_mu.Mod()) * cos(v_met_rfinal_mu.Phi() - myMetMuon.Phi()) ) < 0.8);
   }
 
   if (printMet){
     cout<<"Info for MET "<<endl;
     met_obj.PrintInfo();
     cout<<"met_ST.Mod() = " << v_met_ST.Mod()*0.001 << endl;
-    cout<<"MET from D3PD = " << v_met_rfinal.Mod()*0.001 << endl;
+    cout<<"MET from D3PD = " << v_met_rfinal_mu.Mod()*0.001 << endl;
     cout<<endl;
   }
   
@@ -3276,6 +3300,13 @@ EL::StatusCode chorizo :: finalize ()
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
 
+  if(tool_purw){
+    if(genPUfile)
+      tool_purw->WriteToFile(Form("pu_%s.root", wk()->metaData()->getString(SH::MetaFields::sampleName).c_str()));
+
+      delete tool_purw;
+      tool_purw=0;
+  }
 
   //GRL
   if( tool_grl ) {
@@ -3996,7 +4027,7 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
   for( ; tjet_itr != tjet_end; ++tjet_itr ) {
   
     TLorentzVector truthJet;
-    truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 
+    fillTLV( truthJet, (*tjet_itr), true);
     
     //look for overlapping electron
     bool isElectronFakingJet = false;
@@ -4005,9 +4036,8 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
     for( ; truthP_itr != truthP_end; ++truthP_itr ) {
       
       TLorentzVector truthPart;
-      
-      if ( ( *truthP_itr )->absPdgId()==11 && ( *truthP_itr )->status()==1 ){
-  	truthPart.SetPtEtaPhiM( ( *truthP_itr )->pt()*0.001, ( *truthP_itr )->eta(), ( *truthP_itr )->phi(), ( *truthP_itr )->m()*0.001 );
+      if ( ( *truthP_itr )->absPdgId()==11 && isStable( *truthP_itr ) ){
+  	fillTLV( truthPart, ( *truthP_itr ), true);
   	if (truthPart.DeltaR(truthJet) < 0.1) {
   	  isElectronFakingJet = true;
   	  break;
@@ -4694,3 +4724,15 @@ TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name ) {
 
   return myMet;
 }
+
+// TVector2 getMET( const xAOD::MissingETContainer METcon, TString name ) {
+  
+//   TVector2 myMet(0.,0.);
+//   xAOD::MissingETContainer::const_iterator met_it = METcon.find( name.Data() );
+//   if (met_it == METcon.end())
+//     Warning("getMET()", Form("No '%s' inside MET container. Setting MET=(0,0) !", name.Data()));
+//   else
+//     myMet.Set((*met_it)->mpx(), (*met_it)->mpy());
+
+//   return myMet;
+// }

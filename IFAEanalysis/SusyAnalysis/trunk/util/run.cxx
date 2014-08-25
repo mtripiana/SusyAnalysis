@@ -1,10 +1,10 @@
 //---------------------------------------------------------------
-//  Production of mini ntuples for SUSY analyses @IFAE
-//
-//  - migrated to xAOD format from RunI  StopAnalysis package
+//  Master wrapper to run over multiple samples and systematics. 
+//  EventLoop has (seems to have) some problems running over a 
+//  multiple-sample SampleHandler, so here we are...
 //
 //  author: Martin <tripiana@cern.ch>
-//  August, 2014
+//  24/08/14
 //---------------------------------------------------------------
 
 #include "xAODRootAccess/Init.h"
@@ -136,12 +136,18 @@ void printSampleMeta(Sample* sample){
 void printSamplesList(){
   RunsMap rmap;
   std::vector<TString> samples = rmap.getKeys();
-
+  std::vector<int> ids;
   std::cout << bold("\n List of samples") << std::endl; 
   std::cout << bold("------------------------------------------------------------") << std::endl;
-  for(unsigned int i=0; i<samples.size(); i++)
-    cout << samples[i] << endl;
-
+  for(unsigned int i=0; i<samples.size(); i++){
+    cout << setw(70) << left << samples[i];
+    cout << "[" ;
+    ids = rmap.getIDs(samples[i]);
+    for(unsigned int j=0; j<ids.size(); j++){
+      cout << ids[j] << ",";
+    }
+    cout << "]" << endl;
+  }
 }
 
 void printSystList(){
@@ -185,7 +191,6 @@ int main( int argc, char* argv[] ) {
     // return 0;
   }
 
-  int single_id=-1;
   //config options
   for( unsigned int iop=0; iop < opts.size(); iop++){
     if (opts[iop] == "l"){ //run locally
@@ -202,13 +207,10 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
     }
-    else if (opts[iop].BeginsWith("i") ){
-      cout << "MYDEBUG :: " << opts[iop] << endl;
-      single_id = opts[iop].ReplaceAll("i=","").Atoi();
-    }
   }
-
-  cout << "MYDEBUG ::  single_id = " << single_id << endl;
+  TString allopts=""; //join all options in one string
+  for (unsigned int iopt=0; iopt < opts.size(); iopt++)
+    allopts += " -"+opts[iopt]+" ";
 
   //always run locally for systematics printing!
   if(systListOnly && !runLocal){
@@ -231,23 +233,19 @@ int main( int argc, char* argv[] ) {
   }
 
 
-  //***Get map of runs  
-  RunsMap mapOfRuns;
-  //check if sample is mapped
-  RMap mymap = mapOfRuns.getMap();
-  RMap::iterator it = mymap.find( args[0] );
-  if(it == mymap.end()){
-    cout << bold(red("\n Ups! "));    
-    cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
-    cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
-    return 0;
+  //samples
+  std::vector<TString> samples;
+  samples = getTokens(args[0], ","); //I already checked there is a 'sample' input
+  
+  //Systematics
+  std::vector<TString> systematics; 
+  if(args.size() > 1){ 
+    systematics = getTokens(args[1], ",");
   }
+  else
+    systematics.push_back("Nom");
 
-
-  // Set up the job for xAOD access:
-  xAOD::Init().ignore();
-
-  // Read some config options
+  //*** Read some input options
   std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
   std::string xmlPath=DirectoryPath+"/SusyAnalysis/util/AnalysisJobOptions/METbb_JobOption.xml";
 
@@ -264,219 +262,118 @@ int main( int argc, char* argv[] ) {
 
   TString CollateralPath = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
 
-
-  // Get patterns/paths to load for this sample
-  std::vector<TString> run_pattern = mapOfRuns.getPatterns( args[0] );
-  std::vector<int>     run_ids     = mapOfRuns.getIDs( args[0] );
-
-  // Construct the samples to run on:
+  //*** Call run_chorizo for every sample-id-systematic combination
+  //*** Merge ids for same sample-systematic pair
   SampleHandler sh;
-  bool mgd=false; //make grid direct (for direct access to PIC disks)
-  for(unsigned int p=0; p < run_pattern.size(); p++){
-        
-    if(single_id>=0 && ((int)p != single_id)) continue; //pick only chosen id (if given)
-
-    //** Run on local samples
-    //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
-    if(runLocal){
-      scanDir( sh, run_pattern[p].Data() );
-    }
-    else if(runBatch){
-      //** Run on PIC samples
-      //   e.g. scanDQ2 (sh, "user.eifert.mc12_13TeV.110090*");
-      scanDQ2 (sh, run_pattern[p].Data() );
-      mgd=true;
-    }    
-  }
-  if(mgd)
-    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
-
-  sh.print(); //print what we found
-
-  //Handle Meta-Data
   sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
 
-  //set EBeam field
-  TString s_ecm  = "8"; //default is 8TeV 
-  TString s_ecm_tmp = "";
-  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
-    (*iter)->setMetaDouble ("ebeam", (double)getEBeam(*iter));
-    
-    s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
-    if(s_ecm_tmp.IsNull()){ 
-      s_ecm_tmp = s_ecm;
-    }
-    else if( ! s_ecm_tmp.EqualTo(s_ecm) ){ // All ECM set by first sample for now. WARNING: we can't mix MC at diff ecm for now!!
-      cout << bold(red("\n Ups! "));
-      cout << "You are not supposed to merge diff ecm samples !! (for the moment anyways)" << endl;
-      cout << "Check the implementation for '" << args[0] << "' in RunsMap class and get back...\n" << endl;
-      return 0;
-    }
-  }
-  
-  //  First try reading meta-data from SUSYTools
-  readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
-
-  //  then fetch missing meta-data from AMI
-  fetchMetaData (sh, false); //do not override as default. Trust xsection in SUSYTools for the moment.
-
-  //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 
   std::vector<double> weights;
-  bool isData = (sh.size() ? (sh.at(0)->getMetaDouble( MetaFields::isData ))==1 : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
+  bool isData;
   
-  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
-      printSampleMeta( *iter );
-      weights.push_back( getLumiWeight(*iter) );
-  }
+  for(unsigned int i_sample=0; i_sample < samples.size(); i_sample++){ //samples loop
 
-  //Check data type consistency (e.g. don't mix MC with data!)
-  if( ! type_consistent(sh) ){
-    cout << "\n" << bold(red("ERROR :: ")) << "You are mixing MC and data samples!! The current implementation does not support this! Sorry...\n" << endl;
-    return 0;
-  }
-
-  //Systematics
-  CP::SystematicSet syst_CP = CP::SystematicSet();
-  SystErr::Syste syst_ST = SystErr::NONE;
-  ScaleVariatioReweighter::variation syst_Scale = ScaleVariatioReweighter::None;
-  pileupErr::pileupSyste syst_PU = pileupErr::NONE;
-  JvfUncErr::JvfSyste syst_JVF = JvfUncErr::NONE;
-  BCHCorrMediumErr::BCHSyste syst_BCH = BCHCorrMediumErr::NONE;
-  
-  std::vector<TString> systematic; 
-  if(args.size() > 1){ 
-    systematic = getTokens(args[1], ",");
-  }
-  else
-    systematic.push_back("Nom");
-
-  Systematics Sobj;
-  Sobj.LoadList();
-
-  //Loop over systematics  (NOTE: without effect for now!! WE run a wrapper on top for this!)
-  for (unsigned int isys=0; isys  < systematic.size(); isys++){
-
-    //fill systematics
-    Sobj.SystTranslate(systematic[isys], syst_CP, syst_ST, syst_Scale, syst_PU, syst_JVF, syst_BCH);
-    
-    //Create an EventLoop job:
-    EL::Job job;
-    job.useXAOD();
-    job.sampleHandler( sh );
-    
-    //Add NtupleSvc
-    EL::OutputStream output  ("output");
-    job.outputAdd (output);
-    EL::NTupleSvc *ntuple = new EL::NTupleSvc ("output");
-    ntuple->treeName("AnalysisTree");
-    job.algsAdd (ntuple);
-    
-    chorizo *alg = new chorizo();
-    
-    //Alg config options here
-    alg->outputName = "output";
-    alg->Region = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
-    
-    alg->defaultRegion = "SR"; //from XML?
-    alg->xmlPath = xmlPath;
-    
-    alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
-    alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
-    alg->isQCD      = false;   //get it from D3PDReader-like code (add metadata to SH)
-    alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
-    alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
-    alg->isNCBG     = false;   //get it from the XML!!
-    
-    alg->doAnaTree  = doAnaTree;     // Output trees
-    alg->doFlowTree = doFlowTree;
-    alg->doPUTree   = false;         //get it from the XML!!
-    alg->genPUfile  = generatePUfile;
-    
-    alg->syst_CP    = syst_CP;      // Systematics
-    alg->syst_ST    = syst_ST;      
-    alg->syst_Scale = syst_Scale;
-    alg->syst_PU    = syst_PU;
-    alg->syst_JVF   = syst_JVF;
-    alg->syst_BCH   = syst_BCH;
-    
-    
-    alg->printMet      = false;     //debug printing
-    alg->printJet      = false;
-    alg->printElectron = false;
-    alg->printMuon     = false;
-    alg->errIgnoreLevel = (systListOnly ? kFatal : kInfo);
-    
-    alg->systListOnly  = systListOnly;
-    
-    
-    //Load alg to job
-    job.algsAdd( alg );
-    
-    //Set Max number of events (for testing)
-    job.options()->setDouble (EL::Job::optMaxEvents, 10);
-    if(systListOnly)
-      job.options()->setDouble (EL::Job::optMaxEvents, 1);
-    
-    //TTreeCache use
-    job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
-    
-    
-    //create tmp output dir
-    string tmpdir = tmpdirname();
-    
-    // Run the job using the local/direct driver:
-    EL::DirectDriver driver;
-    
-    //submit the job
-    driver.submit( job, tmpdir );
-    
-    if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
-    
-    //move output to collateral files' path
-    TString sampleName,targetName;
-    int isample=0;
-    for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
-      
-      // if(single_id>=0 && (isample != single_id)){
-      // 	isample++;
-      // 	continue; //pick only chosen id (if given)
-      // }
-      
-      sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-      targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
-
-      system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
-
-      cout << "MYDEBUG :: " << "cp "<<tmpdir<<"/data-output/"<<sampleName.Data()<<" "<<CollateralPath<<"/"<<targetName.Data() << endl;;
-      cout << "MYDEBUG :: run_chorizo :: " << "adding " << CollateralPath<<"/"<<targetName << " to mergeList " << endl;
-
-      mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+    //***Get map of runs  
+    RunsMap mapOfRuns;
+    //check if sample is mapped
+    RMap mymap = mapOfRuns.getMap();
+    RMap::iterator it = mymap.find( samples[i_sample] );
+    if(it == mymap.end()){
+      cout << bold(red("\n Ups! "));    
+      cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
+      cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
+      return 0;
     }
-  
-    if(single_id<0){ //NOTE: moved to the run wrapper for now!!
 
-      //** after-burner to merge samples, add weights and anti-SF
-      cout << bold("\n\n*** AFTER-BURNER *** ") << endl;
+    //Print meta-data and save weights+names for later use
+    mergeList.clear(); 
+    weights.clear();
+    isData=false;
+
+    // Get patterns/paths to load for this sample
+    std::vector<TString> run_patterns  = mapOfRuns.getPatterns( args[i_sample] );
+    std::vector<int>     run_ids       = mapOfRuns.getIDs( args[i_sample] );
+    bool mgd=false;  //make grid direct (for direct access to PIC disks)
+    for(unsigned int i_id = 0; i_id < run_ids.size(); i_id++){ //id loop
+      
+      //** Run on local samples
+      if(runLocal){
+	scanDir( sh, run_patterns[i_id].Data() );
+      }
+      else if(runBatch){
+	//** Run on PIC samples
+	scanDQ2 (sh, run_patterns[i_id].Data() );
+	mgd=true;
+      }    
+      else if(runGrid){
+	//** Run on the grid
+	scanDQ2 (sh, run_patterns[i_id].Data() );
+      }    
+      
+      if(mgd)
+	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
+      
+      
+      //Handle Meta-Data
+      //set EBeam field
+      TString s_ecm  = "8"; //default is 8TeV 
+      sh.at(0)->setMetaDouble ("ebeam", (double)getEBeam(sh.at(0)));
+      s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
+
+      //  First try reading meta-data from SUSYTools
+      readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+
+      //  then fetch missing meta-data from AMI
+      fetchMetaData (sh, false); //do not override as default. Trust xsection in SUSYTools for the moment.
+      
+      isData = (sh.at(0)->getMetaDouble( MetaFields::isData )==1);
+      
+      weights.push_back( getLumiWeight(sh.at(0)) );
+
+      TString targetName = Form("SYST_%s_%d.root", samples[i_sample].Data(), run_ids[i_id]);
+      mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+
+      for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
+	TString torun = Form("run_chorizo %s -i=%d %s %s", allopts.Data(), i_id, args[i_sample].Data(), systematics[i_syst].Data());
+	cout << "RUNNING :  " << torun << endl;
+	system(torun.Data());
+      }//end of systematics loop
+      
+      //remove sample from SH
+      sh.remove(sh.at(0));
+
+    }//end of id loop
+
+
+    //MERGING STEP!
+    //** after-burner to merge samples, add weights and anti-SF
+    cout << bold("\n\n*** AFTER-BURNER *** ") << endl;
+
+    std::vector<TString> tmp_mergeList;
+    for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop    
+
+      tmp_mergeList.clear();
+
       cout << "\n >> merging "<< mergeList.size() << " sample(s) ...\n" << endl;
       for (unsigned int i=0; i < mergeList.size(); i++){
-	cout<<"\t\t" << i << ": " << mergeList[i] << endl;
+	tmp_mergeList.push_back( mergeList[i].Copy().ReplaceAll("SYST", systematics.at(i_syst)) );
+	cout<<"\t\t" << i << ": " << tmp_mergeList[i] << endl;
       }      
-      
-      TString mergedName = Form("%s_%s.root",systematic[isys].Data(), args[0].Data());
-      
+      cout << endl;
+
+      TString mergedName = Form("%s_%s.root",systematics[i_syst].Data(), samples[i_sample].Data());
+    
       if (!generatePUfile){
 	if (!doAnaTree) {
 	  //--- Case where we run on 1 file
 	  //... 
 	} 
 	else {
-	  tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
+	  tadd(tmp_mergeList, weights, FinalPath+"/"+mergedName, isData);
 	}
       }
-    }
-
-  }//end systematics list
+    }//end of syst loop
+  }//end of samples loop
 
   return 0;
 }

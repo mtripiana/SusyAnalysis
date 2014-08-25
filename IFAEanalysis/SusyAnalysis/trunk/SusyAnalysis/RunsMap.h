@@ -91,8 +91,8 @@ void RunsMap::LoadMap(){
 
   m_map["TestMClocal2"] = rlist( Rpair(167764, "/nfs/at3/scratch/tripiana/xAOD/mc14/Wmunu/"));
 
-  m_map["TestMClocal3"] = rlist( Rpair(167764, "/nfs/at3/scratch/tripiana/xAOD/mc14/singletop/"),
-				 Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbar/"));
+  m_map["TestMClocal3"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbar/"),
+				 Rpair(167764, "/nfs/at3/scratch/tripiana/xAOD/mc14/singletop/"));
 				 
 
   m_map["TestMClocal4"] = rlist( Rpair(110101,"/nfs/at3/scratch/tripiana/xAOD/mc14/singletop/"));

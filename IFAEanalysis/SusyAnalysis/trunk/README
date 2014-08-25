@@ -55,10 +55,30 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
    *** This needs to be updated!
        For now you can run it by doing:
 
-       run_chorizo <systematic> <outDir>
-   
-       where <systematic> is the systematic to be considered [comma-separated list] 
-             <outDir> is where all the output is saved [if left empty is reads the path from the xml jobOption]. 	
+       run_chorizo [options] <Sample> [Syst] [outDir]
+
+       where
+
+		<Sample>  : The sample name to run over (comma-sep list). 
+		            To list the implemented samples do: 'run samples'
+			  
+                [Syst]    : systematics to be considered (comma-separated list) [optional]. 
+		            Just nominal is taken by default (Nom).
+                 	    To list the available (recommended) systematic variations do: 'run slist'
+  		            or well run './SusyAnalysis/scripts/list_systematics.sh'
+
+	        [options] : supported option flags
+			    
+			         -l  : run locally (default) 
+			         -b  : run in batch          
+				 -g  : run on the grid       
+				 -x  : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
+
+                [outDir]  : is where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)). 	
+
+
+
+       or just type:  'run'  to get this help.
 
    *** 
    
