@@ -41,8 +41,6 @@
 
 //PDF Reweighting
 #include "LHAPDF/LHAPDF.h"
-#define USEPDFTOOL
-
 
 //TeV unit (w.r.t MeV)
 #ifndef TEV
@@ -1101,7 +1099,8 @@ EL::StatusCode chorizo :: initialize ()
   // input events.
   m_event = wk()->xaodEvent();
 
-  //  xAOD::TStore store;
+  // Create a transient object store. Needed for the tools.
+  //  xAOD::TStore store; 
 
   //Read XML options
   ReadXML();
@@ -1191,17 +1190,23 @@ EL::StatusCode chorizo :: initialize ()
   tool_jvf->UseGeV(true);
 
   //--- PDF reweighting
-  LHAPDF::setPDFPath( gSystem->Getenv("LHAPATH") );
-  Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPATH")) );
+  // LHAPDF::setPDFPath( gSystem->Getenv("LHAPATH") );
+  // Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPATH")) );
+  LHAPDF::setPaths( gSystem->Getenv("LHAPDF_DATA_PATH") );
+  Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPDF_DATA_PATH")) );
 
-  int original_pdfset = 10800; // CT10
+  TString input_pdfset    = "CT10"; // 10800 //CHECK_ME this was not CT10as but CT10 !!
+  int input_pdfset_member = 0;     
   if (this->isSignal || this->isTop) {
-    original_pdfset = 10050; // cteq6mE.LHgrid --------------------
+    input_pdfset = "cteq6l1"; //10042; // cteq6L1.LHgrid 
+    input_pdfset_member = 0;  
   }
 
   // scale beam energy from 8 TeV to 13 TeV
-  beamE_from = (float)  wk()->metaData()->getDouble("ebeam", 4.); //default is 8TeV!
-  tool_pdf = new PDFTool(beamE_from * TEV, beamE_to/beamE_from, -1, original_pdfset);   
+  if(doPDFrw){
+    beamE_from = (float) wk()->metaData()->getDouble("ebeam", 4.); //default is 8TeV!
+    m_PDF = LHAPDF::mkPDF(input_pdfset.Data(), input_pdfset_member); //LHAPDF6
+  }
 
   // initialize and configure the jet cleaning tool
   tool_jClean = new JetCleaningTool("JetCleaning");
@@ -1213,7 +1218,6 @@ EL::StatusCode chorizo :: initialize ()
   //  myRand = new TRandom1(time(0));
                                                                                            
    
-
   //--- number of events
   Info("initialize()", "Total number of events = %lli", m_event->getEntries() );
   
@@ -1253,6 +1257,7 @@ EL::StatusCode chorizo :: execute ()
   //  wk()->tree()->GetEntry (wk()->treeEntry());
 
   // Create a transient object store. Needed for the tools.
+  //  xAOD::TStore store; 
   store.clear(); 
 
   if(systListOnly){  //just print systematics list and leave!
@@ -1390,15 +1395,19 @@ EL::StatusCode chorizo :: execute ()
 
     //--- Weigths for Sherpa, MC@NLO, Acer, ...
     MC_w = eventInfo->mcEventWeight();
-
+    
     //--- PDF reweighting
     xAOD::TruthEventContainer::const_iterator truthE_itr = truthE->begin();
-    int id1, id2;
-    float x1, x2, pdf1, pdf2, scalePDF;
+    int id1, id2, pdfId1, pdfId2; //, pdf1, pdf2;
+    float x1, x2, scalePDF;
+    
+    //** For newer tags when they come...
     // ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::ID1);
     // ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::ID2);
     // ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
     // ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
+    // ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
+    // ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
     // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
     // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
     // ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::SCALEPDF);
@@ -1407,13 +1416,17 @@ EL::StatusCode chorizo :: execute ()
     ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::id2);
     ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::x1);
     ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::x2);
-    ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::pdf1);
-    ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::pdf2);
+    ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::pdfId1);
+    ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::pdfId2);
+    // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::pdf1);
+    // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::pdf2);
     ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::scalePDF);
     
-    
-    PDF_w = tool_pdf->event_weight( pow(scalePDF,2), x1, x2, pdf1, pdf2);
-
+    //pdf reweighting
+    if(doPDFrw){
+      PDF_w *= getPdfRW((double)beamE_to/beamE_from, (double)(scalePDF*scalePDF), (double)x1, (double)x2, pdfId1, pdfId2);     
+    }
+  
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
     this->w_average = 1.;//this->GetAverageWeight((Int_t)RunNumber, (Int_t)mc_channel_number);
     this->w = 1/w_average;
@@ -1463,7 +1476,6 @@ EL::StatusCode chorizo :: execute ()
     } 
   }
   
-
 
   //----------------------------------------------------------
   //--- ANALYSIS CRITERIA ------------------------------------
@@ -1550,7 +1562,7 @@ EL::StatusCode chorizo :: execute ()
     }
     Info("execute()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
   }
-  
+
   //--- Get Electrons
   // MAKE TRANSIENT CONTAINER IN SG?
   // xAOD::ElectronContainer* baseElectrons = new xAOD::ElectronContainer();
@@ -1569,14 +1581,11 @@ EL::StatusCode chorizo :: execute ()
     
     // if ( (el_MET_wet->at(k)).at(0) != 0) velidx[iter->first].push_back(k); //CHECK_ME (MET WEIGHTS?)
 
-    xAOD::Electron el = **el_itr;
-    el.makePrivateStore(**el_itr);
-    
-    tool_st->FillElectron( el, iEl ); //, El_DefinPtCut, El_DefinEtaCut ); //FIX_ME! not possible in ST as of now...
-    tool_st->IsSignalElectron( el, iEl, El_PreselPtCut, -1 ); //thight ID + d0 & z0 no isolation applied for now! //CHECK ME
+    tool_st->FillElectron( (**el_itr), iEl ); //, El_DefinPtCut, El_DefinEtaCut ); //FIX_ME! not possible in ST as of now...
+    tool_st->IsSignalElectron( (**el_itr), iEl, El_PreselPtCut, -1 ); //thight ID + d0 & z0 no isolation applied for now! //CHECK ME
     
     //pre-book baseline electrons
-    if( el.auxdata< int >("baseline") ){ 
+    if( (**el_itr).auxdata< int >("baseline") ){ 
 
       //define preselected electron                
       Particle recoElectron;
@@ -1585,27 +1594,27 @@ EL::StatusCode chorizo :: execute ()
       if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
 
       recoElectron.id = iEl;
-      recoElectron.ptcone20 = el.auxdata<float>("ptcone20")/1000.;
-      recoElectron.etcone20 = el.auxdata<float>("etcone20")/1000.;
-      recoElectron.ptcone30 = el.auxdata<float>("ptcone30")/1000.;
-      recoElectron.etcone30 = el.auxdata<float>("etcone30")/1000.;
-      el.passSelection(recoElectron.isTight, "Tight");
+      recoElectron.ptcone20 = (**el_itr).auxdata<float>("ptcone20")/1000.;
+      recoElectron.etcone20 = (**el_itr).auxdata<float>("etcone20")/1000.;
+      recoElectron.ptcone30 = (**el_itr).auxdata<float>("ptcone30")/1000.;
+      recoElectron.etcone30 = (**el_itr).auxdata<float>("etcone30")/1000.;
+      (**el_itr).passSelection(recoElectron.isTight, "Tight");
 
       //get electron scale factors
       if(this->isMC){
 	//nominal
-	recoElectron.SF = tool_st->GetSignalElecSF( el );
+	recoElectron.SF = tool_st->GetSignalElecSF( **el_itr );
 
 	if (tool_st->m_effi_corr->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("execute()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
 	}
-	recoElectron.SFu = tool_st->GetSignalElecSF( el );
+	recoElectron.SFu = tool_st->GetSignalElecSF( **el_itr );
 
 	//+1 sys down
 	if (tool_st->m_effi_corr->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("execute()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
 	}
-	recoElectron.SFd = tool_st->GetSignalElecSF( el );
+	recoElectron.SFd = tool_st->GetSignalElecSF( **el_itr );
 
 	tool_st->m_effi_corr->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 
@@ -4736,3 +4745,63 @@ TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name ) {
 
 //   return myMet;
 // }
+
+
+//Returns factor for PDF reweighting
+double chorizo :: getPdfRW(   double rwScale,
+			      double pdf_scale2,
+			      double pdf_x1, 
+			      double pdf_x2,
+			      int pdf_id1,
+			      int pdf_id2
+			      ){
+  return this->getPdfRW(m_PDF, rwScale, pdf_scale2, pdf_x1, pdf_x2, pdf_id1, pdf_id2);
+}
+
+double chorizo :: getPdfRW(   LHAPDF::PDF* pdf,
+			      double rwScale,
+			      double pdf_scale2,
+			      double pdf_x1, 
+			      double pdf_x2,
+			      int pdf_id1,
+			      int pdf_id2
+			      ){
+  return this->getPdfRW(pdf, pdf, rwScale, pdf_scale2, pdf_x1, pdf_x2, pdf_id1, pdf_id2);
+}
+
+double chorizo :: getPdfRW(   LHAPDF::PDF* pdfFrom,
+			      LHAPDF::PDF* pdfTo,
+			      double rwScale,
+			      double pdf_scale2,
+			      double pdf_x1, 
+			      double pdf_x2,
+			      int pdf_id1,
+			      int pdf_id2
+			      ){
+
+  //if same to-from pdfs and no scaling required just leave
+  if( rwScale==1 && 
+      pdfFrom->lhapdfID()==pdfTo->lhapdfID() && 
+      pdfFrom->memberID()==pdfTo->memberID() )
+    return 1.;
+  
+
+  if (pdf_x1==0 || pdf_x2==0 || pdf_id1==0 || pdf_id2==0 || pdf_scale2==0) return 0.; //it doesn't know what to do then
+
+  // original pdf of particle1
+  double pdf1org = pdfFrom->xfxQ2( pdf_id1, pdf_x1, pdf_scale2) / pdf_x1;
+
+  // original pdf of particle2
+  double pdf2org = pdfFrom->xfxQ2( pdf_id2, pdf_x2, pdf_scale2) / pdf_x2;
+
+  // new pdf of particle1
+  double pdf1new = pdfTo->xfxQ2( pdf_id1, pdf_x1, pdf_scale2) / pdf_x1;
+
+  // new pdf of particle2
+  double pdf2new = pdfTo->xfxQ2( pdf_id2, pdf_x2, pdf_scale2) / pdf_x2;
+
+  // factor for reweighting
+  double weight = (pdf1new * pdf2new) / (pdf1org * pdf2org) / pow(rwScale,2);
+
+  return weight;
+};

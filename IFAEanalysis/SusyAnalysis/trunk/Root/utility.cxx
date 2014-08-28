@@ -10,9 +10,31 @@ TString red(TString t){
   return "\x1b[31m"+t+"\x1b[0m";
 }
 
+std::string getCmdOutput(const std::string& mStr)
+{
+  std::string result, file;
+  FILE* pipe{popen((mStr+" 2>/dev/null").c_str(), "r")};
+  if (!pipe) return std::string(red("ERROR").Data())+" something went wrong with command : %s \n"+mStr;
+  char buffer[256];
+
+  while(fgets(buffer, sizeof(buffer), pipe) != NULL)
+    {
+      file = buffer;
+      result += file.substr(0, file.size() - 1);
+    }
+  pclose(pipe);
+  return result;
+}
+
+std::string tmpdirname(){
+  std::string ret = getCmdOutput("mktemp -d");
+  system(("rmdir "+ret).c_str());
+  return ret;
+}
+
 std::vector<TString> getTokens(TString line, TString delim){
   std::vector<TString> vtokens;
-  TObjArray* tokens = line.Tokenize(","); //delimiters
+  TObjArray* tokens = line.Tokenize(delim); //delimiters
   if(tokens->GetEntriesFast()) {
       TIter iString(tokens);
       TObjString* os=0;
@@ -25,6 +47,36 @@ std::vector<TString> getTokens(TString line, TString delim){
   return vtokens;
 }
 
+
+TString stripName(TString name){ //remove not-official tags for AMI search (so trying to get the provenance from the sample name itself...)
+  
+  TString new_name="";
+  TString tmp_name="";
+  std::vector<TString> tokens;
+
+  //remove tid and der tokens (last are added when asking a partial transfer to IFAE_LOCALDISK)  
+  tokens = getTokens(name, "_");
+  for(unsigned int it=0; it < tokens.size(); it++){
+    if(tokens[it].BeginsWith("der")) continue;
+    if(tokens[it].BeginsWith("tid")) break; //remove everything after that!
+    if(tmp_name!="") 
+      tmp_name += "_";
+    tmp_name += Form("%s", tokens.at(it).Data());
+  } 
+
+  tokens = getTokens(tmp_name, ".");
+  for(unsigned int it=0; it < tokens.size(); it++){
+    if(tokens[it].BeginsWith("user")){
+      it++; //remove next one too (i.e. the user)
+      continue;
+    }
+    if(new_name!="") 
+      new_name += ".";
+    new_name += Form("%s", tokens.at(it).Data());
+  } 
+
+  return new_name;
+}
 
 float MinimumOf(float a, float b){
   float min=0.;

@@ -2,7 +2,10 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
+** Fix PdfReweighting!
+
 ** set drivers for batch and grid modes
+   Running on IFAE's batch (PSB) is done with local driver anyways for now.
 
 ** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...) --> 'run' wrapper for now
     *** CHECK CASE for multi-samples+multi-systs
@@ -11,11 +14,7 @@ HIGH PRIORITY
 
 ** Overlap removal. Can we just use ST-one?
 
-** MET rebuilding
-
-** check 'baseline' selection in SUSYTools suits our needs
-
-**  modulate some actions into xAOD-methods, bypassing the CINT compilation.
+** MET rebuilding  --> Hack SUSYTools for kin electron selection and MET terms activation! (contacted Kerim already about it to try it to make official!)
 
 **  PileUp Reweighting ntuples. 
      https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/EventLoop#Solution_for_TPileupReweighting
@@ -24,15 +23,26 @@ HIGH PRIORITY
 
 ** truth navigation
 
-** btagging
-       review current setup, variables and ops.
+
+VALIDATION/CHECK
+--------------------------------------------------------------------------------------------------------
+** check 'baseline' selection in SUSYTools suits our needs
 
 ** after-burner to merge samples, adding FileWeights and anti-SF .  Done --> validate it!
+
+** btagging
+       review current setup, variables and ops.
 
 
 
 LOW priority
 --------------------------------------------------------------------------------------------------------
+** Improve tools verbosity level (lower'em all probably)
+
+** Create qsub files on the fly? Do we really need to save them? (for local running maybe...but can be overcome)
+
+**  modulate some actions into xAOD-methods, bypassing the CINT compilation.
+
 ** clean-up RegionIdentifier
 
 ** add configuration for debug printing, in JO (printMET, printElectron, ...)
@@ -45,6 +55,7 @@ LOW priority
 
        - Connect to list_systematics.sh script for auto-update (perhaps)
 
+** move to Sample class inside RunsMap ? so to specify ecm, location (afs, pic, ...), etc. So to map "sampleKey" --> rlist( Rpair(id, Sample("name",...other attributes)))
 
 
 Errors/Warning to take care of (at least understand if we can safely ignore these)

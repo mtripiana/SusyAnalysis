@@ -10,7 +10,7 @@ The first thing you need to do is to set the Analysis release, so to have access
 
 For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
 
-     >  rcSetup Base,2.0.6
+     >  rcSetup Base,2.0.7
  
      Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
 
@@ -26,10 +26,6 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
 
    > export ANALYSISCODE="<your analysis folder>"      # where your code will be, from where you did the rcSetup above.
    > export HISTFITTERDIR="<your HistFitter folder>"   # where you have (or gonna place) the HistFitter code.
-   > export LHAPATH=/nfs/at3users/users/vgiangio/MonoJet_00-03-12-04/code/scripts/pdfsets/
-   > export FASTJET_DIR=$ANALYSISCODE"/fastjet-install/"
-   > export PATH="$PATH:$FASTJET_DIR/bin"
-   > export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$FASTJET_DIR/lib"
 
 
 3) Getting the analysis code:
@@ -52,19 +48,28 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
 6) To run the analysis:
    =====================
 
-   *** This needs to be updated!
-       For now you can run it by doing:
+   *** grid-stuff setup
+       
+       As the sample metadata is fetched from AMI, we need a voms-proxy beforehand. To do so please run (after rcSetup):
 
-       run_chorizo [options] <Sample> [Syst] [outDir]
+       	  source SusyAnalysis/scripts/grid_up.sh
+
+
+   *** to run the code you do:
+
+          run [options] <Sample> [Syst] [outDir]
 
        where
 
 		<Sample>  : The sample name to run over (comma-sep list). 
-		            To list the implemented samples do: 'run samples'
+
+		            To list the implemented samples do:      'run samples'
 			  
                 [Syst]    : systematics to be considered (comma-separated list) [optional]. 
 		            Just nominal is taken by default (Nom).
-                 	    To list the available (recommended) systematic variations do: 'run slist'
+
+                 	    To list the available (recommended) systematic variations do:     'run slist'
+
   		            or well run './SusyAnalysis/scripts/list_systematics.sh'
 
 	        [options] : supported option flags
@@ -86,22 +91,35 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
 
    root generate_qsub_files.C
 
-   b) Untar the lists files (containing the paths to all configured samples) if needed:
-
-   cd scripts/
-   tar zxfv Lists_all.tar.gz
-
-   NOTE:   if your xml jobOption is not pointing to your local area for this ('ListFolderPath'), you can skip this step!
-   	   
    b) Run
       e.g. to produce the mini-ntuples for X-sample:
 
    $ANALYSISCODE/SusyAnalysis/scripts/qsubFiles/X-sample.sub
 
+   To actually send it to the batch you do:
+
+      submit_batch.sh
+
+   after modifying it accordingly. Put the samples and systematics you would like to run there.
+
+
+
+   ** NOTE:  for the moment there is no nice to get the proxy running on the batch. 
+             So we need to re-set the grid stuff locally again on the running machine, for what we need the password :)
+	     A way to do it (not nice I know but ...) is to place your grid certificate password in a file a call 
+             voms-init-proxy with it. 
+
+             In short...you need to:
+      
+                 - create a $ANALYSISCODE/.gridpsd file with just your password in it
+		 - make sure its permissions are correct (so you are minimally protected :) ) :   
+  		   	chmod 600 $ANALYSISCODE/.gridsp
+		 - voila! 
+             
 
 
 ---------------- Caveats & Warnings --------------------------
-- it is not possible to mix samples at diff e.c.m.  
+- it is not possible to mix samples at diff e.c.m.  ( I think it is now! thanks to the wrapper. CHECK! (Martin))
 - it is not possible to put MC and data within the same sample (= runs map key) (code prevents this anyways)
 
 
