@@ -443,7 +443,7 @@ int main( int argc, char* argv[] ) {
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
-    job.options()->setDouble (EL::Job::optMaxEvents, 10);
+    //job.options()->setDouble (EL::Job::optMaxEvents, 10);
     if(systListOnly)
       job.options()->setDouble (EL::Job::optMaxEvents, 1);
     
