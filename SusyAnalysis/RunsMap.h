@@ -78,6 +78,9 @@ void RunsMap::LoadMap(){
   //                                                 Local afs/nfs tests
   //======================================================================================================================
 
+  //New test xAOD mc14 (SUSY1 derivation)
+  m_map["TestDF"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbarD/"));
+
   //New test xAOD mc14 
   m_map["TestMClocal"] = rlist( Rpair(117050, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/"));
 
@@ -100,6 +103,9 @@ void RunsMap::LoadMap(){
   //======================================================================================================================
   //                                                 List of backgrounds for the Baseline analysis
   //======================================================================================================================
+
+  //Zmumu (test Sherpa)
+  m_map["TestMCpic"] = rlist( Rpair(167752, "user.tripiana.mc14_8TeV.167752.Sherpa_CT10_ZmumuMassiveCBPt0_BFilter.merge.AOD.e1585_s1933_s1911_r5591_r5625_tid01512435*"));
 
   //Baseline_ttbar
   m_map["PowhegPythia_P2011C_ttbar"] = rlist( Rpair(117050, "mc14_8TeV.117050.PowhegPythia_P2011C_ttbar*") );

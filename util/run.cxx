@@ -19,6 +19,7 @@
 #include "EventLoop/DirectDriver.h"
 #include "EventLoop/OutputStream.h"
 #include "EventLoopAlgs/NTupleSvc.h"
+#include "EventLoop/TorqueDriver.h"
 
 #include "SusyAnalysis/chorizo.h"
 #include "SusyAnalysis/RunsMap.h"
@@ -62,28 +63,6 @@ void usage(){
   cout << endl;
 }
 
-std::string getCmdOutput(const std::string& mStr)
-{
-  std::string result, file;
-  FILE* pipe{popen((mStr+" 2>/dev/null").c_str(), "r")};
-  if (!pipe) return std::string(red("ERROR").Data())+" something went wrong with command : %s \n"+mStr;
-  char buffer[256];
-
-  while(fgets(buffer, sizeof(buffer), pipe) != NULL)
-    {
-      file = buffer;
-      result += file.substr(0, file.size() - 1);
-    }
-  pclose(pipe);
-  return result;
-}
-
-std::string tmpdirname(){
-  std::string ret = getCmdOutput("mktemp -d");
-  system(("rmdir "+ret).c_str());
-  return ret;
-}
-
 float getLumiWeight(Sample* sample){
 
   if( sample->getMetaDouble( MetaFields::isData ) ) //don't weight data!
@@ -93,8 +72,11 @@ float getLumiWeight(Sample* sample){
   
 }
 
+
 float getECM(Sample* sample){ //in TeV
-  std::string s_ecm = getCmdOutput( "ami dataset info "+sample->getMetaString( MetaFields::sampleName )+" | grep ECM | awk '{print $2}'");
+  TString sampleName(sample->getMetaString( MetaFields::sampleName ));
+  std::string newName = stripName(sampleName).Data();
+  std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECM | awk '{print $2}'");
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -121,6 +103,7 @@ void printSampleMeta(Sample* sample){
   cout << endl;
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
+  cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
   cout << " isData          = " << (sample->getMetaDouble( MetaFields::isData )==0 ? "No" : "Yes") << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
@@ -138,7 +121,7 @@ void printSamplesList(){
   std::vector<TString> samples = rmap.getKeys();
   std::vector<int> ids;
   std::cout << bold("\n List of samples") << std::endl; 
-  std::cout << bold("------------------------------------------------------------") << std::endl;
+  std::cout << bold("------------------------------------------------------------------------------------------------------------------------") << std::endl;
   for(unsigned int i=0; i<samples.size(); i++){
     cout << setw(70) << left << samples[i];
     cout << "[" ;
@@ -222,14 +205,15 @@ int main( int argc, char* argv[] ) {
   }
 
   //check for needed setup 
-  std::string ami_check = getCmdOutput(R"( which ami )");
+  std::string ami_check = gSystem->GetFromPipe("which ami 2>/dev/null").Data(); 
   if (ami_check.empty()){
     cout << bold(red("\n Ups! "));
     cout << "You need to setup a few things first!" << endl;
     cout << " Please do: " << endl;
-    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh" << endl;
-    cout << "\n and get back! :) \n" << endl;
-    return 0;
+    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh   \n" << endl;
+    cout << "\n ...but ok! this time I'll try to do it for you...  :) \n" << endl;
+    gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh");
+    //    return 0; //FOR TESTING
   }
 
 
@@ -298,10 +282,15 @@ int main( int argc, char* argv[] ) {
       
       //** Run on local samples
       if(runLocal){
-	scanDir( sh, run_patterns[i_id].Data() );
+	if( run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") ){//local samples
+	  scanDir( sh, run_patterns[i_id].Data() );
+	}else{//PIC samples
+	  scanDQ2 (sh, run_patterns[i_id].Data() );
+	  mgd=true;
+	}
       }
       else if(runBatch){
-	//** Run on PIC samples
+	//** Run in batch 
 	scanDQ2 (sh, run_patterns[i_id].Data() );
 	mgd=true;
       }    
@@ -314,18 +303,37 @@ int main( int argc, char* argv[] ) {
 	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
       
       
+      sh.print();
+      
       //Handle Meta-Data
+      sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
+      
+
+      //override name with 'provenance' name (weal attempt to allow for user-skimmed and partially-transfered samples)
+      //save original name in a new meta field
+      for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
+	(*iter)->setMetaString( "inputName",  (*iter)->getMetaString( MetaFields::sampleName) ); //I think no longer needed
+	(*iter)->setMetaString( MetaFields::gridName,  stripName( TString( (*iter)->getMetaString( MetaFields::sampleName))).Data() );
+      }
+
       //set EBeam field
       TString s_ecm  = "8"; //default is 8TeV 
       sh.at(0)->setMetaDouble ("ebeam", (double)getEBeam(sh.at(0)));
       s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
+      bool amiFound=true;
 
-      //  First try reading meta-data from SUSYTools
+      if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
+	s_ecm="8";
+	amiFound=false;
+      }
+
+      //  fetch meta-data from AMI
+      if(amiFound)
+	fetchMetaData (sh, false); 
+
+      //  then override some meta-data from SUSYTools
       readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
 
-      //  then fetch missing meta-data from AMI
-      fetchMetaData (sh, false); //do not override as default. Trust xsection in SUSYTools for the moment.
-      
       isData = (sh.at(0)->getMetaDouble( MetaFields::isData )==1);
       
       weights.push_back( getLumiWeight(sh.at(0)) );
@@ -335,7 +343,6 @@ int main( int argc, char* argv[] ) {
 
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
 	TString torun = Form("run_chorizo %s -i=%d %s %s", allopts.Data(), i_id, args[i_sample].Data(), systematics[i_syst].Data());
-	cout << "RUNNING :  " << torun << endl;
 	system(torun.Data());
       }//end of systematics loop
       

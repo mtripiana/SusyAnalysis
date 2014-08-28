@@ -17,6 +17,7 @@
 #include "SampleHandler/fetch.h"
 #include "EventLoop/Job.h"
 #include "EventLoop/DirectDriver.h"
+#include "EventLoop/TorqueDriver.h"
 #include "EventLoop/OutputStream.h"
 #include "EventLoopAlgs/NTupleSvc.h"
 
@@ -93,8 +94,11 @@ float getLumiWeight(Sample* sample){
   
 }
 
+
 float getECM(Sample* sample){ //in TeV
-  std::string s_ecm = getCmdOutput( "ami dataset info "+sample->getMetaString( MetaFields::sampleName )+" | grep ECM | awk '{print $2}'");
+  TString sampleName(sample->getMetaString( MetaFields::sampleName ));
+  std::string newName = stripName(sampleName).Data();
+  std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECM | awk '{print $2}'");
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -121,6 +125,7 @@ void printSampleMeta(Sample* sample){
   cout << endl;
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
+  cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
   cout << " isData          = " << (sample->getMetaDouble( MetaFields::isData )==0 ? "No" : "Yes") << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
@@ -136,13 +141,20 @@ void printSampleMeta(Sample* sample){
 void printSamplesList(){
   RunsMap rmap;
   std::vector<TString> samples = rmap.getKeys();
-
+  std::vector<int> ids;
   std::cout << bold("\n List of samples") << std::endl; 
-  std::cout << bold("------------------------------------------------------------") << std::endl;
-  for(unsigned int i=0; i<samples.size(); i++)
-    cout << samples[i] << endl;
-
+  std::cout << bold("------------------------------------------------------------------------------------------------------------------------") << std::endl;
+  for(unsigned int i=0; i<samples.size(); i++){
+    cout << setw(70) << left << samples[i];
+    cout << "[" ;
+    ids = rmap.getIDs(samples[i]);
+    for(unsigned int j=0; j<ids.size(); j++){
+      cout << ids[j] << ",";
+    }
+    cout << "]" << endl;
+  }
 }
+
 
 void printSystList(){
   Systematics Smap;
@@ -203,12 +215,9 @@ int main( int argc, char* argv[] ) {
       queue = "at3_xxl";
     }
     else if (opts[iop].BeginsWith("i") ){
-      cout << "MYDEBUG :: " << opts[iop] << endl;
       single_id = opts[iop].ReplaceAll("i=","").Atoi();
     }
   }
-
-  cout << "MYDEBUG ::  single_id = " << single_id << endl;
 
   //always run locally for systematics printing!
   if(systListOnly && !runLocal){
@@ -220,14 +229,15 @@ int main( int argc, char* argv[] ) {
   }
 
   //check for needed setup 
-  std::string ami_check = getCmdOutput(R"( which ami )");
+  std::string ami_check = gSystem->GetFromPipe("which ami ").Data();
   if (ami_check.empty()){
     cout << bold(red("\n Ups! "));
     cout << "You need to setup a few things first!" << endl;
     cout << " Please do: " << endl;
-    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh" << endl;
-    cout << "\n and get back! :) \n" << endl;
-    return 0;
+    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh \n" << endl;
+    cout << "\n ...but ok! this time I'll try to do it for you...  :) \n" << endl;
+    gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh");
+    //return 0; //FOR TESTING
   }
 
 
@@ -279,7 +289,12 @@ int main( int argc, char* argv[] ) {
     //** Run on local samples
     //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
     if(runLocal){
-      scanDir( sh, run_pattern[p].Data() );
+      if( run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") ){//local samples
+	scanDir( sh, run_pattern[p].Data() );
+      }else{//PIC samples
+	scanDQ2 (sh, run_pattern[p].Data() );
+	mgd=true;
+      }
     }
     else if(runBatch){
       //** Run on PIC samples
@@ -295,6 +310,13 @@ int main( int argc, char* argv[] ) {
 
   //Handle Meta-Data
   sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
+
+  //override name with 'provenance' name (weal attempt to allow for user-skimmed and partially-transfered samples)
+  //save original name in a new meta field
+  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
+    (*iter)->setMetaString( "inputName", (*iter)->getMetaString( MetaFields::sampleName) ); //no longer needed?
+    (*iter)->setMetaString( MetaFields::gridName, stripName( TString( (*iter)->getMetaString( MetaFields::sampleName))).Data() );
+  }
 
   //set EBeam field
   TString s_ecm  = "8"; //default is 8TeV 
@@ -314,12 +336,19 @@ int main( int argc, char* argv[] ) {
     }
   }
   
-  //  First try reading meta-data from SUSYTools
+  bool amiFound=true;
+  if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
+    s_ecm="8";
+    amiFound=false;
+  }
+    
+  //  fetch meta-data from AMI
+  if(amiFound)
+    fetchMetaData (sh, false); 
+  
+  //  then override some meta-data from SUSYTools
   readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
-
-  //  then fetch missing meta-data from AMI
-  fetchMetaData (sh, false); //do not override as default. Trust xsection in SUSYTools for the moment.
-
+  
   //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 
   std::vector<double> weights;
@@ -425,31 +454,31 @@ int main( int argc, char* argv[] ) {
     //create tmp output dir
     string tmpdir = tmpdirname();
     
-    // Run the job using the local/direct driver:
-    EL::DirectDriver driver;
+    // Run the job using the appropiate driver:
+    EL::DirectDriver Ddriver;
+    EL::TorqueDriver Tdriver;
+    
     
     //submit the job
-    driver.submit( job, tmpdir );
-    
+    if(runLocal){
+      Ddriver.submit( job, tmpdir );
+    }
+    else{
+      //     const std::string HOME = getenv ("HOME");
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.6 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh || exit $?;";
+
+      Tdriver.submit( job, tmpdir );
+    }
     if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
     
     //move output to collateral files' path
     TString sampleName,targetName;
-    int isample=0;
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
-      
-      // if(single_id>=0 && (isample != single_id)){
-      // 	isample++;
-      // 	continue; //pick only chosen id (if given)
-      // }
       
       sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
       targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
 
       system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
-
-      cout << "MYDEBUG :: " << "cp "<<tmpdir<<"/data-output/"<<sampleName.Data()<<" "<<CollateralPath<<"/"<<targetName.Data() << endl;;
-      cout << "MYDEBUG :: run_chorizo :: " << "adding " << CollateralPath<<"/"<<targetName << " to mergeList " << endl;
 
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }

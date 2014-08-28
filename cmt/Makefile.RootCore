@@ -13,7 +13,7 @@ PACKAGE          = SusyAnalysis
 PACKAGE_PRELOAD  = 
 
 # additional compilation flags to pass (not propagated to dependent packages):
-PACKAGE_CXXFLAGS = -I$(FASTJET_DIR)/include -L$(FASTJET_DIR)/lib 
+PACKAGE_CXXFLAGS = -I$(FASTJET_DIR)/include -L$(FASTJET_DIR)/lib -I.../for_rootcint_only
 
 # additional compilation flags to pass (propagated to dependent packages):
 PACKAGE_OBJFLAGS = 
@@ -28,7 +28,7 @@ PACKAGE_BINFLAGS = -g -lXMLParser
 PACKAGE_LIBFLAGS = 
 
 # the list of packages we depend on:
-PACKAGE_DEP = EventLoop EventLoopGrid EventLoopAlgs xAODRootAccess AsgTools SUSYTools JVFUncertaintyTool RootCoreLhapdf xAODEventInfo xAODEgamma xAODMuon xAODJet xAODTau xAODMissingET xAODTruth xAODTracking JetSelectorTools PhotonEfficiencyCorrection GoodRunsLists 
+PACKAGE_DEP = EventLoop EventLoopGrid EventLoopAlgs xAODRootAccess AsgTools SUSYTools JVFUncertaintyTool xAODEventInfo xAODEgamma xAODMuon xAODJet xAODTau xAODMissingET xAODTruth xAODTracking JetSelectorTools PhotonEfficiencyCorrection GoodRunsLists Asg_Lhapdf
 
 #
 #PileupReweighting GoodRunsLists MuonEfficiencyCorrections

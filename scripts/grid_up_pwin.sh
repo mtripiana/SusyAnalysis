@@ -9,7 +9,7 @@ localSetupDQ2Client --skipConfirm
 
 export DQ2_LOCAL_SITE_ID=ROAMING
 
-voms-proxy-init -voms atlas 
+voms-proxy-init -voms atlas -pwstdin < $ANALYSISCODE/.gridpsd
 
 localSetupPyAMI
 localSetupPandaClient --noAthenaCheck

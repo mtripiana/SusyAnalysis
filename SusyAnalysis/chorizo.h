@@ -26,7 +26,6 @@
 // code includes
 #include "SusyAnalysis/XMLReader.h"
 #include "SusyAnalysis/SmartVeto.h"
-#include "SusyAnalysis/PDFTool.h"
 #include "SusyAnalysis/utility.h"
 #include "SusyAnalysis/particles.h"
 #include "SusyAnalysis/Systematics.h"
@@ -51,6 +50,7 @@
 #include "SUSYTools/BTagCalib.h"
 #include "fastjet/ClusterSequence.hh"
 
+
 // Systematics includes
 #include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicVariation.h"
@@ -58,6 +58,11 @@
 #include "PATInterfaces/SystematicCode.h"
 //#include "boost/unordered_map.hpp"
 
+
+#ifndef __MAKECINT__
+#include "xAODMissingET/MissingETContainer.h"
+#include "xAODTruth/TruthParticle.h"
+#endif // not __MAKECINT__
 
 /* #include "METSmearing/MissingETSmearing.h" */
 /* #include "TruthToRecoFunctions/ElectronParam.h" */
@@ -67,44 +72,13 @@
 /* #include <TruthToRecoFunctions/MCP_resol.h> */
 /* #include "TruthToRecoFunctions/btag_performance.h" */
 
-
-// Fwd declares
-/* class xAODJet; */
-/* class xAODElectron; */
-/* class xAODMuon; */
-/* class xAODTruth; */
-
-#ifndef __MAKECINT__
-#include "xAODMissingET/MissingETContainer.h"
-#include "xAODTruth/TruthParticle.h"
-#endif // not __MAKECINT__
-
-/* #include "xAODMuon/MuonContainer.h" */
-/* #include "xAODJet/JetContainer.h" */
-/* #include "xAODEgamma/ElectronContainer.h" */
-/* #include "xAODEgamma/PhotonContainer.h" */
-/* #include "xAODTau/TauJetContainer.h" */
-//#include "xAODCaloEvent/CaloCluster.h"
-/* #include "xAODTruth/TruthParticleContainer.h" */
-/* #include "xAODTruth/TruthEventContainer.h" */
-/* #include "xAODTruth/TruthEvent.h" */
-/* #include "xAODTruth/TruthParticle.h" */
-/* #include "xAODMissingET/MissingET.h" */
-/* #include "xAODMissingET/MissingETContainer.h" */
-
-/* namespace xAOD{ */
-/*   /\* class JetContainer; *\/ */
-/*   /\* class ElectronContainer; *\/ */
-/*   /\* class MuonContainer; *\/ */
-/*   class TruthEventContainer; */
-/*   class TruthParticleContainer; */
-/*   class TruthParticle; */
-/* } */
-
-
 /* namespace METSmear{ */
 /*   class MissingETSmearing; */
 /* } */
+
+namespace LHAPDF{
+  class PDF;
+}
 
 class GoodRunsListSelectionTool;
 
@@ -223,10 +197,10 @@ private:
   BTagCalib*     tool_calib2; //!
   Root::TPileupReweighting* tool_purw; //!
   JVFUncertaintyTool* tool_jvf; //!
-  PDFTool*       tool_pdf; //!
-  JetCleaningTool *tool_jClean; //!  
+  JetCleaningTool* tool_jClean; //!  
 #ifndef __CINT__
   GoodRunsListSelectionTool *tool_grl;
+  LHAPDF::PDF* m_PDF;
 #endif // not __CINT__
 
   //Member Functions
@@ -257,6 +231,12 @@ private:
   virtual float GetAverageWeight();
 
   VVFloat GetBTagCalibSyst(BTagCalib* calibTool);
+
+  //pdf reweighting
+  double  getPdfRW( LHAPDF::PDF* pdfFrom, LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
+  double  getPdfRW( LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
+  double  getPdfRW( double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
+
 
   //Calculation functions
   virtual float Calc_MT(Particle p, TVector2 met);
@@ -346,6 +326,7 @@ private:
   int     QCD_SmearedEvents; //!
 
   //----- PDF Reweighting
+  //  LHAPDF::PDF*     m_PDF; //!
   bool    doPDFrw; //!
   float   beamE_from; //!
   float   beamE_to; //!
