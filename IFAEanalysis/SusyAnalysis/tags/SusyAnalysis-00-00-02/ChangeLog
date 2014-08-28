@@ -1,0 +1,43 @@
+2014-08-28 Martin <tripiana@cern.ch>
+	* Moved to Base-2.0.7 . 
+	* Moved to Asg_Lhapdf package (LHAPDF6). pdfsets from cvmfs now. PDFTool deprecated, replaced by our own implementation for v6.
+	* Update meta-data magic to accomodate user-defined samples
+	* Update scripts to run in batch
+	* Tag SusyAnalysis-00-00-02
+
+2014-08-25 Martin <tripiana@cern.ch>
+	* Add scripts for job submission.
+
+2014-08-25 Martin <tripiana@cern.ch>
+	* Add run wrapper to allow for multiple-id samples & systematics.
+	* Add missing files.
+
+2014-08-23 Martin <tripiana@cern.ch>
+	* Add MET recalculation, via SUSYTools.
+
+2014-08-22 Martin <tripiana@cern.ch>
+	* Fix lepton selection and SFs.
+
+2014-08-21 Martin <tripiana@cern.ch>
+	* Move to Asg_FastJet
+	* Remove scripts/install_fastjet.sh (no longer needed)
+	* Add auto-extraction of beam/ecm Energy. Used for meta-data reading and PDFRW config
+	* Add some format to output
+
+2014-08-20 Martin <tripiana@cern.ch>
+	* Add new Systematics class
+
+2014-08-19 Martin <tripiana@cern.ch>
+	* Update to Base-2.0.6
+	* Fix  several issues
+	* Add  several improvements and running features
+	* Add  SusyAnalysis/RunsMap.h for input management
+	* Add  scripts/grid_up.sh for env setup, needed for auto-fetch of metadata from AMI
+	* Add  TODO file to record pending issues and ideas for future development
+	* Caveats : no MET-rebuilding yet
+	* Tag  SusyAnalysis-00-00-01
+
+2014-07-23 Martin <tripiana@cern.ch>
+	* Initial import
+
+

@@ -1,0 +1,141 @@
+
+SETUP
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+1) Analysis release:
+   =====================
+
+The first thing you need to do is to set the Analysis release, so to have access to all packages used by our code.
+
+For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
+
+     >  rcSetup Base,2.0.7
+ 
+     Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
+
+     Then everytime you login, you just need to do:
+
+     > rcSetup
+
+
+2) Env variables:
+   =====================
+
+   Please make sure to add these variables to your environment (.bash_profile or .bashrc or .profile), so the code knows where to fund some stuff:
+
+   > export ANALYSISCODE="<your analysis folder>"      # where your code will be, from where you did the rcSetup above.
+   > export HISTFITTERDIR="<your HistFitter folder>"   # where you have (or gonna place) the HistFitter code.
+
+
+3) Getting the analysis code:
+   =====================
+   cd $ANALYSISCODE
+   svn co svn+ssh://$USER@svn.cern.ch/reps/IfaeAnaRepo/IFAEanalysis/SusyAnalysis/trunk SusyAnalysis
+
+
+4) Getting extra packages (not included in the Analysis release):
+   =====================
+   source $ANALYSISCODE/SusyAnalysis/scripts/get_extra_packages.sh
+
+
+5) Compile everything:
+   =====================
+   rc find_packages	
+   rc compile
+
+
+6) To run the analysis:
+   =====================
+
+   *** grid-stuff setup
+       
+       As the sample metadata is fetched from AMI, we need a voms-proxy beforehand. To do so please run (after rcSetup):
+
+       	  source SusyAnalysis/scripts/grid_up.sh
+
+
+   *** to run the code you do:
+
+          run [options] <Sample> [Syst] [outDir]
+
+       where
+
+		<Sample>  : The sample name to run over (comma-sep list). 
+
+		            To list the implemented samples do:      'run samples'
+			  
+                [Syst]    : systematics to be considered (comma-separated list) [optional]. 
+		            Just nominal is taken by default (Nom).
+
+                 	    To list the available (recommended) systematic variations do:     'run slist'
+
+  		            or well run './SusyAnalysis/scripts/list_systematics.sh'
+
+	        [options] : supported option flags
+			    
+			         -l  : run locally (default) 
+			         -b  : run in batch          
+				 -g  : run on the grid       
+				 -x  : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
+
+                [outDir]  : is where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)). 	
+
+
+
+       or just type:  'run'  to get this help.
+
+   *** 
+   
+   a) Create batch submission scripts (only once! Might take some time though...):
+
+   root generate_qsub_files.C
+
+   b) Run
+      e.g. to produce the mini-ntuples for X-sample:
+
+   $ANALYSISCODE/SusyAnalysis/scripts/qsubFiles/X-sample.sub
+
+   To actually send it to the batch you do:
+
+      submit_batch.sh
+
+   after modifying it accordingly. Put the samples and systematics you would like to run there.
+
+
+
+   ** NOTE:  for the moment there is no nice to get the proxy running on the batch. 
+             So we need to re-set the grid stuff locally again on the running machine, for what we need the password :)
+	     A way to do it (not nice I know but ...) is to place your grid certificate password in a file a call 
+             voms-init-proxy with it. 
+
+             In short...you need to:
+      
+                 - create a $ANALYSISCODE/.gridpsd file with just your password in it
+		 - make sure its permissions are correct (so you are minimally protected :) ) :   
+  		   	chmod 600 $ANALYSISCODE/.gridsp
+		 - voila! 
+             
+
+
+---------------- Caveats & Warnings --------------------------
+- it is not possible to mix samples at diff e.c.m.  ( I think it is now! thanks to the wrapper. CHECK! (Martin))
+- it is not possible to put MC and data within the same sample (= runs map key) (code prevents this anyways)
+
+
+---------------- EXTRAS --------------------------
+
+ROOT version:
+=============
+
+If you have problems setting ROOT (although the rcSetup should do it for you) you can write this in your .bash_profile:
+
+export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+echo "ATLAS_LOCAL_ROOT_BASE "$ATLAS_LOCAL_ROOT_BASE
+source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
+localSetupROOT
+
+
+
+
+

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnalysisOptions>
+
+    <GeneralSettings>
+        <Mode name="setDefinitionRegion">SR</Mode> <!-- Name of the object definition regions, separated by comma -->
+        <Mode name="debug">false</Mode>
+        <Mode name="doTree">true</Mode>
+        <Mode name="GeneratePileupFiles">false</Mode>
+        <Mode name="DoCutFlow">false</Mode>
+        <Path name="code">/nfs/at3users/users/tripiana/StopAnalysis/code</Path>
+	<Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
+        <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
+        <Path name="GRLxmlFile">SUSYTools/data/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
+	<Pileup>
+            <Mode name="ApplyPileupReweighting">false</Mode>
+            <Path name="PileupReweightingConfigFolder">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/data/PileupReweighting/</Path>
+            <Path name="PileupReweightingIlumicalcFile">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/data/PileupReweighting/ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>		
+            <PeriodConfig>MC12a</PeriodConfig>
+        </Pileup>
+
+        <LeptonEfficiency>
+            <Unitarity>true</Unitarity>
+        </LeptonEfficiency>
+
+    </GeneralSettings>
+
+    <ObjectDefinition>
+
+        <PdfRw>
+	  <Enable>false</Enable> 
+	  <ToBeamE>6.5</ToBeamE> <!-- Final beam energy (in TeV) -->
+        </PdfRw>
+        
+        <SmearTruth>
+	  <Enable>false</Enable> <!-- Only applicable to truth samples (isTruth==true) -->
+	  <Mu>60</Mu> <!-- needed for Jet smearing (hard coded) -->
+	  <MetWP>mu60</MetWP> <!--  implemented options: 60,80,140 -->
+	  <ElectronWP>0</ElectronWP> <!-- Electron working point . 0=loose 1=tight-->
+	  <RecJetFlav>false</RecJetFlav> <!-- Recalculate jet flavor? Mostly needed for old truth (buggy) ntuples.-->
+	</SmearTruth>
+	  
+        <Trigger>
+            <region name="SR">EF_xe80_tclcw</region>
+        </Trigger>
+
+        <Vertex>
+            <region name="SR">4</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
+        </Vertex>
+
+        <TrackVeto>
+            <Enable>false</Enable>
+            <region name="SR">
+                <Pt>10000</Pt>
+                <Eta>2.5</Eta>
+                <d0>1</d0>
+                <z0>2</z0>
+                <ndof>0</ndof>
+                <chi2OverNdof_min>0</chi2OverNdof_min>
+                <chi2OverNdof_max>3</chi2OverNdof_max>
+                <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
+                <TrackIso>0</TrackIso>
+            </region>
+        </TrackVeto>
+        <Electron>
+            <region name="SR">
+                <DefinPtCut>7000.</DefinPtCut>
+                <DefinEtaCut>2.47</DefinEtaCut>
+                <PreselPtCut>7000.</PreselPtCut>
+                <PreselEtaCut>2.47</PreselEtaCut>
+                <RecoPtCut>7000.</RecoPtCut>
+                <RecoEtaCut>2.47</RecoEtaCut>
+
+                <recoSF>true</recoSF>
+                <idSF>true</idSF>
+                <triggerSF>false</triggerSF>
+                <isolationVar>noIso</isolationVar>
+                <isolationThres>0.</isolationThres>
+            </region>
+        </Electron>
+        <Muon>
+            <region name="SR">
+                <DefinPtCut>6000.</DefinPtCut>
+                <DefinEtaCut>2.4</DefinEtaCut>
+                <PreselPtCut>6000.</PreselPtCut>
+                <PreselEtaCut>2.4</PreselEtaCut>
+                <RecoPtCut>6000.</RecoPtCut>
+                <RecoEtaCut>2.4</RecoEtaCut>
+                <isolationVar>mu_staco_ptcone20</isolationVar>
+                <isolationThres>1.8</isolationThres>
+            </region>
+        </Muon>
+        <Jet>
+            <region name="SR">
+                <Path name="BtagEnv">SUSYTools/data/BTagCalibration.env</Path>
+                <Path name="BtagCalib">SUSYTools/data/</Path>
+                <dPhiMin>0.4</dPhiMin>
+                <JVFMin>0.5</JVFMin>
+                <Collection>AntiKt4LCTopo</Collection>
+
+                <DefinPtCut>20000.</DefinPtCut>
+                <DefinEtaCut>10</DefinEtaCut>
+                <PreselPtCut>20000.</PreselPtCut>
+                <PreselEtaCut>10</PreselEtaCut>
+                <RecoPtCut>30000.</RecoPtCut>
+                <RecoEtaCut>2.8</RecoEtaCut>
+
+                <OverlapRemovalElPt>20000.</OverlapRemovalElPt>
+                <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt>
+                
+                <!--- For the c/b-tagger -->
+                <Tagger>MV1</Tagger>
+                <TaggerOpPoint>0_7892</TaggerOpPoint>	
+                <TaggerOpPoint2>0_3511</TaggerOpPoint2>				
+                <TaggerCollection>AntiKt4TopoLCJVF</TaggerCollection>
+            </region>
+        </Jet>
+        <Etmiss>
+            <region name="SR">
+                <Path name="FakeMetEstimator">RootCore/../SUSYTools/data/fest_periodF_v1.root</Path>
+                <Collection>Egamma10NoTau</Collection>
+                <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
+                <doFakeEtmiss>true</doFakeEtmiss>
+
+                <Term name="doRefEle">true</Term>
+                <Term name="doRefGamma">true</Term>
+                <Term name="doRefTau">false</Term>
+                <Term name="doRefJet">true</Term>
+                <Term name="doMuons">false</Term>
+                <Term name="doSoftTerms">true</Term>
+            </region>
+        </Etmiss>
+	<QCD>
+	    <region name="SR">
+	        <JetsPtPreselection>20000.0</JetsPtPreselection>
+		<METSigCut>1.0</METSigCut>
+		<LeadJetPreSel>Stop</LeadJetPreSel>
+		<RandomSeedOffset>123456</RandomSeedOffset>
+		<SmearType>optimal</SmearType>
+		<SmearUseBweight>true</SmearUseBweight>
+		<SmearBtagWeight>0.772</SmearBtagWeight>
+		<SmearMeanShift>low</SmearMeanShift>
+		<SmearExtraSmr>true</SmearExtraSmr>
+		<DoPhiSmearing>true</DoPhiSmearing>
+		<SmearedEvents>250</SmearedEvents>
+	    </region>
+	</QCD>
+    </ObjectDefinition>
+
+    <Cuts>
+        <c2_SR_M150150>passPreselectionCuts==true &amp;&amp; met&gt;120 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c2_SR_M150150>
+        <c2_SR_M280220>passPreselectionCuts==true &amp;&amp; met&gt;120 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c2_SR_M280220>
+        <c2_SR_M340340>passPreselectionCuts==true &amp;&amp; met&gt;120 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c2_SR_M340340>
+        <c2_SR_P220220>passPreselectionCuts==true &amp;&amp; met&gt;120 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c2_SR_P220220>
+        <c2_SR_M450340>passPreselectionCuts==true &amp;&amp; met&gt;120 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c2_SR_M450340>
+
+        <c3_SR_M150150>passPreselectionCuts==true &amp;&amp; met&gt;150 &amp;&amp; pt1&gt;150 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c3_SR_M150150>
+        <c3_SR_M280220>passPreselectionCuts==true &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;280 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c3_SR_M280220>
+        <c3_SR_M340340>passPreselectionCuts==true &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;340 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c3_SR_M340340>
+        <c3_SR_P220220>passPreselectionCuts==true &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;220 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c3_SR_P220220>
+        <c3_SR_M450340>passPreselectionCuts==true &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;450 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c3_SR_M450340>
+
+        <c4_SR_M150150>passPreselectionCuts==true &amp;&amp; met&gt;150 &amp;&amp; pt1&gt;150 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c4_SR_M150150>
+        <c4_SR_M280220>passPreselectionCuts==true &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;280 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c4_SR_M280220>
+        <c4_SR_M340340>passPreselectionCuts==true &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;340 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c4_SR_M340340>
+        <c4_SR_P220220>passPreselectionCuts==true &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;220 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; n_jets&gt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c4_SR_P220220>
+        <c4_SR_M450340>passPreselectionCuts==true &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;450 &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==0</c4_SR_M450340>
+
+
+        <c2_CR_Ele_M150150>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;150 &amp;&amp; pt1&gt;150 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N&gt;0 &amp;&amp; m_N==0</c2_CR_Ele_M150150>
+        <c2_CR_Ele_M280220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;280 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N&gt;0 &amp;&amp; m_N==0</c2_CR_Ele_M280220>
+        <c2_CR_Ele_M340340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;340 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N&gt;0 &amp;&amp; m_N==0</c2_CR_Ele_M340340>
+        <c2_CR_Ele_P220220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;220 &amp;&amp; n_jets&gt;=3 &amp;&amp; e_N&gt;0 &amp;&amp; m_N==0</c2_CR_Ele_P220220>
+        <c2_CR_Ele_M450340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;450 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N&gt;0 &amp;&amp; m_N==0</c2_CR_Ele_M450340>
+
+        <c2_CR_Muo_M150150>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;150 &amp;&amp; pt1&gt;150 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N&gt;0</c2_CR_Muo_M150150>
+        <c2_CR_Muo_M280220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;280 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N&gt;0</c2_CR_Muo_M280220>
+        <c2_CR_Muo_M340340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;340 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N&gt;0</c2_CR_Muo_M340340>
+        <c2_CR_Muo_P220220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;220 &amp;&amp; n_jets&gt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N&gt;0</c2_CR_Muo_P220220>
+        <c2_CR_Muo_M450340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;450 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N&gt;0</c2_CR_Muo_M450340>
+
+        <c2_CR_Wmn_M150150>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;150 &amp;&amp; pt1&gt;150 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==1 &amp;&amp; m_MT&gt;30 &amp;&amp; m_MT&lt;100</c2_CR_Wmn_M150150>
+        <c2_CR_Wmn_M280220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;280 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==1 &amp;&amp; m_MT&gt;30 &amp;&amp; m_MT&lt;100</c2_CR_Wmn_M280220>
+        <c2_CR_Wmn_M340340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;340 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==1 &amp;&amp; m_MT&gt;30 &amp;&amp; m_MT&lt;100</c2_CR_Wmn_M340340>
+        <c2_CR_Wmn_P220220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;220 &amp;&amp; n_jets&gt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==1 &amp;&amp; m_MT&gt;30 &amp;&amp; m_MT&lt;100</c2_CR_Wmn_P220220>
+        <c2_CR_Wmn_M450340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;450 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==1 &amp;&amp; m_MT&gt;30 &amp;&amp; m_MT&lt;100</c2_CR_Wmn_M450340>
+
+        <c2_CR_Zmm_M150150>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;150 &amp;&amp; pt1&gt;150 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==2 &amp;&amp; m_M&gt;66 &amp;&amp; m_M&lt;116</c2_CR_Zmm_M150150>
+        <c2_CR_Zmm_M280220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;280 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==2 &amp;&amp; m_M&gt;66 &amp;&amp; m_M&lt;116</c2_CR_Zmm_M280220>
+        <c2_CR_Zmm_M340340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;340 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==2 &amp;&amp; m_M&gt;66 &amp;&amp; m_M&lt;116</c2_CR_Zmm_M340340>
+        <c2_CR_Zmm_P220220>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;220 &amp;&amp; pt1&gt;220 &amp;&amp; n_jets&gt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==2 &amp;&amp; m_M&gt;66 &amp;&amp; m_M&lt;116</c2_CR_Zmm_P220220>
+        <c2_CR_Zmm_M450340>passPreselectionCuts==true &amp;&amp; eta1&lt;2.8 &amp;&amp; eta1&gt;-2.8 &amp;&amp; j1_chf&gt;0.02 &amp;&amp; j1_emf&gt;0.1 &amp;&amp; JVF_min&gt;0.5 &amp;&amp; j1_fsm&lt;0.8 &amp;&amp; dPhi_min&gt;0.4 &amp;&amp; met&gt;340 &amp;&amp; pt1&gt;450 &amp;&amp; n_jets&lt;=3 &amp;&amp; e_N==0 &amp;&amp; m_N==2 &amp;&amp; m_M&gt;66 &amp;&amp; m_M&lt;116</c2_CR_Zmm_M450340>
+
+    </Cuts>
+
+</AnalysisOptions>
