@@ -711,6 +711,7 @@ private:
   float btag_weight_total_80eff;
 
   float tag_MV1_1, tag_MV1_2, tag_MV1_3, tag_MV1_4;
+  float tag_SV1_1, tag_SV1_2, tag_SV1_3, tag_SV1_4;
   float tag_JetFitterCu_1, tag_JetFitterCu_2, tag_JetFitterCu_3, tag_JetFitterCu_4;
   float tag_JetFitterCb_1, tag_JetFitterCb_2, tag_JetFitterCb_3, tag_JetFitterCb_4;
 

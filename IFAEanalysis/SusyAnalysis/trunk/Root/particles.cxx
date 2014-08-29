@@ -28,9 +28,9 @@ TLorentzVector Particle::GetVector(){
   return TLorentzVector(*this);
 }
 
-void Particle::SetVector(TLorentzVector vec, bool inGeV){
+void Particle::SetVector(TLorentzVector vec, bool inGeV){ //inGeV=true if it is already in GeV!
   if(inGeV)
-    this->SetPtEtaPhiE(vec.Pt()*0.001, vec.Eta(), vec.Phi(), vec.E()*0.001);
+    this->SetPtEtaPhiE(vec.Pt(), vec.Eta(), vec.Phi(), vec.E());
   else
     this->SetPtEtaPhiE(vec.Pt()*0.001, vec.Eta(), vec.Phi(), vec.E()*0.001);
 
@@ -52,6 +52,7 @@ void Particle::PrintInfo(){
 
 // Default constructor for Jet
 Jet::Jet(){
+  isbjet = false;
   MV1 = -1;
   SV1plusIP3D = -1;
   SV1_pb = -1;
@@ -93,17 +94,19 @@ Jet::Jet(){
 
 Jet::~Jet(){}
 
-bool Jet::isBTagged(TString Tagger){ //--- Check!!!
-  if      (Tagger=="MV1"              && (this->MV1 > 0.7892))              {return true;}
-  else if (Tagger=="JetFitterCombNN" && (this->JetFitterCombNN > -2.55 && this->JetFitterCombNNc < 1.0)) {return true;}
+bool Jet::isBTagged(TString Tagger){ 
+  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
+  if      (Tagger=="MV1"              && (this->MV1 > 0.7892))              {return true;}//70% b eff  
+  else if (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > 1.85))         {return true;}//70% b eff 
+  else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > -2.55 && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
   else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
  
   return false;
 }
 
-bool Jet::isBTagged_80eff(TString Tagger){ //--- Check!!!
+bool Jet::isBTagged_80eff(TString Tagger){ 
   if      (Tagger=="MV1"              && (this->MV1 > 0.3511))              {return true;}
-
+  if      (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > -0.70))       {return true;}
   return false;
 }
 
@@ -119,6 +122,7 @@ bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
 
 float Jet::getBweight(TString Tagger){
   if (Tagger=="MV1")              return (this->MV1);
+  if (Tagger=="IP3DSV1")              return (this->SV1plusIP3D);
   if (Tagger=="JetFitterCOMBNN")  return (this->JetFitterCombNN);
   if (Tagger=="JetFitterCOMBNNc") return (this->JetFitterCombNNc); 
   
@@ -143,6 +147,7 @@ MET::MET(){
   met_lochadtopo.Set(0., 0.);
   met_ecorr.Set(0., 0.);
   m_hasMuons = false;
+  gev=false;
 }
 
 MET::~MET(){}
@@ -150,6 +155,8 @@ MET::~MET(){}
 void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   
   float sf = (inGeV ? 1. : 0.001); 
+
+  this->gev=true; //book it always in GeV
 
   if(which=="met_trk"){
     this->met_trk.Set(vec.X() * sf, vec.Y() * sf);

@@ -47,6 +47,10 @@
 #define TEV 1000000.
 #endif
 
+//Dummy values for variables initialization
+#define DUMMYUP  99999
+#define DUMMYDN -99999
+
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
 
@@ -319,6 +323,10 @@ void chorizo :: bookTree(){
       output->tree()->Branch("tag_MV1_2",&tag_MV1_2,"tag_MV1_2/F", 10000);
       output->tree()->Branch("tag_MV1_3",&tag_MV1_3,"tag_MV1_3/F", 10000);
       output->tree()->Branch("tag_MV1_4",&tag_MV1_4,"tag_MV1_4/F", 10000);
+      output->tree()->Branch("tag_SV1_1",&tag_SV1_1,"tag_SV1_1/F", 10000);
+      output->tree()->Branch("tag_SV1_2",&tag_SV1_2,"tag_SV1_2/F", 10000);
+      output->tree()->Branch("tag_SV1_3",&tag_SV1_3,"tag_SV1_3/F", 10000);
+      output->tree()->Branch("tag_SV1_4",&tag_SV1_4,"tag_SV1_4/F", 10000);
       output->tree()->Branch("tag_JetFitterCu_1",&tag_JetFitterCu_1,"tag_JetFitterCu_1/F", 10000);
       output->tree()->Branch("tag_JetFitterCu_2",&tag_JetFitterCu_2,"tag_JetFitterCu_2/F", 10000);
       output->tree()->Branch("tag_JetFitterCu_3",&tag_JetFitterCu_3,"tag_JetFitterCu_3/F", 10000);
@@ -504,90 +512,90 @@ void chorizo :: InitVars()
 
   //- Top    
   ttbar_weight = 1.;                  
-  Top_truth_pt = 0.;                  
-  Topbar_truth_pt = 0.;               
-  avTop_truth_pt = 0.;                
+  Top_truth_pt = DUMMYDN;                  
+  Topbar_truth_pt = DUMMYDN;                  
+  avTop_truth_pt = DUMMYDN;                  
                                        
   //- Boson info                       
-  bos_pt = 0.;                      
-  bos_m = 0.;                       
-  bos_pdgId = 0.;                   
-  bosonVec_reco_pt = 0.;            
-  bosonVec_reco_eta = 0.;           
-  bosonVec_reco_phi = 0.;           
-  bosonVec_truth_pt = 0.;           
-  bosonVec_truth_eta = 0.;          
-  bosonVec_truth_phi = 0.;          
+  bos_pt = DUMMYDN;                      
+  bos_m = DUMMYDN;                       
+  bos_pdgId = DUMMYDN;                   
+  bosonVec_reco_pt = DUMMYDN;            
+  bosonVec_reco_eta = DUMMYDN;           
+  bosonVec_reco_phi = DUMMYDN;           
+  bosonVec_truth_pt = DUMMYDN;           
+  bosonVec_truth_eta = DUMMYDN;          
+  bosonVec_truth_phi = DUMMYDN;          
                                        
   //- truth kin info                   
-  truth_MT = 0.;                      
-  truth_M = 0.;                       
-  truth_Lep1_pt = 0.;                 
-  truth_Lep2_pt = 0.;                 
+  truth_MT = DUMMYDN;                      
+  truth_M = DUMMYDN;                       
+  truth_Lep1_pt = DUMMYDN;                 
+  truth_Lep2_pt = DUMMYDN;                 
   truth_m_fiducial = false;              
-  truth_met = 0.;                     
-  truth_met_noEle = 0.;               
+  truth_met = DUMMYDN;                     
+  truth_met_noEle = DUMMYDN;               
                             
-  truth_n_bjets = 0.;        
-  truth_n_HFjets = 0.;       
-  truth_n_leptons = 0.;      
+  truth_n_bjets = DUMMYDN;        
+  truth_n_HFjets = DUMMYDN;       
+  truth_n_leptons = DUMMYDN;      
   
   //- Production kin        
   //only for signal samples 
-  sigSam_pt1 = 0.;         
-  sigSam_eta1 = 0.;        
-  sigSam_phi1 = 0.;        
-  sigSam_E1 = 0.;          
-  sigSam_pt2 = 0.;         
-  sigSam_eta2 = 0.;        
-  sigSam_phi2 = 0.;        
-  sigSam_E2 = 0.;          
-  truth_shat = 0.;         
+  sigSam_pt1 = DUMMYDN;         
+  sigSam_eta1 = DUMMYDN;        
+  sigSam_phi1 = DUMMYDN;        
+  sigSam_E1 = DUMMYDN;          
+  sigSam_pt2 = DUMMYDN;         
+  sigSam_eta2 = DUMMYDN;        
+  sigSam_phi2 = DUMMYDN;        
+  sigSam_E2 = DUMMYDN;          
+  truth_shat = DUMMYDN;         
 
   //- Event selection
   nVertex = 0;
 
   //- Electron Info
-  e_N = 0.;               
-  e_pt = 0.;              
-  e_truth_pt = 0.;        
-  e_truth_eta = 0.;       
-  e_truth_phi = 0.;       
-  e_eta = 0.;             
-  e_phi = 0.;             
-  e_ptiso30 = 0.;         
-  e_etiso30 = 0.;         
+  e_N = DUMMYDN;               
+  e_pt = DUMMYDN;              
+  e_truth_pt = DUMMYDN;        
+  e_truth_eta = DUMMYDN;       
+  e_truth_phi = DUMMYDN;       
+  e_eta = DUMMYDN;             
+  e_phi = DUMMYDN;             
+  e_ptiso30 = DUMMYDN;         
+  e_etiso30 = DUMMYDN;         
   e_tight = false;           
-  e_M = 0.;               
-  e_Zpt = 0.;             
-  electronSF = 0.;        
-  electronSFu = 0.;       
-  electronSFd = 0.;       
+  e_M = DUMMYDN;               
+  e_Zpt = DUMMYDN;             
+  electronSF = DUMMYDN;        
+  electronSFu = DUMMYDN;       
+  electronSFd = DUMMYDN;       
 
   //Muon info
-  m_N = 0.;                  
-  m_pt = 0.;               
-  m_eta = 0.;              
-  m_phi = 0.;              
-  m2_pt = 0.;              
-  m2_eta = 0.;             
-  m2_phi = 0.;             
-  m_iso = 0.;              
-  m_ptiso30 = 0.;          
-  m_etiso30 = 0.;          
-  m2_iso = 0.;             
-  m2_ptiso30 = 0.;         
-  m2_etiso30 = 0.;         
-  muonSF = 0.;             
-  muonSFu = 0.;            
-  muonSFd = 0.;            
-  m_M = 0.;                
-  m_MT = 0.;               
-  m_Zpt = 0.;              
-  m_EM = 0.;               
+  m_N = DUMMYDN;                  
+  m_pt = DUMMYDN;               
+  m_eta = DUMMYDN;              
+  m_phi = DUMMYDN;              
+  m2_pt = DUMMYDN;              
+  m2_eta = DUMMYDN;             
+  m2_phi = DUMMYDN;             
+  m_iso = DUMMYDN;              
+  m_ptiso30 = DUMMYDN;          
+  m_etiso30 = DUMMYDN;          
+  m2_iso = DUMMYDN;             
+  m2_ptiso30 = DUMMYDN;         
+  m2_etiso30 = DUMMYDN;         
+  muonSF = DUMMYDN;             
+  muonSFu = DUMMYDN;            
+  muonSFd = DUMMYDN;            
+  m_M = DUMMYDN;                
+  m_MT = DUMMYDN;               
+  m_Zpt = DUMMYDN;              
+  m_EM = DUMMYDN;               
 
   //muons (before overlap removal)      
-  muon_N = 0.;                 
+  muon_N = DUMMYDN;                 
   muon_pt.clear();                
   muon_eta.clear();               
   muon_phi.clear();               
@@ -611,74 +619,74 @@ void chorizo :: InitVars()
   JVF_min=false;
   n_jets=0;
   n_taujets=0;
-  pt1 = 0.;              
-  pt2 = 0.;              
-  pt3 = 0.;              
-  pt4 = 0.;              
-  pt5 = 0.;              
-  pt6 = 0.;              
-  eta1 = 0.;             
-  eta2 = 0.;             
-  eta3 = 0.;             
-  eta4 = 0.;             
-  eta5 = 0.;             
-  eta6 = 0.;             
-  phi1 = 0.;             
-  phi2 = 0.;             
-  phi3 = 0.;             
-  phi4 = 0.;             
-  phi5 = 0.;             
-  phi6 = 0.;             
-  j1_chf = 0.;           
-  j2_chf = 0.;           
-  j3_chf = 0.;           
-  j4_chf = 0.;           
-  j1_emf = 0.;           
-  j2_emf = 0.;           
-  j3_emf = 0.;           
-  j4_emf = 0.;           
-  j1_fsm = 0.;           
-  j2_fsm = 0.;           
-  j3_fsm = 0.;           
-  j4_fsm = 0.;           
-  j1_time = 0.;          
-  j2_time = 0.;          
-  j3_time = 0.;          
-  j4_time = 0.;          
-  j1_mT = 0.;            
-  j2_mT = 0.;            
-  j3_mT = 0.;            
-  j4_mT = 0.;            
-  j1_nTrk = 0.;                               
-  j2_nTrk = 0.;                               
-  j3_nTrk = 0.;                               
-  j4_nTrk = 0.;                               
-  j1_sumPtTrk = 0.;                           
-  j2_sumPtTrk = 0.;                           
-  j3_sumPtTrk = 0.;                           
-  j4_sumPtTrk = 0.;                           
-  j1_jvtxf = 0.;                              
-  j2_jvtxf = 0.;                              
-  j3_jvtxf = 0.;                              
-  j4_jvtxf = 0.;                              
-  j1_tflavor = 0.;                              
-  j2_tflavor = 0.;                              
-  j3_tflavor = 0.;                              
-  j4_tflavor = 0.;                              
+  pt1 = DUMMYDN;              
+  pt2 = DUMMYDN;              
+  pt3 = DUMMYDN;              
+  pt4 = DUMMYDN;              
+  pt5 = DUMMYDN;              
+  pt6 = DUMMYDN;              
+  eta1 = DUMMYDN;             
+  eta2 = DUMMYDN;             
+  eta3 = DUMMYDN;             
+  eta4 = DUMMYDN;             
+  eta5 = DUMMYDN;             
+  eta6 = DUMMYDN;             
+  phi1 = DUMMYDN;             
+  phi2 = DUMMYDN;             
+  phi3 = DUMMYDN;             
+  phi4 = DUMMYDN;             
+  phi5 = DUMMYDN;             
+  phi6 = DUMMYDN;             
+  j1_chf = DUMMYDN;           
+  j2_chf = DUMMYDN;           
+  j3_chf = DUMMYDN;           
+  j4_chf = DUMMYDN;           
+  j1_emf = DUMMYDN;           
+  j2_emf = DUMMYDN;           
+  j3_emf = DUMMYDN;           
+  j4_emf = DUMMYDN;           
+  j1_fsm = DUMMYDN;           
+  j2_fsm = DUMMYDN;           
+  j3_fsm = DUMMYDN;           
+  j4_fsm = DUMMYDN;           
+  j1_time = DUMMYDN;          
+  j2_time = DUMMYDN;          
+  j3_time = DUMMYDN;          
+  j4_time = DUMMYDN;          
+  j1_mT = DUMMYDN;            
+  j2_mT = DUMMYDN;            
+  j3_mT = DUMMYDN;            
+  j4_mT = DUMMYDN;            
+  j1_nTrk = DUMMYDN;                               
+  j2_nTrk = DUMMYDN;                               
+  j3_nTrk = DUMMYDN;                               
+  j4_nTrk = DUMMYDN;                               
+  j1_sumPtTrk = DUMMYDN;                           
+  j2_sumPtTrk = DUMMYDN;                           
+  j3_sumPtTrk = DUMMYDN;                           
+  j4_sumPtTrk = DUMMYDN;                           
+  j1_jvtxf = DUMMYDN;                              
+  j2_jvtxf = DUMMYDN;                              
+  j3_jvtxf = DUMMYDN;                              
+  j4_jvtxf = DUMMYDN;                              
+  j1_tflavor = DUMMYDN;                              
+  j2_tflavor = DUMMYDN;                              
+  j3_tflavor = DUMMYDN;                              
+  j4_tflavor = DUMMYDN;                              
                                                
   //- Btagging                                 
   n_bjets = 0;                               
-  n_bjets_80eff = 0.;                         
-  btag_weight1 = 0.;                          
-  btag_weight2 = 0.;                          
-  btag_weight3 = 0.;                          
-  btag_weight4 = 0.;                          
-  btag_weight_80eff1 = 0.;                    
-  btag_weight_80eff2 = 0.;                    
-  btag_weight_80eff3 = 0.;                    
-  btag_weight_80eff4 = 0.;                    
-  btag_weight_total = 0.;                     
-  btag_weight_total_80eff = 0.;               
+  n_bjets_80eff = DUMMYDN;                         
+  btag_weight1 = DUMMYDN;                          
+  btag_weight2 = DUMMYDN;                          
+  btag_weight3 = DUMMYDN;                          
+  btag_weight4 = DUMMYDN;                          
+  btag_weight_80eff1 = DUMMYDN;                    
+  btag_weight_80eff2 = DUMMYDN;                    
+  btag_weight_80eff3 = DUMMYDN;                    
+  btag_weight_80eff4 = DUMMYDN;                    
+  btag_weight_total = DUMMYDN;                     
+  btag_weight_total_80eff = DUMMYDN;               
 
   btag_weight_first.clear();
   btag_weight_first_80eff.clear();
@@ -698,18 +706,22 @@ void chorizo :: InitVars()
   btag_weight_L_up.clear();
   btag_weight_L_up_80eff.clear();
 
-  tag_MV1_1 = 0.;
-  tag_MV1_2 = 0.;
-  tag_MV1_3 = 0.;
-  tag_MV1_4 = 0.;
-  tag_JetFitterCu_1 = 0.;
-  tag_JetFitterCu_2 = 0.;
-  tag_JetFitterCu_3 = 0.;
-  tag_JetFitterCu_4 = 0.;
-  tag_JetFitterCb_1 = 0.;
-  tag_JetFitterCb_2 = 0.;
-  tag_JetFitterCb_3 = 0.;
-  tag_JetFitterCb_4 = 0.;
+  tag_MV1_1 = DUMMYDN;
+  tag_MV1_2 = DUMMYDN;
+  tag_MV1_3 = DUMMYDN;
+  tag_MV1_4 = DUMMYDN;
+  tag_SV1_1 = DUMMYDN;
+  tag_SV1_2 = DUMMYDN;
+  tag_SV1_3 = DUMMYDN;
+  tag_SV1_4 = DUMMYDN;
+  tag_JetFitterCu_1 = DUMMYDN;
+  tag_JetFitterCu_2 = DUMMYDN;
+  tag_JetFitterCu_3 = DUMMYDN;
+  tag_JetFitterCu_4 = DUMMYDN;
+  tag_JetFitterCb_1 = DUMMYDN;
+  tag_JetFitterCb_2 = DUMMYDN;
+  tag_JetFitterCb_3 = DUMMYDN;
+  tag_JetFitterCb_4 = DUMMYDN;
   
   //BCH cleaning
   JetsFailBCHTight = false;        
@@ -720,89 +732,89 @@ void chorizo :: InitVars()
   Jet2FailBCHMedium = false;       
   Jet3FailBCHTight = false;        
   Jet3FailBCHMedium = false;       
-  Jet1_BCH_CORR_CELL = 0.;     
-  Jet2_BCH_CORR_CELL = 0.;     
-  Jet3_BCH_CORR_CELL = 0.;     
+  Jet1_BCH_CORR_CELL = DUMMYDN;     
+  Jet2_BCH_CORR_CELL = DUMMYDN;     
+  Jet3_BCH_CORR_CELL = DUMMYDN;     
 
   //met 
-  met = 0.;
-  met_phi = 0.;
-  met_trk = 0.;
-  mettrk_phi = 0.;
-  met_mu = 0.;
-  met_ecorr = 0.;
-  met_lochadtopo = 0.;
-  met_reffinalNoMu = 0.;
+  met = DUMMYDN;
+  met_phi = DUMMYDN;
+  met_trk = DUMMYDN;
+  mettrk_phi = DUMMYDN;
+  met_mu = DUMMYDN;
+  met_ecorr = DUMMYDN;
+  met_lochadtopo = DUMMYDN;
+  met_reffinalNoMu = DUMMYDN;
 
   //event variables 
-  dPhi_met_j1 = 0.;                         
-  dPhi_met_j2 = 0.;                         
-  dPhi_met_j3 = 0.;                         
-  dPhi_met_j4 = 0.;                         
-  dPhi_mettrk_j1 = 0.;                      
-  dPhi_mettrk_j2 = 0.;                      
-  dPhi_mettrk_j3 = 0.;                      
-  dPhi_mettrk_j4 = 0.;                      
-  dPhi_met_mettrk = 0.;                     
-  dPhi_j1_j2 = 0.;                          
-  dPhi_j1_j3 = 0.;                          
-  dPhi_j2_j3 = 0.;                          
-  dPhi_b1_b2 = 0.;                          
-  dPhi_min = 0.;                            
-  dPhi_min_alljets = 0.;                    
-  dR_j1_j2 = 0.;                            
-  dR_j1_j3 = 0.;                            
-  dR_j2_j3 = 0.;                            
-  dR_j1_m1 = 0.;                            
-  dR_j1_m2 = 0.;                            
-  dR_j2_m1 = 0.;                            
-  dR_j2_m2 = 0.;                            
-  dR_j3_m1 = 0.;                            
-  dR_j3_m2 = 0.;                            
-  dEta_j1_j2 = 0.;                          
+  dPhi_met_j1 = DUMMYDN;                         
+  dPhi_met_j2 = DUMMYDN;                         
+  dPhi_met_j3 = DUMMYDN;                         
+  dPhi_met_j4 = DUMMYDN;                         
+  dPhi_mettrk_j1 = DUMMYDN;                      
+  dPhi_mettrk_j2 = DUMMYDN;                      
+  dPhi_mettrk_j3 = DUMMYDN;                      
+  dPhi_mettrk_j4 = DUMMYDN;                      
+  dPhi_met_mettrk = DUMMYDN;                     
+  dPhi_j1_j2 = DUMMYDN;                          
+  dPhi_j1_j3 = DUMMYDN;                          
+  dPhi_j2_j3 = DUMMYDN;                          
+  dPhi_b1_b2 = DUMMYDN;                          
+  dPhi_min = DUMMYDN;                            
+  dPhi_min_alljets = DUMMYDN;                    
+  dR_j1_j2 = DUMMYDN;                            
+  dR_j1_j3 = DUMMYDN;                            
+  dR_j2_j3 = DUMMYDN;                            
+  dR_j1_m1 = DUMMYDN;                            
+  dR_j1_m2 = DUMMYDN;                            
+  dR_j2_m1 = DUMMYDN;                            
+  dR_j2_m2 = DUMMYDN;                            
+  dR_j3_m1 = DUMMYDN;                            
+  dR_j3_m2 = DUMMYDN;                            
+  dEta_j1_j2 = DUMMYDN;                          
 
-  M12 = 0.;
+  M12 = DUMMYDN;
 
-  MT_min_jet_met = 0.;  
-  MT_bcl_met = 0.;  
-  MT_bfar_met = 0.;  
-  MT_lcl_met = 0.;  
-  MT_jsoft_met = 0.;  
+  MT_min_jet_met = DUMMYDN;  
+  MT_bcl_met = DUMMYDN;  
+  MT_bfar_met = DUMMYDN;  
+  MT_lcl_met = DUMMYDN;  
+  MT_jsoft_met = DUMMYDN;  
 
   DiJet_Mass=0;
   DiBJet_Mass=0;
 
-  mct=0;
-  meff=0;
-  HT=0;
+  mct=0.;
+  meff=0.;
+  HT=0.;
 
-  AlphaT=0;
+  AlphaT=DUMMYDN;
 
   //Razor
-  MR=0;
-  MTR=0;
-  R=0;
-  shatR=0;
-  gaminvR=0;
-  mdeltaR=0;
-  cosptR=0;
-  
+  MR=DUMMYDN;
+  MTR=DUMMYDN;
+  R=DUMMYDN;
+  shatR=DUMMYDN;
+  gaminvR=DUMMYDN;
+  mdeltaR=DUMMYDN;
+  cosptR=DUMMYDN;
+    
   //top reconstruction
-  MtTop = 0.;
-  m_top_had1 = 0.;
-  m_top_had2 = 0.;
+  MtTop = DUMMYDN;
+  m_top_had1 = DUMMYDN;
+  m_top_had2 = DUMMYDN;
 
   //fat jets
-  m0_antikt12 = 0.;
-  m1_antikt12 = 0.;
-  m0_antikt08 = 0.;
-  m1_antikt08 = 0.;
-  pt0_antikt12 = 0.;
-  pt1_antikt12 = 0.;
-  pt0_antikt08 = 0.;
-  pt1_antikt08 = 0.;
-  mtasym12 = 0.;
-  mtasym08 = 0.;
+  m0_antikt12 = DUMMYDN;
+  m1_antikt12 = DUMMYDN;
+  m0_antikt08 = DUMMYDN;
+  m1_antikt08 = DUMMYDN;
+  pt0_antikt12 = DUMMYDN;
+  pt1_antikt12 = DUMMYDN;
+  pt0_antikt08 = DUMMYDN;
+  pt1_antikt08 = DUMMYDN;
+  mtasym12 = DUMMYDN;
+  mtasym08 = DUMMYDN;
 
   warningPileup = true; //to do some warnings prints first time only! (GetAverageWeight())
 
@@ -1203,14 +1215,14 @@ EL::StatusCode chorizo :: initialize ()
   }
 
   // scale beam energy from 8 TeV to 13 TeV
-  if(doPDFrw){
+  if(doPDFrw && this->isMC){
     beamE_from = (float) wk()->metaData()->getDouble("ebeam", 4.); //default is 8TeV!
     m_PDF = LHAPDF::mkPDF(input_pdfset.Data(), input_pdfset_member); //LHAPDF6
   }
 
   // initialize and configure the jet cleaning tool
   tool_jClean = new JetCleaningTool("JetCleaning");
-  tool_jClean->msg().setLevel( MSG::DEBUG ); 
+  //  tool_jClean->msg().setLevel( MSG::DEBUG ); 
   tool_jClean->setProperty( "CutLevel", "MediumBad");
   tool_jClean->initialize();
 
@@ -1402,8 +1414,8 @@ EL::StatusCode chorizo :: execute ()
     float x1, x2, scalePDF;
     
     //** For newer tags when they come...
-    // ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::ID1);
-    // ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::ID2);
+    // ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1);
+    // ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2);
     // ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
     // ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
     // ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
@@ -1411,6 +1423,9 @@ EL::StatusCode chorizo :: execute ()
     // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
     // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
     // ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::SCALEPDF);
+    // ( *truthE_itr )->pdfInfoParameter(pdf_Q, xAOD::TruthEvent::Q);
+    // ( *truthE_itr )->pdfInfoParameter(pdf_xf1, xAOD::TruthEvent::XF1);
+    // ( *truthE_itr )->pdfInfoParameter(pdf_xf2, xAOD::TruthEvent::XF2);
 
     ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::id1);
     ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::id2);
@@ -1424,7 +1439,18 @@ EL::StatusCode chorizo :: execute ()
     
     //pdf reweighting
     if(doPDFrw){
-      PDF_w *= getPdfRW((double)beamE_to/beamE_from, (double)(scalePDF*scalePDF), (double)x1, (double)x2, pdfId1, pdfId2);     
+      PDF_w *= getPdfRW((double)beamE_to/beamE_from, (double)(scalePDF*scalePDF), (double)x1, (double)x2, id1, id2);     
+      // cout << "-------------------------------------" << endl;
+      // cout << "DEBUG :: rwScale = " << beamE_to/beamE_from << endl; 
+      // cout << "DEBUG :: scalePDF = " << scalePDF << endl; 
+      // cout << "DEBUG :: x1 = " << x1 << endl; 
+      // cout << "DEBUG :: x2 = " << x2 << endl; 
+      // cout << "DEBUG :: id1 = " << id1 << endl; 
+      // cout << "DEBUG :: id2 = " << id2 << endl; 
+      // cout << "DEBUG :: pdfId1 = " << pdfId1 << endl; 
+      // cout << "DEBUG :: pdfId2 = " << pdfId2 << endl; 
+      // cout << "DEBUG :: PDF_w = " << PDF_w << endl; 
+      // cout << "-------------------------------------" << endl;
     }
   
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
@@ -1581,7 +1607,7 @@ EL::StatusCode chorizo :: execute ()
     
     // if ( (el_MET_wet->at(k)).at(0) != 0) velidx[iter->first].push_back(k); //CHECK_ME (MET WEIGHTS?)
 
-    tool_st->FillElectron( (**el_itr), iEl ); //, El_DefinPtCut, El_DefinEtaCut ); //FIX_ME! not possible in ST as of now...
+    tool_st->FillElectron( (**el_itr), iEl, El_DefinPtCut, El_DefinEtaCut ); //FIX_ME! not possible in ST as of now... I hacked ST meanwhile
     tool_st->IsSignalElectron( (**el_itr), iEl, El_PreselPtCut, -1 ); //thight ID + d0 & z0 no isolation applied for now! //CHECK ME
     
     //pre-book baseline electrons
@@ -2018,7 +2044,7 @@ EL::StatusCode chorizo :: execute ()
     std::vector<int> ntrk_vec;
     (*jet_itr)->getAttribute(xAOD::JetAttribute::NumTrkPt1000, ntrk_vec); //NumTrkPt500? CHECK_ME
     if (ntrk_vec.size()>0)                                                    
-      recoJet.nTrk = ntrk_vec[0]*0.001; // assume the 0th vertex is the primary one (in GeV)
+      recoJet.nTrk = ntrk_vec[0]; // assume the 0th vertex is the primary one (in GeV)
     else                                                                          
       recoJet.nTrk = 0;                                                              
 
@@ -2058,10 +2084,14 @@ EL::StatusCode chorizo :: execute ()
     }
 
     //--- B-tagging
+    
+    //from SUSYTools (based on SV1plusIP3D (70%) at the moment!)
+    recoJet.isbjet = (bool)(*jet_itr)->auxdata< int >("bjet");
+
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
 
-    recoJet.MV1 = btag->MV1_discriminant(); //CHECK_ME
-    recoJet.SV1plusIP3D = btag->SV1plusIP3D_discriminant(); //CHECK_ME
+    recoJet.MV1 = btag->MV1_discriminant();
+    recoJet.SV1plusIP3D = btag->SV1plusIP3D_discriminant();
 
     recoJet.IP3D_pb = btag->IP3D_pb(); 
     recoJet.IP3D_pc = btag->IP3D_pc(); 
@@ -2108,12 +2138,18 @@ EL::StatusCode chorizo :: execute ()
   tool_st->GetMET(metRFc);   //doMuons here?
   TVector2 metRF(0.,0.);// = getMET(&metRFc, "Final"); 
 
+  xAOD::MissingETContainer::const_iterator metrf_it = metRFc.find( "Final" );
+  if (metrf_it == metRFc.end())
+    Warning("execute()", "No 'Final' inside MET container. Setting MET=(0,0) !");
+  else
+    metRF.Set((*metrf_it)->mpx(), (*metrf_it)->mpy());
+
 
   //--- Remove events with fake Etmiss
   if (Met_doFakeEtmiss && !this->isTruth){
     for(unsigned int iJet=0; iJet < jetCandidates.size(); iJet++){
       if(jetCandidates.at(iJet).Pt() > 40. && 
-	 //jetCandidates.at(iJet).BCH_CORR_JET > 0.05 && //FIX_ME
+	 jetCandidates.at(iJet).BCH_CORR_JET > 0.05 && 
 	 deltaPhi(metRF.Phi(), jetCandidates.at(iJet).Phi()) < 0.3){
 	this->isFakeMet=true;
       }
@@ -2509,7 +2545,7 @@ EL::StatusCode chorizo :: execute ()
   //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
   
   tool_st->GetMET(metRFc, Met_doMuons);
-  TVector2 v_met_ST(0.,0.); // = getMET(&metRFc, "Final");
+  TVector2 v_met_ST = getMET(&metRFc, "Final");
 
   met_obj.SetVector(v_met_ST,"");  //- Copy met vector to the met data member
   met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
@@ -2524,8 +2560,7 @@ EL::StatusCode chorizo :: execute ()
     TVector2 muon_vector2(recoMuons.at(iMu).GetVector().Px(), recoMuons.at(iMu).GetVector().Py());
     v_met_muinv_ST -= muon_vector2;
   }
-  v_met_muinv_ST *= TVector2(1000., 1000.); //back to MeV
-  met_obj.SetVector(v_met_muinv_ST, "met_mu");
+  met_obj.SetVector(v_met_muinv_ST, "met_mu", true); //it is in GeV already!
   
   //--- Met LocHadTopo (from the branches)
   TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); 
@@ -2537,21 +2572,23 @@ EL::StatusCode chorizo :: execute ()
 
 
   //--- Met RefFinal, invisible muons (from the branches)
-  TVector2 v_met_rfinal_muinv = v_met_rfinal_mu;
+  TVector2 v_met_rfinal_muinv = met_obj.GetVector("met_refFinal"); //in GeV
   for (unsigned int iMu=0; iMu < recoMuons.size(); iMu++){
     TVector2 muon_vector2(recoMuons.at(iMu).GetVector().Px(), recoMuons.at(iMu).GetVector().Py());
     v_met_rfinal_muinv += muon_vector2;
   }
-  v_met_rfinal_muinv *= TVector2(1000., 1000.); //back to MeV 
-  met_obj.SetVector(v_met_rfinal_muinv, "met_refFinal_mu");
+  met_obj.SetVector(v_met_rfinal_muinv, "met_refFinal_mu", true); //already in GeV
   
   //--- Met with electrons as invisible 
   TVector2 v_met_elinv_ST = met_obj.GetVector(); //== met_ST (GeV) 
   if (e_N==1) { 
-    v_met_elinv_ST.Set( met*cos(met_phi) + e_pt*cos(e_phi), met*sin(met_phi)+e_pt*sin(e_phi) );
+    float metmod=v_met_elinv_ST.Mod();
+    float metphi=TVector2::Phi_mpi_pi(v_met_elinv_ST.Phi());
+    float e0pt  = recoElectrons.at(0).Pt();
+    float e0phi = recoElectrons.at(0).Phi();
+    v_met_elinv_ST.Set( metmod*cos(metphi) + e0pt*cos(e0phi), metmod*sin(metphi)+e0pt*sin(e0phi) );
   }
-  v_met_elinv_ST *= TVector2(1000., 1000.); //back to MeV 
-  met_obj.SetVector(v_met_elinv_ST, "met_ecorr");    
+  met_obj.SetVector(v_met_elinv_ST, "met_ecorr", true); //already in GeV    
 
 
 
@@ -2958,7 +2995,7 @@ EL::StatusCode chorizo :: execute ()
     
   bosonVec_reco_pt = V_lnu.Mod();
   //bosonVec_reco_eta = V_lnu.Eta();  //not accesible!
-  bosonVec_reco_phi = V_lnu.Phi();       
+  bosonVec_reco_phi = TVector2::Phi_mpi_pi( V_lnu.Phi() );       
   
   if (!isTruth)
     MtTop = TopTransvMass();
@@ -3058,6 +3095,7 @@ void chorizo :: dumpJets(){
     
   if (n_jets>0){
     tag_MV1_1 = recoJets.at(0).MV1;
+    tag_SV1_1 = recoJets.at(0).SV1plusIP3D;
     // tag_JetFitterCOMBNN_1 = recoJets.at(0).JetFitterCOMBNN;
     // tag_JetFitterCOMBNNc_1 = recoJets.at(0).JetFitterCOMBNNc;
     tag_JetFitterCu_1 = recoJets.at(0).JetFitterCu;
@@ -3114,6 +3152,7 @@ void chorizo :: dumpJets(){
       
       //btagging
       tag_MV1_2 = recoJets.at(1).MV1;
+      tag_SV1_2 = recoJets.at(1).SV1plusIP3D;
       // tag_JetFitterCOMBNN_2 = recoJets.at(1).JetFitterCOMBNN;
       // tag_JetFitterCOMBNNc_2 = recoJets.at(1).JetFitterCOMBNNc;
       tag_JetFitterCu_2 = recoJets.at(1).JetFitterCu;
@@ -3166,6 +3205,7 @@ void chorizo :: dumpJets(){
         
       if (n_jets>2){
 	tag_MV1_3 = recoJets.at(2).MV1;
+	tag_SV1_3 = recoJets.at(2).SV1plusIP3D;
 	// tag_JetFitterCOMBNN_3 = recoJets.at(2).JetFitterCOMBNN;
 	// tag_JetFitterCOMBNNc_3 = recoJets.at(2).JetFitterCOMBNNc;
 	tag_JetFitterCu_3 = recoJets.at(2).JetFitterCu;
@@ -3218,6 +3258,7 @@ void chorizo :: dumpJets(){
           
 	if (n_jets>3){
 	  tag_MV1_4 = recoJets.at(3).MV1;
+	  tag_SV1_4 = recoJets.at(3).SV1plusIP3D;
 	  // tag_JetFitterCOMBNN_4 = recoJets.at(3).JetFitterCOMBNN;
 	  // tag_JetFitterCOMBNNc_4 = recoJets.at(3).JetFitterCOMBNNc;
 	  tag_JetFitterCu_4 = recoJets.at(3).JetFitterCu;
@@ -3484,14 +3525,14 @@ bool chorizo :: passMCor(){
   xAOD::TruthParticleContainer::const_iterator truthP_end;
   
   double cutting_var=0.;
-  if (this->mc_channel_number>=156803 && mc_channel_number<=156828){ //Znunu AlpGen
+  if (this->mc_channel_number>=156803 && this->mc_channel_number<=156828){ //Znunu AlpGen
 
     //truth particles loop                                                              
     truthP_itr = truthP->begin();
     truthP_end = truthP->end();
     for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 
-      if(( *truthP_itr )->status()==124 && ( *truthP_itr )->absPdgId()==23){
+      if(( *truthP_itr )->status()==124 && ( *truthP_itr )->absPdgId()==23){ //Z boson
 	cutting_var = ( *truthP_itr )->pt();
 	this->bos_pt = cutting_var;
       }
@@ -3625,7 +3666,7 @@ bool chorizo :: passMCor(){
 float chorizo :: GetTruthEtmiss(bool noEleTau){
 
   /// Calculate the boson pt
-  TLorentzVector V(0.,0.,0.,0.);
+  TLorentzVector V;
   TLorentzVector l1;
 
   //retrieve truth particles container 
@@ -3641,7 +3682,7 @@ float chorizo :: GetTruthEtmiss(bool noEleTau){
   
   for( ; truthP_itr != truthP_end; ++truthP_itr ) {
     int apid = (*truthP_itr)->absPdgId();
-    if( isStable( (*truthP_itr)->status() ) && isLepNeut( apid )){
+    if( isStable( (*truthP_itr) ) && isLepNeut( apid )){
       if( noEleTau && (apid==11 || apid==15) ) continue;
       this->fillTLV(l1, (*truthP_itr) );
       V = V + l1;
@@ -4722,7 +4763,7 @@ TLorentzVector chorizo :: getTLV( xAODPart* p, bool inGeV ){
 }
 
 
-TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name ) {
+TVector2 chorizo :: getMET( const xAOD::MissingETContainer* METcon, TString name ) {
   
   TVector2 myMet(0.,0.);
   xAOD::MissingETContainer::const_iterator met_it = METcon->find( name.Data() );
@@ -4734,7 +4775,7 @@ TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name ) {
   return myMet;
 }
 
-// TVector2 getMET( const xAOD::MissingETContainer METcon, TString name ) {
+// TVector2 chorizo :: getMET( const xAOD::MissingETContainer METcon, TString name ) {
   
 //   TVector2 myMet(0.,0.);
 //   xAOD::MissingETContainer::const_iterator met_it = METcon.find( name.Data() );
@@ -4752,10 +4793,10 @@ double chorizo :: getPdfRW(   double rwScale,
 			      double pdf_scale2,
 			      double pdf_x1, 
 			      double pdf_x2,
-			      int pdf_id1,
-			      int pdf_id2
+			      int pdg_id1,
+			      int pdg_id2
 			      ){
-  return this->getPdfRW(m_PDF, rwScale, pdf_scale2, pdf_x1, pdf_x2, pdf_id1, pdf_id2);
+  return this->getPdfRW(m_PDF, rwScale, pdf_scale2, pdf_x1, pdf_x2, pdg_id1, pdg_id2);
 }
 
 double chorizo :: getPdfRW(   LHAPDF::PDF* pdf,
@@ -4763,10 +4804,10 @@ double chorizo :: getPdfRW(   LHAPDF::PDF* pdf,
 			      double pdf_scale2,
 			      double pdf_x1, 
 			      double pdf_x2,
-			      int pdf_id1,
-			      int pdf_id2
+			      int pdg_id1,
+			      int pdg_id2
 			      ){
-  return this->getPdfRW(pdf, pdf, rwScale, pdf_scale2, pdf_x1, pdf_x2, pdf_id1, pdf_id2);
+  return this->getPdfRW(pdf, pdf, rwScale, pdf_scale2, pdf_x1, pdf_x2, pdg_id1, pdg_id2);
 }
 
 double chorizo :: getPdfRW(   LHAPDF::PDF* pdfFrom,
@@ -4775,8 +4816,8 @@ double chorizo :: getPdfRW(   LHAPDF::PDF* pdfFrom,
 			      double pdf_scale2,
 			      double pdf_x1, 
 			      double pdf_x2,
-			      int pdf_id1,
-			      int pdf_id2
+			      int pdg_id1,
+			      int pdg_id2
 			      ){
 
   //if same to-from pdfs and no scaling required just leave
@@ -4786,19 +4827,19 @@ double chorizo :: getPdfRW(   LHAPDF::PDF* pdfFrom,
     return 1.;
   
 
-  if (pdf_x1==0 || pdf_x2==0 || pdf_id1==0 || pdf_id2==0 || pdf_scale2==0) return 0.; //it doesn't know what to do then
+  if (pdf_x1==0 || pdf_x2==0 || pdg_id1==0 || pdg_id2==0 || pdf_scale2==0) return 0.; //it doesn't know what to do then
 
   // original pdf of particle1
-  double pdf1org = pdfFrom->xfxQ2( pdf_id1, pdf_x1, pdf_scale2) / pdf_x1;
+  double pdf1org = pdfFrom->xfxQ2( pdg_id1, pdf_x1, pdf_scale2) / pdf_x1;
 
   // original pdf of particle2
-  double pdf2org = pdfFrom->xfxQ2( pdf_id2, pdf_x2, pdf_scale2) / pdf_x2;
+  double pdf2org = pdfFrom->xfxQ2( pdg_id2, pdf_x2, pdf_scale2) / pdf_x2;
 
   // new pdf of particle1
-  double pdf1new = pdfTo->xfxQ2( pdf_id1, pdf_x1, pdf_scale2) / pdf_x1;
+  double pdf1new = pdfTo->xfxQ2( pdg_id1, pdf_x1/rwScale, pdf_scale2) / (pdf_x1/rwScale);
 
   // new pdf of particle2
-  double pdf2new = pdfTo->xfxQ2( pdf_id2, pdf_x2, pdf_scale2) / pdf_x2;
+  double pdf2new = pdfTo->xfxQ2( pdg_id2, pdf_x2/rwScale, pdf_scale2) / (pdf_x2/rwScale);
 
   // factor for reweighting
   double weight = (pdf1new * pdf2new) / (pdf1org * pdf2org) / pow(rwScale,2);
