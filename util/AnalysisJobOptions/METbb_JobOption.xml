@@ -27,7 +27,7 @@
     <ObjectDefinition>
 
         <PdfRw>
-	  <Enable>false</Enable> 
+	  <Enable>true</Enable> 
 	  <ToBeamE>6.5</ToBeamE> <!-- Final beam energy (in TeV) -->
         </PdfRw>
         
@@ -108,9 +108,10 @@
                 <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt>
                 
                 <!--- For the c/b-tagger -->
-                <Tagger>MV1</Tagger>
-                <TaggerOpPoint>0_7892</TaggerOpPoint>	
-                <TaggerOpPoint2>0_3511</TaggerOpPoint2>				
+                <!---<Tagger>MV1</Tagger> -->
+		<Tagger>IP3DSV1</Tagger>
+                <TaggerOpPoint>1_85</TaggerOpPoint>	
+                <TaggerOpPoint2>m0_70</TaggerOpPoint2>				
                 <TaggerCollection>AntiKt4TopoLCJVF</TaggerCollection>
             </region>
         </Jet>

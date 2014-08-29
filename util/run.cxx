@@ -42,6 +42,7 @@ using namespace SH;
 
 #define LumFactor 1000. //in nb-1
 
+
 void usage(){
 
   cout << endl;

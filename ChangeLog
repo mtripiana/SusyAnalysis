@@ -1,5 +1,12 @@
+2014-08-29 Martin <tripiana@cern.ch>
+	* Fix met & other variables
+	* Fix btag filling. NOTE: use IP3DSV1 tagger to get something out (MV1 weights not saved yet)
+	* Fix PDF_w   (still old pdf parameters enum, as in xAODTruth-00-00-23)
+	* Add dummy values for variables init (DUMMYUP, DUMMYDN)
+	* Tag SusyAnalysis-00-00-03
+
 2014-08-28 Martin <tripiana@cern.ch>
-	* Moved to Base-2.0.7 . 
+	* Moved to Base-2.0.7 .
 	* Moved to Asg_Lhapdf package (LHAPDF6). pdfsets from cvmfs now. PDFTool deprecated, replaced by our own implementation for v6.
 	* Update meta-data magic to accomodate user-defined samples
 	* Update scripts to run in batch

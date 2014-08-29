@@ -48,6 +48,7 @@ class Jet : public Particle {
   public:
     Jet();
     ~Jet();
+    bool                    isbjet; //--- as from SUSYTools (decoration)
     float                   MV1;
     float                   SV1plusIP3D;
     float                   SV1_pb;
@@ -108,6 +109,8 @@ class MET : public TVector2{
 
     TVector2 GetVector(TString which="");
     TVector3 GetMET_Razor();
+
+    bool gev;
 
     void SetHasMuons(bool hasMuons);
     bool GetHasMuons();

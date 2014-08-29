@@ -42,6 +42,8 @@ using namespace SH;
 
 #define LumFactor 1000. //in nb-1
 
+#define TEST 0  //to quickly restrict the run to 10 events
+
 void usage(){
 
   cout << endl;
@@ -443,7 +445,7 @@ int main( int argc, char* argv[] ) {
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
-    //job.options()->setDouble (EL::Job::optMaxEvents, 10);
+    if(TEST) job.options()->setDouble (EL::Job::optMaxEvents, 10);
     if(systListOnly)
       job.options()->setDouble (EL::Job::optMaxEvents, 1);
     
