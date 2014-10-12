@@ -97,7 +97,7 @@ Jet::~Jet(){}
 bool Jet::isBTagged(TString Tagger){ 
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
   if      (Tagger=="MV1"              && (this->MV1 > 0.7892))              {return true;}//70% b eff  
-  else if (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > 1.85))         {return true;}//70% b eff 
+  else if (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > 1.85))         {return true;}//80% b eff 
   else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > -2.55 && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
   else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
  

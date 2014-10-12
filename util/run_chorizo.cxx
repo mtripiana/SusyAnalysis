@@ -1,7 +1,7 @@
 //---------------------------------------------------------------
 //  Production of mini ntuples for SUSY analyses @IFAE
 //
-//  - migrated to xAOD format from RunI  StopAnalysis package
+//  - migrated to xAOD format from RunI StopAnalysis package
 //
 //  author: Martin <tripiana@cern.ch>
 //  August, 2014
@@ -18,6 +18,8 @@
 #include "EventLoop/Job.h"
 #include "EventLoop/DirectDriver.h"
 #include "EventLoop/TorqueDriver.h"
+#include "EventLoopGrid/PrunDriver.h"
+#include "EventLoopGrid/GridDriver.h"
 #include "EventLoop/OutputStream.h"
 #include "EventLoopAlgs/NTupleSvc.h"
 
@@ -171,6 +173,7 @@ int main( int argc, char* argv[] ) {
   bool runLocal = true;
   bool runBatch = false;
   bool runGrid  = false;
+  bool runPrun  = false;
   TString queue = "at3";
 
   //parse input arguments
@@ -209,7 +212,11 @@ int main( int argc, char* argv[] ) {
       runBatch = true;
       runLocal = false;
     } 
-    else if (opts[iop] == "g"){ //run on the grid
+    else if (opts[iop] == "g"){ //run on the grid (prun)
+      runPrun = true;
+      runLocal = false;
+    }
+    else if (opts[iop] == "g"){ //run on the grid (ganga)
       runGrid = true;
       runLocal = false;
     }
@@ -236,9 +243,9 @@ int main( int argc, char* argv[] ) {
     cout << bold(red("\n Ups! "));
     cout << "You need to setup a few things first!" << endl;
     cout << " Please do: " << endl;
-    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh \n" << endl;
+    cout << "\n   source $ROOTCOREBIN/user_scripts//SusyAnalysis/grid_up_pwin.sh \n" << endl;
     cout << "\n ...but ok! this time I'll try to do it for you...  :) \n" << endl;
-    gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh");
+    gSystem->Exec("source $ROOTCOREBIN/user_scripts//SusyAnalysis/grid_up_pwin.sh");
     //return 0; //FOR TESTING
   }
 
@@ -260,8 +267,10 @@ int main( int argc, char* argv[] ) {
   xAOD::Init().ignore();
 
   // Read some config options
-  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
-  std::string xmlPath=DirectoryPath+"/SusyAnalysis/util/AnalysisJobOptions/METbb_JobOption.xml";
+  std::string maindir = getenv("ROOTCOREBIN");
+
+  std::string xmlPath=maindir+"/data/SusyAnalysis/METbb_JobOption.xml";
+
 
   XMLReader *xmlJobOption = new XMLReader();
   xmlJobOption->readXML(xmlPath);
@@ -291,19 +300,23 @@ int main( int argc, char* argv[] ) {
     //** Run on local samples
     //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
     if(runLocal){
-      if( run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") ){//local samples
+      if( run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
 	scanDir( sh, run_pattern[p].Data() );
       }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
 	mgd=true;
       }
     }
-    else if(runBatch){
-      //** Run on PIC samples
-      //   e.g. scanDQ2 (sh, "user.eifert.mc12_13TeV.110090*");
+    else{ 
+      //** Run on the grid or in batch mode
+      //   e.g. scanDQ2 (sh, "user.tripiana.mc14_8TeV.167752.*");
       scanDQ2 (sh, run_pattern[p].Data() );
-      mgd=true;
+      if(runBatch)
+	mgd=true; //** PIC samples
     }    
+
+    //set ID (do it global since there will be only one sample now)
+    sh.setMetaDouble( "DSID", (double)run_ids[p] );
   }
   if(mgd)
     makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
@@ -317,7 +330,7 @@ int main( int argc, char* argv[] ) {
   //save original name in a new meta field
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
     (*iter)->setMetaString( "inputName", (*iter)->getMetaString( MetaFields::sampleName) ); //no longer needed?
-    (*iter)->setMetaString( MetaFields::gridName, stripName( TString( (*iter)->getMetaString( MetaFields::sampleName))).Data() );
+    (*iter)->setMetaString( MetaFields::gridName, (stripName( TString( (*iter)->getMetaString( MetaFields::sampleName)))+"/").Data() );
   }
 
   //set EBeam field
@@ -343,6 +356,7 @@ int main( int argc, char* argv[] ) {
     s_ecm="8";
     amiFound=false;
   }
+
     
   //  fetch meta-data from AMI
   if(amiFound)
@@ -425,6 +439,7 @@ int main( int argc, char* argv[] ) {
     alg->genPUfile  = generatePUfile;
     
     alg->syst_CP    = syst_CP;      // Systematics
+    alg->syst_CPstr = syst_CP.name();
     alg->syst_ST    = syst_ST;      
     alg->syst_Scale = syst_Scale;
     alg->syst_PU    = syst_PU;
@@ -459,30 +474,56 @@ int main( int argc, char* argv[] ) {
     // Run the job using the appropiate driver:
     EL::DirectDriver Ddriver;
     EL::TorqueDriver Tdriver;
-    
-    
+    EL::PrunDriver   Pdriver;
+    EL::GridDriver   Gdriver;
+        
     //submit the job
-    if(runLocal){
+    if(runLocal){ //local mode 
       Ddriver.submit( job, tmpdir );
     }
-    else{
+    else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
       Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.6 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }
+    else if(runPrun){ //Prun mode
+
+      //** prun
+      Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
+       //      Pdriver.options()->setString("nc_nFilesPerJob", "5"); //By default, split in as few jobs as possible
+      Pdriver.options()->setDouble("nc_nFiles", 1);
+      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
+      sh.setMetaString ("nc_grid_filter", "*.root*");
+
+      Pdriver.submitOnly( job, tmpdir );
+    }
+    else if(runGrid){ //grid mode
+
+      //** ganga
+      sh.setMetaString ("nc_grid_filter", "*.root*");
+      Gdriver.outputSampleName = "user.%nickname%.SAtest.%in:name[2]%.v0";
+      Gdriver.nFiles = 1;
+      Gdriver.mergeOutput = 1; 
+
+      Gdriver.submit( job, tmpdir );
+    }
+
+
     if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
     
     //move output to collateral files' path
     TString sampleName,targetName;
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       
-      sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-      targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
-
-      system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
-
-      mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+      if(!generatePUfile){
+	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
+	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
+	
+	system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+	
+	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+      }
     }
   
     if(single_id<0){ //NOTE: moved to the run wrapper for now!!

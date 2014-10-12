@@ -3,13 +3,14 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <algorithm>  
 
 #include <vector>
 #include <map>
 
 #include "TString.h"
+#include "TError.h"
 
-#include "SUSYTools/SUSYObjDef.h"
 #include "SUSYTools/ScaleVariatioReweighter.hpp"
 #include "PATInterfaces/SystematicSet.h"
 
@@ -40,6 +41,15 @@ namespace BCHCorrMediumErr
   } BCHSyste;
 }
 
+//ported (partially) from old SUSYObjDef class 
+//@todo get rid of this once we have the correspendent implementation in CP
+namespace SystErr
+{
+  typedef enum  {
+    NONE,                          
+    BJETDOWN, BJETUP, CJETDOWN, CJETUP, BMISTAGDOWN, BMISTAGUP  
+  } Syste;
+}
 
 class Systematics {
 
@@ -69,7 +79,7 @@ private:
 
   std::vector<TString> m_list;    // the whole list of systematics
   std::vector<TString> m_CP_list; // just the registered ones (recommended by CP groups)
-  std::vector<TString> m_ST_list; // just the SUSYTools ones
+  std::vector<TString> m_ST_list; // just the SUSYTools ones (old, deprecated!)
   std::vector<TString> m_user_list; // just the user defined ones (PU, scale, BCH, JVF)
 
 };
