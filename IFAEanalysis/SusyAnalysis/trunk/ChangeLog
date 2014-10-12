@@ -1,4 +1,15 @@
 2014-08-29 Martin <tripiana@cern.ch>
+	* Move to Base-2.0.12
+	* Add chorizoEDM.h header to hold all EDM no-cint-friendly
+	* Update to new PileupReweightingTool
+	* Update to new electron EDM (now available in ST)
+	* Update to new TileTripReader
+	* Fix CP systematic set
+	* Remove old SUSYObjDef dependencies
+	* Fix all paths relative to $ROOTCOREBIN (grid friendly)
+	* Tagging SusyAnalysis-00-00-04
+
+2014-08-29 Martin <tripiana@cern.ch>
 	* Fix met & other variables
 	* Fix btag filling. NOTE: use IP3DSV1 tagger to get something out (MV1 weights not saved yet)
 	* Fix PDF_w   (still old pdf parameters enum, as in xAODTruth-00-00-23)
@@ -6,8 +17,8 @@
 	* Tag SusyAnalysis-00-00-03
 
 2014-08-28 Martin <tripiana@cern.ch>
-	* Moved to Base-2.0.7 .
-	* Moved to Asg_Lhapdf package (LHAPDF6). pdfsets from cvmfs now. PDFTool deprecated, replaced by our own implementation for v6.
+	* Move to Base-2.0.7 .
+	* Move to Asg_Lhapdf package (LHAPDF6). pdfsets from cvmfs now. PDFTool deprecated, replaced by our own implementation for v6.
 	* Update meta-data magic to accomodate user-defined samples
 	* Update scripts to run in batch
 	* Tag SusyAnalysis-00-00-02

@@ -146,6 +146,7 @@ int main( int argc, char* argv[] ) {
   std::vector<TString> args,opts;
   bool runLocal = true;
   bool runBatch = false;
+  bool runPrun  = false;
   bool runGrid  = false;
   TString queue = "at3";
 
@@ -184,7 +185,11 @@ int main( int argc, char* argv[] ) {
       runBatch = true;
       runLocal = false;
     } 
-    else if (opts[iop] == "g"){ //run on the grid
+    else if (opts[iop] == "p"){ //run on the grid (prun)
+      runPrun = true;
+      runLocal = false;
+    }
+    else if (opts[iop] == "g"){ //run on the grid (ganga)
       runGrid = true;
       runLocal = false;
     }
@@ -199,6 +204,7 @@ int main( int argc, char* argv[] ) {
   //always run locally for systematics printing!
   if(systListOnly && !runLocal){
     runGrid=false;
+    runPrun=false;
     runBatch=false;
     runLocal=true;
     cout << bold(red("\n Ups! "));
@@ -214,7 +220,6 @@ int main( int argc, char* argv[] ) {
     cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh   \n" << endl;
     cout << "\n ...but ok! this time I'll try to do it for you...  :) \n" << endl;
     gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh");
-    //    return 0; //FOR TESTING
   }
 
 
@@ -231,8 +236,10 @@ int main( int argc, char* argv[] ) {
     systematics.push_back("Nom");
 
   //*** Read some input options
-  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
-  std::string xmlPath=DirectoryPath+"/SusyAnalysis/util/AnalysisJobOptions/METbb_JobOption.xml";
+  //  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
+  std::string maindir = getenv("ROOTCOREBIN");
+
+  std::string xmlPath=maindir+"/data/SusyAnalysis/METbb_JobOption.xml";
 
   XMLReader *xmlJobOption = new XMLReader();
   xmlJobOption->readXML(xmlPath);
@@ -246,6 +253,13 @@ int main( int argc, char* argv[] ) {
   if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
 
   TString CollateralPath = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
+
+
+  //Do not run systematics if generating pile-up files!
+  if(generatePUfile){
+    systematics.clear();
+    systematics.push_back("Nom");
+  }
 
   //*** Call run_chorizo for every sample-id-systematic combination
   //*** Merge ids for same sample-systematic pair
@@ -283,7 +297,7 @@ int main( int argc, char* argv[] ) {
       
       //** Run on local samples
       if(runLocal){
-	if( run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") ){//local samples
+	if( run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
 	  scanDir( sh, run_patterns[i_id].Data() );
 	}else{//PIC samples
 	  scanDQ2 (sh, run_patterns[i_id].Data() );
@@ -295,7 +309,7 @@ int main( int argc, char* argv[] ) {
 	scanDQ2 (sh, run_patterns[i_id].Data() );
 	mgd=true;
       }    
-      else if(runGrid){
+      else if(runGrid || runPrun){
 	//** Run on the grid
 	scanDQ2 (sh, run_patterns[i_id].Data() );
       }    
@@ -321,12 +335,15 @@ int main( int argc, char* argv[] ) {
       TString s_ecm  = "8"; //default is 8TeV 
       sh.at(0)->setMetaDouble ("ebeam", (double)getEBeam(sh.at(0)));
       s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
-      bool amiFound=true;
 
+      bool amiFound=true;
       if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
 	s_ecm="8";
 	amiFound=false;
       }
+
+      //set ID
+      sh.at(0)->setMetaDouble( "DSID", (double)run_ids[i_id] );
 
       //  fetch meta-data from AMI
       if(amiFound)
@@ -352,6 +369,13 @@ int main( int argc, char* argv[] ) {
 
     }//end of id loop
 
+
+    //Done merging step only if running locally
+    if(!runLocal) return 0;
+
+
+    //Don't merge if generating pile=up files
+    if(generatePUfile) return 0;
 
     //MERGING STEP!
     //** after-burner to merge samples, add weights and anti-SF

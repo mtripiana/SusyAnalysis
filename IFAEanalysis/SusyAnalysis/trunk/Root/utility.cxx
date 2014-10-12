@@ -208,6 +208,19 @@ float deltaR(Float_t phi1,Float_t eta1,Float_t phi2,Float_t eta2){
   return sqrt(dPhi*dPhi + dEta*dEta);
 }
 
+float BtagEta(float eta){
+  if( eta < -2.5 ) return -2.5;
+  else if( eta > 2.5 ) return 2.5;
+  
+  return eta;
+};
+
+float getAsymmetry(float a, float b){
+  if( ! (a+b > 0)) return -1;
+
+  return (a-b) / (a+b);
+};
+
 bool isBeamHalo(int run=0,int event=0){ //CHECK_ME
   bool isBH=0;
   //  std::cout<<run<<"\t"<<event<<std::endl;

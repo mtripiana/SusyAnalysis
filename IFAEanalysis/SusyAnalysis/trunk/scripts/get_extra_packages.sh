@@ -6,17 +6,16 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.0.7
+# Extra tags needed for Base,2.0.12
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/MissingETUtility/tags/MissingETUtility-01-02-08 MissingETUtility
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Control/xAODRootAccess/trunk xAODRootAccess
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonMomentumCorrections/tags/MuonMomentumCorrections-01-00-08 MuonMomentumCorrections
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/TauID/TauAnalysisTools/tags/TauAnalysisTools-00-00-06 TauAnalysisTools
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonMomentumCorrections/tags/MuonMomentumCorrections-01-00-10 MuonMomentumCorrections
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/ElectronPhotonID/ElectronPhotonFourMomentumCorrection/tags/ElectronPhotonFourMomentumCorrection-00-01-05 ElectronPhotonFourMomentumCorrection
+#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/MuonID/MuonSelectorTools/tags/MuonSelectorTools-00-04-01 MuonSelectorTools
 
 ##needed by SUSYTools
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/egamma/egammaEvent/trunk egammaEvent
+#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/egamma/egammaEvent/trunk egammaEvent
 #this one is the old one! it won't be needed eventually
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/egamma/egammaAnalysis/egammaAnalysisUtils/tags/egammaAnalysisUtils-00-04-59 egammaAnalysisUtils
+#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/egamma/egammaAnalysis/egammaAnalysisUtils/tags/egammaAnalysisUtils-00-04-59 egammaAnalysisUtils
 
 # Boost libraries
 #

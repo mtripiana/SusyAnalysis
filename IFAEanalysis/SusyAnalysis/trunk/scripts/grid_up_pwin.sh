@@ -12,5 +12,5 @@ export DQ2_LOCAL_SITE_ID=ROAMING
 voms-proxy-init -voms atlas -pwstdin < $ANALYSISCODE/.gridpsd
 
 localSetupPyAMI
-localSetupPandaClient --noAthenaCheck
+localSetupPandaClient currentJedi --noAthenaCheck
 

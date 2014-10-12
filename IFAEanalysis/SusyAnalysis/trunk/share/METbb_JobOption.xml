@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnalysisOptions>
+
+    <GeneralSettings>
+        <Mode name="setDefinitionRegion">SR</Mode> <!-- Name of the object definition regions, separated by comma -->
+        <Mode name="debug">false</Mode>
+        <Mode name="doTree">true</Mode>
+        <Mode name="GeneratePileupFiles">false</Mode>
+        <Mode name="DoCutFlow">false</Mode>
+	<Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
+        <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
+        <Path name="GRLxmlFile">SUSYTools/data/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
+	<Pileup>
+            <Mode name="ApplyPileupReweighting">true</Mode>
+            <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path>
+            <Path name="PileupReweightingIlumicalcFile">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>		
+            <PeriodConfig>MC12a</PeriodConfig>
+        </Pileup>
+
+        <LeptonEfficiency>
+            <Unitarity>true</Unitarity>
+        </LeptonEfficiency>
+
+        <PdfRw>
+	  <Enable>true</Enable> 
+	  <ToBeamE>6.5</ToBeamE> <!-- Final beam energy (in TeV) -->
+        </PdfRw>
+        
+        <SmearTruth>
+	  <Enable>false</Enable> <!-- Only applicable to truth samples (isTruth==true) -->
+	  <Mu>60</Mu> <!-- needed for Jet smearing (hard coded) -->
+	  <MetWP>mu60</MetWP> <!--  implemented options: 60,80,140 -->
+	  <ElectronWP>0</ElectronWP> <!-- Electron working point . 0=loose 1=tight-->
+	  <RecJetFlav>false</RecJetFlav> <!-- Recalculate jet flavor? Mostly needed for old truth (buggy) ntuples.-->
+	</SmearTruth>
+
+    </GeneralSettings>
+
+    <ObjectDefinition>
+	  
+        <Trigger>
+            <region name="SR">EF_xe80_tclcw</region>
+        </Trigger>
+
+        <Vertex>
+            <region name="SR">4</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
+        </Vertex>
+
+        <TrackVeto>
+            <Enable>false</Enable>
+            <region name="SR">
+                <Pt>10000</Pt>
+                <Eta>2.5</Eta>
+                <d0>1</d0>
+                <z0>2</z0>
+                <ndof>0</ndof>
+                <chi2OverNdof_min>0</chi2OverNdof_min>
+                <chi2OverNdof_max>3</chi2OverNdof_max>
+                <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
+                <TrackIso>0</TrackIso>
+            </region>
+        </TrackVeto>
+        <Electron>
+            <region name="SR">
+                <DefinPtCut>7000.</DefinPtCut>
+                <DefinEtaCut>2.47</DefinEtaCut>
+                <PreselPtCut>7000.</PreselPtCut>
+                <PreselEtaCut>2.47</PreselEtaCut>
+                <RecoPtCut>7000.</RecoPtCut>
+                <RecoEtaCut>2.47</RecoEtaCut>
+
+                <recoSF>true</recoSF>
+                <idSF>true</idSF>
+                <triggerSF>false</triggerSF>
+                <isolationVar>noIso</isolationVar>
+                <isolationThres>0.</isolationThres>
+            </region>
+        </Electron>
+        <Muon>
+            <region name="SR">
+                <DefinPtCut>6000.</DefinPtCut>
+                <DefinEtaCut>2.4</DefinEtaCut>
+                <PreselPtCut>6000.</PreselPtCut>
+                <PreselEtaCut>2.4</PreselEtaCut>
+                <RecoPtCut>6000.</RecoPtCut>
+                <RecoEtaCut>2.4</RecoEtaCut>
+                <isolationVar>mu_staco_ptcone20</isolationVar> 
+                <!-- <isolationVar>noIso</isolationVar> -->
+                <isolationThres>5000</isolationThres> <!-- 1.8 -->
+            </region>
+        </Muon>
+        <Jet>
+            <region name="SR">
+                <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
+                <Path name="BtagCalib">SUSYTools/</Path>
+                <dPhiMin>0.4</dPhiMin>
+                <JVFMin>0.5</JVFMin>
+                <Collection>AntiKt4LCTopo</Collection>
+
+                <DefinPtCut>20000.</DefinPtCut>
+                <DefinEtaCut>10</DefinEtaCut>
+                <PreselPtCut>20000.</PreselPtCut>
+                <PreselEtaCut>10</PreselEtaCut>
+                <RecoPtCut>30000.</RecoPtCut>
+                <RecoEtaCut>2.8</RecoEtaCut>
+
+                <OverlapRemovalElPt>20000.</OverlapRemovalElPt>
+                <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt>
+                
+                <!--- For the c/b-tagger -->
+                <!---<Tagger>MV1</Tagger> -->
+		<Tagger>IP3DSV1</Tagger>
+                <TaggerOpPoint>1_85</TaggerOpPoint>	
+                <TaggerOpPoint2>m0_70</TaggerOpPoint2>				
+                <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
+            </region>
+        </Jet>
+        <Etmiss>
+            <region name="SR">
+                <Path name="FakeMetEstimator">fest_periodF_v1.root</Path>
+                <Collection>Egamma10NoTau</Collection>
+                <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
+                <doFakeEtmiss>true</doFakeEtmiss>
+
+                <Term name="doRefEle">true</Term>
+                <Term name="doRefGamma">true</Term>
+                <Term name="doRefTau">false</Term>
+                <Term name="doRefJet">true</Term>
+                <Term name="doMuons">false</Term>
+                <Term name="doSoftTerms">true</Term>
+            </region>
+        </Etmiss>
+	<QCD>
+	    <region name="SR">
+	        <JetsPtPreselection>20000.0</JetsPtPreselection>
+		<METSigCut>1.0</METSigCut>
+		<LeadJetPreSel>Stop</LeadJetPreSel>
+		<RandomSeedOffset>123456</RandomSeedOffset>
+		<SmearType>optimal</SmearType>
+		<SmearUseBweight>true</SmearUseBweight>
+		<SmearBtagWeight>0.772</SmearBtagWeight>
+		<SmearMeanShift>low</SmearMeanShift>
+		<SmearExtraSmr>true</SmearExtraSmr>
+		<DoPhiSmearing>true</DoPhiSmearing>
+		<SmearedEvents>250</SmearedEvents>
+	    </region>
+	</QCD>
+    </ObjectDefinition>
+
+</AnalysisOptions>

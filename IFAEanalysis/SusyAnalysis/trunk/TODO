@@ -2,7 +2,7 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
-** Fix PdfReweighting!
+** check mem leaks (it crashes for ~30K events)
 
 ** set drivers for batch and grid modes
    Running on IFAE's batch (PSB) is done with local driver anyways for now.
@@ -10,16 +10,11 @@ HIGH PRIORITY
 ** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...) --> 'run' wrapper for now
     *** CHECK CASE for multi-samples+multi-systs
 
-** Allow for multiple input samples and systematics. Comma-separated lists.   --> DONE for systematics (provided we fix the item above).
-
 ** Overlap removal. Can we just use ST-one?
 
-** MET rebuilding  --> Hack SUSYTools for kin electron selection and MET terms activation! (contacted Kerim already about it to try it to make official!)
+** revisit matching everywhere. Use Links? ghost association? 
 
-**  PileUp Reweighting ntuples. 
-     https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/EventLoop#Solution_for_TPileupReweighting
-
-** revisite matching everywhere. Use Links? ghost association? 
+** move random number generation from BCH to PURW tool? (DataPeriod class in ST at the moment...)
 
 ** truth navigation
 
@@ -28,8 +23,6 @@ VALIDATION/CHECK
 --------------------------------------------------------------------------------------------------------
 ** check 'baseline' selection in SUSYTools suits our needs
 
-** after-burner to merge samples, adding FileWeights and anti-SF .  Done --> validate it!
-
 ** btagging
        review current setup, variables and ops.
 
@@ -37,16 +30,13 @@ VALIDATION/CHECK
 
 LOW priority
 --------------------------------------------------------------------------------------------------------
-** Improve tools verbosity level (lower'em all probably)
 
 ** Create qsub files on the fly? Do we really need to save them? (for local running maybe...but can be overcome)
 
-**  modulate some actions into xAOD-methods, bypassing the CINT compilation.
+**  modulate some actions into xAOD-methods, bypassing the CINT compilation.  [already started!]
 
 ** clean-up RegionIdentifier
 
-** add configuration for debug printing, in JO (printMET, printElectron, ...)
- 
 ** move to new truthParticle/Event aliases once it is all updated.
 
 ** templatize hist handling methods. (TH1F, TH1D, ...)

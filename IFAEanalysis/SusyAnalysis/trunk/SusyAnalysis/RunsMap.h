@@ -75,8 +75,31 @@ std::vector<TString> RunsMap::getPatterns(TString runname){
 void RunsMap::LoadMap(){
 
   //======================================================================================================================
+  //                                                 Grid tests
+  //======================================================================================================================
+
+  //New test xAOD mc14 (SUSY1 derivation)
+  m_map["TestGrid"] = rlist( Rpair(167752, "mc14_8TeV.167752.Sherpa_CT10_ZmumuMassiveCBPt0_BFilter.merge.AOD.e1585_s1933_s1911_r5591_r5625/"));
+
+  m_map["TestGrid2"] = rlist( Rpair(167836, "mc14_8TeV.167836.Sherpa_CT10_ZmumuMassiveCBPt500_BFilter.merge.AOD.e1620_s1933_s1911_r5591_r5625/"));
+
+  //======================================================================================================================
   //                                                 Local afs/nfs tests
   //======================================================================================================================
+  
+  //New DAOD_IFAE3G derivation
+  m_map["TestIFAE3G"] = rlist( Rpair(117050, "/nfs/at3users/users/tripiana/Derivations/WorkArea/run/test/"));
+
+  //New test on primary xAODs
+  m_map["TestP1"] = rlist( Rpair(117050, "/tmp/tripiana/prim1/"));
+  m_map["TestP2"] = rlist( Rpair(117050, "/tmp/tripiana/prim2/"));
+  m_map["TestP3"] = rlist( Rpair(117050, "/tmp/tripiana/prim3/"));
+  m_map["TestP4"] = rlist( Rpair(117050, "/tmp/tripiana/prim4/"));
+  m_map["TestP5"] = rlist( Rpair(117050, "/tmp/tripiana/prim5/"));
+
+  m_map["TestPall"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar/")); //10 files 
+  m_map["TestPall1"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar/prim1/")); //5 files 
+  m_map["TestPall2"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar/prim2/")); //5 files 
 
   //New test xAOD mc14 (SUSY1 derivation)
   m_map["TestDF"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbarD/"));
@@ -99,6 +122,8 @@ void RunsMap::LoadMap(){
 				 
 
   m_map["TestMClocal4"] = rlist( Rpair(110101,"/nfs/at3/scratch/tripiana/xAOD/mc14/singletop/"));
+
+  m_map["TestMClocal5"] = rlist( Rpair(110101,"/nfs/at3/scratch/tripiana/xAOD/mc14/ttbar/"));
 
   //======================================================================================================================
   //                                                 List of backgrounds for the Baseline analysis

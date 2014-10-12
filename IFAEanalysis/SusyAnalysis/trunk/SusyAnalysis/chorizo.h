@@ -22,6 +22,7 @@
 #include <TError.h>
 #include <TRandom1.h>
 #include <TRandom.h>
+#include "TStopwatch.h"
 
 // code includes
 #include "SusyAnalysis/XMLReader.h"
@@ -36,23 +37,19 @@
 #include <string>
 
 // Tools includes
-#include "SUSYTools/SUSYObjDef.h"
 #include "SUSYTools/DataPeriod.h"
 #include "SUSYTools/ScaleVariatioReweighter.hpp"
 #include "SUSYTools/SUSYCrossSection.h"
 
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
-//#include "MissingETUtility/METUtility.h"
-#include "PileupReweighting/TPileupReweighting.h"
-//#include "GoodRunsLists/GoodRunsListSelectionTool.h"
-/* #include "GoodRunsLists/TGoodRunsListReader.h" */
-/* #include "GoodRunsLists/TGRLCollection.h" */
-#include "SUSYTools/BTagCalib.h"
+//#include "SUSYTools/BTagCalib.h"
 #include "fastjet/ClusterSequence.hh"
+#include "BCHCleaningTool/BCHCleaningToolRoot.h"
 
 
 // Systematics includes
 #include "PATInterfaces/SystematicList.h"
+#include "PATInterfaces/SystematicSet.h"
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
@@ -60,6 +57,7 @@
 
 
 #ifndef __MAKECINT__
+#include "xAODJet/JetContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
 #include "xAODTruth/TruthParticle.h"
 #endif // not __MAKECINT__
@@ -81,6 +79,12 @@ namespace LHAPDF{
 }
 
 class GoodRunsListSelectionTool;
+
+class BTaggingEfficiencyTool;
+
+namespace CP{
+  class PileupReweightingTool;
+}
 
 namespace ST{
   class SUSYObjDef_xAOD;
@@ -136,6 +140,7 @@ public:
   bool genPUfile;
 
   CP::SystematicSet syst_CP; //!
+  TString syst_CPstr;
   SystErr::Syste syst_ST;    
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
@@ -174,7 +179,7 @@ public:
 
 private:
   xAOD::TEvent *m_event;  //!
-  xAOD::TStore store;  //!
+  //  xAOD::TStore store;  //!
 
   //--- Containers  //IT can't be done in ROOT5!
   /* const xAOD::JetContainer* jets; */
@@ -193,14 +198,18 @@ private:
   DataPeriod     tool_DPeriod; //!
   //METUtility*    tool_metutil; //NOT USED YET
   FakeMetEstimator* tool_fakeMet; //!
-  BTagCalib*     tool_calib1; //!
-  BTagCalib*     tool_calib2; //!
-  Root::TPileupReweighting* tool_purw; //!
+  /* BTagCalib*     tool_calib1; //! */
+  /* BTagCalib*     tool_calib2; //! */
   JVFUncertaintyTool* tool_jvf; //!
   JetCleaningTool* tool_jClean; //!  
+  Root::TTileTripReader* tool_tileTrip; //!
+  BCHTool::BCHCleaningToolRoot* tool_BCH; //!
 #ifndef __CINT__
+  CP::PileupReweightingTool* tool_purw; 
   GoodRunsListSelectionTool *tool_grl;
   LHAPDF::PDF* m_PDF;
+  BTaggingEfficiencyTool* tool_btag;  //70%op
+  BTaggingEfficiencyTool* tool_btag2; //80%op
 #endif // not __CINT__
 
   //Member Functions
@@ -228,9 +237,10 @@ private:
 
   virtual double GetGeneratorUncertaintiesSherpa();
 
+  UInt_t  puRunNumber( UInt_t rn); //obsolete! (new PURW tool now)
   virtual float GetAverageWeight();
 
-  VVFloat GetBTagCalibSyst(BTagCalib* calibTool);
+  //  VVFloat GetBTagCalibSyst(BTagCalib* calibTool);
 
   //pdf reweighting
   double  getPdfRW( LHAPDF::PDF* pdfFrom, LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
@@ -253,44 +263,24 @@ private:
   virtual float TopTransvMass();
   virtual void  RecoHadTops(int ibtop1, int ibtop2);
   virtual std::vector<TLorentzVector> getFatJets(double R);
-  virtual void  findBparton();
-
-  //Aux functions
-  virtual float getAsymmetry(float a, float b);
-
-  virtual bool  isLepton(int pid){ return (fabs(pid)==11 || fabs(pid)==13 || fabs(pid)==15); };
-  virtual bool  isNeutrino(int pid){ return (fabs(pid)==12 || fabs(pid)==14 || fabs(pid)==16); };
-  virtual bool  isLepNeut(int pid){ return (isLepton(pid) || isNeutrino(pid)); };
-  virtual bool  isHF(int pid){ return (fabs(pid)==4 || fabs(pid)==5); };
-  virtual bool  isStable(int status){ return (status==1); };
-  virtual bool  isHard(int status){ return (status==3); };
+  virtual void  findBparton(); 
 
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
   //  TVector2 getMET( const xAOD::MissingETContainer METcon, TString name );
 
-  virtual bool  isStable(const xAOD::TruthParticle* p);
+  float GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool);
 #endif // not __MAKECINT__
 
-  /* virtual bool  isLepton(xAOD::TruthParticle* p); */
-  /* virtual bool  isNeutrino(xAOD::TruthParticle* p); */
-  /* virtual bool  isLepNeut(xAOD::TruthParticle* p); */
-  /* virtual bool  isHF(xAOD::TruthParticle* p); */
-  /* virtual bool  isHardP(xAOD::TruthParticle* p); */
 
   template <class xAODPart>
   void  fillTLV( TLorentzVector &v, xAODPart* p, bool inGeV=false ); 
-
+  
   template <class xAODPart>
   TLorentzVector getTLV( xAODPart* p, bool inGeV=false ); 
 
-  virtual bool  isSignal_WIMP(int mc_id); //move to RunsMap.h or so? //CHECK_ME
-  virtual bool  isSignal_ADD(int mc_id); //move to RunsMap.h or so? //CHECK_ME
-
   virtual TString WccType();
-
-  virtual float BtagEta(float eta); //saturates eta to 2.5 (btag calib defined region)
 
   //--- Variable definition                                                             
   bool isMC; //!  
@@ -420,23 +410,23 @@ private:
   bool Met_doSoftTerms; //!
 
   //btag weights & systematics
-  std::vector<float> btag_weight_first;//!
-  std::vector<float> btag_weight_first_80eff;//!
-  std::vector<float> btag_weight;//!
-  std::vector<float> btag_weight_80eff;//!
+  /* std::vector<float> btag_weight_first;//! */
+  /* std::vector<float> btag_weight_first_80eff;//! */
+  /* std::vector<float> btag_weight;//! */
+  /* std::vector<float> btag_weight_80eff;//! */
 
-  std::vector<float> btag_weight_B_down; //!
-  std::vector<float> btag_weight_B_down_80eff; //!
-  std::vector<float> btag_weight_B_up; //!
-  std::vector<float> btag_weight_B_up_80eff; //!
-  std::vector<float> btag_weight_C_down; //!
-  std::vector<float> btag_weight_C_down_80eff; //!
-  std::vector<float> btag_weight_C_up; //!
-  std::vector<float> btag_weight_C_up_80eff; //!
-  std::vector<float> btag_weight_L_down; //!
-  std::vector<float> btag_weight_L_down_80eff; //!
-  std::vector<float> btag_weight_L_up; //!
-  std::vector<float> btag_weight_L_up_80eff; //!
+  /* std::vector<float> btag_weight_B_down; //! */
+  /* std::vector<float> btag_weight_B_down_80eff; //! */
+  /* std::vector<float> btag_weight_B_up; //! */
+  /* std::vector<float> btag_weight_B_up_80eff; //! */
+  /* std::vector<float> btag_weight_C_down; //! */
+  /* std::vector<float> btag_weight_C_down_80eff; //! */
+  /* std::vector<float> btag_weight_C_up; //! */
+  /* std::vector<float> btag_weight_C_up_80eff; //! */
+  /* std::vector<float> btag_weight_L_down; //! */
+  /* std::vector<float> btag_weight_L_down_80eff; //! */
+  /* std::vector<float> btag_weight_L_up; //! */
+  /* std::vector<float> btag_weight_L_up_80eff; //! */
 
   //RecoToTruth smearing                                                           
   bool recalc_jetflav; //!
@@ -530,6 +520,8 @@ private:
   void InitGHist(TH1F* h, std::string name, int nbin, float binlow, float binhigh, std::string xaxis="", std::string yaxis="");
 
   void Fill(TH1 *h, float value, float weight=1.);
+
+  TStopwatch watch; 
 
   //Ntuple branches
   //--- Declaration of leaf types                                                    
@@ -643,6 +635,9 @@ private:
   //- Jet info
   bool  JVF_min;
   int   n_jets;
+  int   n_jets40;
+  int   n_jets60;
+  int   n_jets80;
   int   n_taujets;
 
   float pt1;
@@ -699,14 +694,14 @@ private:
   //- Btagging
   int   n_bjets;
   int   n_bjets_80eff;
-  float btag_weight1; 
-  float btag_weight2; 
-  float btag_weight3; 
-  float btag_weight4; 
-  float btag_weight_80eff1; 
-  float btag_weight_80eff2; 
-  float btag_weight_80eff3; 
-  float btag_weight_80eff4; 
+  /* float btag_weight1;  */
+  /* float btag_weight2;  */
+  /* float btag_weight3;  */
+  /* float btag_weight4;  */
+  /* float btag_weight_80eff1;  */
+  /* float btag_weight_80eff2;  */
+  /* float btag_weight_80eff3;  */
+  /* float btag_weight_80eff4;  */
   float btag_weight_total;
   float btag_weight_total_80eff;
 
