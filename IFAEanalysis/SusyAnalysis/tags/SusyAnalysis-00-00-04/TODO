@@ -1,0 +1,61 @@
+
+HIGH PRIORITY
+--------------------------------------------------------------------------------------------------------
+
+** check mem leaks (it crashes for ~30K events)
+
+** set drivers for batch and grid modes
+   Running on IFAE's batch (PSB) is done with local driver anyways for now.
+
+** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...) --> 'run' wrapper for now
+    *** CHECK CASE for multi-samples+multi-systs
+
+** Overlap removal. Can we just use ST-one?
+
+** revisit matching everywhere. Use Links? ghost association? 
+
+** move random number generation from BCH to PURW tool? (DataPeriod class in ST at the moment...)
+
+** truth navigation
+
+
+VALIDATION/CHECK
+--------------------------------------------------------------------------------------------------------
+** check 'baseline' selection in SUSYTools suits our needs
+
+** btagging
+       review current setup, variables and ops.
+
+
+
+LOW priority
+--------------------------------------------------------------------------------------------------------
+
+** Create qsub files on the fly? Do we really need to save them? (for local running maybe...but can be overcome)
+
+**  modulate some actions into xAOD-methods, bypassing the CINT compilation.  [already started!]
+
+** clean-up RegionIdentifier
+
+** move to new truthParticle/Event aliases once it is all updated.
+
+** templatize hist handling methods. (TH1F, TH1D, ...)
+
+** Systematics:
+
+       - Connect to list_systematics.sh script for auto-update (perhaps)
+
+** move to Sample class inside RunsMap ? so to specify ecm, location (afs, pic, ...), etc. So to map "sampleKey" --> rlist( Rpair(id, Sample("name",...other attributes)))
+
+
+Errors/Warning to take care of (at least understand if we can safely ignore these)
+--------------------------------------------------------------------------------------------------------
+~~ SUSYObjDef_xAOD           ERROR No ID track!!     (ATH_MSG_ERROR from FillMuon())
+
+~~ Info in <xAOD::TAuxStore::setupAuxBranch>: Variable ExtrapolatedMuonTrackParticlesAuxDyn.trackLink will not be available for reading/copying
+
+~~ Warning in <TVector3::PseudoRapidity>: transvers momentum = 0! return +/- 10e10    (Note : From Razor methods? Seems not!)
+ 
+~~ ERROR in TElectronEfficiencyCorrectionTool (file: /nfs/at3users/users/tripiana/StopAnalysis_xAOD/ElectronEfficiencyCorrection/Root/TElectronEfficiencyCorrectionTool.cxx, line: 591!)
+No correction factor provided for et=31.302971
+Returning scale factor 1.0 with uncertainty 1.0
