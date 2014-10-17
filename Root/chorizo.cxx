@@ -1,11 +1,12 @@
 #define  chorizo_cxx
 #include <EventLoop/Job.h>
-#include <EventLoop/StatusCode.h>
 #include <EventLoop/Worker.h>
 #include "SampleHandler/MetaFields.h"
 #include <SusyAnalysis/chorizo.h>
 #include <SusyAnalysis/chorizoEDM.h>
 #include <SusyAnalysis/MCUtils.h>
+
+#include <EventLoop/StatusCode.h>
 
 //ST includes
 #include "SUSYTools/SUSYObjDef_xAOD.h"
@@ -188,6 +189,18 @@ void chorizo :: bookTree(){
       output->tree()->Branch("avTop_truth_pt",&avTop_truth_pt,"avTop_truth_pt/F", 10000);
       output->tree()->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
 
+      //photons
+      output->tree()->Branch("ph_N",&ph_N,"ph_N/I", 10000);
+      output->tree()->Branch("ph_pt",&ph_pt,"ph_pt/F", 10000);
+      output->tree()->Branch("ph_eta",&ph_eta,"ph_eta/F", 10000);
+      output->tree()->Branch("ph_phi",&ph_phi,"ph_phi/F", 10000);
+      output->tree()->Branch("ph_etiso30",&ph_etiso30,"ph_etiso30/F", 10000);
+      output->tree()->Branch("ph_ptiso30",&ph_ptiso30,"ph_ptiso30/F", 10000);
+      output->tree()->Branch("ph_tight",&ph_tight,"ph_tight/O", 10000);
+      output->tree()->Branch("ph_SF",&photonSF,"ph_SF/F", 10000);
+      output->tree()->Branch("ph_SFu",&photonSF,"ph_SFu/F", 10000);
+      output->tree()->Branch("ph_SFd",&photonSF,"ph_SFd/F", 10000);
+
       //electrons
       output->tree()->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
       output->tree()->Branch("e_truth_eta",&e_truth_eta,"e_truth_eta/F", 10000);
@@ -217,6 +230,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m2_eta",&m2_eta,"m2_eta/F", 10000);                   
       output->tree()->Branch("m2_phi",&m2_phi,"m2_phi/F", 10000);                   
       output->tree()->Branch("m_iso",&m_iso,"m_iso/F", 10000);                      
+      output->tree()->Branch("m_etiso20",&m_etiso20,"m_etiso20/F", 10000);          
+      output->tree()->Branch("m_ptiso20",&m_ptiso20,"m_ptiso20/F", 10000);          
       output->tree()->Branch("m_etiso30",&m_etiso30,"m_etiso30/F", 10000);          
       output->tree()->Branch("m_ptiso30",&m_ptiso30,"m_ptiso30/F", 10000);          
       output->tree()->Branch("m2_iso",&m2_iso,"m2_iso/F", 10000);                      
@@ -452,7 +467,6 @@ EL::StatusCode chorizo :: histInitialize ()
   TProfile::SetDefaultSumw2();
 
   h_average = new TH1D("beginning","beggining",1,0,1);
-  h_average->Sumw2();
   wk()->addOutput(h_average);     
 
   InitGHist(h_cut_var, "h_cut_var", 2000, 0, 1000., "Cut Var (GeV)", "");
@@ -573,7 +587,19 @@ void chorizo :: InitVars()
   electronSFu = 1.;
   electronSFd = 1.;
 
-  //Muon info
+  //- Photon Info
+  ph_N = 0; //DUMMYDN;               
+  ph_pt = 0; //DUMMYDN;              
+  ph_eta = 0.; //DUMMYDN;             
+  ph_phi = 0.; //DUMMYDN;             
+  ph_ptiso30 = 0.; //DUMMYDN;         
+  ph_etiso30 = 0.; //DUMMYDN;         
+  ph_tight = false;           
+  photonSF = DUMMYDN;        
+  photonSFu = 1.;
+  photonSFd = 1.;
+
+  //- Muon info
   m_N = 0.; //DUMMYDN;                  
   m_pt = 0.; //DUMMYDN;               
   m_eta = 0.; //DUMMYDN;              
@@ -584,6 +610,8 @@ void chorizo :: InitVars()
   m_iso = DUMMYDN;              
   m_ptiso30 = 0.; //DUMMYDN;          
   m_etiso30 = 0.; //DUMMYDN;          
+  m_ptiso20 = 0.; //DUMMYDN;          
+  m_etiso20 = 0.; //DUMMYDN;          
   m2_iso = DUMMYDN;             
   m2_ptiso30 = 0.; //DUMMYDN;         
   m2_etiso30 = 0.; //DUMMYDN;         
@@ -616,7 +644,7 @@ void chorizo :: InitVars()
   muon_jet_mv1.clear();           
   muon_jet_vtxf.clear();        
 
-  //jets
+  //- Jet Info
   JVF_min=false;
   n_jets=0;
   n_jets40=0;
@@ -1311,17 +1339,12 @@ void chorizo :: printSystList(){
 
 EL::StatusCode chorizo :: execute ()
 {
-  // Here you do everything that needs to be done on every single
-  // events, e.g. read input variables, apply cuts, and fill
-  // histograms and trees.  This is where most of your actual analysis
-  // code will go.
+  return loop();
+}
 
-  //  wk()->tree()->GetEntry (wk()->treeEntry());
-
-  // Create a transient object store. Needed for the tools.
-  //xAOD::TStore store; 
-  //store.clear(); 
-
+EL::StatusCode chorizo :: loop ()
+{
+ 
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
     wk()->skipEvent();
@@ -2031,7 +2054,7 @@ EL::StatusCode chorizo :: execute ()
   }
   
   //--- Do overlap removal   
-  tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
+  //  tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
 
   // Get good jets now (after overlap removal!)
   jet_itr = (jets_sc.first)->begin();
@@ -2041,7 +2064,7 @@ EL::StatusCode chorizo :: execute ()
     (**jet_itr).auxdata< int >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
     if( (*jet_itr)->auxdata< int >("baseline")==1  &&
-	(*jet_itr)->auxdata< int >("passOR")==1  && 
+	//	(*jet_itr)->auxdata< int >("passOR")==1  && 
 	(*jet_itr)->pt() > Jet_PreselPtCut  && 
 	( fabs( (*jet_itr)->eta()) < Jet_PreselEtaCut) ) {
       m_goodJets->push_back (*jet_itr);
@@ -3066,6 +3089,8 @@ void chorizo :: dumpLeptons(){
     m_pt = recoMuons.at(0).Pt();
     m_eta = recoMuons.at(0).Eta();
     m_phi = recoMuons.at(0).Phi();
+    m_etiso20 = recoMuons.at(0).etcone20;
+    m_ptiso20 = recoMuons.at(0).ptcone20;
     m_etiso30 = recoMuons.at(0).etcone30;
     m_ptiso30 = recoMuons.at(0).ptcone30;
   }

@@ -46,14 +46,14 @@ using namespace SH;
 void usage(){
 
   cout << endl;
-  cout << bold("run_chorizo [options] <Sample> [Syst]") << endl;
+  cout << bold("run [options] <Sample> [Syst]") << endl;
   cout << endl;
   cout << " <Sample> : The sample name to run over. " << endl;
-  cout << "            To list the implemented samples do: 'run_chorizo samples'" << endl;
+  cout << "            To list the implemented samples do: 'run samples'" << endl;
   cout << endl;
   cout << " [Syst]   : systematics to be considered (comma-separated list) [optional]. " << endl;
   cout << "            Just nominal is run by default (Nom)." << endl;       
-  cout << "            To list the available (recommended) systematic variations do: 'run_chorizo slist'" << endl;
+  cout << "            To list the available (recommended) systematic variations do: 'run slist'" << endl;
   cout << "            or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "" << endl;
   cout << " [options] : supported option flags" << endl;

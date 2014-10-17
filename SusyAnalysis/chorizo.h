@@ -6,6 +6,7 @@
 #include "xAODRootAccess/TEvent.h"
 #include "xAODRootAccess/TStore.h"
 
+#include <EventLoop/StatusCode.h>
 #include <EventLoop/Algorithm.h>
 #include <EventLoopAlgs/NTupleSvc.h>
 //#include <EventLoopAlgs/AlgSelect.h>
@@ -170,6 +171,7 @@ public:
   virtual EL::StatusCode changeInput (bool firstFile);
   virtual EL::StatusCode initialize ();
   virtual EL::StatusCode execute ();
+  virtual EL::StatusCode loop ();
   virtual EL::StatusCode postExecute ();
   virtual EL::StatusCode finalize ();
   virtual EL::StatusCode histFinalize ();
@@ -590,6 +592,18 @@ private:
   //- Event selection
   int nVertex;
 
+  //- Photon Info
+  int   ph_N;
+  float ph_pt;
+  float ph_eta;
+  float ph_phi;
+  float ph_ptiso30;
+  float ph_etiso30;
+  bool  ph_tight; 
+  float photonSF;
+  float photonSFu;
+  float photonSFd;
+
   //- Electron Info
   int   e_N;
   float e_pt;
@@ -614,6 +628,8 @@ private:
   float m2_eta;
   float m2_phi;
   float m_iso;
+  float m_ptiso20;
+  float m_etiso20;
   float m_ptiso30;
   float m_etiso30;
   float m2_iso;
@@ -732,6 +748,7 @@ private:
 
   float met_mu;
   float met_ecorr;
+  float met_phcorr;
 
   float met_lochadtopo;
   float met_reffinalNoMu;
