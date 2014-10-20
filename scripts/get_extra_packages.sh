@@ -6,11 +6,16 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.0.12
+# Extra tags needed for Base,2.0.13
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonMomentumCorrections/tags/MuonMomentumCorrections-01-00-10 MuonMomentumCorrections
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/ElectronPhotonID/ElectronPhotonFourMomentumCorrection/tags/ElectronPhotonFourMomentumCorrection-00-01-05 ElectronPhotonFourMomentumCorrection
-#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/MuonID/MuonSelectorTools/tags/MuonSelectorTools-00-04-01 MuonSelectorTools
+
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Tools/PathResolver/tags/PathResolver-00-02-06 PathResolver
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-04-04 JetCalibTools
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetUncertainties/tags/JetUncertainties-00-09-08 JetUncertainties
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetInterface/tags/JetInterface-00-00-33 JetInterface
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetCPInterfaces/tags/JetCPInterfaces-00-00-00 JetCPInterfaces
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Control/AthToolSupport/AsgTools/tags/AsgTools-00-00-33 AsgTools
+
 
 ##needed by SUSYTools
 #svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/egamma/egammaEvent/trunk egammaEvent

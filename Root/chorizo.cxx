@@ -35,6 +35,9 @@
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
 
+//for errorcheck
+#define APP_NAME "chorizo"
+
 chorizo :: chorizo ()
 {
   // Here you put any code for the base initialization of variables,
@@ -1416,18 +1419,16 @@ EL::StatusCode chorizo :: loop ()
 
   //  -- New containers for MET recalculation!
   m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS); 
-  if( ! m_store->record( m_goodJets, "MySelJets" ) ) { 
-      Error("execute()", "Failed to store 'MySelJets' container. Exiting." );
-      return EL::StatusCode::FAILURE; 
-  }
+  CHECK( m_store->record( m_goodJets, "MySelJets" ) );
 
-  xAOD::MissingETContainer* recMETcont = new xAOD::MissingETContainer();
-  xAOD::MissingETAuxContainer* recMETcontAux = new xAOD::MissingETAuxContainer();
-  recMETcont->setStore( recMETcontAux ); //< Connect the two                
-  if( ! m_store->record( recMETcont, "MET_MyRefFinal" ) ) { 
-      Error("execute()", "Failed to store 'MET_MyRefFinal' container. Exiting." );
-      return EL::StatusCode::FAILURE; 
-  }
+
+  xAOD::MissingETContainer* metRFC = new xAOD::MissingETContainer;
+  xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
+  metRFC->setStore(metRFCAux);
+
+  CHECK( m_store->record( metRFC, "MET_MyRefFinal" ) );
+  CHECK( m_store->record( metRFCAux, "MET_MyRefFinalAux." ) );
+
 
 
   //--- Analysis Code 
@@ -1671,6 +1672,8 @@ EL::StatusCode chorizo :: loop ()
   bool IsElectron = false; // any good not-overlapping electron in the event?
  
   std::pair< xAOD::ElectronContainer*, xAOD::ShallowAuxContainer* > electrons_sc = xAOD::shallowCopyContainer( *m_electrons );
+  bool setLinks = xAOD::setOriginalObjectLink(*m_electrons, *electrons_sc.first);
+
   xAOD::ElectronContainer::iterator el_itr = (electrons_sc.first)->begin();
   xAOD::ElectronContainer::iterator el_end = (electrons_sc.first)->end();
   
@@ -1683,7 +1686,9 @@ EL::StatusCode chorizo :: loop ()
     tool_st->IsSignalElectron( (**el_itr), El_PreselPtCut, -1 ); //thight ID + d0 & z0 no isolation applied for now! //CHECK ME
     
     //pre-book baseline electrons
-    if( (**el_itr).auxdata< int >("baseline") ){ 
+    if( (**el_itr).auxdata< char >("baseline") ){ 
+
+    cout << "AFTER BASELINE ELECTRON " << endl;
 
       //define preselected electron                
       Particle recoElectron;
@@ -1749,6 +1754,8 @@ EL::StatusCode chorizo :: loop ()
   bool IsMuon = false; // any good not-overlapping muon in the event?
 
   std::pair< xAOD::MuonContainer*, xAOD::ShallowAuxContainer* > muons_sc = xAOD::shallowCopyContainer( *m_muons );
+  setLinks = xAOD::setOriginalObjectLink(*m_muons, *muons_sc.first);
+
   xAOD::MuonContainer::iterator mu_itr = (muons_sc.first)->begin();
   xAOD::MuonContainer::iterator mu_end = (muons_sc.first)->end();
   int iMu=0;
@@ -1759,7 +1766,7 @@ EL::StatusCode chorizo :: loop ()
     tool_st->IsCosmicMuon( **mu_itr );  //'cosmic'   decoration
 
     //pre-book baseline muons
-    if( (**mu_itr).auxdata< int >("signal") ){  //in isolation applied though
+    if( (**mu_itr).auxdata< char >("signal") ){  //without isolation applied though
     
       Particle recoMuon;
       recoMuon.SetVector( getTLV( &(**mu_itr) ));
@@ -2010,6 +2017,8 @@ EL::StatusCode chorizo :: loop ()
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
   
   std::pair< xAOD::JetContainer*, xAOD::ShallowAuxContainer* > jets_sc = xAOD::shallowCopyContainer( *m_jets );
+  setLinks = xAOD::setOriginalObjectLink(*m_jets, *jets_sc.first);
+
   xAOD::JetContainer::iterator jet_itr = (jets_sc.first)->begin();
   xAOD::JetContainer::iterator jet_end = (jets_sc.first)->end();
   
@@ -2040,31 +2049,31 @@ EL::StatusCode chorizo :: loop ()
     smr_met_jets_phi.push_back( recoJet.Phi() );
     smr_met_jets_E.push_back( recoJet.E() );  //in GeV!
     
-    typedef ElementLink< xAOD::IParticleContainer > Link_t;
-    static const char* linkName = "originalObjectLink";
-    const xAOD::IParticleContainer* cont = dynamic_cast< const xAOD::IParticleContainer* >( (*jet_itr)->container() );
-    if( ! cont ) {
-      Warning( "execute()", "Input object not part of a container, 'originalObjectLink' ElementLink not established" );
-    } else {
-      const Link_t link( *m_jets, (*jet_itr)->index() );
-      Link_t& auxLink = (*jet_itr)->auxdata< Link_t >( linkName );
-      auxLink = link;
-      auxLink.toPersistent();
-    }
+    // typedef ElementLink< xAOD::IParticleContainer > Link_t;
+    // static const char* linkName = "originalObjectLink";
+    // const xAOD::IParticleContainer* cont = dynamic_cast< const xAOD::IParticleContainer* >( (*jet_itr)->container() );
+    // if( ! cont ) {
+    //   Warning( "execute()", "Input object not part of a container, 'originalObjectLink' ElementLink not established" );
+    // } else {
+    //   const Link_t link( *m_jets, (*jet_itr)->index() );
+    //   Link_t& auxLink = (*jet_itr)->auxdata< Link_t >( linkName );
+    //   auxLink = link;
+    //   auxLink.toPersistent();
+    // }
   }
   
   //--- Do overlap removal   
-  //  tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
+  tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
 
   // Get good jets now (after overlap removal!)
   jet_itr = (jets_sc.first)->begin();
   jet_end = (jets_sc.first)->end();
   for( ; jet_itr != jet_end; ++jet_itr ) {
 
-    (**jet_itr).auxdata< int >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
+    (**jet_itr).auxdata< char >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
-    if( (*jet_itr)->auxdata< int >("baseline")==1  &&
-	//	(*jet_itr)->auxdata< int >("passOR")==1  && 
+    if( (*jet_itr)->auxdata< char >("baseline")==1  &&
+	(*jet_itr)->auxdata< char >("passOR")==1  && 
 	(*jet_itr)->pt() > Jet_PreselPtCut  && 
 	( fabs( (*jet_itr)->eta()) < Jet_PreselEtaCut) ) {
       m_goodJets->push_back (*jet_itr);
@@ -2098,7 +2107,7 @@ EL::StatusCode chorizo :: loop ()
     // if (isoverlap) continue;
 
     //flag event if bad jet is found
-    this->isBadID |= (*jet_itr)->auxdata< int >("bad");
+    this->isBadID |= (*jet_itr)->auxdata< char >("bad");
 
     //--- Get some other jet attributes
     std::vector<float> sumpttrk_vec;                                                   
@@ -2157,7 +2166,7 @@ EL::StatusCode chorizo :: loop ()
     //--- B-tagging
     
     //from SUSYTools (based on SV1plusIP3D (70%) at the moment!)
-    recoJet.isbjet = (bool)(*jet_itr)->auxdata< int >("bjet");
+    recoJet.isbjet = (bool)(*jet_itr)->auxdata< char >("bjet");
 
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
 
@@ -2204,16 +2213,28 @@ EL::StatusCode chorizo :: loop ()
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
 
 
-  //--- Get (recalculated) MissingEt
-  xAOD::MissingETContainer metRFc;
-  tool_st->GetMET(metRFc);   //doMuons here?
-  TVector2 metRF(0.,0.);// = getMET(&metRFc, "Final"); 
+  //--- Get (recalculated) MissingEt  
+  CHECK( tool_st->GetMET(*metRFC,
+			 electrons_sc.first,
+			 0,
+			 0,
+			 muons_sc.first,
+			 jets_sc.first) );
+  
+  
+  TVector2 metRF = getMET(metRFC, "Final"); 
+  
+  //  xAOD::MissingETContainer::const_iterator metRF_it = metRFC->find("Final");
 
-  xAOD::MissingETContainer::const_iterator metrf_it = metRFc.find( "Final" );
-  if (metrf_it == metRFc.end())
-    Warning("execute()", "No 'Final' inside MET container. Setting MET=(0,0) !");
-  else
-    metRF.Set((*metrf_it)->mpx(), (*metrf_it)->mpy());
+  //xAOD::MissingETContainer metRFc;
+  //  tool_st->GetMET(metRFc);   //doMuons here?
+  //  TVector2 metRF(0.,0.);// = getMET(&metRFc, "Final"); 
+  // xAOD::MissingETContainer::const_iterator metrf_it = metRFc.find( "Final" );
+
+  // if (metRF_it == metRFC->end())
+  //   Warning("execute()", "No 'Final' inside MET container. Setting MET=(0,0) !");
+  // else
+  //   metRF.Set((*metRF_it)->mpx(), (*metRF_it)->mpy());
 
 
   //--- Remove events with fake Etmiss
@@ -2591,8 +2612,14 @@ EL::StatusCode chorizo :: loop ()
   //** configure MET terms 
   tool_st->setProperty("METDoMuon", Met_doMuons);
 
-  tool_st->GetMET(metRFc);
-  TVector2 v_met_ST = getMET(&metRFc, "Final");
+  CHECK( tool_st->GetMET(*metRFC,
+			 electrons_sc.first,
+			 0,
+			 0,
+			 muons_sc.first,
+			 jets_sc.first) );
+  
+  TVector2 v_met_ST = getMET( metRFC, "Final");
 
   met_obj.SetVector(v_met_ST,"");  //- Copy met vector to the met data member
   met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
