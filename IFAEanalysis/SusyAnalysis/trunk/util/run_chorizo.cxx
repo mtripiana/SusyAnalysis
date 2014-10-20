@@ -212,7 +212,7 @@ int main( int argc, char* argv[] ) {
       runBatch = true;
       runLocal = false;
     } 
-    else if (opts[iop] == "g"){ //run on the grid (prun)
+    else if (opts[iop] == "p"){ //run on the grid (prun)
       runPrun = true;
       runLocal = false;
     }

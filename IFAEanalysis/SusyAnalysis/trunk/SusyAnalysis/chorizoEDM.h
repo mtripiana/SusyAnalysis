@@ -10,6 +10,9 @@
 //EDM includes:
 #include "xAODEventInfo/EventInfo.h"
 #include "xAODCore/ShallowCopy.h"
+#include "xAODBase/IParticleHelpers.h"
+
+#include "CPAnalysisExamples/errorcheck.h"
 
 #include "xAODJet/JetContainer.h"
 #include "xAODJet/JetAuxContainer.h"
