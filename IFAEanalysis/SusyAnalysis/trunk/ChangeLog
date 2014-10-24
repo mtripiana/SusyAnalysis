@@ -1,7 +1,7 @@
 2014-10-24 Martin <tripiana@cern.ch>
 	* Add overlap removal option to jO.
 	* Fix store cleaning when running in genPU mode.
-	
+	* Fix Stop and Monojet jOptions.
 
 2014-10-21 Martin <tripiana@cern.ch>
 	* Move to Base,2.0.14

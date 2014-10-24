@@ -2,7 +2,13 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
-** check mem leaks (it crashes for ~30K events)
+** Allow for multiple samples inside same directory, e.g.:
+   	 Znunu/sample1/AOD.pool.root
+   	 Znunu/sample2/AOD.pool.root
+
+** Check Pileup jOption config.  PeriodConfig = MC12a??
+
+** check mem leaks (it crashes for ~30K events)   <---- not anymore??
 
 ** set drivers for batch and grid modes
    Running on IFAE's batch (PSB) is done with local driver anyways for now.
@@ -10,7 +16,7 @@ HIGH PRIORITY
 ** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...) --> 'run' wrapper for now
     *** CHECK CASE for multi-samples+multi-systs
 
-** Overlap removal. Can we just use ST-one?
+** Overlap removal. Can we just use ST-one? <--- It is what we have now, but check if appropiate.
 
 ** revisit matching everywhere. Use Links? ghost association? 
 

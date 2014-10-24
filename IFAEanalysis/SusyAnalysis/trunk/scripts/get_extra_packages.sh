@@ -47,5 +47,5 @@ svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_FastJet/trunk A
 # Move to AsgExternal/Asg_Lhapdf ?
 #svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/D3PDTools/RootCoreLhapdf/trunk RootCoreLhapdf
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_Lhapdf/trunk Asg_Lhapdf
-echo "export LHAPDF_DATA_PATH="$ANALYSISCODE"/RootCoreBin/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:" > $HOME/.bashrc
+
 
