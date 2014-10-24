@@ -10,7 +10,7 @@ The first thing you need to do is to set the Analysis release, so to have access
 
 For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
 
-     >  rcSetup Base,2.0.13
+     >  rcSetup Base,2.0.14
  
      Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
 
@@ -76,8 +76,10 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
 			    
 			         -l  : run locally (default) 
 			         -b  : run in batch          
-				 -g  : run on the grid       
+				 -p  : run on the grid    (prun)   
+				 -g  : run on the grid    (ganga)     
 				 -x  : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
+				 -t  : run just a test over 50 events
 
                 [outDir]  : is where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)). 	
 

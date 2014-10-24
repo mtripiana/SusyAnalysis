@@ -44,7 +44,7 @@ using namespace SH;
 
 #define LumFactor 1000. //in nb-1
 
-#define TEST 0  //to quickly restrict the run to 10 events
+#define TEST 1  //to quickly restrict the run to 10 events
 
 void usage(){
 
@@ -62,8 +62,10 @@ void usage(){
   cout << " [options] : supported option flags" << endl;
   cout << "       -l  : run locally (default)   " << endl;
   cout << "       -b  : run in batch            " << endl;
-  cout << "       -g  : run on the grid         " << endl;
+  cout << "       -p  : run on the grid (prun)        " << endl;
+  cout << "       -g  : run on the grid (ganga)        " << endl;
   cout << "       -x  : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
+  cout << "       -t  : to run just a test over 50 events " <<endl;
   cout << endl;
 }
 
@@ -175,6 +177,7 @@ int main( int argc, char* argv[] ) {
   bool runGrid  = false;
   bool runPrun  = false;
   TString queue = "at3";
+  bool quick_test = true;
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -222,6 +225,9 @@ int main( int argc, char* argv[] ) {
     }
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
+    }
+    else if (opts[iop] == "t"){ //limit run to n events
+      quick_test = true;
     }
     else if (opts[iop].BeginsWith("i") ){
       single_id = opts[iop].ReplaceAll("i=","").Atoi();
@@ -460,7 +466,7 @@ int main( int argc, char* argv[] ) {
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
-    if(TEST) job.options()->setDouble (EL::Job::optMaxEvents, 10);
+    if(TEST || quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 50);
     if(systListOnly)
       job.options()->setDouble (EL::Job::optMaxEvents, 1);
     
@@ -491,12 +497,14 @@ int main( int argc, char* argv[] ) {
 
       //** prun
       Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
+      Pdriver.options()->setDouble("nc_disableAutoRetry", 1);
        //      Pdriver.options()->setString("nc_nFilesPerJob", "5"); //By default, split in as few jobs as possible
       Pdriver.options()->setDouble("nc_nFiles", 1);
       Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
       Pdriver.submitOnly( job, tmpdir );
+      break;
     }
     else if(runGrid){ //grid mode
 

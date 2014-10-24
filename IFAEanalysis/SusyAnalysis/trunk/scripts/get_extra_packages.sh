@@ -6,16 +6,11 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.0.13
+# Extra tags needed for Base,2.0.14
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
 
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Tools/PathResolver/tags/PathResolver-00-02-06 PathResolver
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-04-04 JetCalibTools
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetUncertainties/tags/JetUncertainties-00-09-08 JetUncertainties
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetInterface/tags/JetInterface-00-00-33 JetInterface
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetCPInterfaces/tags/JetCPInterfaces-00-00-00 JetCPInterfaces
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Control/AthToolSupport/AsgTools/tags/AsgTools-00-00-33 AsgTools
-
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 JVFUncertaintyTool
 
 ##needed by SUSYTools
 #svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/egamma/egammaEvent/trunk egammaEvent
@@ -26,11 +21,11 @@ svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Control/AthToolSupport/AsgTools
 #
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_Boost/trunk Asg_Boost
 
-# JetSmearing
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-00-01-25 JetSmearing
+# JetSmearing (IT will come...)
+#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-01-00-03 JetSmearing
 
 # METSmearing
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/MET/METSmearing/tags/METSmearing-00-00-02 METSmearing
+#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/MET/METSmearing/tags/METSmearing-00-00-02 METSmearing  ## not used yet
 
 # TruthToRecoFunctions
 #
@@ -38,7 +33,7 @@ svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/MET/METSmearing/
 # svn co svn+ssh://$USER@svn.cern.ch/reps/atlasgroups/PhysicsAnalysis/EuropeanStrategy/TruthToRecoFunctions/trunk TruthToRecoFunctions
 #
 # (recommended!) optimized code from Martin's public area:
-cp -r /afs/cern.ch/user/t/tripiana/public/IFAE/SUSY/TruthToRecoFunctions/ .
+#cp -r /afs/cern.ch/user/t/tripiana/public/IFAE/SUSY/TruthToRecoFunctions/ .      ## not used yet
 
 # HistFitter
 #
