@@ -2,6 +2,7 @@
 	* Move to Base,2.0.14
 	* New MET re-building in ST
 	* Fix m_top
+	* Add submit_batch script.
 	* Tagging SusyAnalysis-00-00-05
 
 2014-10-20 Martin <tripiana@cern.ch>
