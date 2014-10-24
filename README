@@ -45,6 +45,22 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
    rc compile
 
 
+NOTE:   before running please check the path for the pdfrw tool is properly set. 
+        --> do : 
+             echo $LHAPDF_DATA_PATH
+
+        This should look like this:
+	"$ROOTCOREBIN/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:"
+         
+	 where $ROOTCOREBIN = $ANALYSISCODE/RootCoreBin
+
+	If it is not the case please set it up, soing something like :
+ 
+        echo "export LHAPDF_DATA_PATH="$ANALYSISCODE"/RootCoreBin/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:" > $HOME/.bashrc
+
+        (and source your .bashrc . Or just start a new session and re-do 'rcsetup'). 
+
+
 6) To run the analysis:
    =====================
 
@@ -97,6 +113,7 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
       e.g. to produce the mini-ntuples for X-sample:
 
    $ANALYSISCODE/SusyAnalysis/scripts/qsubFiles/X-sample.sub
+
 
    To actually send it to the batch you do:
 
