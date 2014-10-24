@@ -1275,6 +1275,7 @@ EL::StatusCode chorizo :: initialize ()
   tool_BCH = new BCHTool::BCHCleaningToolRoot();
   tool_BCH->InitializeTool(!isMC, tool_tileTrip, maindir+"BCHCleaningTool/FractionsRejectedJetsMC.root");
 
+  Info("initialize()","BEFORE JVF tool");
 
   //--- JVF uncertainty
   tool_jvf = new JVFUncertaintyTool();
@@ -1347,7 +1348,9 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
- 
+  
+  //Info("loop()", "Inside loop");
+
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
     wk()->skipEvent();
@@ -1370,7 +1373,7 @@ EL::StatusCode chorizo :: loop ()
   //--------------------------- 
   const xAOD::EventInfo* eventInfo = 0;
   if( ! m_event->retrieve( eventInfo, "EventInfo").isSuccess() ){
-    Error("execute()", "Failed to retrieve 'EventInfo' collection. Exiting." );
+    Error("loop()", "Failed to retrieve 'EventInfo' collection. Exiting." );
     return EL::StatusCode::FAILURE;
   }
 
@@ -1386,31 +1389,31 @@ EL::StatusCode chorizo :: loop ()
   
   //  -- Jets
   if ( !m_event->retrieve( m_jets, "AntiKt4LCTopoJets" ).isSuccess() ){ 
-    Error("execute()", "Failed to retrieve 'AntiKt4LCTopoJets' container. Exiting." );
+    Error("loop()", "Failed to retrieve 'AntiKt4LCTopoJets' container. Exiting." );
     return EL::StatusCode::FAILURE;
   }
   //  -- Electrons
   if ( !m_event->retrieve( m_electrons, "ElectronCollection" ).isSuccess() ){ 
-    Error("execute()", "Failed to retrieve 'ElectronCollection' container. Exiting." );
+    Error("loop()", "Failed to retrieve 'ElectronCollection' container. Exiting." );
     return EL::StatusCode::FAILURE;
   }
   //  -- Muons
   if ( !m_event->retrieve( m_muons, "Muons" ).isSuccess() ){ 
-    Error("execute()", "Failed to retrieve 'Muons' container. Exiting." );
+    Error("loop()", "Failed to retrieve 'Muons' container. Exiting." );
     return EL::StatusCode::FAILURE;
   }
   //  -- Truth Particles
   if(isMC){
     if ( !m_event->retrieve( m_truthE, "TruthEvent" ).isSuccess() ){ 
-      Error("execute()", "Failed to retrieve 'TruthEvent' container. Exiting." );
+      Error("loop()", "Failed to retrieve 'TruthEvent' container. Exiting." );
       return EL::StatusCode::FAILURE;
     }
     if ( !m_event->retrieve( m_truthP, "TruthParticle" ).isSuccess() ){ 
-      Error("execute()", "Failed to retrieve 'TruthParticle' container. Exiting." );
+      Error("loop()", "Failed to retrieve 'TruthParticle' container. Exiting." );
       return EL::StatusCode::FAILURE;
     }
     if( ! m_event->retrieve( m_truth_jets, "AntiKt4TruthJets").isSuccess() ){
-      Error("GetGeneratorUncertaintiesSherpa()", "Failed to retrieve Truth jets collection : AntiKt4TruthJets. Exiting." );
+      Error("loop()", "Failed to retrieve Truth jets collection : AntiKt4TruthJets. Exiting." );
       return EL::StatusCode::FAILURE;
     }
   }
@@ -1588,7 +1591,7 @@ EL::StatusCode chorizo :: loop ()
   //--- Vertex selection   (Note: It might not be needed at all in Run2!)
   const xAOD::VertexContainer* vertices = 0;
   if( ! m_event->retrieve( vertices, "PrimaryVertices").isSuccess() ){
-    Error("execute()", "Failed to retrieve PrimaryVertices container. Exiting." );
+    Error("loop()", "Failed to retrieve PrimaryVertices container. Exiting." );
     return EL::StatusCode::FAILURE;
   }
   nVertex = static_cast< int >( vertices->size() );
@@ -1664,7 +1667,7 @@ EL::StatusCode chorizo :: loop ()
     if ( ! isBeamHalo(RunNumber,EventNumber) ){
       return EL::StatusCode::SUCCESS; // select only events spotted by the beam halo tool
     }
-    Info("execute()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
+    Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
   }
 
   //--- Get Electrons
@@ -1688,8 +1691,6 @@ EL::StatusCode chorizo :: loop ()
     //pre-book baseline electrons
     if( (**el_itr).auxdata< char >("baseline") ){ 
 
-    cout << "AFTER BASELINE ELECTRON " << endl;
-
       //define preselected electron                
       Particle recoElectron;
       recoElectron.SetVector( getTLV( &(**el_itr) ));
@@ -1709,13 +1710,13 @@ EL::StatusCode chorizo :: loop ()
 	recoElectron.SF = tool_st->GetSignalElecSF( **el_itr );
 
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	  Error("execute()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
+	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
 	}
 	recoElectron.SFu = tool_st->GetSignalElecSF( **el_itr );
 
 	//+1 sys down
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	  Error("execute()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
+	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
 	}
 	recoElectron.SFd = tool_st->GetSignalElecSF( **el_itr );
 
@@ -1786,13 +1787,13 @@ EL::StatusCode chorizo :: loop ()
 
 	//+1 sys up
 	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
-	  Error("execute()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
+	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
 	}
 	recoMuon.SFu = tool_st->GetSignalMuonSF(**mu_itr);
 
 	//+1 sys down
 	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
-	  Error("execute()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
+	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
 	}
 	recoMuon.SFd = tool_st->GetSignalMuonSF(**mu_itr);
 
@@ -1828,7 +1829,7 @@ EL::StatusCode chorizo :: loop ()
     //retrieve track container
     const xAOD::TrackParticleContainer* tracks;
     if ( !m_event->retrieve( tracks, "GSFTrackParticles" ).isSuccess() ){ 
-      Error("execute()", "Failed to retrieve 'GSFTrackParticles' container. Exiting." );
+      Error("loop()", "Failed to retrieve 'GSFTrackParticles' container. Exiting." );
       return EL::StatusCode::FAILURE;
     }
 
@@ -2022,10 +2023,6 @@ EL::StatusCode chorizo :: loop ()
   xAOD::JetContainer::iterator jet_itr = (jets_sc.first)->begin();
   xAOD::JetContainer::iterator jet_end = (jets_sc.first)->end();
   
-  // record calibrated jets to the store for MET rebuilding                           
-  std::string MetJetColl =  "CalibratedAntiKt4LCTopoJets";
-  m_store->record(jets_sc.first, MetJetColl);
-  tool_st->setProperty("METJetCollection", MetJetColl);
 
   //jets for met recalculation of qcd  //CHECK_ME couldn't I just read the 'CalibratedAntiKt4LCTopoJets' now?
   smr_met_jets_pt.clear();
@@ -2043,23 +2040,12 @@ EL::StatusCode chorizo :: loop ()
     tool_st->IsBJet( **jet_itr ); //CHECK ME! replace decoration with our own?
 
 
-    //book it for smearing (before overlap removal)
+    //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
     smr_met_jets_pt.push_back( recoJet.Pt() ); //in GeV!
     smr_met_jets_eta.push_back( recoJet.Eta() );
     smr_met_jets_phi.push_back( recoJet.Phi() );
     smr_met_jets_E.push_back( recoJet.E() );  //in GeV!
     
-    // typedef ElementLink< xAOD::IParticleContainer > Link_t;
-    // static const char* linkName = "originalObjectLink";
-    // const xAOD::IParticleContainer* cont = dynamic_cast< const xAOD::IParticleContainer* >( (*jet_itr)->container() );
-    // if( ! cont ) {
-    //   Warning( "execute()", "Input object not part of a container, 'originalObjectLink' ElementLink not established" );
-    // } else {
-    //   const Link_t link( *m_jets, (*jet_itr)->index() );
-    //   Link_t& auxLink = (*jet_itr)->auxdata< Link_t >( linkName );
-    //   auxLink = link;
-    //   auxLink.toPersistent();
-    // }
   }
   
   //--- Do overlap removal   
@@ -2232,7 +2218,7 @@ EL::StatusCode chorizo :: loop ()
   // xAOD::MissingETContainer::const_iterator metrf_it = metRFc.find( "Final" );
 
   // if (metRF_it == metRFC->end())
-  //   Warning("execute()", "No 'Final' inside MET container. Setting MET=(0,0) !");
+  //   Warning("loop()", "No 'Final' inside MET container. Setting MET=(0,0) !");
   // else
   //   metRF.Set((*metRF_it)->mpx(), (*metRF_it)->mpy());
 
@@ -2281,7 +2267,7 @@ EL::StatusCode chorizo :: loop ()
 	isolated_electron = ((electronCandidates.at(iEl).ptcone30/electronCandidates.at(iEl).Pt()) < 0.16) && ((electronCandidates.at(iEl).etcone30/electronCandidates.at(iEl).Pt()) < 0.18); //hard-coded thresholds for now. Improve this!
       }
       else{
-	Fatal("execute()", "The El_isolationVar is not implemented! --> Crashing...");
+	Fatal("loop()", "The El_isolationVar is not implemented! --> Crashing...");
       }
       electronCandidates.at(iEl).isIsolated = isolated_electron;
       
@@ -2398,7 +2384,7 @@ EL::StatusCode chorizo :: loop ()
 	isolated_muon = muonCandidates.at(iMu).ptcone20/muonCandidates.at(iMu).Pt() < Mu_isolationThres; // this is causing troubles  && muonCandidates.at(iMu).Pt()>Mu_PreselPtCut; //--- It's a ratio 
       }
       else{
-	Fatal("execute()", "The Mu_isolationVar is not implemented! --> Crashing...");
+	Fatal("loop()", "The Mu_isolationVar is not implemented! --> Crashing...");
       }
       muonCandidates.at(iMu).isIsolated = isolated_muon;
       
@@ -2577,15 +2563,15 @@ EL::StatusCode chorizo :: loop ()
   const xAOD::MissingETContainer* cmet_track;
 
   if( ! m_event->retrieve( cmet_reffinal, "MET_RefFinal").isSuccess() ){
-    Error("execute()", "Failed to retrieve MET_RefFinal container. Exiting." );
+    Error("loop()", "Failed to retrieve MET_RefFinal container. Exiting." );
     return EL::StatusCode::FAILURE;
   }
   if( ! m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo").isSuccess() ){
-    Error("execute()", "Failed to retrieve MET_LocHadTopo container. Exiting." );
+    Error("loop()", "Failed to retrieve MET_LocHadTopo container. Exiting." );
     return EL::StatusCode::FAILURE;
   }
   if( ! m_event->retrieve( cmet_track, "MET_Track").isSuccess() ){
-    Error("execute()", "Failed to retrieve MET_Track container. Exiting." );
+    Error("loop()", "Failed to retrieve MET_Track container. Exiting." );
     return EL::StatusCode::FAILURE;
   }
 
@@ -2606,18 +2592,24 @@ EL::StatusCode chorizo :: loop ()
   //  const xAOD::MissingET* mrf_refjetjvf = (*cmet_reffinal)["RefJetJVF"];  //refined
   //  const xAOD::MissingET* mrf_refpvstrk = (*cmet_reffinal)["PVSoftTrk"]; 
 
-  //- Recomputed MET via SUSYTools (MetUtility)
+  //- Recomputed MET via SUSYTools
   //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
-  
-  //** configure MET terms 
-  tool_st->setProperty("METDoMuon", Met_doMuons);
-
-  CHECK( tool_st->GetMET(*metRFC,
-			 electrons_sc.first,
-			 0,
-			 0,
-			 muons_sc.first,
-			 jets_sc.first) );
+  if(Met_doMuons){
+    CHECK( tool_st->GetMET(*metRFC,
+			   electrons_sc.first,
+			   0,
+			   0,
+			   muons_sc.first,
+			   jets_sc.first) );
+  }
+  else{
+    CHECK( tool_st->GetMET(*metRFC,
+			   electrons_sc.first,
+			   0,
+			   0,
+			   0,
+			   jets_sc.first) );
+  }
   
   TVector2 v_met_ST = getMET( metRFC, "Final");
 
@@ -2945,6 +2937,10 @@ EL::StatusCode chorizo :: loop ()
 
       float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
       if(locbw > maxbw1){
+	if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
+	  maxbw2 = maxbw1;
+	  ibtop2 = ibtop1;
+	}
 	ibtop1 = ijet;
 	maxbw1 = locbw;
       }
@@ -4258,6 +4254,11 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
       float locdr = recoJets.at(ij1).DeltaR( recoJets.at(ij2).GetVector() );
       
       if(locdr < W1dr){
+	if(W1dr<999){
+	  W2j1 = W1j1;
+	  W2j2 = W1j2;
+	  W2dr = W1dr;
+	}
 	W1j1 = ij1;
 	W1j2 = ij2;
 	W1dr = locdr;

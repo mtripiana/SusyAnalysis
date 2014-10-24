@@ -59,8 +59,10 @@ void usage(){
   cout << " [options] : supported option flags" << endl;
   cout << "       -l  : run locally (default)   " << endl;
   cout << "       -b  : run in batch            " << endl;
-  cout << "       -g  : run on the grid         " << endl;
+  cout << "       -p  : run on the grid (prun)        " << endl;
+  cout << "       -g  : run on the grid (ganga)        " << endl;
   cout << "       -x  : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
+  cout << "       -t  : to run just a test over 50 events " <<endl;
   cout << endl;
 }
 
