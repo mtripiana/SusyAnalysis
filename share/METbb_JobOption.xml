@@ -4,8 +4,8 @@
     <GeneralSettings>
         <Mode name="setDefinitionRegion">SR</Mode> <!-- Name of the object definition regions, separated by comma -->
         <Mode name="debug">false</Mode>
-        <Mode name="doTree">true</Mode>
-        <Mode name="GeneratePileupFiles">false</Mode>
+        <Mode name="doTree">false</Mode>
+        <Mode name="GeneratePileupFiles">true</Mode>
         <Mode name="DoCutFlow">false</Mode>
 	<Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
         <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
@@ -37,6 +37,13 @@
     </GeneralSettings>
 
     <ObjectDefinition>
+
+        <OverlapRemoval>
+            <Enable>true</Enable>
+            <!-- <OverlapRemovalElPt>20000.</OverlapRemovalElPt>
+		 <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt> -->
+        </OverlapRemoval> 
+
 	  
         <Trigger>
             <region name="SR">EF_xe80_tclcw</region>
@@ -104,9 +111,6 @@
                 <RecoPtCut>30000.</RecoPtCut>
                 <RecoEtaCut>2.8</RecoEtaCut>
 
-                <OverlapRemovalElPt>20000.</OverlapRemovalElPt>
-                <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt>
-                
                 <!--- For the c/b-tagger -->
                 <!---<Tagger>MV1</Tagger> -->
 		<Tagger>IP3DSV1</Tagger>
