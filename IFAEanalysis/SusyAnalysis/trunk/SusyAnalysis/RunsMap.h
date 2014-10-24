@@ -127,6 +127,11 @@ void RunsMap::LoadMap(){
 
   m_map["TestMClocal5"] = rlist( Rpair(110101,"/nfs/at3/scratch/tripiana/xAOD/mc14/ttbar/"));
 
+  //New test on 8TeV Znunu xAODs
+  m_map["TestZnunu"] = rlist( Rpair(167818, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167818/"),
+                              Rpair(167819, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"),
+                              Rpair(167820, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167820/"));
+
   //======================================================================================================================
   //                                                 List of backgrounds for the Baseline analysis
   //======================================================================================================================

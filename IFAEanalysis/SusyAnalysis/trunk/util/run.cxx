@@ -301,7 +301,9 @@ int main( int argc, char* argv[] ) {
       if(runLocal){
 	if( run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
 	  scanDir( sh, run_patterns[i_id].Data() );
-	}else{//PIC samples
+	  //.Find( run_patterns[i_id].Data() );
+	}
+	else{//PIC samples
 	  scanDQ2 (sh, run_patterns[i_id].Data() );
 	  mgd=true;
 	}
@@ -322,6 +324,8 @@ int main( int argc, char* argv[] ) {
       
       sh.print();
       
+      //      return 0;
+
       //Handle Meta-Data
       sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
       

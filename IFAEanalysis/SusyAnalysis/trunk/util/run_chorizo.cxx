@@ -44,7 +44,7 @@ using namespace SH;
 
 #define LumFactor 1000. //in nb-1
 
-#define TEST 1  //to quickly restrict the run to 10 events
+#define TEST 0  //to quickly restrict the run to 50 events
 
 void usage(){
 
@@ -177,7 +177,7 @@ int main( int argc, char* argv[] ) {
   bool runGrid  = false;
   bool runPrun  = false;
   TString queue = "at3";
-  bool quick_test = true;
+  bool quick_test = false;
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -496,11 +496,12 @@ int main( int argc, char* argv[] ) {
     else if(runPrun){ //Prun mode
 
       //** prun
-      Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
+      //      Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
+      Pdriver.options()->setString("nc_outputSampleName", "user.tripiana.SASimpleTest.v0");
       Pdriver.options()->setDouble("nc_disableAutoRetry", 1);
-       //      Pdriver.options()->setString("nc_nFilesPerJob", "5"); //By default, split in as few jobs as possible
-      Pdriver.options()->setDouble("nc_nFiles", 1);
-      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
+      //      Pdriver.options()->setString("nc_nFilesPerJob", "5"); //By default, split in as few jobs as possible
+      //      Pdriver.options()->setDouble("nc_nFiles", 1);
+      //      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
       Pdriver.submitOnly( job, tmpdir );

@@ -923,6 +923,9 @@ void chorizo :: ReadXML(){
   while (std::getline(triggerNameIStr, s, ',')) {
     TriggerNames.push_back(s);
   }
+
+  Info(whereAmI, Form(" - Overlap Removal") );
+  doOR = xmlJobOption->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
   
   Info(whereAmI, Form(" - TrackVeto" ));
   tVeto_Enable = xmlJobOption->retrieveBool("AnalysisOptions$ObjectDefinition$TrackVeto$Enable");
@@ -1160,9 +1163,6 @@ EL::StatusCode chorizo :: initialize ()
   //Initialize variables
   InitVars();
 
-  // View container provides access to selected jets
-  m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-
 
   // get event info needed for tool's config
   const xAOD::EventInfo* eventInfo = 0;
@@ -1274,8 +1274,6 @@ EL::StatusCode chorizo :: initialize ()
   //--- BCH cleaning
   tool_BCH = new BCHTool::BCHCleaningToolRoot();
   tool_BCH->InitializeTool(!isMC, tool_tileTrip, maindir+"BCHCleaningTool/FractionsRejectedJetsMC.root");
-
-  Info("initialize()","BEFORE JVF tool");
 
   //--- JVF uncertainty
   tool_jvf = new JVFUncertaintyTool();
@@ -1420,10 +1418,9 @@ EL::StatusCode chorizo :: loop ()
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;
 
-  //  -- New containers for MET recalculation!
-  m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS); 
+  // View container provides access to selected jets   (for MET recalculation)
+  m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
   CHECK( m_store->record( m_goodJets, "MySelJets" ) );
-
 
   xAOD::MissingETContainer* metRFC = new xAOD::MissingETContainer;
   xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
@@ -1431,7 +1428,6 @@ EL::StatusCode chorizo :: loop ()
 
   CHECK( m_store->record( metRFC, "MET_MyRefFinal" ) );
   CHECK( m_store->record( metRFCAux, "MET_MyRefFinalAux." ) );
-
 
 
   //--- Analysis Code 
@@ -1467,17 +1463,20 @@ EL::StatusCode chorizo :: loop ()
 
     if (RunNumber==0){
       Info("execute()", Form("Skipping event %d because RunNumber=0 !!", EventNumber));
+      m_store->clear();
       return EL::StatusCode::SUCCESS;
     }
     
     if (!doPUTree) {        
-      //      tool_purw->Fill( puRunNumber(RunNumber), mc_channel_number, eventInfo->mcEventWeight(), averageIntPerXing); //the tool is not configured to handle the new MC yet. Use MCb RunNumber instead (should be the same for now at 8TeV).
+      //   tool_purw->Fill(RunNumber, mc_channel_number, eventInfo->mcEventWeight(), averageIntPerXing); //the tool is not configured to handle the new MC yet. Use MCb RunNumber instead (should be the same for now at 8TeV).
+      m_store->clear();
       return EL::StatusCode::SUCCESS;
     }
     else{
       pileup_w = eventInfo->auxdata<double>("PileupWeight");
 
       output->setFilterPassed ();
+      m_store->clear();
       return EL::StatusCode::SUCCESS;
     }
   }
@@ -2049,13 +2048,14 @@ EL::StatusCode chorizo :: loop ()
   }
   
   //--- Do overlap removal   
-  tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
+  if(doOR)
+    tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
 
   // Get good jets now (after overlap removal!)
   jet_itr = (jets_sc.first)->begin();
   jet_end = (jets_sc.first)->end();
   for( ; jet_itr != jet_end; ++jet_itr ) {
-
+    
     (**jet_itr).auxdata< char >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
     if( (*jet_itr)->auxdata< char >("baseline")==1  &&
@@ -2239,20 +2239,21 @@ EL::StatusCode chorizo :: loop ()
   //*** THIS IS REDUNDANT AT THE MOMENT! the OR has been done already within ST. //CHECK ME
   // 1) electrons : put a flag IsElectron=false if an electrons is closer by DR=0.4 to a jet 
   //                - this probably never happens : how can we identify an electron inside a jet ?
-  float DeltaR=10;      
-  bool eleOverlap=false;
-  for(unsigned int iEl=0; iEl < electronCandidates.size(); ++iEl){
-    eleOverlap=false;
-    for(unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
-      if (jetCandidates.at(iJet).Pt() < (Jet_ORElPt/1000.)) continue; //--- Overlap with jets of Pt above Jet_ORElPt
-      DeltaR = jetCandidates.at(iJet).DeltaR(electronCandidates.at(iEl).GetVector());
-      if( DeltaR < 0.4 ) {
-	eleOverlap=true;
-	break;
-      }            
-    }
 
-    eleOverlap=false; //MARTIN TAKE THIS OUT!!
+  // float DeltaR=10;      
+  // bool eleOverlap=false;
+  // for(unsigned int iEl=0; iEl < electronCandidates.size(); ++iEl){
+  //   eleOverlap=false;
+  //   for(unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
+  //     if (jetCandidates.at(iJet).Pt() < (Jet_ORElPt/1000.)) continue; //--- Overlap with jets of Pt above Jet_ORElPt
+  //     DeltaR = jetCandidates.at(iJet).DeltaR(electronCandidates.at(iEl).GetVector());
+  //     if( DeltaR < 0.4 ) {
+  // 	eleOverlap=true;
+  // 	break;
+  //     }            
+  //   }
+
+  eleOverlap=false; //MARTIN TAKE THIS OUT!!
 
     //--- Additionnal cut for signal electrons
     if (eleOverlap==false) {

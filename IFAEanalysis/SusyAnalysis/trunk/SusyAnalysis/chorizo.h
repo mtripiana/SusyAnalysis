@@ -348,6 +348,9 @@ private:
 
   std::vector<std::string> TriggerNames; //!
 
+  //OverlapRemoval
+  bool  doOR;
+
   //track veto
   bool  tVeto_Enable; //! 
   int   nTracks; //! 
