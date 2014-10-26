@@ -19,12 +19,12 @@ bool isSignal_WIMP(int mc_id);
 bool isSignal_ADD(int mc_id);
 
 float boson_sherpa_stop_charm(const Int_t mc_n,
-			      const std::vector<int> *mc_status,
-			      const std::vector<int> *mc_pdgId,
-			      const std::vector<float> *mc_pt,
-			      const std::vector<float> *mc_eta,
-			      const std::vector<float> *mc_phi,
-			      const std::vector<float> *mc_m);
+			      std::vector<int> mc_status,
+			      std::vector<int> mc_pdgId,
+			      std::vector<float> mc_pt,
+			      std::vector<float> mc_eta,
+			      std::vector<float> mc_phi,
+			      std::vector<float> mc_m);
 
 //---aux
 float BtagEta(float eta); //saturates eta to 2.5 (btag calib defined region)

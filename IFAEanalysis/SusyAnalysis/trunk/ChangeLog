@@ -1,3 +1,6 @@
+2014-10-26 Martin <tripiana@cern.ch>
+	* Fix passMCor (+ avoid zero-pt warnings)
+
 2014-10-24 Martin <tripiana@cern.ch>
 	* Add overlap removal option to jO.
 	* Fix store cleaning when running in genPU mode.

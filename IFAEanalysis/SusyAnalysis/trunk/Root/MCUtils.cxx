@@ -27,14 +27,14 @@ bool isSignal_ADD(int mc_id){
 
 /// Sherpa MassiveCB W/Z reweighting used in the stop to charm analysis: reweighting of the boson pT to data (section 8.1 of the supporting note ATL-COM-PHYS-2013-064 
 float boson_sherpa_stop_charm(const Int_t mc_n,
-			      const std::vector<int> *mc_status,
-			      const std::vector<int> *mc_pdgId,
-			      const std::vector<float> *mc_pt,
-			      const std::vector<float> *mc_eta,
-			      const std::vector<float> *mc_phi,
-			      const std::vector<float> *mc_m){
-  float weight = 1;
-  float pt = 0;
+			      std::vector<int> mc_status,
+			      std::vector<int> mc_pdgId,
+			      std::vector<float> mc_pt,
+			      std::vector<float> mc_eta,
+			      std::vector<float> mc_phi,
+			      std::vector<float> mc_m){
+  float weight = 1.;
+  float pt = 0.;
   
   /// Calculate the boson pt
   TLorentzVector V;
@@ -46,12 +46,12 @@ float boson_sherpa_stop_charm(const Int_t mc_n,
   bool foundSecond = false; 
   
   for ( int j = 0; j < mc_n; ++j){
-    if ((*mc_status)[j] == 3 && fabs((*mc_pdgId)[j]) >= 11 && fabs((*mc_pdgId)[j]) <= 16){
+    if (mc_status[j] == 3 && fabs(mc_pdgId[j]) >= 11 && fabs(mc_pdgId[j]) <= 16){
       if (!foundFirst){
-	l1.SetPtEtaPhiM((*mc_pt)[j],(*mc_eta)[j], (*mc_phi)[j], (*mc_m)[j]);
+	l1.SetPtEtaPhiM(mc_pt[j],mc_eta[j], mc_phi[j], mc_m[j]);
 	foundFirst = true;
       } else if(!foundSecond){
-	l2.SetPtEtaPhiM((*mc_pt)[j],(*mc_eta)[j], (*mc_phi)[j], (*mc_m)[j]);
+	l2.SetPtEtaPhiM(mc_pt[j],mc_eta[j], mc_phi[j], mc_m[j]);
 	foundSecond = true;
       } else {
 	std::cout << "Error in boson_sherpa_stop_charm : more than 2 leptons" << std::endl;

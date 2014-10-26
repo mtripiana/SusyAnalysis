@@ -132,6 +132,8 @@ void RunsMap::LoadMap(){
                               Rpair(167819, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"),
                               Rpair(167820, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167820/"));
 
+  m_map["TestZnunu167819"] = rlist( Rpair(167819,"/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"));
+
   //======================================================================================================================
   //                                                 List of backgrounds for the Baseline analysis
   //======================================================================================================================

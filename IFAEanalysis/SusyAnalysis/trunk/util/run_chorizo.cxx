@@ -466,13 +466,12 @@ int main( int argc, char* argv[] ) {
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
-    if(TEST || quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 50);
+    if(TEST || quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 5);
     if(systListOnly)
       job.options()->setDouble (EL::Job::optMaxEvents, 1);
     
     //TTreeCache use
     job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
-    
     
     //create tmp output dir
     string tmpdir = tmpdirname();
@@ -489,19 +488,19 @@ int main( int argc, char* argv[] ) {
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
-      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.6 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh || exit $?;";
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.14 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }
     else if(runPrun){ //Prun mode
 
       //** prun
-      //      Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
-      Pdriver.options()->setString("nc_outputSampleName", "user.tripiana.SASimpleTest.v0");
+      //Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
+      Pdriver.options()->setString("nc_outputSampleName", "user.tripiana.SM_BB_800_1.SA.v1");
       Pdriver.options()->setDouble("nc_disableAutoRetry", 1);
-      //      Pdriver.options()->setString("nc_nFilesPerJob", "5"); //By default, split in as few jobs as possible
-      //      Pdriver.options()->setDouble("nc_nFiles", 1);
-      //      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
+      Pdriver.options()->setString("nc_nFilesPerJob", "1"); //By default, split in as few jobs as possible
+      Pdriver.options()->setDouble("nc_nFiles", 5);
+      Pdriver.options()->setDouble("nc_mergeOutput", 0); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
       Pdriver.submitOnly( job, tmpdir );
