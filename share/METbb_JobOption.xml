@@ -39,9 +39,10 @@
     <ObjectDefinition>
 
         <OverlapRemoval>
-            <Enable>true</Enable>
-            <!-- <OverlapRemovalElPt>20000.</OverlapRemovalElPt>
-		 <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt> -->
+          <Enable>true</Enable>
+	  <!-- NOT USE ANYMORE -->
+	  <!--      <OverlapRemovalElPt>20000.</OverlapRemovalElPt> --> 
+          <!--	    <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt> -->
         </OverlapRemoval> 
 	  
         <Trigger>

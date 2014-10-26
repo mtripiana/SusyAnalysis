@@ -2,13 +2,13 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
+** check bad_alloc crash (it explodes after ~30K events)  
+
 ** Allow for multiple samples inside same directory, e.g.:
    	 Znunu/sample1/AOD.pool.root
    	 Znunu/sample2/AOD.pool.root
 
 ** Check Pileup jOption config.  PeriodConfig = MC12a??
-
-** check mem leaks (it crashes for ~30K events)   <---- not anymore??
 
 ** set drivers for batch and grid modes
    Running on IFAE's batch (PSB) is done with local driver anyways for now.
@@ -29,6 +29,7 @@ HIGH PRIORITY
 
 VALIDATION/CHECK
 --------------------------------------------------------------------------------------------------------
+
 ** check 'baseline' selection in SUSYTools suits our needs
 
 ** btagging
@@ -38,6 +39,8 @@ VALIDATION/CHECK
 
 LOW priority
 --------------------------------------------------------------------------------------------------------
+
+** Remove unchecked code warnings for StatusCode and CP::SystematicCode
 
 ** Create qsub files on the fly? Do we really need to save them? (for local running maybe...but can be overcome)
 
@@ -62,8 +65,6 @@ Errors/Warning to take care of (at least understand if we can safely ignore thes
 
 ~~ Info in <xAOD::TAuxStore::setupAuxBranch>: Variable ExtrapolatedMuonTrackParticlesAuxDyn.trackLink will not be available for reading/copying
 
-~~ Warning in <TVector3::PseudoRapidity>: transvers momentum = 0! return +/- 10e10    (Note : From Razor methods? Seems not!)
- 
 ~~ ERROR in TElectronEfficiencyCorrectionTool (file: /nfs/at3users/users/tripiana/StopAnalysis_xAOD/ElectronEfficiencyCorrection/Root/TElectronEfficiencyCorrectionTool.cxx, line: 591!)
 No correction factor provided for et=31.302971
 Returning scale factor 1.0 with uncertainty 1.0

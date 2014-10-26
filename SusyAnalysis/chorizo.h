@@ -395,8 +395,8 @@ private:
   float Jet_PreselEtaCut; //!
   float Jet_RecoPtCut; //!
   float Jet_RecoEtaCut; //!
-  float Jet_ORElPt; //!
-  float Jet_ORMuPt; //!
+  /* float Jet_ORElPt; //! */
+  /* float Jet_ORMuPt; //! */
   TString Jet_Tagger;
   TString Jet_TaggerOp;
   TString Jet_TaggerOp2;  

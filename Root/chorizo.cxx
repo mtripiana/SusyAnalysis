@@ -1035,8 +1035,8 @@ void chorizo :: ReadXML(){
     Jet_PreselEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", cRegion));
     Jet_RecoPtCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
     Jet_RecoEtaCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
-    Jet_ORElPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", cRegion));
-    Jet_ORMuPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", cRegion));
+    // Jet_ORElPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", cRegion));
+    // Jet_ORMuPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
@@ -1053,8 +1053,8 @@ void chorizo :: ReadXML(){
     Jet_PreselEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", defRegion));
     Jet_RecoPtCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
     Jet_RecoEtaCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
-    Jet_ORElPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", defRegion));
-    Jet_ORMuPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", defRegion));
+    // Jet_ORElPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", defRegion));
+    // Jet_ORMuPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", defRegion));
   }
   
   Info(whereAmI, Form(" - Etmiss") );
@@ -1184,7 +1184,7 @@ EL::StatusCode chorizo :: initialize ()
   tool_st->setProperty("IsMC12b",   0); // mc12b); //FIX ME
   tool_st->setProperty("UseLeptonTrigger", 0); //useLeptonTrigger); //FIX ME
   tool_st->initialize();
-  tool_st->msg().setLevel( MSG::WARNING ); //set message level 
+  tool_st->msg().setLevel( MSG::ERROR ); //set message level 
 
   if(syst_CP.size()){
 
@@ -1306,8 +1306,7 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- Random number generator for truth-->reco efficiency                  
   //  myRand = new TRandom1(time(0));
-                                                                                           
-   
+                                                                                              
   //--- number of events
   Info("initialize()", Form("Total number of events = %lli", m_event->getEntries() ));
   watch.Stop();
@@ -1346,14 +1345,11 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  
   //Info("loop()", "Inside loop");
 
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
     wk()->skipEvent();
-    // output->setFilterPassed ();
-    // return EL::StatusCode::SUCCESS;
   }
 
   InitVars();
@@ -1386,10 +1382,11 @@ EL::StatusCode chorizo :: loop ()
   m_muons= 0;
   
   //  -- Jets
-  if ( !m_event->retrieve( m_jets, "AntiKt4LCTopoJets" ).isSuccess() ){ 
-    Error("loop()", "Failed to retrieve 'AntiKt4LCTopoJets' container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( m_jets, "AntiKt4LCTopoJets" ) );
+  // if ( !m_event->retrieve( m_jets, "AntiKt4LCTopoJets" ).isSuccess() ){ 
+  //   Error("loop()", "Failed to retrieve 'AntiKt4LCTopoJets' container. Exiting." );
+  //   return EL::StatusCode::FAILURE;
+  // }
   //  -- Electrons
   if ( !m_event->retrieve( m_electrons, "ElectronCollection" ).isSuccess() ){ 
     Error("loop()", "Failed to retrieve 'ElectronCollection' container. Exiting." );
@@ -1481,7 +1478,6 @@ EL::StatusCode chorizo :: loop ()
     }
   }
   
-
   //--- Weights for MC
   if (isMC){
 
@@ -1582,7 +1578,6 @@ EL::StatusCode chorizo :: loop ()
     } 
   }
   
-
   //----------------------------------------------------------
   //--- ANALYSIS CRITERIA ------------------------------------
   //----------------------------------------------------------
@@ -1595,14 +1590,16 @@ EL::StatusCode chorizo :: loop ()
   }
   nVertex = static_cast< int >( vertices->size() );
 
-  std::vector<int>* vx_nTrk = new std::vector<int>; //for jet systematics afterwards...
-  vx_nTrk->clear();
+  //** not used at the moment! ** CHECK_ME
+  // std::vector<int>* vx_nTrk = new std::vector<int>; //for jet systematics afterwards...
+  // vx_nTrk->clear();
   
-  xAOD::VertexContainer::const_iterator pv_itr = vertices->begin();
-  xAOD::VertexContainer::const_iterator pv_end = vertices->end();
-  for( ; pv_itr != pv_end; ++pv_itr ) 
-    vx_nTrk->push_back( ( *pv_itr )->nTrackParticles() );
+  // xAOD::VertexContainer::const_iterator pv_itr = vertices->begin();
+  // xAOD::VertexContainer::const_iterator pv_end = vertices->end();
+  // for( ; pv_itr != pv_end; ++pv_itr ) 
+  //   vx_nTrk->push_back( ( *pv_itr )->nTrackParticles() );
 
+  // delete vx_nTrk; //not really used!
 
   if (!doFlowTree && nVertex==0)
     return EL::StatusCode::SUCCESS; //skip event
@@ -1731,6 +1728,8 @@ EL::StatusCode chorizo :: loop ()
   //sort the electron candidates in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end());
 
+
+
   //--- Get truth electrons 
   if ( this->isMC && !this->isSignal && !this->isTruth ){
 
@@ -1748,7 +1747,7 @@ EL::StatusCode chorizo :: loop ()
     //sort truth electrons in pt 
     if (truthElectrons.size()>0) std::sort(truthElectrons.begin(), truthElectrons.end());
   }
-  
+
   //--- Get Muons
   std::vector<Particle> muonCandidates; //intermediate selection muons
   bool IsMuon = false; // any good not-overlapping muon in the event?
@@ -1807,7 +1806,6 @@ EL::StatusCode chorizo :: loop ()
 
   //sort the muon candidates in Pt
   if (muonCandidates.size()>0) std::sort(muonCandidates.begin(), muonCandidates.end());
-
 
   //--- Get Tracks
   if(tVeto_Enable){
@@ -2192,12 +2190,11 @@ EL::StatusCode chorizo :: loop ()
     }
 
     iJet++;
-  }    
-  //jet loop
+
+  }  //jet loop
 
   //sort the jet candidates in Pt
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
-
 
   //--- Get (recalculated) MissingEt  
   CHECK( tool_st->GetMET(*metRFC,
@@ -2240,20 +2237,19 @@ EL::StatusCode chorizo :: loop ()
   // 1) electrons : put a flag IsElectron=false if an electrons is closer by DR=0.4 to a jet 
   //                - this probably never happens : how can we identify an electron inside a jet ?
 
-  // float DeltaR=10;      
-  // bool eleOverlap=false;
-  // for(unsigned int iEl=0; iEl < electronCandidates.size(); ++iEl){
-  //   eleOverlap=false;
-  //   for(unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
-  //     if (jetCandidates.at(iJet).Pt() < (Jet_ORElPt/1000.)) continue; //--- Overlap with jets of Pt above Jet_ORElPt
-  //     DeltaR = jetCandidates.at(iJet).DeltaR(electronCandidates.at(iEl).GetVector());
-  //     if( DeltaR < 0.4 ) {
-  // 	eleOverlap=true;
-  // 	break;
-  //     }            
-  //   }
+  float DeltaR=10;      
+  bool eleOverlap=false;
+  for(unsigned int iEl=0; iEl < electronCandidates.size(); ++iEl){
 
-  eleOverlap=false; //MARTIN TAKE THIS OUT!!
+    eleOverlap=false;
+    //   for(unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
+    //     if (jetCandidates.at(iJet).Pt() < (Jet_ORElPt/1000.)) continue; //--- Overlap with jets of Pt above Jet_ORElPt
+    //     DeltaR = jetCandidates.at(iJet).DeltaR(electronCandidates.at(iEl).GetVector());
+    //     if( DeltaR < 0.4 ) {
+    // 	eleOverlap=true;
+    // 	break;
+    //     }            
+    //   }
 
     //--- Additionnal cut for signal electrons
     if (eleOverlap==false) {
@@ -2295,7 +2291,6 @@ EL::StatusCode chorizo :: loop ()
   bool muOverlap=false;
   
   for(unsigned int iMu=0; iMu < muonCandidates.size(); ++iMu){
-    muOverlap=false;
     
     // Here we save the info on all the muons (before isolation, and before OR with jets)
     muon_pt.push_back(muonCandidates.at(iMu).Pt());
@@ -2363,15 +2358,18 @@ EL::StatusCode chorizo :: loop ()
       muon_jet_mv1.push_back(-100.0);
       muon_jet_vtxf.push_back(-100.0);
     }
+
+    muOverlap=false;
 	
-    for(unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
-      if (jetCandidates.at(iJet).Pt() < (Jet_ORMuPt/1000.)) continue; //--- Overlap with Pt above Jet_ORMuPt
-      DeltaR = jetCandidates.at(iJet).DeltaR(muonCandidates.at(iMu));
-      if( DeltaR < 0.4) {
-	muOverlap=true;
-	break;
-      }
-    }	
+    // for(unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
+    //   if (jetCandidates.at(iJet).Pt() < (Jet_ORMuPt/1000.)) continue; //--- Overlap with Pt above Jet_ORMuPt
+    //   DeltaR = jetCandidates.at(iJet).DeltaR(muonCandidates.at(iMu));
+    //   if( DeltaR < 0.4) {
+    // 	muOverlap=true;
+    // 	break;
+    //   }
+    // }	
+
     //--- Additional cuts for signal muons --> Finish!
     if (muOverlap==false){
       bool isolated_muon = true;
@@ -3436,14 +3434,7 @@ bool chorizo :: passMCor(){
 
   if (!this->isMC) //it only obviously applies to MC
     return true;
-    
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("passMCor()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
-  
+
   //to loop over  
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;
@@ -3475,26 +3466,32 @@ bool chorizo :: passMCor(){
     {
       
       //load mc particles info vectors
-      const int mc_n = static_cast< const int >( m_truthP->size() );
-      vector<int> *mc_status = new vector<int>(mc_n);
-      vector<int> *mc_pdgId  = new vector<int>(mc_n);
-      vector<float> *mc_pt   = new vector<float>(mc_n);
-      vector<float> *mc_eta  = new vector<float>(mc_n);
-      vector<float> *mc_phi  = new vector<float>(mc_n);
-      vector<float> *mc_m    = new vector<float>(mc_n);
-
+      int mc3_n = -1;
+      const int mcall_n = static_cast< const int >( m_truthP->size() );
+      vector<int> mc_status(mcall_n);
+      vector<int> mc_pdgId(mcall_n);
+      vector<float> mc_pt(mcall_n);
+      vector<float> mc_eta(mcall_n);
+      vector<float> mc_phi(mcall_n);
+      vector<float> mc_m(mcall_n);
+      
       truthP_itr = m_truthP->begin();
       truthP_end = m_truthP->end();
       for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	mc_status->push_back( ( *truthP_itr )->status() );
-	mc_pdgId->push_back( ( *truthP_itr )->pdgId() );
-	mc_pt->push_back( ( *truthP_itr )->pt() );
-	mc_eta->push_back( ( *truthP_itr )->eta() );
-	mc_phi->push_back( ( *truthP_itr )->phi() );
-	mc_m->push_back( ( *truthP_itr )->m() );
+	if(( *truthP_itr )->status() != 3) continue; //look at ME particles only
+	if(!is_LepNeut( (*truthP_itr)->pdgId() )) continue; //look for leptons only
+	mc3_n++;
+	mc_status[mc3_n] = ( *truthP_itr )->status();
+	mc_pdgId[mc3_n] = ( *truthP_itr )->pdgId();
+	mc_pt[mc3_n] =  ( *truthP_itr )->pt();
+	mc_eta[mc3_n] = ( *truthP_itr )->eta();
+	mc_phi[mc3_n] = ( *truthP_itr )->phi();
+	mc_m[mc3_n] = ( *truthP_itr )->m();
       }
+      mc3_n++;  // index --> size
+      const int mc_n = static_cast< const int >( mc3_n );
       //get boson pt weight
-      this->bosonVect_w = boson_sherpa_stop_charm(mc_pt->size(), mc_status, mc_pdgId, mc_pt, mc_eta, mc_phi, mc_m);
+      this->bosonVect_w = boson_sherpa_stop_charm(mc_n, mc_status, mc_pdgId, mc_pt, mc_eta, mc_phi, mc_m);
       
       truth_met          = this->GetTruthEtmiss();
       vector<float> bTruthKin = this->GetTruthBosonPt(truth_M, truth_MT, truth_m_fiducial, truth_Lep1_pt, truth_Lep2_pt);
@@ -3522,7 +3519,8 @@ bool chorizo :: passMCor(){
 	    break;
 	  }
 	}//if                                                                                   
-      }//mc particles loop                                                                      
+      }//mc particles loop
+
       TLorentzVector v3(0.,0.,0.,0.);
       v3+=v1;
       v3+=v2;
@@ -3574,11 +3572,19 @@ bool chorizo :: passMCor(){
   
   if( !doFlowTree && count(check_ids, check_ids+84, this->mc_channel_number) ){
     TVector2 met(0.,0.);
-    //    tool_st->GetMET(met); //METRefFinal for now... //FIX_ME !!
+    xAOD::MissingETContainer* metRFcutvar; // = new xAOD::MissingETContainer;
+    if( ! m_event->retrieve( metRFcutvar, "MET_RefFinal").isSuccess() ){
+      Error("loop()", "Failed to retrieve MET_RefFinal container. Exiting." );
+      return EL::StatusCode::FAILURE;
+    }
+    met = getMET( metRFcutvar, "Final"); //METRefFinal for now... //FIX_ME !! Reco MET??
+
     bos_pt = met.Mod();
     cutting_var = bos_pt/1000.;
+
     if( ! DoIHaveToKeepIt(mc_channel_number,cutting_var) )
       return false;
+
   }
   
   return true;
@@ -3588,28 +3594,23 @@ bool chorizo :: passMCor(){
 float chorizo :: GetTruthEtmiss(bool noEleTau){
 
   /// Calculate the boson pt
-  TLorentzVector V;
+  TLorentzVector V(0.,0.,0.,0.);
   TLorentzVector l1;
-
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetTruthEtmiss()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
 
   //to loop over  
   xAOD::TruthParticleContainer::const_iterator truthP_itr = m_truthP->begin();
   xAOD::TruthParticleContainer::const_iterator truthP_end = m_truthP->end();
-  
+  bool found=false;
   for( ; truthP_itr != truthP_end; ++truthP_itr ) {
     if( isStable( (*truthP_itr) ) && isLepNeut( (*truthP_itr) )){
       if( noEleTau && (isElectron((*truthP_itr)) || isTau((*truthP_itr))) ) continue;
       fillTLV(l1, (*truthP_itr) );
-      V = V + l1;
+      V += l1;
+      found=true;
     }
   }
 
+  if(!found) return -999;
   return (V.Pt()*0.001);
 
 }
@@ -3629,20 +3630,12 @@ std::vector<float> chorizo :: GetTruthBosonPt(float &_M, float &_MT, bool &_Muon
   float _Muon_pt = 0.0, _Muon_eta = 0.0;
 
   /// Calculate the boson pt
-  TLorentzVector V;
-
-  TLorentzVector l1;
-  TLorentzVector l2;
+  TLorentzVector V(0.,0.,0.,0.);
+  TLorentzVector l1(0.,0.,0.,0.);
+  TLorentzVector l2(0.,0.,0.,0.);
   bool foundFirst = false;
   bool foundSecond = false;
  
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetTruthBosonPt()", "Failed to retrieve 'TruthParticle' container. Exiting.");
-  //   throw EL::StatusCode::FAILURE;
-  // }
-
   xAOD::TruthParticleContainer::const_iterator truthP_itr = m_truthP->begin();
   xAOD::TruthParticleContainer::const_iterator truthP_end = m_truthP->end();
   
@@ -3736,11 +3729,10 @@ float chorizo :: GetTTbarReweight(float &Top_truth_pt, float &Topbar_truth_pt, f
     }
   }
 
-  if (!foundTop && !foundTopbar) {
+  if (!foundTop || !foundTopbar) {
     Warning("GetTTbarReweight()", "Error in ttbar : unable to find top+antitop quark pair");
     return weight;
   }
-  
   else {
     
     TTbar = Top + Topbar;
@@ -4050,17 +4042,17 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
   return rn;
 }
 
- float chorizo :: GetAverageWeight(){
-
-   return 1.; //DUMMY FOR NOW!!! TAKE THIS OUT!!
-
+float chorizo :: GetAverageWeight(){
+  
+  return 1.; //DUMMY FOR NOW!!! TAKE THIS OUT!!
+  
   if ( strcmp(Form("%s", h_average->GetName()), Form("pileup_chan%d_run%d", mc_channel_number, RunNumber))==0 ){ //--- Strings look the same
     return (h_average->Integral() / h_average->GetEntries());
   }
   else{
     h_average->Reset();
     f_average->Close();
-
+    
     if (warningPileup)
       Info("GetAverageWeight()", Form("Changing TFile to %s/pileup_%d.root", PURW_Folder.Data(), mc_channel_number));
     f_average = new TFile(Form("%s/pileup_%d.root", PURW_Folder.Data(), mc_channel_number));
@@ -4074,7 +4066,7 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
       h_average = (TH1D *)f_average->Get(Form("pileup_chan%d_run%d", mc_channel_number, runnumber));
     }
     return (h_average->Integral() / h_average->GetEntries());
-  }
+   }
 }
 
 
@@ -4493,10 +4485,11 @@ float chorizo :: Calc_MTR(TLorentzVector ja, TLorentzVector jb, TVector3 met){
 
 float chorizo :: Calc_AlphaT(TLorentzVector ja, TLorentzVector jb){
 
-  float mT = sqrt((ja.Et()+jb.Et())*(ja.Et()+jb.Et()) - (ja.Px()+jb.Px())*(ja.Px()+jb.Px()) - (ja.Py()+jb.Py())*(ja.Py()+jb.Py()));
-  float AlphaT = jb.Et()/mT;
+  float form = (ja.Et()+jb.Et())*(ja.Et()+jb.Et()) - (ja.Px()+jb.Px())*(ja.Px()+jb.Px()) - (ja.Py()+jb.Py())*(ja.Py()+jb.Py());
+  float mT = ( form >=0 ? sqrt(form) : 0.);
+  
+  float AlphaT = (mT > 0 ? jb.Et()/mT : -999);
   return AlphaT;
-
 }
 
 
