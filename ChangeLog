@@ -1,7 +1,8 @@
 2014-10-26 Martin <tripiana@cern.ch>
 	* Fix passMCor (+ avoid zero-pt warnings)
 	* Fix bad_alloc crash.
-	* Tagging SusyAnalysis-00-00-06
+	* Tagging SusyAnalysis-00-00-05	
+
 
 2014-10-24 Martin <tripiana@cern.ch>
 	* Add overlap removal option to jO.
@@ -13,7 +14,6 @@
 	* New MET re-building in ST
 	* Fix m_top
 	* Add submit_batch script.
-	* Tagging SusyAnalysis-00-00-05
 
 2014-10-20 Martin <tripiana@cern.ch>
 	* Move to Base-2.0.13
