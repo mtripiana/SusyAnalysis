@@ -123,7 +123,7 @@ public:
 
   //algo options
   std::string outputName;
-  std::string xmlPath;
+  std::string jOption;
   std::string Region;
   std::string defaultRegion;
 
@@ -191,7 +191,7 @@ private:
   /* const xAOD::TruthParticleContainer* truthP; */
 
   //--- Tools
-  XMLReader*     xmlJobOption; //!
+  XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; 
 #endif // not __CINT__

@@ -44,8 +44,6 @@ using namespace SH;
 
 #define LumFactor 1000. //in nb-1
 
-#define TEST 0  //to quickly restrict the run to 50 events
-
 void usage(){
 
   cout << endl;
@@ -60,12 +58,14 @@ void usage(){
   cout << "            or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "" << endl;
   cout << " [options] : supported option flags" << endl;
-  cout << "       -l  : run locally (default)   " << endl;
-  cout << "       -b  : run in batch            " << endl;
-  cout << "       -p  : run on the grid (prun)        " << endl;
-  cout << "       -g  : run on the grid (ganga)        " << endl;
-  cout << "       -x  : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
-  cout << "       -t  : to run just a test over 50 events " <<endl;
+  cout << "       -j=<jOption>  : choose which analysis you want to run over. ( = 'METbb'(default), 'Stop', 'Monojet')	" << endl;		    
+  cout << "       -l            : run locally (default)   " << endl;
+  cout << "       -b            : run in batch            " << endl;
+  cout << "       -p            : run on the grid (prun)        " << endl;
+  cout << "       -g            : run on the grid (ganga)        " << endl;
+  cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
+  cout << "       -t            : to run just a test over 50 events " <<endl;
+  cout << "       -n=<N>        : to run over N  events " <<endl;
   cout << endl;
 }
 
@@ -179,6 +179,8 @@ int main( int argc, char* argv[] ) {
   TString queue = "at3";
   bool quick_test = false;
 
+  std::string jOption = "METbb_JobOption.xml";
+
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
     if( std::string(argv[i]).find("-") != std::string::npos )// is option
@@ -206,6 +208,7 @@ int main( int argc, char* argv[] ) {
   }
 
   int single_id=-1;
+  int nMax=-1;
   //config options
   for( unsigned int iop=0; iop < opts.size(); iop++){
     if (opts[iop] == "l"){ //run locally
@@ -231,6 +234,12 @@ int main( int argc, char* argv[] ) {
     }
     else if (opts[iop].BeginsWith("i") ){
       single_id = opts[iop].ReplaceAll("i=","").Atoi();
+    }
+    else if (opts[iop].BeginsWith("j") ){
+      jOption = opts[iop].ReplaceAll("j=","")+"_JobOption.xml";
+    }
+    else if (opts[iop].BeginsWith("n") ){
+      nMax = opts[iop].ReplaceAll("n=","").Atoi();
     }
   }
 
@@ -275,21 +284,18 @@ int main( int argc, char* argv[] ) {
   // Read some config options
   std::string maindir = getenv("ROOTCOREBIN");
 
-  std::string xmlPath=maindir+"/data/SusyAnalysis/METbb_JobOption.xml";
+  XMLReader *xmlReader = new XMLReader();
+  xmlReader->readXML(maindir+"/data/SusyAnalysis/"+jOption);
 
-
-  XMLReader *xmlJobOption = new XMLReader();
-  xmlJobOption->readXML(xmlPath);
-
-  bool doAnaTree = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/doTree");
-  bool doFlowTree = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
+  bool doAnaTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/doTree");
+  bool doFlowTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
   bool doPUTree = false; //No option in the xml yet!!
-  bool generatePUfile = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
+  bool generatePUfile = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
 
-  TString FinalPath      = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
+  TString FinalPath      = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
   if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
 
-  TString CollateralPath = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
+  TString CollateralPath = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
 
 
   // Get patterns/paths to load for this sample
@@ -427,10 +433,10 @@ int main( int argc, char* argv[] ) {
     
     //Alg config options here
     alg->outputName = "output";
-    alg->Region = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
+    alg->Region = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
     
     alg->defaultRegion = "SR"; //from XML?
-    alg->xmlPath = xmlPath;
+    alg->jOption = jOption;
     
     alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
@@ -466,7 +472,9 @@ int main( int argc, char* argv[] ) {
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
-    if(TEST || quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 5);
+    if(quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 5);
+    if(nMax>0) job.options()->setDouble (EL::Job::optMaxEvents, nMax);
+    
     if(systListOnly)
       job.options()->setDouble (EL::Job::optMaxEvents, 1);
     
@@ -496,9 +504,10 @@ int main( int argc, char* argv[] ) {
 
       //** prun
       //Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
-      Pdriver.options()->setString("nc_outputSampleName", "user.tripiana.SM_BB_800_1.SA.v2");
+      Pdriver.options()->setString("nc_outputSampleName", "user.tripiana.SM_BB_800_1.SA.v4");
       Pdriver.options()->setDouble("nc_disableAutoRetry", 1);
-      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
+      if(quick_test)
+	Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
       Pdriver.options()->setDouble("nc_nFiles", 1);
       Pdriver.options()->setDouble("nc_mergeOutput", 0); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
@@ -520,18 +529,19 @@ int main( int argc, char* argv[] ) {
 
     if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
     
+    if(generatePUfile) return 0; //leave if generating PURW files... no need to merge here... (it seems)
+
+    	
     //move output to collateral files' path
     TString sampleName,targetName;
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       
-      if(!generatePUfile){
 	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
 	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
 	
 	system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
 	
 	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
-      }
     }
   
     if(single_id<0){ //NOTE: moved to the run wrapper for now!!
@@ -545,14 +555,12 @@ int main( int argc, char* argv[] ) {
       
       TString mergedName = Form("%s_%s.root",systematic[isys].Data(), args[0].Data());
       
-      if (!generatePUfile){
-	if (!doAnaTree) {
-	  //--- Case where we run on 1 file
-	  //... 
-	} 
-	else {
-	  tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
-	}
+      if (!doAnaTree) {
+	//--- Case where we run on 1 file
+	//... 
+      } 
+      else {
+	tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
       }
     }
 

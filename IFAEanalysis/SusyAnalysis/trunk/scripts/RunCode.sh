@@ -24,6 +24,10 @@ if [ -z "$ROOTCOREDIR" ]; then
     $ROOTCOREDIR/scripts/find_packages.sh
     $ROOTCOREDIR/scripts/compile.sh
 
+    if [ -z "$LHAPDF_DATA_PATH" ]; then
+	export LHAPDF_DATA_PATH=$ROOTCOREBIN/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:
+    fi
+    echo 
     echo " --> back to: "$WHEREFROM
     cd $WHEREFROM
 fi  

@@ -51,8 +51,8 @@ chorizo :: chorizo ()
   Region="";
   defaultRegion="SR";
 
-  xmlJobOption = 0;
-  xmlPath = "";
+  xmlReader = 0;
+  jOption = "";
 
   isMC=false;
   isSignal=false;
@@ -887,34 +887,34 @@ void chorizo :: ReadXML(){
   const char* cRegion = Region.c_str();
   const char* defRegion = defaultRegion.c_str();
 
-  xmlJobOption = new XMLReader();
-  xmlJobOption->readXML(xmlPath);
+  xmlReader = new XMLReader();
+  xmlReader->readXML(maindir+"/data/SusyAnalysis/"+jOption);
 
   //------ Define and read global variables from the XML
   Info(whereAmI, Form(" - PDF reweighting") );
-  doPDFrw = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
-  beamE_to = xmlJobOption->retrieveFloat("AnalysisOptions$GeneralSettings$PdfRw$ToBeamE");
+  doPDFrw = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
+  beamE_to = xmlReader->retrieveFloat("AnalysisOptions$GeneralSettings$PdfRw$ToBeamE");
 
   Info(whereAmI, Form(" - GRL") );
-  GRLxmlFile = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/GRLxmlFile").c_str());
+  GRLxmlFile = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/GRLxmlFile").c_str());
 
   Info(whereAmI, Form(" - Pileup") );
-  applyPURW = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Pileup$Mode/name/ApplyPileupReweighting");
-  PURW_Folder = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$Path/name/PileupReweightingConfigFolder").c_str());
-  PURW_IlumicalcFile = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$Path/name/PileupReweightingIlumicalcFile").c_str());
-  PeriodConfig = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$PeriodConfig").c_str());
+  applyPURW = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Pileup$Mode/name/ApplyPileupReweighting");
+  PURW_Folder = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$Path/name/PileupReweightingConfigFolder").c_str());
+  PURW_IlumicalcFile = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$Path/name/PileupReweightingIlumicalcFile").c_str());
+  PeriodConfig = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$PeriodConfig").c_str());
 
   Info(whereAmI, Form(" - LeptonEff Unitarity") );
-  leptonEfficiencyUnitarity = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$LeptonEfficiency$Unitarity");
+  leptonEfficiencyUnitarity = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$LeptonEfficiency$Unitarity");
 
   Info(whereAmI, Form(" - Trigger") );
   std::string triggerNameStr="";
   try{
-    triggerNameStr = (xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Trigger$region/name/%s", cRegion))).c_str();
+    triggerNameStr = (xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Trigger$region/name/%s", cRegion))).c_str();
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    triggerNameStr = (xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Trigger$region/name/%s", defRegion))).c_str();
+    triggerNameStr = (xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Trigger$region/name/%s", defRegion))).c_str();
   }
   std::istringstream triggerNameIStr(triggerNameStr);
   std::string s;
@@ -923,205 +923,205 @@ void chorizo :: ReadXML(){
   }
 
   Info(whereAmI, Form(" - Overlap Removal") );
-  doOR = xmlJobOption->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
+  doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
   
   Info(whereAmI, Form(" - TrackVeto" ));
-  tVeto_Enable = xmlJobOption->retrieveBool("AnalysisOptions$ObjectDefinition$TrackVeto$Enable");
+  tVeto_Enable = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$TrackVeto$Enable");
   try{
-    tVeto_Pt               = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Pt", cRegion));
-    tVeto_Eta              = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Eta", cRegion));
-    tVeto_d0               = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$d0", cRegion));
-    tVeto_z0               = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$z0", cRegion));
-    tVeto_ndof             = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$ndof", cRegion));
-    tVeto_chi2OverNdof_min = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_min", cRegion));
-    tVeto_chi2OverNdof_max = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_max", cRegion));
-    PixHitsAndSCTHits      = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$PixHitsAndSCTHits", cRegion));
-    tVeto_TrackIso         = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$TrackIso", cRegion));
+    tVeto_Pt               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Pt", cRegion));
+    tVeto_Eta              = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Eta", cRegion));
+    tVeto_d0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$d0", cRegion));
+    tVeto_z0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$z0", cRegion));
+    tVeto_ndof             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$ndof", cRegion));
+    tVeto_chi2OverNdof_min = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_min", cRegion));
+    tVeto_chi2OverNdof_max = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_max", cRegion));
+    PixHitsAndSCTHits      = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$PixHitsAndSCTHits", cRegion));
+    tVeto_TrackIso         = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$TrackIso", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    tVeto_Pt               = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Pt", defRegion));
-    tVeto_Eta              = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Eta", defRegion));
-    tVeto_d0               = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$d0", defRegion));
-    tVeto_z0               = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$z0", defRegion));
-    tVeto_ndof             = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$ndof", defRegion));
-    tVeto_chi2OverNdof_min = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_min", defRegion));
-    tVeto_chi2OverNdof_max = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_max", defRegion));
-    PixHitsAndSCTHits      = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$PixHitsAndSCTHits", defRegion));
-    tVeto_TrackIso         = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$TrackIso", defRegion));
+    tVeto_Pt               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Pt", defRegion));
+    tVeto_Eta              = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Eta", defRegion));
+    tVeto_d0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$d0", defRegion));
+    tVeto_z0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$z0", defRegion));
+    tVeto_ndof             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$ndof", defRegion));
+    tVeto_chi2OverNdof_min = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_min", defRegion));
+    tVeto_chi2OverNdof_max = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_max", defRegion));
+    PixHitsAndSCTHits      = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$PixHitsAndSCTHits", defRegion));
+    tVeto_TrackIso         = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$TrackIso", defRegion));
   }
 
 
   Info(whereAmI, Form(" - Vertex") );
   try{
-    nTracks = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Vertex$region/name/%s", cRegion));
+    nTracks = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Vertex$region/name/%s", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    nTracks = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Vertex$region/name/%s", defRegion));
+    nTracks = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Vertex$region/name/%s", defRegion));
   }
 
   Info(whereAmI, Form(" - Electrons") );
   try{
-    El_DefinPtCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinPtCut", cRegion));
-    El_DefinEtaCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinEtaCut", cRegion));
-    El_PreselPtCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselPtCut", cRegion));
-    El_PreselEtaCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselEtaCut", cRegion));
-    El_RecoPtCut     = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoPtCut", cRegion));
-    El_RecoEtaCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoEtaCut", cRegion));
+    El_DefinPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinPtCut", cRegion));
+    El_DefinEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinEtaCut", cRegion));
+    El_PreselPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselPtCut", cRegion));
+    El_PreselEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselEtaCut", cRegion));
+    El_RecoPtCut     = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoPtCut", cRegion));
+    El_RecoEtaCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoEtaCut", cRegion));
     
-    El_recoSF         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$recoSF", cRegion));
-    El_idSF           = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$idSF", cRegion));
-    El_triggerSF      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$triggerSF", cRegion));
-    El_isolationVar   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationVar", cRegion)).c_str());
-    El_isolationThres = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationThres", cRegion));
+    El_recoSF         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$recoSF", cRegion));
+    El_idSF           = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$idSF", cRegion));
+    El_triggerSF      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$triggerSF", cRegion));
+    El_isolationVar   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationVar", cRegion)).c_str());
+    El_isolationThres = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationThres", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    El_DefinPtCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinPtCut", defRegion));
-    El_DefinEtaCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinEtaCut", defRegion));
-    El_PreselPtCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselPtCut", defRegion));
-    El_PreselEtaCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselEtaCut", defRegion));
-    El_RecoPtCut     = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoPtCut", defRegion));
-    El_RecoEtaCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoEtaCut", defRegion));
+    El_DefinPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinPtCut", defRegion));
+    El_DefinEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$DefinEtaCut", defRegion));
+    El_PreselPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselPtCut", defRegion));
+    El_PreselEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselEtaCut", defRegion));
+    El_RecoPtCut     = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoPtCut", defRegion));
+    El_RecoEtaCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoEtaCut", defRegion));
     
-    El_recoSF         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$recoSF", defRegion));
-    El_idSF           = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$idSF", defRegion));
-    El_triggerSF      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$triggerSF", defRegion));
-    El_isolationVar   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationVar", defRegion)).c_str());
-    El_isolationThres = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationThres", defRegion));
+    El_recoSF         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$recoSF", defRegion));
+    El_idSF           = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$idSF", defRegion));
+    El_triggerSF      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$triggerSF", defRegion));
+    El_isolationVar   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationVar", defRegion)).c_str());
+    El_isolationThres = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isolationThres", defRegion));
   }
   
   Info(whereAmI, Form(" - Muons") );
   try{
-    Mu_DefinPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinPtCut", cRegion));
-    Mu_DefinEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinEtaCut", cRegion));
-    Mu_PreselPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselPtCut", cRegion));
-    Mu_PreselEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselEtaCut", cRegion));
-    Mu_RecoPtCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoPtCut", cRegion));
-    Mu_RecoEtaCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoEtaCut", cRegion));
+    Mu_DefinPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinPtCut", cRegion));
+    Mu_DefinEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinEtaCut", cRegion));
+    Mu_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselPtCut", cRegion));
+    Mu_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselEtaCut", cRegion));
+    Mu_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoPtCut", cRegion));
+    Mu_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoEtaCut", cRegion));
     
-    Mu_isolationVar   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationVar", cRegion)).c_str());
-    Mu_isolationThres = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationThres", cRegion));
+    Mu_isolationVar   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationVar", cRegion)).c_str());
+    Mu_isolationThres = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationThres", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    Mu_DefinPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinPtCut", defRegion));
-    Mu_DefinEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinEtaCut", defRegion));
-    Mu_PreselPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselPtCut", defRegion));
-    Mu_PreselEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselEtaCut", defRegion));
-    Mu_RecoPtCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoPtCut", defRegion));
-    Mu_RecoEtaCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoEtaCut", defRegion));
+    Mu_DefinPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinPtCut", defRegion));
+    Mu_DefinEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$DefinEtaCut", defRegion));
+    Mu_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselPtCut", defRegion));
+    Mu_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselEtaCut", defRegion));
+    Mu_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoPtCut", defRegion));
+    Mu_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoEtaCut", defRegion));
     
-    Mu_isolationVar   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationVar", defRegion)).c_str());
-    Mu_isolationThres = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationThres", defRegion));
+    Mu_isolationVar   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationVar", defRegion)).c_str());
+    Mu_isolationThres = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isolationThres", defRegion));
   }
   
   Info(whereAmI, Form(" - Jets") );
   try{
-    JetCollection=TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Collection", cRegion)).c_str());
-    Jet_BtagEnv    = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagEnv", cRegion)).c_str());
-    Jet_BtagCalib  = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagCalib", cRegion)).c_str());
-    Jet_Tagger     = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Tagger", cRegion)).c_str());
-    Jet_TaggerOp   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint", cRegion)).c_str());
-    Jet_TaggerOp2   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint2", cRegion)).c_str());      
-    Jet_Tagger_Collection = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerCollection", cRegion)).c_str());
+    JetCollection=TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Collection", cRegion)).c_str());
+    Jet_BtagEnv    = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagEnv", cRegion)).c_str());
+    Jet_BtagCalib  = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagCalib", cRegion)).c_str());
+    Jet_Tagger     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Tagger", cRegion)).c_str());
+    Jet_TaggerOp   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint", cRegion)).c_str());
+    Jet_TaggerOp2   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint2", cRegion)).c_str());      
+    Jet_Tagger_Collection = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerCollection", cRegion)).c_str());
     
-    Jet_DefinPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinPtCut", cRegion));
-    Jet_DefinEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinEtaCut", cRegion));
-    Jet_PreselPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselPtCut", cRegion));
-    Jet_PreselEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", cRegion));
-    Jet_RecoPtCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
-    Jet_RecoEtaCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
-    // Jet_ORElPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", cRegion));
-    // Jet_ORMuPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", cRegion));
+    Jet_DefinPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinPtCut", cRegion));
+    Jet_DefinEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinEtaCut", cRegion));
+    Jet_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselPtCut", cRegion));
+    Jet_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", cRegion));
+    Jet_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
+    Jet_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
+    // Jet_ORElPt       = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", cRegion));
+    // Jet_ORMuPt       = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    JetCollection=TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Collection", defRegion)).c_str());
-    Jet_BtagEnv    = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagEnv", defRegion)).c_str());
-    Jet_BtagCalib  = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagCalib", defRegion)).c_str());
-    Jet_Tagger     = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Tagger", defRegion)).c_str());
-    Jet_TaggerOp   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint", defRegion)).c_str());
-    Jet_TaggerOp2   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint2", defRegion)).c_str());      
-    Jet_Tagger_Collection   = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerCollection", defRegion)).c_str());
-    Jet_DefinPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinPtCut", defRegion));
-    Jet_DefinEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinEtaCut", defRegion));
-    Jet_PreselPtCut  = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselPtCut", defRegion));
-    Jet_PreselEtaCut = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", defRegion));
-    Jet_RecoPtCut    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
-    Jet_RecoEtaCut   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
-    // Jet_ORElPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", defRegion));
-    // Jet_ORMuPt       = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", defRegion));
+    JetCollection=TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Collection", defRegion)).c_str());
+    Jet_BtagEnv    = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagEnv", defRegion)).c_str());
+    Jet_BtagCalib  = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagCalib", defRegion)).c_str());
+    Jet_Tagger     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Tagger", defRegion)).c_str());
+    Jet_TaggerOp   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint", defRegion)).c_str());
+    Jet_TaggerOp2   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint2", defRegion)).c_str());      
+    Jet_Tagger_Collection   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerCollection", defRegion)).c_str());
+    Jet_DefinPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinPtCut", defRegion));
+    Jet_DefinEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$DefinEtaCut", defRegion));
+    Jet_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselPtCut", defRegion));
+    Jet_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", defRegion));
+    Jet_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
+    Jet_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
+    // Jet_ORElPt       = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalElPt", defRegion));
+    // Jet_ORMuPt       = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$OverlapRemovalMuPt", defRegion));
   }
   
   Info(whereAmI, Form(" - Etmiss") );
   try{
-    METCollection        = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Collection",cRegion)).c_str());
-    Met_FakeMetEstimator = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Path/name/FakeMetEstimator", cRegion)).c_str());
-    Met_doFakeEtmiss     = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doFakeEtmiss", cRegion));
-    Met_doMetCleaning    = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doMetCleaning", cRegion));
-    Met_doRefEle         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefEle", cRegion));
-    Met_doRefGamma       = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", cRegion));
-    Met_doRefTau         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", cRegion));
-    Met_doRefJet         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", cRegion));
-    Met_doMuons          = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", cRegion));
-    Met_doSoftTerms      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", cRegion));
+    METCollection        = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Collection",cRegion)).c_str());
+    Met_FakeMetEstimator = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Path/name/FakeMetEstimator", cRegion)).c_str());
+    Met_doFakeEtmiss     = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doFakeEtmiss", cRegion));
+    Met_doMetCleaning    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doMetCleaning", cRegion));
+    Met_doRefEle         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefEle", cRegion));
+    Met_doRefGamma       = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", cRegion));
+    Met_doRefTau         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", cRegion));
+    Met_doRefJet         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", cRegion));
+    Met_doMuons          = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", cRegion));
+    Met_doSoftTerms      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    METCollection        = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Collection",defRegion)).c_str());
-    Met_FakeMetEstimator = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Path/name/FakeMetEstimator", defRegion)).c_str());
-    Met_doFakeEtmiss     = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doFakeEtmiss", defRegion));
-    Met_doMetCleaning    = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doMetCleaning", defRegion));
-    Met_doRefEle         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefEle", defRegion));
-    Met_doRefGamma       = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", defRegion));
-    Met_doRefTau         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", defRegion));
-    Met_doRefJet         = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", defRegion));
-    Met_doMuons          = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", defRegion));
-    Met_doSoftTerms      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", defRegion));
+    METCollection        = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Collection",defRegion)).c_str());
+    Met_FakeMetEstimator = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Path/name/FakeMetEstimator", defRegion)).c_str());
+    Met_doFakeEtmiss     = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doFakeEtmiss", defRegion));
+    Met_doMetCleaning    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doMetCleaning", defRegion));
+    Met_doRefEle         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefEle", defRegion));
+    Met_doRefGamma       = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", defRegion));
+    Met_doRefTau         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", defRegion));
+    Met_doRefJet         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", defRegion));
+    Met_doMuons          = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", defRegion));
+    Met_doSoftTerms      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", defRegion));
   }
 
   Info(whereAmI, Form("- QCD") );
   try{
-    QCD_JetsPtPreselection = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", cRegion));
-    QCD_JetsPtSelection    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
-    QCD_JetsEtaSelection   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
-    QCD_METSig             = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$METSigCut", cRegion));
-    QCD_LeadJetPreSel      = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$LeadJetPreSel", cRegion)).c_str());
-    QCD_RandomSeedOffset   = xmlJobOption->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$RandomSeedOffset", cRegion));
-    QCD_SmearType          = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearType", cRegion)).c_str());
-    QCD_SmearUseBweight    = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearUseBweight", cRegion));
-    QCD_SmearBtagWeight    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearBtagWeight", cRegion));
-    QCD_SmearMeanShift     = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", cRegion)).c_str());
-    QCD_SmearExtraSmr      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", cRegion));
-    QCD_DoPhiSmearing      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", cRegion));
-    QCD_SmearedEvents      = xmlJobOption->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", cRegion));
+    QCD_JetsPtPreselection = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", cRegion));
+    QCD_JetsPtSelection    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
+    QCD_JetsEtaSelection   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
+    QCD_METSig             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$METSigCut", cRegion));
+    QCD_LeadJetPreSel      = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$LeadJetPreSel", cRegion)).c_str());
+    QCD_RandomSeedOffset   = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$RandomSeedOffset", cRegion));
+    QCD_SmearType          = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearType", cRegion)).c_str());
+    QCD_SmearUseBweight    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearUseBweight", cRegion));
+    QCD_SmearBtagWeight    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearBtagWeight", cRegion));
+    QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", cRegion)).c_str());
+    QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", cRegion));
+    QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", cRegion));
+    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion)); 
-    QCD_JetsPtPreselection = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", defRegion));
-    QCD_JetsPtSelection    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
-    QCD_JetsEtaSelection   = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
-    QCD_METSig             = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$METSigCut", defRegion));
-    QCD_LeadJetPreSel      = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$LeadJetPreSel", defRegion)).c_str());
-    QCD_RandomSeedOffset   = xmlJobOption->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$RandomSeedOffset", defRegion));
-    QCD_SmearType          = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearType", defRegion)).c_str());
-    QCD_SmearUseBweight    = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearUseBweight", defRegion));
-    QCD_SmearBtagWeight    = xmlJobOption->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearBtagWeight", defRegion));
-    QCD_SmearMeanShift     = TString(xmlJobOption->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", defRegion)).c_str());
-    QCD_SmearExtraSmr      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", defRegion));
-    QCD_DoPhiSmearing      = xmlJobOption->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", defRegion));
-    QCD_SmearedEvents      = xmlJobOption->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
+    QCD_JetsPtPreselection = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", defRegion));
+    QCD_JetsPtSelection    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
+    QCD_JetsEtaSelection   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
+    QCD_METSig             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$METSigCut", defRegion));
+    QCD_LeadJetPreSel      = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$LeadJetPreSel", defRegion)).c_str());
+    QCD_RandomSeedOffset   = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$RandomSeedOffset", defRegion));
+    QCD_SmearType          = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearType", defRegion)).c_str());
+    QCD_SmearUseBweight    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearUseBweight", defRegion));
+    QCD_SmearBtagWeight    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearBtagWeight", defRegion));
+    QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", defRegion)).c_str());
+    QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", defRegion));
+    QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", defRegion));
+    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
   }
   
   //--- To know if we gonna smear a truth sample                                         
-  doTTR = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$Enable");
-  ttr_mu = xmlJobOption->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$Mu");
-  ttr_eleWP = (short) xmlJobOption->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$ElectronWP");
-  ttr_recjetflav = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$RecJetFlav");
+  doTTR = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$Enable");
+  ttr_mu = xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$Mu");
+  ttr_eleWP = (short) xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$ElectronWP");
+  ttr_recjetflav = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$RecJetFlav");
 
-  TString st_ttr_metWP = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$SmearTruth$MetWP"));
+  TString st_ttr_metWP = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$SmearTruth$MetWP"));
 
   //only these four configured at the moment!                                           
   // if( st_ttr_metWP=="mu60" )       ttr_metWP =  METSmear::MissingETSmearing::mu60;
@@ -1200,7 +1200,7 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- MET
   //    --- Used in the SmartVeto function.
-  tool_fakeMet = new FakeMetEstimator((TString(this->DirectoryPath)+Met_FakeMetEstimator).Data());
+  tool_fakeMet = new FakeMetEstimator(TString(maindir + Met_FakeMetEstimator).Data());
 
   //--- B-tagging
   tool_btag  = new BTaggingEfficiencyTool("BTag70");
@@ -1256,7 +1256,7 @@ EL::StatusCode chorizo :: initialize ()
   //--- GRL
   tool_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
   std::vector<std::string> grlist;
-  grlist.push_back((this->DirectoryPath+GRLxmlFile).Data());
+  grlist.push_back((maindir + GRLxmlFile).Data());
   tool_grl->setProperty( "GoodRunsListVec", grlist);
   tool_grl->setProperty("PassThrough", false);
   if (!tool_grl->initialize().isSuccess()) {
@@ -2046,11 +2046,11 @@ EL::StatusCode chorizo :: loop ()
   //--- Do overlap removal   
   if(doOR)
     tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first);
-
+  
   // Get good jets now (after overlap removal!)
   jet_itr = (jets_sc.first)->begin();
   jet_end = (jets_sc.first)->end();
-  for( ; jet_itr != jet_end; ++jet_itr ) {
+  for( ; jet_itr != jet_end; ++jet_itr ){
     
     (**jet_itr).auxdata< char >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
