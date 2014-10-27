@@ -14,12 +14,12 @@ QSUBDIRECTORY=$ANALYSISCODE'/SusyAnalysis/scripts/qsubFiles'
 
 #SIGNALLIST="MadGraphPythia_SM_TT_directCC_200_125 MadGraphPythia_SM_TT_directCC_200_195"
 
-TESTLIST="TestDF"
+TESTLIST="TestMClocal5"
 
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
 source $ANALYSISCODE"/SusyAnalysis/scripts/grid_up.sh"
-source export_proxy.sh
+source $ANALYSISCODE"/SusyAnalysis/scripts/export_proxy.sh"
 #------------------------------------
 
 SAMPLELIST=$TESTLIST 

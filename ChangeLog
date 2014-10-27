@@ -1,7 +1,11 @@
+2014-10-27 Martin <tripiana@cern.ch>
+	* Add options for max number of events and jOption.
+	* Fix data paths for running in batch/grid mode.
+
 2014-10-26 Martin <tripiana@cern.ch>
 	* Fix passMCor (+ avoid zero-pt warnings)
 	* Fix bad_alloc crash.
-	* Tagging SusyAnalysis-00-00-05	
+	* Tagging SusyAnalysis-00-00-05
 
 
 2014-10-24 Martin <tripiana@cern.ch>
