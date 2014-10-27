@@ -105,7 +105,25 @@ void RunsMap::LoadMap(){
 
   //New test xAOD mc14 (SUSY1 derivation)
   m_map["TestDF"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbarD/"));
+  
+  //New test on 8TeV Znunu xAODs
+  m_map["TestZnunu167818"] = rlist( Rpair(167818, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167818/"));
+  m_map["TestZnunu167819"] = rlist( Rpair(167819, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"));
+  m_map["TestZnunu167820"] = rlist( Rpair(167820, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167820/"));
 
+  m_map["TestZmumu167812"] = rlist( Rpair(167812, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167812/"));
+  m_map["TestZmumu167813"] = rlist( Rpair(167813, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167813/"));
+  m_map["TestZmumu167814"] = rlist( Rpair(167814, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167814/"));
+
+  m_map["TestWenu167770"] = rlist( Rpair(167770, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167770/"));
+  m_map["TestWenu167771"] = rlist( Rpair(167771, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167771/"));
+  m_map["TestWenu167772"] = rlist( Rpair(167772, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167772/"));
+
+  m_map["TestWmunu167773"] = rlist( Rpair(167773, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167773/"));
+  m_map["TestWmunu167774"] = rlist( Rpair(167774, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167774/"));
+  m_map["TestWmunu167775"] = rlist( Rpair(167775, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167775/"));
+
+  
   //New test xAOD mc14 
   m_map["TestMClocal"] = rlist( Rpair(117050, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/"));
 
@@ -127,13 +145,7 @@ void RunsMap::LoadMap(){
 
   m_map["TestMClocal5"] = rlist( Rpair(110101,"/nfs/at3/scratch/tripiana/xAOD/mc14/ttbar/"));
 
-  //New test on 8TeV Znunu xAODs
-  m_map["TestZnunu"] = rlist( Rpair(167818, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167818/"),
-                              Rpair(167819, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"),
-                              Rpair(167820, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167820/"));
-
-  m_map["TestZnunu167819"] = rlist( Rpair(167819,"/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"));
-
+ 
   //======================================================================================================================
   //                                                 List of backgrounds for the Baseline analysis
   //======================================================================================================================
