@@ -1,5 +1,7 @@
 2014-10-26 Martin <tripiana@cern.ch>
 	* Fix passMCor (+ avoid zero-pt warnings)
+	* Fix bad_alloc crash.
+	* Tagging SusyAnalysis-00-00-06
 
 2014-10-24 Martin <tripiana@cern.ch>
 	* Add overlap removal option to jO.

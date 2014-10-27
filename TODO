@@ -2,8 +2,6 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
-** check bad_alloc crash (it explodes after ~30K events)  
-
 ** Allow for multiple samples inside same directory, e.g.:
    	 Znunu/sample1/AOD.pool.root
    	 Znunu/sample2/AOD.pool.root
