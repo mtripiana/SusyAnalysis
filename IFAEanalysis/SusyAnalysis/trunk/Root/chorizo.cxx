@@ -62,9 +62,7 @@ chorizo :: chorizo ()
 
   isAtlfast=false;
   isQCD=false;
-  isNCBG=false;
-
-  doAnaTree=false;
+  isNCBG=false;  doAnaTree=false;
   doPUTree=false;
   doFlowTree=false;
 
@@ -3078,6 +3076,17 @@ EL::StatusCode chorizo :: loop ()
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
   if(isMC) RunNumber = mc_channel_number;
 
+
+  // The containers created by the shallow copy are owned by you. Remember to delete them
+  delete jets_sc.first;
+  delete jets_sc.second;
+  delete muons_sc.first;
+  delete muons_sc.second;
+  delete electrons_sc.first;
+  delete electrons_sc.second;
+  // delete photons_sc.first;
+  // delete photons_sc.second;
+  
   // Clear View container
   m_goodJets->clear();
 
