@@ -1,3 +1,6 @@
+2014-10-28 Arely <arelycg@cern.ch>
+	* 'passOR' requirement should be "!doOR"
+
 2014-10-28 Martin <tripiana@cern.ch>
 	* Update GetMET call to latest SUSYTools implementation.
 	* Fix jet 'passOR' requirement
