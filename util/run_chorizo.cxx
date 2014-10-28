@@ -507,8 +507,8 @@ int main( int argc, char* argv[] ) {
       Pdriver.options()->setString("nc_outputSampleName", "user.tripiana.SM_BB_800_1.SA.v4");
       Pdriver.options()->setDouble("nc_disableAutoRetry", 1);
       if(quick_test)
-	Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
-      Pdriver.options()->setDouble("nc_nFiles", 1);
+	Pdriver.options()->setDouble("nc_nFiles", 1);
+      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
       Pdriver.options()->setDouble("nc_mergeOutput", 0); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 

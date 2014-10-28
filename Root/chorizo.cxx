@@ -2055,7 +2055,7 @@ EL::StatusCode chorizo :: loop ()
     (**jet_itr).auxdata< char >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
     if( (*jet_itr)->auxdata< char >("baseline")==1  &&
-	(*jet_itr)->auxdata< char >("passOR")==1  && 
+	(doOR || (*jet_itr)->auxdata< char >("passOR")==1) && 
 	(*jet_itr)->pt() > Jet_PreselPtCut  && 
 	( fabs( (*jet_itr)->eta()) < Jet_PreselEtaCut) ) {
       m_goodJets->push_back (*jet_itr);
@@ -2196,11 +2196,11 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Get (recalculated) MissingEt  
   CHECK( tool_st->GetMET(*metRFC,
+			 jets_sc.first,
 			 electrons_sc.first,
-			 0,
-			 0,
 			 muons_sc.first,
-			 jets_sc.first) );
+			 0,
+			 0) );
   
   
   TVector2 metRF = getMET(metRFC, "Final"); 
@@ -2593,19 +2593,19 @@ EL::StatusCode chorizo :: loop ()
   //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
   if(Met_doMuons){
     CHECK( tool_st->GetMET(*metRFC,
+			   jets_sc.first,
 			   electrons_sc.first,
-			   0,
-			   0,
 			   muons_sc.first,
-			   jets_sc.first) );
+			   0,
+			   0));
   }
   else{
     CHECK( tool_st->GetMET(*metRFC,
+			   jets_sc.first,
 			   electrons_sc.first,
 			   0,
 			   0,
-			   0,
-			   jets_sc.first) );
+			   0));
   }
   
   TVector2 v_met_ST = getMET( metRFC, "Final");
