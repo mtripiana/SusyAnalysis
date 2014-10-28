@@ -1,6 +1,7 @@
 2014-10-28 Arely <arelycg@cern.ch>
 	* 'passOR' requirement should be "!doOR"
         * correct the '-j' option in util/run.cxx
+        * added n_jets50
 
 2014-10-28 Martin <tripiana@cern.ch>
 	* Update GetMET call to latest SUSYTools implementation.

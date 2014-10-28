@@ -247,6 +247,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("JVF_min",&JVF_min,"JVF_min/O", 10000);                           
       output->tree()->Branch("n_jets",&n_jets,"n_jets/I", 10000);
       output->tree()->Branch("n_jets40",&n_jets40,"n_jets40/I", 10000);
+      output->tree()->Branch("n_jets50",&n_jets50,"n_jets50/I", 10000);
       output->tree()->Branch("n_jets60",&n_jets60,"n_jets60/I", 10000);
       output->tree()->Branch("n_jets80",&n_jets80,"n_jets80/I", 10000);
       output->tree()->Branch("n_taujets",&n_taujets,"n_taujets/I", 10000);
@@ -649,6 +650,7 @@ void chorizo :: InitVars()
   JVF_min=false;
   n_jets=0;
   n_jets40=0;
+  n_jets50=0;
   n_jets60=0;
   n_jets80=0;
   n_taujets=0;
@@ -2055,7 +2057,7 @@ EL::StatusCode chorizo :: loop ()
     (**jet_itr).auxdata< char >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
     if( (*jet_itr)->auxdata< char >("baseline")==1  &&
-	( !doOR || (*jet_itr)->auxdata< char >("passOR")==1 )  && 
+	( (!doOR) || ((*jet_itr)->auxdata< char >("passOR")==1) )  && 
 	(*jet_itr)->pt() > Jet_PreselPtCut  && 
 	( fabs( (*jet_itr)->eta()) < Jet_PreselEtaCut) ) {
       m_goodJets->push_back (*jet_itr);
@@ -2524,11 +2526,14 @@ EL::StatusCode chorizo :: loop ()
     
     if(recoJets.at(ij).Pt()>40.){
       n_jets40++;
-      if(recoJets.at(ij).Pt()>60.){
-	n_jets60++;
-	if(recoJets.at(ij).Pt()>80.){
-	  n_jets80++;
-	}
+      if(recoJets.at(ij).Pt()>50.){
+        n_jets50++;
+        if(recoJets.at(ij).Pt()>60.){
+	  n_jets60++;
+	  if(recoJets.at(ij).Pt()>80.){
+	    n_jets80++;
+	  }
+        }
       }
     }
   }
