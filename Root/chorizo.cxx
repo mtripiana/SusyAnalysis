@@ -2055,7 +2055,7 @@ EL::StatusCode chorizo :: loop ()
     (**jet_itr).auxdata< char >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
     if( (*jet_itr)->auxdata< char >("baseline")==1  &&
-	(doOR || (*jet_itr)->auxdata< char >("passOR")==1) && 
+	( !doOR || (*jet_itr)->auxdata< char >("passOR")==1 )  && 
 	(*jet_itr)->pt() > Jet_PreselPtCut  && 
 	( fabs( (*jet_itr)->eta()) < Jet_PreselEtaCut) ) {
       m_goodJets->push_back (*jet_itr);
