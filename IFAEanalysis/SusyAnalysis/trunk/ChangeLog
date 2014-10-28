@@ -1,3 +1,7 @@
+2014-10-28 Martin <tripiana@cern.ch>
+	* Update GetMET call to latest SUSYTools implementation.
+	* Fix jet 'passOR' requirement
+
 2014-10-27 Martin <tripiana@cern.ch>
 	* Add options for max number of events and jOption.
 	* Fix data paths for running in batch/grid mode.
