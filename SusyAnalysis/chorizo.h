@@ -655,6 +655,7 @@ private:
   bool  JVF_min;
   int   n_jets;
   int   n_jets40;
+  int   n_jets50;
   int   n_jets60;
   int   n_jets80;
   int   n_taujets;
