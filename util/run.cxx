@@ -154,6 +154,11 @@ int main( int argc, char* argv[] ) {
   bool runGrid  = false;
   TString queue = "at3";
 
+  //*** Read some input options
+  //  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
+  std::string maindir = getenv("ROOTCOREBIN");
+  std::string xmlPath=maindir+"/data/SusyAnalysis/METbb_JobOption.xml";
+
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
     if( std::string(argv[i]).find("-") != std::string::npos )// is option
@@ -200,6 +205,9 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
     }
+    else if (opts[iop].BeginsWith("j") ){
+      xmlPath=maindir+"/data/SusyAnalysis/"+opts[iop].Copy().ReplaceAll("j=","")+"_JobOption.xml";
+    }
   }
   TString allopts=""; //join all options in one string
   for (unsigned int iopt=0; iopt < opts.size(); iopt++)
@@ -239,11 +247,6 @@ int main( int argc, char* argv[] ) {
   else
     systematics.push_back("Nom");
 
-  //*** Read some input options
-  //  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
-  std::string maindir = getenv("ROOTCOREBIN");
-
-  std::string xmlPath=maindir+"/data/SusyAnalysis/METbb_JobOption.xml";
 
   XMLReader *xmlJobOption = new XMLReader();
   xmlJobOption->readXML(xmlPath);
