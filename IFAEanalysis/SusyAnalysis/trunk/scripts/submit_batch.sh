@@ -25,7 +25,7 @@ source $ANALYSISCODE"/SusyAnalysis/scripts/export_proxy.sh"
 
 SAMPLELIST=$TESTLIST 
 
-SYSTLIST="
+ALLSYSTLIST="
 Nom \
 "
 
@@ -34,12 +34,22 @@ if [[ $2 != "" ]]; then SYSTEMATIC=$2;fi
 if [[ $3 != "" ]]; then MYJOP=$3; fi
 if [[ $4 != "" ]]; then SAMPLELIST=$4; DATALIST="";fi
 
+
 echo
 echo "Samples -------------------------------" 
 echo $SAMPLELIST
 echo $DATALIST
+echo
 
+echo "Systematics -------------------------------" 
+SYSTLIST="${SYSTEMATIC//,/ }"
+for syst in $SYSTLIST
+do
+    echo $syst
+done
+echo
 
+##SUBMIT
 if [ "$SYSTEMATIC" == "ALL" ]
 then
     if [ -f $ANALYSISCODE"/SusyAnalysis/ToRunSusy.txt" ]
@@ -47,9 +57,8 @@ then
         rm $ANALYSISCODE"/code/ToRunSusy.txt*"
     fi
 
-    for syst in $SYSTLIST
+    for syst in $ALLSYSTLIST
     do
-
         echo "Sendig systematic: "$syst
 
         if [ "$syst" == "GENERATOR" ]; then
@@ -87,25 +96,23 @@ then
         fi
     done
     split -d -l910 $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt" $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+
 else
-    echo "Running only in "$SYSTEMATIC
+
     for sample in $SAMPLELIST
     do 
         f=$QSUBDIRECTORY/$sample
-        isequal=0
         for esample in $EXCEPTIONS
         do
             if [ $sample == $esample ]
             then
-                isequal=1
+		QUEUE="at3_xxl"
             fi
         done
-        if [ $isequal == 0 ]
-        then
-            qsub -q $QUEUE -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
-        else
-            qsub -q at3_xxl -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
-        fi
+	for syst in $SYSTLIST
+	do
+	    qsub -q $QUEUE -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
+	done
     done
     if [ "$SYSTEMATIC" == "Nom" ]; then
         for sample in $DATALIST
