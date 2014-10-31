@@ -71,9 +71,16 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
        	  source SusyAnalysis/scripts/grid_up.sh
 
 
+   *NOTE( (30/10/2014):  (in case you don't use the script above to setup the grid)  
+                         There is a new default version of PyAMI in at3. It is a major update (v5.0.0) which is not backward compatible! (and so the fetch tool won't work)
+   	                 Please make sure you set the previous version, unless until SampleHandler gets updated:
+                       
+                       -->  localSetupPyAMI pyAMI-4.1.3a-x86_64-slc6
+  
+           
    *** to run the code you do:
 
-          run [options] <Sample> [Syst] [outDir]
+          run [options] <Sample> 
 
        where
 
@@ -81,16 +88,9 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 
 		            To list the implemented samples do:      'run samples'
 			  
-                [Syst]    : systematics to be considered (comma-separated list) [optional]. 
-		            Just nominal is taken by default (Nom).
-
-                 	    To list the available (recommended) systematic variations do:     'run slist'
-
-  		            or well run './SusyAnalysis/scripts/list_systematics.sh'
-
 	        [options] : supported option flags
 
-			    	 -j=<jOption>  : choose which analysis you want to run over. ( = METbb, Stop, Monojet)			    
+			    	 -j=<jOption>  : choose which analysis you want to run over. ( = METbb, Stop, Monojet)	
 			         -l            : run locally (default) 
 			         -b            : run in batch          
 				 -p            : run on the grid    (prun)   
@@ -98,26 +98,34 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 				 -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
 				 -t            : run just a test over 50 events
 				 -n=<N>        : run over N events
+				 -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)
+				 -s=<S>        : systematics to be considered (comma-separated list) [optional]. 
+		            	 	         Just nominal is taken by default (Nom).
 
-                [outDir]  : is where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)). 	
+ 						 To list the available (recommended) systematic variations do:     'run slist'
 
+						 or well run './SusyAnalysis/scripts/list_systematics.sh'
+
+ 				 -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)).
+ 	
 
 
        or just type:  'run'  to get this help.
 
    *** 
-   
+   ** Batch submission **
+
    a) Create batch submission scripts (only once! Might take some time though...):
 
-   root generate_qsub_files.C
+      root generate_qsub_files.C
 
    b) Run
       e.g. to produce the mini-ntuples for X-sample:
 
-   $ANALYSISCODE/SusyAnalysis/scripts/qsubFiles/X-sample.sub
+      run -b X-sample -j=Stop -s=Nom,MUONS_ID__1up,MUONS_ID__1down
 
 
-   To actually send it to the batch you do:
+   Or you could run the script:
 
       submit_batch.sh
 

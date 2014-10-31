@@ -10,6 +10,7 @@
 #include <EventLoop/Algorithm.h>
 #include <EventLoopAlgs/NTupleSvc.h>
 //#include <EventLoopAlgs/AlgSelect.h>
+#include "SampleHandler/MetaFields.h"
 
 
 // Root includes
@@ -163,6 +164,8 @@ public:
   virtual void SetTruthSmearing(bool doit=false){ doTTR=doit; }; //to overwrite xml option.
 
   virtual void printSystList(); //systematics list
+
+  virtual void loadMetaData(); 
 
   // these are the functions inherited from Algorithm
   virtual EL::StatusCode setupJob (EL::Job& job);
@@ -527,6 +530,14 @@ private:
   void Fill(TH1 *h, float value, float weight=1.);
 
   TStopwatch watch; 
+
+  //MetaData
+  float meta_xsec;
+  float meta_xsec_relunc;
+  float meta_kfactor;
+  float meta_feff;
+  float meta_nsim;
+  float meta_lumi;
 
   //Ntuple branches
   //--- Declaration of leaf types                                                    

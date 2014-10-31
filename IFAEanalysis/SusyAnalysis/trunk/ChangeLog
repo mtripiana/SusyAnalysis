@@ -1,3 +1,9 @@
+2014-10-30 Martin <tripiana@cern.ch>
+	* Add options for systematics and output dir.
+	* Add wrapper to run in batch. (overrides previous -b option).
+	* Fix doOR requirement.
+	* Fix PyAMI version in grid setup scripts.
+	
 2014-10-28 Arely <arelycg@cern.ch>
 	* 'passOR' requirement should be "!doOR"
         * correct the '-j' option in util/run.cxx
@@ -5,7 +11,8 @@
 
 2014-10-28 Martin <tripiana@cern.ch>
 	* Update GetMET call to latest SUSYTools implementation.
-	* Fix jet 'passOR' requirement
+	* Fix jet 'passOR' requirement./
+	* Add version flag (-v) to tag output files.
 
 2014-10-27 Martin <tripiana@cern.ch>
 	* Add options for max number of events and jOption.

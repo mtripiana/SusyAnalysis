@@ -1,5 +1,6 @@
 QUEUE='at3'
 SYSTEMATIC='Nom'
+MYJOP='METbb'
 MYSAMPLE=''
 
 QSUBDIRECTORY=$ANALYSISCODE'/SusyAnalysis/scripts/qsubFiles'
@@ -28,13 +29,16 @@ SYSTLIST="
 Nom \
 "
 
-
 if [[ $1 != "" ]]; then QUEUE=$1;fi
 if [[ $2 != "" ]]; then SYSTEMATIC=$2;fi
-if [[ $3 != "" ]]; then SAMPLELIST=$3; DATALIST="";fi
+if [[ $3 != "" ]]; then MYJOP=$3; fi
+if [[ $4 != "" ]]; then SAMPLELIST=$4; DATALIST="";fi
 
+echo
+echo "Samples -------------------------------" 
 echo $SAMPLELIST
 echo $DATALIST
+
 
 if [ "$SYSTEMATIC" == "ALL" ]
 then
@@ -52,14 +56,14 @@ then
             for sample in $BKGLISTGEN
             do
                 f=$QSUBDIRECTORY/$sample
-                echo "qsub -q at3 -v SYS=Nom -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                echo "qsub -q $QUEUE -v MYSYS=Nom,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
             done
         else
             if [ "$syst" == "Nom" ]; then
                 for sample in $DATALIST
                 do
                     f=$QSUBDIRECTORY/$sample
-                    echo "qsub -q at3 -v SYS=$syst -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                    echo "qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
                 done
             fi
             for sample in $SAMPLELIST
@@ -75,9 +79,9 @@ then
                 done
                 if [ $isequal == 0 ]
                 then
-                    echo "qsub -q $QUEUE -v SYS=$syst -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                    echo "qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
                 else
-                    echo "qsub -q at3_xxl -v SYS=$syst -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                    echo "qsub -q at3_xxl -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
                 fi
             done
         fi
@@ -98,19 +102,16 @@ else
         done
         if [ $isequal == 0 ]
         then
-            qsub -q $QUEUE -v SYS=$SYSTEMATIC -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
-#            echo "qsub -q $QUEUE -v SYS=$SYSTEMATIC -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub "
+            qsub -q $QUEUE -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
         else
-            qsub -q at3_xxl -v SYS=$SYSTEMATIC -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
-#            echo "qsub -q at3_xxl -v SYS=$SYSTEMATIC -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub "
+            qsub -q at3_xxl -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
         fi
     done
     if [ "$SYSTEMATIC" == "Nom" ]; then
         for sample in $DATALIST
         do
             f=$QSUBDIRECTORY/$sample
-            qsub -q at3 -v SYS=$SYSTEMATIC -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub"
-#            echo "qsub -q at3_xxl -v SYS=$SYSTEMATIC -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub "
+            qsub -q at3 -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub"
         done
     fi
 fi
