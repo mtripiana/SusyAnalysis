@@ -3,7 +3,8 @@
 	* Add wrapper to run in batch. (overrides previous -b option).
 	* Fix doOR requirement.
 	* Fix PyAMI version in grid setup scripts.
-	
+	* Fix batch submission for multiple samples/systemtics.
+
 2014-10-28 Arely <arelycg@cern.ch>
 	* 'passOR' requirement should be "!doOR"
         * correct the '-j' option in util/run.cxx
