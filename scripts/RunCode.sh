@@ -3,6 +3,9 @@
 syst="Nom"
 if [[ $2 != "" ]]; then syst=$2;fi
 
+jop="METbb"
+if [[ $3 != "" ]]; then jop=$3;fi
+
 WHEREFROM=$PWD
  
 echo "CURRENT = "$WHEREFROM 
@@ -38,6 +41,6 @@ export ROOTENV_NO_HOME=1  #--- To be able to read correctly the TEnv class in RO
 echo "===============  Run the code  ================"
 
 source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh
-run -l $1 $syst
+run -l -j=$jop $1 $syst
 
 

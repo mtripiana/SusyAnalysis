@@ -11,6 +11,6 @@ export DQ2_LOCAL_SITE_ID=ROAMING
 
 voms-proxy-init -voms atlas 
 
-localSetupPyAMI
+localSetupPyAMI pyAMI-4.1.3a-x86_64-slc6
 localSetupPandaClient currentJedi --noAthenaCheck
 

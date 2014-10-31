@@ -9,7 +9,8 @@
         <Mode name="DoCutFlow">false</Mode>
 	<Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
         <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
-        <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
+	<!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
+        <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
 	<Pileup>
             <Mode name="ApplyPileupReweighting">true</Mode>
             <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path>
@@ -39,8 +40,8 @@
     <ObjectDefinition>
 
         <OverlapRemoval>
-          <Enable>true</Enable>
-	  <!-- NOT USE ANYMORE -->
+          <Enable>false</Enable>
+	  <!-- NOT USED ANYMORE -->
 	  <!--      <OverlapRemovalElPt>20000.</OverlapRemovalElPt> --> 
           <!--	    <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt> -->
         </OverlapRemoval> 

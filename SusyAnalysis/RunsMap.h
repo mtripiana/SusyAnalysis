@@ -87,9 +87,23 @@ void RunsMap::LoadMap(){
 
   m_map["ttbar13"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_s1982_s2008_r5787_r5853/"));
 
+  //DC14 data reproc (repro16_v01)
+  //note: Run numbers for data containers follow this convention:   '9900XY'  , X=period, Y=sub-period (0 for whole container)
+  m_map["data12_B"] = rlist( Rpair(990020, "data12_8TeV.periodB.physics_JetTauEtmiss.PhysCont.AOD.repro16_v01/")); //period B
+
+  m_map["data12_Egamma_202798"] = rlist( Rpair(202798, "data12_8TeV.00202798.physics_Egamma.merge.AOD.r5723_p1751/"));
+  m_map["data12_Muons_202798"] = rlist( Rpair(202798, "data12_8TeV.00202798.physics_Muons.merge.AOD.r5723_p1751/"));
+ 
   //======================================================================================================================
   //                                                 Local afs/nfs tests
   //======================================================================================================================
+
+  //Test cutflow (vs Kerim's)
+  m_map["CF_Zee"] =  rlist( Rpair(167750, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zee/"));
+  m_map["CF_Zmumu"] =  rlist( Rpair(167754, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zmumu/"));
+
+  //Data 
+  m_map["TestDataB"] = rlist( Rpair(202798, "/tmp/tripiana/data/"));
   
   //New DAOD_IFAE3G derivation
   m_map["TestIFAE3G"] = rlist( Rpair(117050, "/nfs/at3users/users/tripiana/Derivations/WorkArea/run/test/"));
@@ -133,7 +147,7 @@ void RunsMap::LoadMap(){
 			       Rpair(900001, "/afs/cern.ch/atlas/project/PAT/xAODs/r5597/"));
 
 
-  m_map["TestData"] = rlist( Rpair(900001, "/afs/cern.ch/atlas/project/PAT/xAODs/r5597/"));  //we could decode this as (900001-->A, 900011-->A1, etc... if needed)
+  m_map["TestData"] = rlist( Rpair(900001, "/afs/cern.ch/atlas/project/PAT/xAODs/r5597/"));  //we could decode this as (900010-->A, 900011-->A1, etc... if needed)
 
   m_map["TestMClocal1"] = rlist( Rpair(167764, "/nfs/at3/scratch/tripiana/xAOD/mc14/Zmumu/"));
 

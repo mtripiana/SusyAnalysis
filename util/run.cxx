@@ -46,15 +46,11 @@ using namespace SH;
 void usage(){
 
   cout << endl;
-  cout << bold("run [options] <Sample> [Syst]") << endl;
+  cout << bold("run_chorizo [options] <Sample>") << endl;
   cout << endl;
   cout << " <Sample> : The sample name to run over. " << endl;
   cout << "            To list the implemented samples do: 'run samples'" << endl;
   cout << endl;
-  cout << " [Syst]   : systematics to be considered (comma-separated list) [optional]. " << endl;
-  cout << "            Just nominal is run by default (Nom)." << endl;       
-  cout << "            To list the available (recommended) systematic variations do: 'run slist'" << endl;
-  cout << "            or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "" << endl;
   cout << " [options] : supported option flags" << endl;
   cout << "       -j=<jOption>  : choose which analysis you want to run over. ( = 'METbb'(default), 'Stop', 'Monojet')	" << endl;		    
@@ -64,7 +60,13 @@ void usage(){
   cout << "       -g            : run on the grid (ganga)        " << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
+  cout << "       -v=<V>            : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
+  cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
+  cout << "                       Just nominal is run by default (Nom)." << endl;       
+  cout << "                       To list the available (recommended) systematic variations do: 'run slist'" << endl;
+  cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
+  cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
   cout << endl;
 }
 
@@ -81,7 +83,7 @@ float getLumiWeight(Sample* sample){
 float getECM(Sample* sample){ //in TeV
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECM | awk '{print $2}'");
+  std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECMEnergy | awk '{print $2}'");
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -110,6 +112,7 @@ void printSampleMeta(Sample* sample){
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
   cout << " isData          = " << (sample->getMetaDouble( MetaFields::isData )==0 ? "No" : "Yes") << endl;
+  cout << " isData          = " << sample->getMetaString( MetaFields::isData ) << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
   cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
@@ -153,11 +156,10 @@ int main( int argc, char* argv[] ) {
   bool runPrun  = false;
   bool runGrid  = false;
   TString queue = "at3";
+  bool quick_test = false;
+  TString version="";
 
-  //*** Read some input options
-  //  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
-  std::string maindir = getenv("ROOTCOREBIN");
-  std::string xmlPath=maindir+"/data/SusyAnalysis/METbb_JobOption.xml";
+  std::string jOption = "METbb";
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -168,7 +170,6 @@ int main( int argc, char* argv[] ) {
   }
 
   //check if enough arguments
-  bool systListOnly=false;
   if( args.size() < 1 ){
     usage();
     return 0;
@@ -178,14 +179,15 @@ int main( int argc, char* argv[] ) {
     return 0;
   }
   else if ( args[0] == "slist" ){ //just print systematics list?
-    systListOnly=true;
-    gErrorIgnoreLevel = kFatal;
-    args[0] = "TestMClocal"; //rename to test sample to get systematics list
-    // printSystList();
-    // return 0;
+    TString torun = Form("run_chorizo slist");
+    system(torun.Data());
+    return 0;
   }
 
   //config options
+  int nMax=-1;
+  TString syst_str="";
+  TString outDir="";
   for( unsigned int iop=0; iop < opts.size(); iop++){
     if (opts[iop] == "l"){ //run locally
       runLocal = true;
@@ -205,23 +207,59 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
     }
-    else if (opts[iop].BeginsWith("j") ){
-      xmlPath=maindir+"/data/SusyAnalysis/"+opts[iop].Copy().ReplaceAll("j=","")+"_JobOption.xml";
+    else if (opts[iop] == "t"){ //limit run to 50 events
+      quick_test = true;
     }
+    else if (opts[iop].BeginsWith("s") ){
+      syst_str = opts[iop].ReplaceAll("s=","");
+    }
+    else if (opts[iop].BeginsWith("o") ){
+      outDir = opts[iop].ReplaceAll("o=","");
+    }
+    // else if (opts[iop].BeginsWith("i") ){
+    //   single_id = opts[iop].ReplaceAll("i=","").Atoi();
+    // }
+    else if (opts[iop].BeginsWith("j") ){
+      jOption = opts[iop].ReplaceAll("j=","");
+    }
+    else if (opts[iop].BeginsWith("n") ){ //limit run to n events
+      nMax = opts[iop].ReplaceAll("n=","").Atoi();
+    }
+    // else if (opts[iop].BeginsWith("v") ){
+    //   version = opts[iop].ReplaceAll("v=","");
+    // }
   }
+
+
+  //samples
+  std::vector<TString> samples;
+  samples = getTokens(args[0], ","); //I already checked there is a 'sample' input
+  
+  //Systematics
+  std::vector<TString> systematics; 
+  if(syst_str.Length()){  
+    systematics = getTokens(syst_str, ",");
+  }
+  else{
+    syst_str="Nom";
+    systematics.push_back("Nom");
+  }
+
+
+  //*** BATCH WRAPPER ***
+  //(temporary?) Wrapper to run on the batch .   Until we get the TorqueDriver working...
+  if(runBatch){
+    for(unsigned int isp=0; isp < samples.size(); isp++){
+      gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/submit_batch.sh "+queue+" "+syst_str+" "+jOption+" "+samples[isp]);
+    }
+    return 0;
+  }
+  //***
+
   TString allopts=""; //join all options in one string
   for (unsigned int iopt=0; iopt < opts.size(); iopt++)
     allopts += " -"+opts[iopt]+" ";
 
-  //always run locally for systematics printing!
-  if(systListOnly && !runLocal){
-    runGrid=false;
-    runPrun=false;
-    runBatch=false;
-    runLocal=true;
-    cout << bold(red("\n Ups! "));
-    cout << "Running mode forced to 'local' when printing systematics list.\n" << endl;
-  }
 
   //check for needed setup 
   std::string ami_check = gSystem->GetFromPipe("which ami 2>/dev/null").Data(); 
@@ -235,18 +273,11 @@ int main( int argc, char* argv[] ) {
   }
 
 
-  //samples
-  std::vector<TString> samples;
-  samples = getTokens(args[0], ","); //I already checked there is a 'sample' input
-  
-  //Systematics
-  std::vector<TString> systematics; 
-  if(args.size() > 1){ 
-    systematics = getTokens(args[1], ",");
-  }
-  else
-    systematics.push_back("Nom");
+  //*** Read some input options
+  //  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
+  std::string maindir = getenv("ROOTCOREBIN");
 
+  std::string xmlPath=maindir+"/data/SusyAnalysis/"+jOption+"_JobOption.xml";
 
   XMLReader *xmlJobOption = new XMLReader();
   xmlJobOption->readXML(xmlPath);
@@ -267,6 +298,7 @@ int main( int argc, char* argv[] ) {
     systematics.clear();
     systematics.push_back("Nom");
   }
+
 
   //*** Call run_chorizo for every sample-id-systematic combination
   //*** Merge ids for same sample-systematic pair
@@ -329,11 +361,9 @@ int main( int argc, char* argv[] ) {
       
       sh.print();
       
-      //      return 0;
 
-      //Handle Meta-Data
+      //*** Handle Meta-Data
       sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
-      
 
       //override name with 'provenance' name (weal attempt to allow for user-skimmed and partially-transfered samples)
       //save original name in a new meta field

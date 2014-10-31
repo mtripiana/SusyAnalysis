@@ -133,7 +133,15 @@ void chorizo :: bookTree(){
     output->tree()->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
     output->tree()->Branch ("MC_w", &MC_w, "MC_w/F");                       
 
-    output->tree()->Branch("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
+    output->tree()->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
+
+    //metadata
+    output->tree()->Branch ("xsec", &meta_xsec, "xsec/F");
+    output->tree()->Branch ("xsec_relunc", &meta_xsec_relunc, "xsec_relunc/F");
+    output->tree()->Branch ("kfactor", &meta_kfactor, "kfactor/F");
+    output->tree()->Branch ("feff", &meta_feff, "feff/F");
+    output->tree()->Branch ("nsim", &meta_nsim, "nsim/F");
+    output->tree()->Branch ("lumi", &meta_lumi, "lumi/F");
 
     //bch
     output->tree()->Branch("JetsFailBCHTight",&JetsFailBCHTight,"JetsFailBCHTight/O", 10000);
@@ -496,6 +504,14 @@ void chorizo :: InitVars()
 {
   //Initialize ntuple variables
 
+  //- MetaData
+  meta_xsec = 1.;
+  meta_xsec_relunc = 0.;
+  meta_kfactor = 1.;
+  meta_feff = 1.;
+  meta_nsim = 0.; 
+  meta_lumi = 1.;
+  
   //- Event info
   RunNumber = 0;
   EventNumber = 0;
@@ -1337,6 +1353,18 @@ void chorizo :: printSystList(){
   std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" << std::endl;
 }
 
+void chorizo :: loadMetaData(){
+
+  if(!isMC) return;
+
+  meta_xsec        = wk()->metaData()->getDouble( SH::MetaFields::crossSection );
+  meta_xsec_relunc = wk()->metaData()->getDouble( SH::MetaFields::crossSectionRelUncertainty );
+  meta_kfactor     = wk()->metaData()->getDouble( SH::MetaFields::kfactor );
+  meta_feff        = wk()->metaData()->getDouble( SH::MetaFields::filterEfficiency );
+  meta_nsim        = wk()->metaData()->getDouble( SH::MetaFields::numEvents );
+  meta_lumi        = wk()->metaData()->getDouble( SH::MetaFields::lumi );
+  //  meta_id = (int)wk()->metaData()->getDouble( "DSID" ));
+}
 
 EL::StatusCode chorizo :: execute ()
 {
@@ -1371,7 +1399,8 @@ EL::StatusCode chorizo :: loop ()
     return EL::StatusCode::FAILURE;
   }
 
-  isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
+  loadMetaData();
+  //  isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION ); //already set
 
   //-- Retrieve objects Containers
   m_truthE= 0;
@@ -1451,7 +1480,8 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //PURW
-  tool_purw->apply(eventInfo);  //it does already the filling in 'ConfigMode'
+  if(isMC)
+    tool_purw->apply(eventInfo);  //it does already the filling in 'ConfigMode'
 
   //--- Generate Pileup file??
   if (genPUfile && isMC){
@@ -2057,7 +2087,7 @@ EL::StatusCode chorizo :: loop ()
     (**jet_itr).auxdata< char >("bad") *= (int)tool_jClean->accept( **jet_itr ); //only keep good clean jets
 
     if( (*jet_itr)->auxdata< char >("baseline")==1  &&
-	( (!doOR) || ((*jet_itr)->auxdata< char >("passOR")==1) )  && 
+	((!doOR) || (*jet_itr)->auxdata< char >("passOR")==1) && 
 	(*jet_itr)->pt() > Jet_PreselPtCut  && 
 	( fabs( (*jet_itr)->eta()) < Jet_PreselEtaCut) ) {
       m_goodJets->push_back (*jet_itr);

@@ -2,6 +2,10 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
+** how to get the original number of events??  --> Through CutFlow service, that should be available (soon?) in the DxAODs. Awaiting news from ASG...
+
+** pass options to qsub files calls (directly or through submit_bash script)! --> run in batch from command line now. (-b) . Propagate missing options (e.g. nMax)
+
 ** Allow for multiple samples inside same directory, e.g.:
    	 Znunu/sample1/AOD.pool.root
    	 Znunu/sample2/AOD.pool.root

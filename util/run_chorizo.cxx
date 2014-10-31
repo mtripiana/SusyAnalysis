@@ -47,15 +47,11 @@ using namespace SH;
 void usage(){
 
   cout << endl;
-  cout << bold("run_chorizo [options] <Sample> [Syst]") << endl;
+  cout << bold("run_chorizo [options] <Sample>") << endl;
   cout << endl;
   cout << " <Sample> : The sample name to run over. " << endl;
   cout << "            To list the implemented samples do: 'run_chorizo samples'" << endl;
   cout << endl;
-  cout << " [Syst]   : systematics to be considered (comma-separated list) [optional]. " << endl;
-  cout << "            Just nominal is run by default (Nom)." << endl;       
-  cout << "            To list the available (recommended) systematic variations do: 'run_chorizo slist'" << endl;
-  cout << "            or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "" << endl;
   cout << " [options] : supported option flags" << endl;
   cout << "       -j=<jOption>  : choose which analysis you want to run over. ( = 'METbb'(default), 'Stop', 'Monojet')	" << endl;		    
@@ -65,7 +61,13 @@ void usage(){
   cout << "       -g            : run on the grid (ganga)        " << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
+  cout << "       -v=<V>            : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
+  cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
+  cout << "                       Just nominal is run by default (Nom)." << endl;       
+  cout << "                       To list the available (recommended) systematic variations do: 'run_chorizo slist'" << endl;
+  cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
+  cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
   cout << endl;
 }
 
@@ -104,7 +106,7 @@ float getLumiWeight(Sample* sample){
 float getECM(Sample* sample){ //in TeV
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECM | awk '{print $2}'");
+  std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECMEnergy | awk '{print $2}'");
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -126,13 +128,19 @@ bool type_consistent(SampleHandler sh){
   return true;
 }
 
+bool isData(Sample* sample){ 
+  TString sampleName(sample->getMetaString( MetaFields::sampleName ));
+  std::string newName = stripName(sampleName).Data();
+  std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
+  return (itis=="collisions");
+}
 
 void printSampleMeta(Sample* sample){
   cout << endl;
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
-  cout << " isData          = " << (sample->getMetaDouble( MetaFields::isData )==0 ? "No" : "Yes") << endl;
+  cout << " isData          = " << (isData(sample) ? "Y" : "N") << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
   cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
@@ -178,8 +186,11 @@ int main( int argc, char* argv[] ) {
   bool runPrun  = false;
   TString queue = "at3";
   bool quick_test = false;
+  TString version="";
 
   std::string jOption = "METbb_JobOption.xml";
+
+  std::vector<TString> systematic; 
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -202,13 +213,15 @@ int main( int argc, char* argv[] ) {
   else if ( args[0] == "slist" ){ //just print systematics list?
     systListOnly=true;
     gErrorIgnoreLevel = kFatal;
-    args[0] = "TestMClocal"; //rename to test sample to get systematics list
+    args[0] = "TestDF"; //rename to test sample to get systematics list
     // printSystList();
     // return 0;
   }
 
   int single_id=-1;
   int nMax=-1;
+  TString syst_str="";
+  TString outDir="";
   //config options
   for( unsigned int iop=0; iop < opts.size(); iop++){
     if (opts[iop] == "l"){ //run locally
@@ -232,6 +245,12 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "t"){ //limit run to n events
       quick_test = true;
     }
+    else if (opts[iop].BeginsWith("s") ){
+      syst_str = opts[iop].ReplaceAll("s=","");
+    }
+    else if (opts[iop].BeginsWith("o") ){
+      outDir = opts[iop].ReplaceAll("o=","");
+    }
     else if (opts[iop].BeginsWith("i") ){
       single_id = opts[iop].ReplaceAll("i=","").Atoi();
     }
@@ -241,12 +260,27 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("n") ){
       nMax = opts[iop].ReplaceAll("n=","").Atoi();
     }
+    else if (opts[iop].BeginsWith("v") ){
+      version = opts[iop].ReplaceAll("v=","");
+    }
   }
+
+  if(syst_str.Length()){  
+    systematic = getTokens(syst_str, ",");
+  }
+  else{
+    systematic.push_back("Nom");
+  }
+
+  TString vTag="";
+  if(version!="")
+    vTag = "_v"+version;
 
   //always run locally for systematics printing!
   if(systListOnly && !runLocal){
     runGrid=false;
     runBatch=false;
+    runPrun=false;
     runLocal=true;
     cout << bold(red("\n Ups! "));
     cout << "Running mode forced to 'local' when printing systematics list.\n" << endl;
@@ -293,7 +327,7 @@ int main( int argc, char* argv[] ) {
   bool generatePUfile = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
 
   TString FinalPath      = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
-  if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
+  if( outDir.Length() ) FinalPath = outDir;    // Take the submit directory from the input if provided:
 
   TString CollateralPath = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
 
@@ -338,11 +372,14 @@ int main( int argc, char* argv[] ) {
   //Handle Meta-Data
   sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
 
-  //override name with 'provenance' name (weal attempt to allow for user-skimmed and partially-transfered samples)
-  //save original name in a new meta field
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
+    //override name with 'provenance' name (weal attempt to allow for user-skimmed and partially-transfered samples)
+    //save original name in a new meta field
     (*iter)->setMetaString( "inputName", (*iter)->getMetaString( MetaFields::sampleName) ); //no longer needed?
     (*iter)->setMetaString( MetaFields::gridName, (stripName( TString( (*iter)->getMetaString( MetaFields::sampleName)))+"/").Data() );
+
+    //set Data flag correctly
+    (*iter)->setMetaString( MetaFields::isData, (isData(*iter) ? "Y" : "N") );
   }
 
   //set EBeam field
@@ -380,7 +417,7 @@ int main( int argc, char* argv[] ) {
   //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 
   std::vector<double> weights;
-  bool isData = (sh.size() ? (sh.at(0)->getMetaDouble( MetaFields::isData ))==1 : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
+  bool isData = (sh.size() ? (sh.at(0)->getMetaString( MetaFields::isData )=="Y") : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
   
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       printSampleMeta( *iter );
@@ -401,13 +438,6 @@ int main( int argc, char* argv[] ) {
   JvfUncErr::JvfSyste syst_JVF = JvfUncErr::NONE;
   BCHCorrMediumErr::BCHSyste syst_BCH = BCHCorrMediumErr::NONE;
   
-  std::vector<TString> systematic; 
-  if(args.size() > 1){ 
-    systematic = getTokens(args[1], ",");
-  }
-  else
-    systematic.push_back("Nom");
-
   Systematics Sobj;
   Sobj.LoadList();
 
@@ -473,7 +503,7 @@ int main( int argc, char* argv[] ) {
     
     //Set Max number of events (for testing)
     if(quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 5);
-    if(nMax>0) job.options()->setDouble (EL::Job::optMaxEvents, nMax);
+    if(nMax > 0) job.options()->setDouble (EL::Job::optMaxEvents, nMax);
     
     if(systListOnly)
       job.options()->setDouble (EL::Job::optMaxEvents, 1);
@@ -503,13 +533,13 @@ int main( int argc, char* argv[] ) {
     else if(runPrun){ //Prun mode
 
       //** prun
-      //Pdriver.options()->setString("nc_outputSampleName", "user.%nickname%.SAtest.%in:name[2]%.v0");
-      Pdriver.options()->setString("nc_outputSampleName", "user.tripiana.SM_BB_800_1.SA.v4");
+      std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
+      Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 1);
       if(quick_test)
 	Pdriver.options()->setDouble("nc_nFiles", 1);
       Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
-      Pdriver.options()->setDouble("nc_mergeOutput", 0); //run merging jobs for all samples before downloading (recommended) 
+      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
       Pdriver.submitOnly( job, tmpdir );
@@ -519,7 +549,7 @@ int main( int argc, char* argv[] ) {
 
       //** ganga
       sh.setMetaString ("nc_grid_filter", "*.root*");
-      Gdriver.outputSampleName = "user.%nickname%.SAtest.%in:name[2]%.v0";
+      Gdriver.outputSampleName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
       Gdriver.nFiles = 1;
       Gdriver.mergeOutput = 1; 
 
