@@ -105,14 +105,19 @@ bool type_consistent(SampleHandler sh){
   return true;
 }
 
+bool is_data(Sample* sample){ 
+  TString sampleName(sample->getMetaString( MetaFields::sampleName ));
+  std::string newName = stripName(sampleName).Data();
+  std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
+  return (itis=="collisions");
+}
 
 void printSampleMeta(Sample* sample){
   cout << endl;
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
-  cout << " isData          = " << (sample->getMetaDouble( MetaFields::isData )==0 ? "No" : "Yes") << endl;
-  cout << " isData          = " << sample->getMetaString( MetaFields::isData ) << endl;
+  cout << " isData          = " << (is_data(sample) ? "Y" : "N") << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
   cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
@@ -211,19 +216,19 @@ int main( int argc, char* argv[] ) {
       quick_test = true;
     }
     else if (opts[iop].BeginsWith("s") ){
-      syst_str = opts[iop].ReplaceAll("s=","");
+      syst_str = opts[iop].Copy().ReplaceAll("s=","");
     }
     else if (opts[iop].BeginsWith("o") ){
-      outDir = opts[iop].ReplaceAll("o=","");
+      outDir = opts[iop].Copy().ReplaceAll("o=","");
     }
     // else if (opts[iop].BeginsWith("i") ){
     //   single_id = opts[iop].ReplaceAll("i=","").Atoi();
     // }
     else if (opts[iop].BeginsWith("j") ){
-      jOption = opts[iop].ReplaceAll("j=","");
+      jOption = opts[iop].Copy().ReplaceAll("j=","");
     }
     else if (opts[iop].BeginsWith("n") ){ //limit run to n events
-      nMax = opts[iop].ReplaceAll("n=","").Atoi();
+      nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
     }
     // else if (opts[iop].BeginsWith("v") ){
     //   version = opts[iop].ReplaceAll("v=","");
@@ -370,6 +375,9 @@ int main( int argc, char* argv[] ) {
       for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
 	(*iter)->setMetaString( "inputName",  (*iter)->getMetaString( MetaFields::sampleName) ); //I think no longer needed
 	(*iter)->setMetaString( MetaFields::gridName,  stripName( TString( (*iter)->getMetaString( MetaFields::sampleName))).Data() );
+
+	//set Data flag correctly
+	(*iter)->setMetaString( MetaFields::isData, (is_data(*iter) ? "Y" : "N") );
       }
 
       //set EBeam field
@@ -393,9 +401,12 @@ int main( int argc, char* argv[] ) {
       //  then override some meta-data from SUSYTools
       readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
 
-      isData = (sh.at(0)->getMetaDouble( MetaFields::isData )==1);
+      isData = (sh.at(0)->getMetaString( MetaFields::isData )=="Y"); //global flag. It means we can't run MC and data at the same time. Probably ok?
       
-      weights.push_back( getLumiWeight(sh.at(0)) );
+      if(!isData)
+	weights.push_back( getLumiWeight(sh.at(0)) );
+      else
+	weights.push_back( 1. );
 
       TString targetName = Form("SYST_%s_%d.root", samples[i_sample].Data(), run_ids[i_id]);
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);

@@ -20,6 +20,8 @@ Particle::Particle(){
   SFd = 0;
   gev=false; //4mom in GeV?
   id = -1;
+  type = 0; //as defined in MCTruthClassifier::ParticleType
+  origin = 0; //as defined in MCTruthClassifier::ParticleOrigin
 }
 
 Particle::~Particle(){}
