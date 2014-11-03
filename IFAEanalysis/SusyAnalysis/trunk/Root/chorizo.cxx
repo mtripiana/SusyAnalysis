@@ -3277,15 +3277,10 @@ bool chorizo :: passMCor(){
       mc3_n++;  // index --> size
       const int mc_n = static_cast< const int >( mc3_n );
       //get boson pt weight
-      cout << "before sherpa call" << endl;
       this->bosonVect_w = boson_sherpa_stop_charm(mc_n, mc_status, mc_pdgId, mc_pt, mc_eta, mc_phi, mc_m);
-      cout << "after sherpa call" << endl;
-
       
       truth_met          = this->GetTruthEtmiss();
-      cout << "after truth MET" << endl;
       vector<float> bTruthKin = this->GetTruthBosonPt(truth_M, truth_MT, truth_m_fiducial, truth_Lep1_pt, truth_Lep2_pt);
-      cout << "after truth boson pt" << endl;
 
       bosonVec_truth_pt  = bTruthKin.at(0);
       bosonVec_truth_eta  = bTruthKin.at(1);
@@ -3317,7 +3312,6 @@ bool chorizo :: passMCor(){
       v3+=v2;
       
       cutting_var=v3.Pt()/1000.;
-      cout << "after cutting var" << endl;
       bos_pt=cutting_var;
       if( ! DoIHaveToKeepIt(mc_channel_number,cutting_var) )
 	return false; 
