@@ -112,6 +112,31 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 
        or just type:  'run'  to get this help.
 
+   ***
+   ** Grid submission
+
+   a) with Prun: 
+          nothing to do here. Do simply:
+           
+              run -p MySample
+
+   b) with Ganga:
+      Before running for the first time: The GridDriver uses ganga, which currently needs to create a few configuration defaults before it can be run for the first time. If you have never used ganga before, 
+      start it once in interactive mode before using the GridDriver:
+ 
+	export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+	source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
+	localSetupGanga
+	ganga
+
+      Answer the questions, then press ctrl+d to exit. You only need to do this once on each computer where you want to use the GridDriver.    
+
+      From then on, you can also simply do:
+
+      	      run -g MySample
+
+      and you can add a tag to your output samples in case you run several times on the same input, with the -v option.
+
    *** 
    ** Batch submission **
 

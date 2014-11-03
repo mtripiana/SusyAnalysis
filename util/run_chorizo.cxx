@@ -17,6 +17,7 @@
 #include "SampleHandler/fetch.h"
 #include "EventLoop/Job.h"
 #include "EventLoop/DirectDriver.h"
+#include "EventLoop/ProofDriver.h"
 #include "EventLoop/TorqueDriver.h"
 #include "EventLoopGrid/PrunDriver.h"
 #include "EventLoopGrid/GridDriver.h"
@@ -128,7 +129,7 @@ bool type_consistent(SampleHandler sh){
   return true;
 }
 
-bool isData(Sample* sample){ 
+bool is_data(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
@@ -140,7 +141,7 @@ void printSampleMeta(Sample* sample){
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
-  cout << " isData          = " << (isData(sample) ? "Y" : "N") << endl;
+  cout << " isData          = " << (is_data(sample) ? "Y" : "N") << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
   cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
@@ -379,7 +380,7 @@ int main( int argc, char* argv[] ) {
     (*iter)->setMetaString( MetaFields::gridName, (stripName( TString( (*iter)->getMetaString( MetaFields::sampleName)))+"/").Data() );
 
     //set Data flag correctly
-    (*iter)->setMetaString( MetaFields::isData, (isData(*iter) ? "Y" : "N") );
+    (*iter)->setMetaString( MetaFields::isData, (is_data(*iter) ? "Y" : "N") );
   }
 
   //set EBeam field
@@ -453,16 +454,18 @@ int main( int argc, char* argv[] ) {
     job.sampleHandler( sh );
     
     //Add NtupleSvc
-    EL::OutputStream output  ("output");
+    std::string osname="output";
+
+    EL::OutputStream output  (osname);
     job.outputAdd (output);
-    EL::NTupleSvc *ntuple = new EL::NTupleSvc ("output");
+    EL::NTupleSvc *ntuple = new EL::NTupleSvc (osname);
     ntuple->treeName("AnalysisTree");
     job.algsAdd (ntuple);
     
     chorizo *alg = new chorizo();
     
     //Alg config options here
-    alg->outputName = "output";
+    alg->outputName = osname;
     alg->Region = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
     
     alg->defaultRegion = "SR"; //from XML?
@@ -497,11 +500,11 @@ int main( int argc, char* argv[] ) {
     
     alg->systListOnly  = systListOnly;
     
-    
     //Load alg to job
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
+    cout << "NMAX = " << nMax << endl;
     if(quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 5);
     if(nMax > 0) job.options()->setDouble (EL::Job::optMaxEvents, nMax);
     
@@ -516,6 +519,7 @@ int main( int argc, char* argv[] ) {
     
     // Run the job using the appropiate driver:
     EL::DirectDriver Ddriver;
+    EL::ProofDriver  ProofDriver;
     EL::TorqueDriver Tdriver;
     EL::PrunDriver   Pdriver;
     EL::GridDriver   Gdriver;
@@ -523,6 +527,9 @@ int main( int argc, char* argv[] ) {
     //submit the job
     if(runLocal){ //local mode 
       Ddriver.submit( job, tmpdir );
+
+      // ProofDriver.numWorkers = 4;
+      // ProofDriver.submit( job, tmpdir );
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
@@ -569,7 +576,7 @@ int main( int argc, char* argv[] ) {
 	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
 	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
 	
-	system("cp "+tmpdir+"/data-output/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+	system("cp "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
 	
 	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }

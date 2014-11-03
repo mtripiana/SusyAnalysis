@@ -34,6 +34,8 @@ class Particle : public TLorentzVector {
 
     int    id;
     bool   gev;
+    int    type;
+    int    origin;
 
     TLorentzVector GetVector();
     void SetVector(TLorentzVector vec, bool inGeV = false);

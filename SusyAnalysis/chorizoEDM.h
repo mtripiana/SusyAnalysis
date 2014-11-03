@@ -34,7 +34,12 @@
 #include "xAODTracking/VertexContainer.h"
 #include "xAODTracking/Vertex.h"
 //#include "xAODTracking/TrackingPrimitives.h"
+#include "xAODEgamma/EgammaxAODHelpers.h"
 
+
+#include "SUSYTools/SUSYObjDef_xAOD.h"
+ST::SignalIsoExp::IsoExp elIsoType;
+ST::SignalIsoExp::IsoExp muIsoType;
 
 // Transient object store. Needed for the CP tools.
 xAOD::TStore* m_store;

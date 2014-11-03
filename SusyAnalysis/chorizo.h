@@ -14,8 +14,9 @@
 
 
 // Root includes
+#include <TH1.h>
 #include <TH2.h>
-#include <TH1F.h>
+#include <TNamed.h>
 #include <TTree.h>
 #include <TSystem.h>
 #include <TAxis.h>
@@ -89,6 +90,8 @@ namespace CP{
 }
 
 namespace ST{
+  struct IsSignalElectronExpCutArgs;
+  struct IsSignalMuonExpCutArgs;
   class SUSYObjDef_xAOD;
 }
 
@@ -117,9 +120,8 @@ public:
   // protected from being send from the submission node to the worker
   // node (done by the //!)
 public:
-  // Tree *myTree; //!
-  // TH1 *myHist; //!
 
+  //Ntuple
   EL::NTupleSvc *output; //!
 
   //algo options
@@ -162,10 +164,13 @@ public:
 
   // Own methods
   virtual void SetTruthSmearing(bool doit=false){ doTTR=doit; }; //to overwrite xml option.
+  virtual EL::StatusCode doTrackVeto(std::vector<Particle> electronCandidates, std::vector<Particle> muonCandidates);
 
   virtual void printSystList(); //systematics list
 
   virtual void loadMetaData(); 
+
+  virtual EL::StatusCode nextEvent();
 
   // these are the functions inherited from Algorithm
   virtual EL::StatusCode setupJob (EL::Job& job);
@@ -184,27 +189,25 @@ public:
 
 private:
   xAOD::TEvent *m_event;  //!
-  //  xAOD::TStore store;  //!
 
-  //--- Containers  //IT can't be done in ROOT5!
-  /* const xAOD::JetContainer* jets; */
-  /* const xAOD::ElectronContainer* electrons; */
-  /* const xAOD::MuonContainer* muons; */
-  /* const xAOD::TruthEventContainer* truthE; */
-  /* const xAOD::TruthParticleContainer* truthP; */
+  //Histograms
+  //raw 
+  TH1F* h_presel_flow; //! 
+  //weighted
+  TH1F* h_presel_wflow; //!
+  
+  TH1F* h_cut_var; //!
+
 
   //--- Tools
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; 
 #endif // not __CINT__
-  
 
   DataPeriod     tool_DPeriod; //!
   //METUtility*    tool_metutil; //NOT USED YET
   FakeMetEstimator* tool_fakeMet; //!
-  /* BTagCalib*     tool_calib1; //! */
-  /* BTagCalib*     tool_calib2; //! */
   JVFUncertaintyTool* tool_jvf; //!
   JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
@@ -245,8 +248,6 @@ private:
   UInt_t  puRunNumber( UInt_t rn); //obsolete! (new PURW tool now)
   virtual float GetAverageWeight();
 
-  //  VVFloat GetBTagCalibSyst(BTagCalib* calibTool);
-
   //pdf reweighting
   double  getPdfRW( LHAPDF::PDF* pdfFrom, LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
   double  getPdfRW( LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
@@ -273,7 +274,6 @@ private:
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
-  //  TVector2 getMET( const xAOD::MissingETContainer METcon, TString name );
 
   float GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool);
 #endif // not __MAKECINT__
@@ -290,7 +290,7 @@ private:
   //--- Variable definition                                                             
   bool isMC; //!  
 
-  int m_eventCounter; //!
+  int  m_eventCounter; //!
 
   bool isGRL; //! //event cleaning
   bool isFakeMet; //!
@@ -304,6 +304,8 @@ private:
   bool isCoreFlag; //!
   
   bool passPreselectionCuts; //!
+
+  TNamed *meta_jOption; //!
 
   //----- Jet smearing config (QCD)
   float   QCD_JetsPtPreselection; //!
@@ -368,32 +370,31 @@ private:
   float tVeto_TrackIso; //!
 
   //electrons
-  float El_DefinPtCut; //! 
-  float El_DefinEtaCut; //!
   float El_PreselPtCut; //!
   float El_PreselEtaCut; //!
   float El_RecoPtCut; //!
   float El_RecoEtaCut; //!
+  TString El_isoType; //!
   bool El_recoSF; //!
   bool El_idSF; //!
-  bool El_triggerSF; //!
-  TString El_isolationVar; //!
-  float El_isolationThres; //!
+  bool El_triggerSF; //!  
+
   //muons
-  float Mu_DefinPtCut; //! 
-  float Mu_DefinEtaCut; //!
   float Mu_PreselPtCut; //!
   float Mu_PreselEtaCut; //!
   float Mu_RecoPtCut; //!
   float Mu_RecoEtaCut; //!
-  TString Mu_isolationVar; //!
-  float Mu_isolationThres; //!
+  TString Mu_isoType; //!
+
+#ifndef __CINT__
+  ST::IsSignalElectronExpCutArgs* elIsoArgs; //
+  ST::IsSignalMuonExpCutArgs* muIsoArgs; //
+#endif // not __CINT__
+
   //jets
   TString JetCollection; //!
   TString Jet_BtagEnv; //! 
   TString Jet_BtagCalib; //!
-  float Jet_DefinPtCut; //!
-  float Jet_DefinEtaCut; //!
   float Jet_PreselPtCut; //!
   float Jet_PreselEtaCut; //!
   float Jet_RecoPtCut; //!
@@ -404,11 +405,13 @@ private:
   TString Jet_TaggerOp;
   TString Jet_TaggerOp2;  
   TString Jet_Tagger_Collection;
+
   //met
   TString METCollection; //!
   TString Met_FakeMetEstimator; //! 
   bool Met_doFakeEtmiss; //!
   bool Met_doMetCleaning; //!
+
   //met recalculation
   bool Met_doRefEle; //!
   bool Met_doRefGamma; //!
@@ -519,10 +522,7 @@ private:
   float dR_j2_bp1, dR_j2_bp2;  //!
   float dR_j3_bp1, dR_j3_bp2;  //!
 
-
-  //Histograms
-  TH1F *h_cut_var; //!
-
+  
   // histogram helper functions
   TH1F* InitHist(std::string name, int nbin, float binlow, float binhigh, std::string xaxis="", std::string yaxis="");
   void InitGHist(TH1F* h, std::string name, int nbin, float binlow, float binhigh, std::string xaxis="", std::string yaxis="");

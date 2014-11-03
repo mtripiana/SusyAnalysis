@@ -1,14 +1,28 @@
+2014-11-02 Martin <tripiana@cern.ch>
+	* Add preselection variables (configurable through jO).
+	* Add OR requirements for signal leptons.
+	* Add lepton isolation type config (j0). = Loose, Medium, Tight, None.
+	* New (simplified) logic. Some code cleaning.
+	* Remove DefinPt,DefinEta selections.
+	* Fix data tagging/merging.
+	* Fix TileTrip flag.
+	* Fix store cleaning when leaving before the end.
+	* Fix options parser.
+	* Fix warning in GetTruthBosonPt() for zero-pt composite particle.
+	* Add jOption to file metadata (TNamed jOption in hist file for now).
+
 2014-10-30 Martin <tripiana@cern.ch>
 	* Add options for systematics and output dir.
+	* Add further instructions to README to run on the grid.
 	* Add wrapper to run in batch. (overrides previous -b option).
 	* Fix doOR requirement.
 	* Fix PyAMI version in grid setup scripts.
-	* Fix batch submission for multiple samples/systemtics.
+	* Fix batch submission for multiple samples/systemtics. (no re-compiling now)
 
 2014-10-28 Arely <arelycg@cern.ch>
-	* 'passOR' requirement should be "!doOR"
-        * correct the '-j' option in util/run.cxx
-        * added n_jets50
+	* Fix 'passOR' requirement should be "!doOR"
+        * Fix the '-j' option in util/run.cxx
+        * Add n_jets50
 
 2014-10-28 Martin <tripiana@cern.ch>
 	* Update GetMET call to latest SUSYTools implementation.

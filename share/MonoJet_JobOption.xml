@@ -40,8 +40,6 @@
 
         <OverlapRemoval>
             <Enable>true</Enable>
-            <!-- <OverlapRemovalElPt>20000.</OverlapRemovalElPt>
-		 <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt> -->
         </OverlapRemoval> 
 	  
         <Trigger>
@@ -68,8 +66,6 @@
         </TrackVeto>
         <Electron>
             <region name="SR">
-                <DefinPtCut>7000.</DefinPtCut>
-                <DefinEtaCut>2.47</DefinEtaCut>
                 <PreselPtCut>7000.</PreselPtCut>
                 <PreselEtaCut>2.47</PreselEtaCut>
                 <RecoPtCut>7000.</RecoPtCut>
@@ -78,20 +74,20 @@
                 <recoSF>true</recoSF>
                 <idSF>true</idSF>
                 <triggerSF>false</triggerSF>
-                <isolationVar>noIso</isolationVar>
-                <isolationThres>0.</isolationThres>
+                <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
             </region>
         </Electron>
         <Muon>
             <region name="SR">
-                <DefinPtCut>7000.</DefinPtCut>
-                <DefinEtaCut>2.4</DefinEtaCut>
                 <PreselPtCut>7000.</PreselPtCut>
                 <PreselEtaCut>2.4</PreselEtaCut>
                 <RecoPtCut>7000.</RecoPtCut>
                 <RecoEtaCut>2.4</RecoEtaCut>
-                <isolationVar>mu_staco_ptcone20</isolationVar> <!-- The monojet group uses mu_staco_ptcone20/pt, is this better? -->
-                <isolationThres>1.8</isolationThres>           <!-- relative isolation would be 0.1 -->
+                <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+		<!-- The monojet group uses mu_staco_ptcone20/pt, is this better? -->
+                <!-- <isolationVar>mu_staco_ptcone20</isolationVar> -->
+                <!-- <isolationThres>1.8</isolationThres> -->          
+		<!-- relative isolation would be 0.1 -->
             </region>
         </Muon>
         <Jet>
@@ -102,8 +98,6 @@
                 <JVFMin>0.0</JVFMin>
                 <Collection>AntiKt4LCTopo</Collection>
 
-                <DefinPtCut>20000.</DefinPtCut>
-                <DefinEtaCut>10</DefinEtaCut>
                 <PreselPtCut>20000.</PreselPtCut>
                 <PreselEtaCut>10</PreselEtaCut>
                 <RecoPtCut>30000.</RecoPtCut>

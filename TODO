@@ -2,6 +2,10 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
+** revise track veto
+
+** move ntuple creation inside algorithm. It might fix the Histogram filling problem o.O?
+
 ** how to get the original number of events??  --> Through CutFlow service, that should be available (soon?) in the DxAODs. Awaiting news from ASG...
 
 ** pass options to qsub files calls (directly or through submit_bash script)! --> run in batch from command line now. (-b) . Propagate missing options (e.g. nMax)

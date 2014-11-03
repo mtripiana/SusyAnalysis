@@ -6,13 +6,13 @@
         <Mode name="debug">false</Mode>
         <Mode name="doTree">true</Mode>
         <Mode name="GeneratePileupFiles">false</Mode>
-        <Mode name="DoCutFlow">false</Mode>
+        <Mode name="DoCutFlow">true</Mode>
 	<Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
         <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
 	<!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
         <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
 	<Pileup>
-            <Mode name="ApplyPileupReweighting">true</Mode>
+            <Mode name="ApplyPileupReweighting">false</Mode>
             <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path>
             <Path name="PileupReweightingIlumicalcFile">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>		
             <PeriodConfig>MC12a</PeriodConfig>
@@ -41,9 +41,6 @@
 
         <OverlapRemoval>
           <Enable>false</Enable>
-	  <!-- NOT USED ANYMORE -->
-	  <!--      <OverlapRemovalElPt>20000.</OverlapRemovalElPt> --> 
-          <!--	    <OverlapRemovalMuPt>30000.</OverlapRemovalMuPt> -->
         </OverlapRemoval> 
 	  
         <Trigger>
@@ -70,8 +67,6 @@
         </TrackVeto>
         <Electron>
             <region name="SR">
-                <DefinPtCut>7000.</DefinPtCut>
-                <DefinEtaCut>2.47</DefinEtaCut>
                 <PreselPtCut>7000.</PreselPtCut>
                 <PreselEtaCut>2.47</PreselEtaCut>
                 <RecoPtCut>7000.</RecoPtCut>
@@ -80,21 +75,16 @@
                 <recoSF>true</recoSF>
                 <idSF>true</idSF>
                 <triggerSF>false</triggerSF>
-                <isolationVar>noIso</isolationVar>
-                <isolationThres>0.</isolationThres>
+                <isoType>Loose</isoType> <!-- None,Loose,Medium,Tight -->
             </region>
         </Electron>
         <Muon>
             <region name="SR">
-                <DefinPtCut>6000.</DefinPtCut>
-                <DefinEtaCut>2.4</DefinEtaCut>
                 <PreselPtCut>6000.</PreselPtCut>
                 <PreselEtaCut>2.4</PreselEtaCut>
                 <RecoPtCut>6000.</RecoPtCut>
                 <RecoEtaCut>2.4</RecoEtaCut>
-                <isolationVar>mu_staco_ptcone20</isolationVar> 
-                <!-- <isolationVar>noIso</isolationVar> -->
-                <isolationThres>5000</isolationThres> <!-- 1.8 -->
+                <isoType>Loose</isoType> <!-- None,Loose,Medium,Tight -->
             </region>
         </Muon>
         <Jet>
@@ -105,8 +95,6 @@
                 <JVFMin>0.5</JVFMin>
                 <Collection>AntiKt4LCTopo</Collection>
 
-                <DefinPtCut>20000.</DefinPtCut>
-                <DefinEtaCut>10</DefinEtaCut>
                 <PreselPtCut>20000.</PreselPtCut>
                 <PreselEtaCut>10</PreselEtaCut>
                 <RecoPtCut>30000.</RecoPtCut>
