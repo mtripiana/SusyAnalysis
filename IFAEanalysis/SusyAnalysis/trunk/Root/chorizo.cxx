@@ -1190,6 +1190,7 @@ EL::StatusCode chorizo :: initialize ()
   tool_st->setProperty("IsAtlfast", (int)this->isAtlfast);   
   tool_st->setProperty("IsMC12b",   0); // mc12b); //FIX ME
   tool_st->setProperty("UseLeptonTrigger", 0); //useLeptonTrigger); //FIX ME
+  tool_st->setProperty("METMuonTerm", ""); //No MuonTerm default
   tool_st->initialize();
   tool_st->msg().setLevel( MSG::ERROR ); //set message level 
 
@@ -1792,7 +1793,8 @@ EL::StatusCode chorizo :: loop ()
   
   //--- Do overlap removal   
   if(doOR)
-    CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first) );
+    CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, false) );
+    //CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first) );
 
   //-- Pre-book baseline electrons (after OR)
   std::vector<Particle> electronCandidates; //intermediate selection electrons
@@ -2071,7 +2073,7 @@ EL::StatusCode chorizo :: loop ()
 			 electrons_sc.first,
 			 muons_sc.first,
 			 0,
-			 0) );
+			 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
   
   
   TVector2 metRF = getMET(metRFC, "Final"); 
@@ -2395,7 +2397,7 @@ EL::StatusCode chorizo :: loop ()
 
   met_obj.SetVector(v_met_ST,"");  //- Copy met vector to the met data member
   met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
-
+  
   //- Track met
   TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
   met_obj.SetVector(v_met_trk, "met_trk");
@@ -2435,8 +2437,6 @@ EL::StatusCode chorizo :: loop ()
     v_met_elinv_ST.Set( metmod*cos(metphi) + e0pt*cos(e0phi), metmod*sin(metphi)+e0pt*sin(e0phi) );
   }
   met_obj.SetVector(v_met_elinv_ST, "met_ecorr", true); //already in GeV    
-
-
 
   //- Met Cleaning
   if (Met_doMetCleaning){
@@ -2815,14 +2815,18 @@ EL::StatusCode chorizo :: loop ()
   //--- Define the transverse mass e_MT - we recompute the MET with the electron in order to have the pt of the nu
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
-    TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
+    //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
+    TVector2 met_electron = met_obj.GetVector("met"); //arely
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
   }
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
-    TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
+    //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
+    TVector2 met_muon = met_obj.GetVector("met"); //arely
+    if (!met_obj.GetHasMuons())//muons are invisible, need to remove them from MET
+         met_muon = met_obj.GetVector("met") - v_m1;
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
   }
    
