@@ -1,3 +1,9 @@
+2014-11-05 Arely <arelycg@cern.ch>
+	* Fix e_MT variable (no need to recompute MET for this one).
+        * Correct m_MT in case muons are not invisible.
+        * Set harmonization=false for the OR.
+        * Configure SUSYTools with METMuonTerm="" to allow for muons=invisble.
+
 2014-11-02 Martin <tripiana@cern.ch>
 	* Add preselection variables (configurable through jO).
 	* Add OR requirements for signal leptons.
