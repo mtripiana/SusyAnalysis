@@ -10,6 +10,7 @@ WHEREFROM=$PWD
  
 echo "CURRENT = "$WHEREFROM 
 echo "ANALYSISCODE = "$ANALYSISCODE
+echo "ROOTCOREBIN = "$ROOTCOREBIN
 echo "ROOTCOREDIR = "$ROOTCOREDIR
 
 if [ -z "$ROOTCOREDIR" ]; then
@@ -17,22 +18,20 @@ if [ -z "$ROOTCOREDIR" ]; then
     echo "===============  Setup env  ================"
     export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
     source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh
-    cd $ANALYSISCODE
 
-    RELSET=`cat RootCoreBin/rootcore_config | grep release | grep -oP '(?<=Analysis).*?(?=/Root)' | tr '/' ','`
-    source $ANALYSISCODE/rcSetup.sh $RELSET
+    #setup RootCore from your workarea
+    source $ANALYSISCODE/RootCoreBin/local_setup.sh
 
-    echo "ROOTCOREDIR = "$ROOTCOREDIR
+    echo "new ROOTCOREBIN = "$ROOTCOREBIN
+    echo "new ROOTCOREDIR = "$ROOTCOREDIR
 
-    $ROOTCOREDIR/scripts/find_packages.sh
-    $ROOTCOREDIR/scripts/compile.sh
+    #no need to re-compile (save time) . But make sure you do so before submission...
+    #    $ROOTCOREDIR/scripts/find_packages.sh
+    #    $ROOTCOREDIR/scripts/compile.sh
 
     if [ -z "$LHAPDF_DATA_PATH" ]; then
 	export LHAPDF_DATA_PATH=$ROOTCOREBIN/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:
     fi
-    echo 
-    echo " --> back to: "$WHEREFROM
-    cd $WHEREFROM
 fi  
 
 echo ""
