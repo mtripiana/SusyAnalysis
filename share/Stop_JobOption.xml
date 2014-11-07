@@ -22,7 +22,7 @@
         </LeptonEfficiency>
 
         <PdfRw>
-	  <Enable>true</Enable> 
+	  <Enable>false</Enable> 
 	  <ToBeamE>6.5</ToBeamE> <!-- Final beam energy (in TeV) -->
         </PdfRw>
 
