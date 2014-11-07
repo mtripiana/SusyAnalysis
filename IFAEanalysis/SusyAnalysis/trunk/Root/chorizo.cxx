@@ -1169,6 +1169,9 @@ EL::StatusCode chorizo :: initialize ()
     muIsoArgs->_id_isocut = -1; //do not apply it 
   }
 
+  //Initialize event counter
+  m_eventCounter=0;
+
   //Initialize variables
   InitVars();
 
