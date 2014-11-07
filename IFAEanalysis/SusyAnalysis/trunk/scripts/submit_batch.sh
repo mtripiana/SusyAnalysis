@@ -20,6 +20,7 @@ TESTLIST="TestMClocal5"
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
 source $ANALYSISCODE"/SusyAnalysis/scripts/grid_up.sh"
+#source $ANALYSISCODE"/SusyAnalysis/scripts/grid_up_pwin.sh"  # ! : switch to this to avoid being asked ask for the password every time you send a batch job
 source $ANALYSISCODE"/SusyAnalysis/scripts/export_proxy.sh"
 #------------------------------------
 
@@ -111,14 +112,14 @@ else
         done
 	for syst in $SYSTLIST
 	do
-	    qsub -q $QUEUE -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
+	    qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub" 
 	done
     done
     if [ "$SYSTEMATIC" == "Nom" ]; then
         for sample in $DATALIST
         do
             f=$QSUBDIRECTORY/$sample
-            qsub -q at3 -v MYSYS=$SYSTEMATIC,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub"
+            qsub -q at3 -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub"
         done
     fi
 fi

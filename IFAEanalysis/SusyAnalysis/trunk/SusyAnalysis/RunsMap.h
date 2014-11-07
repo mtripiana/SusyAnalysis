@@ -104,6 +104,7 @@ void RunsMap::LoadMap(){
 
   //Data 
   m_map["TestDataB"] = rlist( Rpair(202798, "/tmp/tripiana/data/"));
+  m_map["TestDataBloc"] = rlist( Rpair(202798, "/nfs/at3/scratch/tripiana/xAOD/data12/"));
   
   //New DAOD_IFAE3G derivation
   m_map["TestIFAE3G"] = rlist( Rpair(117050, "/nfs/at3users/users/tripiana/Derivations/WorkArea/run/test/"));
@@ -138,6 +139,8 @@ void RunsMap::LoadMap(){
   m_map["TestWmunu167773"] = rlist( Rpair(167773, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167773/"));
   m_map["TestWmunu167774"] = rlist( Rpair(167774, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167774/"));
   m_map["TestWmunu167775"] = rlist( Rpair(167775, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167775/"));
+
+  m_map["TestZnunu13"] = rlist( Rpair(167820, "/tmp/tripiana/Znunu13/"));
 
   
   //New test xAOD mc14 

@@ -10,7 +10,7 @@ The first thing you need to do is to set the Analysis release, so to have access
 
 For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
 
-     >  rcSetup Base,2.0.14
+     >  rcSetup Base,2.0.16
  
      Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
 
@@ -44,6 +44,7 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
    rc find_packages	
    rc compile
 
+   For a quick compile of our package only do:  'rc compile_pkg SusyAnalysis' 
 
 NOTE:   before running please check the path for the pdfrw tool is properly set. 
         --> do : 

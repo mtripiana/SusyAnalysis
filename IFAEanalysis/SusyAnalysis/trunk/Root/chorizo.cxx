@@ -1188,9 +1188,8 @@ EL::StatusCode chorizo :: initialize ()
   tool_st->SUSYToolsInit().ignore();
   tool_st->setProperty("IsData",    (int)!this->isMC);
   tool_st->setProperty("IsAtlfast", (int)this->isAtlfast);   
-  tool_st->setProperty("IsMC12b",   0); // mc12b); //FIX ME
-  tool_st->setProperty("UseLeptonTrigger", 0); //useLeptonTrigger); //FIX ME
-  tool_st->setProperty("METMuonTerm", ""); //No MuonTerm default
+  if(!Met_doMuons)
+    tool_st->setProperty("METMuonTerm", ""); //No MuonTerm default
   tool_st->initialize();
   tool_st->msg().setLevel( MSG::ERROR ); //set message level 
 
@@ -1520,34 +1519,37 @@ EL::StatusCode chorizo :: loop ()
     xAOD::TruthEventContainer::const_iterator truthE_itr = m_truthE->begin();
     int id1, id2, pdfId1, pdfId2; //, pdf1, pdf2;
     float x1, x2, scalePDF;
-    
-    //** For newer tags when they come...
-    // ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1);
-    // ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2);
-    // ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
-    // ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
-    // ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
-    // ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
-    // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
-    // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
-    // ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::SCALEPDF);
-    // ( *truthE_itr )->pdfInfoParameter(pdf_Q, xAOD::TruthEvent::Q);
-    // ( *truthE_itr )->pdfInfoParameter(pdf_xf1, xAOD::TruthEvent::XF1);
-    // ( *truthE_itr )->pdfInfoParameter(pdf_xf2, xAOD::TruthEvent::XF2);
 
-    ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::id1);
-    ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::id2);
-    ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::x1);
-    ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::x2);
-    ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::pdfId1);
-    ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::pdfId2);
-    // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::pdf1);
-    // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::pdf2);
-    ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::scalePDF);
-    
     //pdf reweighting
     if(doPDFrw){
+      
+      //** For newer tags when they come...
+      ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1);
+      ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2);
+      ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
+      ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
+      ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
+      ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
+      // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
+      // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
+      ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::SCALE);
+      // ( *truthE_itr )->pdfInfoParameter(pdf_Q, xAOD::TruthEvent::Q);
+      // ( *truthE_itr )->pdfInfoParameter(pdf_xf1, xAOD::TruthEvent::XF1);
+      // ( *truthE_itr )->pdfInfoParameter(pdf_xf2, xAOD::TruthEvent::XF2);
+      
+      //** For the old EDM
+      // ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::id1);
+      // ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::id2);
+      // ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::x1);
+      // ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::x2);
+      // ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::pdfId1);
+      // ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::pdfId2);
+      // // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::pdf1);
+      // // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::pdf2);
+      // ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::scalePDF);
+      
       PDF_w *= getPdfRW((double)beamE_to/beamE_from, (double)(scalePDF*scalePDF), (double)x1, (double)x2, id1, id2);     
+      
       // cout << "-------------------------------------" << endl;
       // cout << "DEBUG :: rwScale = " << beamE_to/beamE_from << endl; 
       // cout << "DEBUG :: scalePDF = " << scalePDF << endl; 
@@ -1580,12 +1582,12 @@ EL::StatusCode chorizo :: loop ()
   this->w *= GetGeneratorUncertaintiesSherpa();
 
   //--- MC vetoes
-  if( vetoMCevent() ){
+  if(vetoMCevent() ){
     //vetoed MC event! Just leave...
     return nextEvent();
   }
 
-  if( ! passMCor() ){ //remove overlap among filtered samples
+  if(! passMCor() ){ //remove overlap among filtered samples
     //vetoed MC event! Just leave...
     return nextEvent();
   }
@@ -1827,14 +1829,16 @@ EL::StatusCode chorizo :: loop ()
       //get electron scale factors
       if(this->isMC){
 	//nominal
-	recoElectron.SF = tool_st->GetSignalElecSF( **el_itr );
+	recoElectron.SF = tool_st->GetSignalElecSF( **el_itr, El_recoSF, El_idSF, El_triggerSF );
 
+	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
 	}
-	recoElectron.SFu = tool_st->GetSignalElecSF( **el_itr );
+	recoElectron.SFu = tool_st->GetSignalElecSF( **el_itr, El_recoSF, El_idSF, El_triggerSF ); 
 
 	//+1 sys down
+	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
 	}
@@ -1899,12 +1903,14 @@ EL::StatusCode chorizo :: loop ()
 	recoMuon.SF = tool_st->GetSignalMuonSF(**mu_itr);
 
 	//+1 sys up
+	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
 	}
 	recoMuon.SFu = tool_st->GetSignalMuonSF(**mu_itr);
 
 	//+1 sys down
+	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
 	}
@@ -1950,9 +1956,10 @@ EL::StatusCode chorizo :: loop ()
     //flag event if bad jet is found
     this->isBadID |= (*jet_itr)->auxdata< char >("bad");
 
-    m_goodJets->push_back (*jet_itr); //don't require !bad for MET recalculation //CHECK
-
     if( (*jet_itr)->auxdata< char >("bad")==1 ) continue; //just book good jets!
+
+    m_goodJets->push_back (*jet_itr);
+
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
