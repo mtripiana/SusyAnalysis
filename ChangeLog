@@ -1,3 +1,7 @@
+2014-11-07 Arely <arelycg@cern.ch>
+	* Added protection against no-pile-up reweigting (for 13TeV)
+        * Added 'harmonization' flag in JobOpt.
+
 2014-11-07 Martin <tripiana@cern.ch>
 	* Move to Base,2.0.16.
 	* Fix propagation of Met_doMuon jO flag to ST init.

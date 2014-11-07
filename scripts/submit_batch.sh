@@ -15,7 +15,8 @@ QSUBDIRECTORY=$ANALYSISCODE'/SusyAnalysis/scripts/qsubFiles'
 
 #SIGNALLIST="MadGraphPythia_SM_TT_directCC_200_125 MadGraphPythia_SM_TT_directCC_200_195"
 
-TESTLIST="TestMClocal5"
+#TESTLIST="TestMClocal5"
+TESTLIST="TestWmunu167773 TestWmunu167774 TestWmunu167775 TestZnunu167818 TestZnunu167819 TestZnunu167820 TestZmumu167812 TestZmumu167813 TestZmumu167814"
 
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
