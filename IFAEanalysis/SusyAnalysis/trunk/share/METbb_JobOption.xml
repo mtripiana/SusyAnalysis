@@ -41,6 +41,7 @@
 
         <OverlapRemoval>
           <Enable>false</Enable>
+          <Harmonization>false</Harmonization>
         </OverlapRemoval> 
 	  
         <Trigger>

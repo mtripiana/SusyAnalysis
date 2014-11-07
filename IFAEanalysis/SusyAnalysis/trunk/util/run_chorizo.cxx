@@ -149,6 +149,7 @@ void printSampleMeta(Sample* sample){
   cout << " filterEff       = " << sample->getMetaDouble( MetaFields::filterEfficiency ) << endl;
   cout << " N               = " << sample->getMetaDouble( MetaFields::numEvents ) << endl;
   cout << " Lumi            = " << sample->getMetaDouble( MetaFields::lumi ) << endl;
+  cout << "FileWeight       = " << sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor )  * sample->getMetaDouble( MetaFields::filterEfficiency ) / (sample->getMetaDouble( MetaFields::numEvents ))<< endl;
   cout << bold("--------------------------------------------------------------------------------------------------------------") << endl;
   cout << endl;  
 }
@@ -541,7 +542,7 @@ int main( int argc, char* argv[] ) {
       //** prun
       std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
-      Pdriver.options()->setDouble("nc_disableAutoRetry", 1);
+      Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
       if(quick_test)
 	Pdriver.options()->setDouble("nc_nFiles", 1);
       Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible

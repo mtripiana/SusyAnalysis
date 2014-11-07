@@ -355,6 +355,7 @@ private:
 
   //OverlapRemoval
   bool  doOR;
+  bool  doHarmonization;
 
   //track veto
   bool  tVeto_Enable; //! 

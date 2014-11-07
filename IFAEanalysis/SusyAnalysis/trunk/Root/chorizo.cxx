@@ -941,6 +941,7 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
+  doHarmonization = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonization");
   
   Info(whereAmI, Form(" - TrackVeto" ));
   tVeto_Enable = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$TrackVeto$Enable");
@@ -1190,6 +1191,7 @@ EL::StatusCode chorizo :: initialize ()
   tool_st->setProperty("IsAtlfast", (int)this->isAtlfast);   
   if(!Met_doMuons)
     tool_st->setProperty("METMuonTerm", ""); //No MuonTerm default
+  //tool_st->setProperty("METTauTerm", ""); //No TauTerm default
   tool_st->initialize();
   tool_st->msg().setLevel( MSG::ERROR ); //set message level 
 
@@ -1484,7 +1486,7 @@ EL::StatusCode chorizo :: loop ()
 
 
   //PURW
-  if(isMC)
+  if(isMC && applyPURW)
     tool_purw->apply(eventInfo);  //it does already the filling in 'ConfigMode'
 
   //--- Generate Pileup file??
@@ -1795,8 +1797,7 @@ EL::StatusCode chorizo :: loop ()
   
   //--- Do overlap removal   
   if(doOR)
-    CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, false) );
-    //CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first) );
+    CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, doHarmonization) );
 
   //-- Pre-book baseline electrons (after OR)
   std::vector<Particle> electronCandidates; //intermediate selection electrons
