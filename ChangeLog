@@ -1,3 +1,11 @@
+2014-11-07 Martin <tripiana@cern.ch>
+	* Move to Base,2.0.16.
+	* Fix propagation of Met_doMuon jO flag to ST init.
+	* Fix electron SF (split in reco,id,trig as requested from jO).
+	* Fix systematics config (reset to nom before/after new syst).
+	* Fix run_chorizo. Remove tmp dir after moving file to CollateralPath (so to avoid filling up the disk!)
+	* Fix batch submission scripts (multiple-syst runs work now).
+
 2014-11-05 Arely <arelycg@cern.ch>
 	* Fix e_MT variable (no need to recompute MET for this one).
         * Correct m_MT in case muons are not invisible.

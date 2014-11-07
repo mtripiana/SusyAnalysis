@@ -504,7 +504,6 @@ int main( int argc, char* argv[] ) {
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
-    cout << "NMAX = " << nMax << endl;
     if(quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 5);
     if(nMax > 0) job.options()->setDouble (EL::Job::optMaxEvents, nMax);
     
@@ -576,7 +575,8 @@ int main( int argc, char* argv[] ) {
 	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
 	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
 	
-	system("cp "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+	system(("rm -rf "+tmpdir).c_str());
 	
 	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }
