@@ -919,7 +919,6 @@ void chorizo :: ReadXML(){
   applyPURW = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Pileup$Mode/name/ApplyPileupReweighting");
   PURW_Folder = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$Path/name/PileupReweightingConfigFolder").c_str());
   PURW_IlumicalcFile = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$Path/name/PileupReweightingIlumicalcFile").c_str());
-  PeriodConfig = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Pileup$PeriodConfig").c_str());
 
   Info(whereAmI, Form(" - LeptonEff Unitarity") );
   leptonEfficiencyUnitarity = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$LeptonEfficiency$Unitarity");
@@ -941,7 +940,7 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
-  doHarmonization = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonization");
+  doORharmo = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
   
   Info(whereAmI, Form(" - TrackVeto" ));
   tVeto_Enable = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$TrackVeto$Enable");
@@ -1233,12 +1232,18 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- Pileup Reweighting
   // trick: path in the tool name so it gets saved to the desired place
-  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
+  //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
+  TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/data/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
+  if(PURW_Folder.Data()!="")
+    PURW_Folder = maindir + "/../SusyAnalysis/share/PURW/";
+  if(this->isMC && genPUfile){ 
+    purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
+  }
   tool_purw = new CP::PileupReweightingTool(purw_name.Data());
   tool_purw->setProperty("Input","EventInfo");
   if (this->isMC){
     if(genPUfile && !doPUTree){ //--- Generate the pileup root files
-      //      tool_purw->setProperty("UsePeriodConfig", PeriodConfig); //allow for auto-detect for now
+      //      tool_purw->setProperty("UsePeriodConfig","MC14");
       tool_purw->initialize();
     }
     else if(applyPURW || doPUTree){ //--- Apply the weights found after generating the pileup root files
@@ -1258,7 +1263,8 @@ EL::StatusCode chorizo :: initialize ()
       else if(this->syst_PU == pileupErr::PileupHigh) 
 	tool_purw->setProperty("DataScaleFactor", 1./1.13);
       
-      lumiFiles.push_back(PURW_IlumicalcFile.Data());      
+      //      lumiFiles.push_back(PURW_IlumicalcFile.Data());      
+      lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
       tool_purw->setProperty("LumiCalcFiles", lumiFiles);
 
       tool_purw->setProperty("UnrepresentedDataAction",2);
@@ -1800,7 +1806,8 @@ EL::StatusCode chorizo :: loop ()
   
   //--- Do overlap removal   
   if(doOR)
-    CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, doHarmonization) );
+    CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, doORharmo) );
+
 
   //-- Pre-book baseline electrons (after OR)
   std::vector<Particle> electronCandidates; //intermediate selection electrons

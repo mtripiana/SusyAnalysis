@@ -1,7 +1,16 @@
+2014-11-10 Martin <tripiana@cern.ch>
+	* Add -u option to generate pile-up root files.
+	* Move pile-up files to share/ dir (to make it grid friendly).
+
 2014-11-07 Arely <arelycg@cern.ch>
 	* Added protection against no-pile-up reweigting (for 13TeV)
         * Added 'harmonization' flag in JobOpt.
         * Initialize the eventcounter
+
+
+2014-11-07 Martin <tripiana@cern.ch>
+	* Remove PeriodConfig from jO.
+	* Add Harmonisation flag to overlap removal config.
 
 2014-11-07 Martin <tripiana@cern.ch>
 	* Move to Base,2.0.16.

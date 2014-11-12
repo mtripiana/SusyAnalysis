@@ -13,8 +13,7 @@
         <Pileup>
             <Mode name="ApplyPileupReweighting">true</Mode>
             <Path name="PileupReweightingConfigFolder">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/data/PileupReweighting/</Path>
-            <Path name="PileupReweightingIlumicalcFile">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/data/PileupReweighting/ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
-            <PeriodConfig>MC12a</PeriodConfig>
+            <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
         </Pileup>
 
         <LeptonEfficiency>
@@ -40,6 +39,7 @@
 
         <OverlapRemoval>
             <Enable>true</Enable>
+            <Harmonisation>true</Harmonisation>
         </OverlapRemoval> 
 	  
         <Trigger>
