@@ -163,6 +163,7 @@ int main( int argc, char* argv[] ) {
   TString queue = "at3";
   bool quick_test = false;
   TString version="";
+  bool genPU=false;
 
   std::string jOption = "METbb";
 
@@ -214,6 +215,9 @@ int main( int argc, char* argv[] ) {
     }
     else if (opts[iop] == "t"){ //limit run to 50 events
       quick_test = true;
+    }
+    else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
+      genPU = true;
     }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].Copy().ReplaceAll("s=","");
@@ -296,6 +300,15 @@ int main( int argc, char* argv[] ) {
   if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
 
   TString CollateralPath = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
+
+  //override jOptions if required
+  if(genPU){
+    doAnaTree=false;
+    doFlowTree=false;
+    doPUTree=false;
+    generatePUfile=true;
+    cout << "INFO :: config has been forced to PURW-file writing mode! (by user request)" << endl;
+  }
 
 
   //Do not run systematics if generating pile-up files!

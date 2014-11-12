@@ -14,8 +14,7 @@
 	<Pileup>
             <Mode name="ApplyPileupReweighting">true</Mode>
             <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path>
-            <Path name="PileupReweightingIlumicalcFile">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>		
-            <PeriodConfig>MC12b</PeriodConfig>
+            <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>		
         </Pileup>
 
         <LeptonEfficiency>
@@ -41,7 +40,7 @@
 
         <OverlapRemoval>
             <Enable>true</Enable>
-            <Harmonization>false</Harmonization>
+            <Harmonisation>true</Harmonisation>
         </OverlapRemoval> 
 
         <Trigger>

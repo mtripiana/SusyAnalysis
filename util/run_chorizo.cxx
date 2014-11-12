@@ -189,6 +189,7 @@ int main( int argc, char* argv[] ) {
   TString queue = "at3";
   bool quick_test = false;
   TString version="";
+  bool genPU=false;
 
   std::string jOption = "METbb_JobOption.xml";
 
@@ -246,6 +247,9 @@ int main( int argc, char* argv[] ) {
     }
     else if (opts[iop] == "t"){ //limit run to n events
       quick_test = true;
+    }
+    else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
+      genPU = true;
     }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].ReplaceAll("s=","");
@@ -333,6 +337,13 @@ int main( int argc, char* argv[] ) {
 
   TString CollateralPath = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
 
+  //override jOptions if required
+  if(genPU){
+    doAnaTree=false;
+    doFlowTree=false;
+    doPUTree=false;
+    generatePUfile=true;
+  }
 
   // Get patterns/paths to load for this sample
   std::vector<TString> run_pattern = mapOfRuns.getPatterns( args[0] );
@@ -545,7 +556,7 @@ int main( int argc, char* argv[] ) {
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
       if(quick_test)
 	Pdriver.options()->setDouble("nc_nFiles", 1);
-      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
+      //      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
       Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 

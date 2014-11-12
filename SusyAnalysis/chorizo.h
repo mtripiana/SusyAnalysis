@@ -348,14 +348,13 @@ private:
   bool    applyPURW;
   TString PURW_Folder; //!
   TString PURW_IlumicalcFile; //!
-  TString PeriodConfig; //!
   bool    leptonEfficiencyUnitarity; //!
 
   std::vector<std::string> TriggerNames; //!
 
   //OverlapRemoval
   bool  doOR;
-  bool  doHarmonization;
+  bool  doORharmo;
 
   //track veto
   bool  tVeto_Enable; //! 
