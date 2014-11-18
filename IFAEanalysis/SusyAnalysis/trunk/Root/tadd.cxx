@@ -88,13 +88,12 @@ void addAverageWeight(TString fileName){
   cout<<"Total events: "<<TotalEvents<<endl;
   
   average_w = TotalEvents/nentries;
-  w = 1./average_w;
+  w = fabs(average_w) > 0.0 ? 1./average_w : 1.;
 
   for (Int_t i = 0; i < nentries; i++){
     b_w->Fill();
   }  
   
-
   t3->Write("",TObject::kOverwrite);
   f2->Close();
 }
