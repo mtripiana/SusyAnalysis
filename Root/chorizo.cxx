@@ -162,7 +162,7 @@ void chorizo :: bookTree(){
  
     if(doAnaTree){ //AnalysisTree
       //weights
-      output->tree()->Branch ("w", &w, "w/F");             
+      //output->tree()->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
       output->tree()->Branch ("w_average", &w_average, "w_average/F");             
       output->tree()->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
       output->tree()->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                   output->tree()->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
@@ -1233,9 +1233,9 @@ EL::StatusCode chorizo :: initialize ()
   //--- Pileup Reweighting
   // trick: path in the tool name so it gets saved to the desired place
   //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
-  TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/data/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
+  TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
   if(PURW_Folder.Data()!="")
-    PURW_Folder = maindir + "/../SusyAnalysis/share/PURW/";
+    PURW_Folder = maindir + "/../../SusyAnalysis/share/PURW/";
   if(this->isMC && genPUfile){ 
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
   }

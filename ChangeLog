@@ -1,6 +1,7 @@
 2014-11-18 Arely <arelycg@cern.ch>
 	* Add script dq2get.sh to download files from the grid
         * Silvia updated tadd.cxx to compute w (1/<w>) in the merging.
+        * Correct the path to the 'default location' for the pileup files. 
 
 2014-11-10 Martin <tripiana@cern.ch>
 	* Add -u option to generate pile-up root files.
