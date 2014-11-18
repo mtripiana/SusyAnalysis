@@ -53,6 +53,53 @@ void AddNewBranch(TString fileName, Float_t FileWeight){
   f->Close();
 }
 
+void addAverageWeight(TString fileName){
+
+//  Info("run_chorizo::addAntiWeightToTree", Form("Adding anti weights for the lepton efficiency into the AnalysisTree."));
+
+  TFile *f2 = new TFile(fileName.Data(),"update");
+  TTree *t3 = (TTree*)f2->Get("AnalysisTree");
+
+  float average_w=1.;
+  float w=1.;
+
+  TBranch *b_w = t3-> Branch("w",&w,"w/F");
+
+  TBranch *b_MC_w;
+  TBranch *b_pileup_w;
+
+  float MC_w_loc=1.;
+  float pileup_w_loc=1.;
+
+  t3->SetBranchAddress("MC_w", &MC_w_loc, &b_MC_w);
+  t3->SetBranchAddress("pileup_w", &pileup_w_loc, &b_pileup_w);
+
+  Float_t TotalEvents = 0.;
+  Int_t nentries = (Int_t)t3->GetEntries();
+
+  for (Int_t i = 0; i < nentries; i++){
+    b_MC_w->GetEntry(i);
+    b_pileup_w->GetEntry(i);
+
+    TotalEvents += MC_w_loc*pileup_w_loc; //--- It's done independently for each NPx (so same FileWeight), and the luminosity is global. 
+
+  }
+
+  cout<<"Total events: "<<TotalEvents<<endl;
+  
+  average_w = TotalEvents/nentries;
+  w = 1./average_w;
+
+  for (Int_t i = 0; i < nentries; i++){
+    b_w->Fill();
+  }  
+  
+
+  t3->Write("",TObject::kOverwrite);
+  f2->Close();
+}
+
+
 void addAntiWeightToTree(TString fileName, bool isData){
 
 //  Info("run_chorizo::addAntiWeightToTree", Form("Adding anti weights for the lepton efficiency into the AnalysisTree."));
@@ -186,8 +233,10 @@ void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString out
   for(unsigned int i=0; i<filelist.size(); i++){
     cout<<"Adding new branches..."<<endl;
     AddNewBranch(filelist.at(i), weights.at(i));
+    addAverageWeight(filelist.at(i));
   }
 
+  
   //--- Join the "joined" files in a single root file. Add also FileWeight branch
   TChain *chain = new TChain("AnalysisTree");
   for(unsigned int i=0; i<filelist.size(); i++){
