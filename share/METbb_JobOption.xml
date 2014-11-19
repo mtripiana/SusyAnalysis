@@ -15,8 +15,6 @@
             <Mode name="ApplyPileupReweighting">false</Mode>
 	    <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
             <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
-	    <!--            <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path> -->
-	    <!--            <Path name="PileupReweightingIlumicalcFile">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>	-->
         </Pileup>
 
         <LeptonEfficiency>
