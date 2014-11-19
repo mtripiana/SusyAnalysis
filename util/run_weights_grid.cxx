@@ -41,7 +41,7 @@ int main( int argc, char* argv[] ) {
 
   //parse input arguments                                                                                                                                                                                                                   
   for (int i=1 ; i < argc ; i++) {
-    cout << argv[i] << endl;
+    //cout << argv[i] << endl;
     if( std::string(argv[i]).find("-") != std::string::npos )// is option 
       opts.push_back( TString( strtok(argv[i],"-") ));
     else //is argument
@@ -54,19 +54,13 @@ int main( int argc, char* argv[] ) {
     return 0;
   }
 
-  cout << "Args size  " << args.size() <<endl;
-
   //we want two arguments: DSID (for output file name) and directory name
-
   int DataSetID = TString(args[0]).Atoi();
-
-
-  cout << "hier" <<endl;
   //  cout << TString(args[1]).Data() << "\t" << args[1].Data() << "\t" << (const char *)(args[1].Data()) << endl;
-  string tmptmp =(string)args[1].Data();
-  const char *dirname = (const char *)tmptmp.c_str(); //(args[1].Data());
+  string tmp_dirname =(string)args[1].Data();
+  const char *dirname = (const char *)tmp_dirname.c_str(); //(args[1].Data());
 
-  cout << "DSID\t" << DataSetID <<"\tDirName\t" << TString(dirname).Data() << endl;
+  cout << "Merging: DSID\t" << DataSetID <<"\tDirName\t" << TString(dirname).Data() << endl;
 
   std::string jOption = "Stop_JobOption.xml";
   std::string outDirectory;
@@ -129,9 +123,6 @@ int main( int argc, char* argv[] ) {
 
   TString DirPath = TString(dirname);
 
-  cout << "I am hereeeee" << endl;
-  cout << dirname << "\t" << ext << endl;
-
   TSystemDirectory dir(dirname, dirname);
   TList *files = dir.GetListOfFiles();
   if (files) {
@@ -148,7 +139,7 @@ int main( int argc, char* argv[] ) {
     }
   }
 
-  tadd_grid(fileNames, FinalPath+"/Nom_"+mergedName+".root", false);
+  tadd_grid(fileNames, FinalPath+"/Nom_"+mergedName+"_tree.root", false);
 
   return 0;
 }
