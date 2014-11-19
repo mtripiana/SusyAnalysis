@@ -1,3 +1,8 @@
+2014-11-19 Cora <cora.fischer@cern.ch>
+	* add tadd_grid routine to compute weights for grid files
+	* new run_weights_grid.cxx util to execute tadd_grid
+	* will be used in combination with d2-get-script
+
 2014-11-19 Martin <tripiana@cern.ch>
 	* Fix PURW_Folder check
 	* Add share/GRL/ and share/PURW/
@@ -18,7 +23,6 @@
 	* Added protection against no-pile-up reweigting (for 13TeV)
         * Added 'harmonization' flag in JobOpt.
         * Initialize the eventcounter
-
 
 2014-11-07 Martin <tripiana@cern.ch>
 	* Remove PeriodConfig from jO.
