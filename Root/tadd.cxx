@@ -105,6 +105,7 @@ void ComputeNewBranch(TString fileName){
   cout << fileName.Data() << endl;
   TTree *t3 = (TTree*)f4->Get("AnalysisTree");
   
+
   TBranch *b_xsec;
   TBranch *b_feff;
   TBranch *b_kfactor;
@@ -114,14 +115,15 @@ void ComputeNewBranch(TString fileName){
   float feff = 0.0;
   float kfactor = 1.0;
   float nsim = 1;
-
+  
+  
   t3->SetBranchAddress("xsec",&xsec,&b_xsec);
   t3->SetBranchAddress("feff",&feff,&b_feff);
   t3->SetBranchAddress("kfactor",&kfactor,&b_kfactor);
   t3->SetBranchAddress("nsim",&nsim,&b_nsim);
 
 
-
+  
   float FileWeight = 1.;
 
   TBranch *b_FileWeight = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
@@ -133,7 +135,7 @@ void ComputeNewBranch(TString fileName){
 
   FileWeight = xsec*feff*kfactor/nsim;
     
-  for (int i = 0; i< t3->GetEntries();i++){
+  for (int i = 0; i< t3->GetEntries();i++){   
     b_FileWeight->Fill();
   }
   t3->Write("",TObject::kOverwrite);
@@ -303,13 +305,6 @@ void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString out
 }
 
 void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
-
-    //compute fileweight and add branch  
-  for(unsigned int i=0; i<filelist.size(); i++){
-    cout<<"Computing new branches..."<<endl;
-    ComputeNewBranch(filelist.at(i));
-    addAverageWeight(filelist.at(i));
-  }
   
   //--- Join the "joined" files in a single root file. Add also FileWeight branch
   TChain *chain = new TChain("AnalysisTree");
@@ -326,7 +321,11 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   //  gROOT->ProcessLine(Form(".! rm %s", filelist.at(i).Data()));
   //}
 
+  cout<<"\nAdding FileWeight"<<endl;  
+  cout<<"\nAdding average weight w"<<endl;  
   cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
+  ComputeNewBranch(outfile.Data());
+  addAverageWeight(outfile.Data());
   addAntiWeightToTree(outfile.Data(), isData);  
 
   cout << endl;
