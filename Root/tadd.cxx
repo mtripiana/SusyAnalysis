@@ -18,6 +18,7 @@ void JoinSplittedFiles(TString fileName){
   //--- Add splitted files into a file with the preffix joined.
   cout<<Form("Adding file %s", fileName.Data())<<endl;
   chainJoin->Add(fileName);
+  cout << chainJoin->GetEntries() << endl;
   for(int count=1; count<fileCounter; count++){
     cout<<Form("Adding file %s_%d.root", preffix.Data(), count)<<endl;
     chainJoin->Add(Form("%s_%d.root", preffix.Data(), count));
@@ -57,8 +58,8 @@ void addAverageWeight(TString fileName){
 
 //  Info("run_chorizo::addAntiWeightToTree", Form("Adding anti weights for the lepton efficiency into the AnalysisTree."));
 
-  TFile *f2 = new TFile(fileName.Data(),"update");
-  TTree *t3 = (TTree*)f2->Get("AnalysisTree");
+  TFile *f3 = new TFile(fileName.Data(),"update");
+  TTree *t3 = (TTree*)f3->Get("AnalysisTree");
 
   float average_w=1.;
   float w=1.;
@@ -95,16 +96,58 @@ void addAverageWeight(TString fileName){
   }  
   
   t3->Write("",TObject::kOverwrite);
-  f2->Close();
+  f3->Close();
 }
+
+//---for grid jobs: FileWeight has to be computed
+void ComputeNewBranch(TString fileName){
+  TFile *f4= new TFile(fileName.Data(),"update");
+  cout << fileName.Data() << endl;
+  TTree *t3 = (TTree*)f4->Get("AnalysisTree");
+  
+  TBranch *b_xsec;
+  TBranch *b_feff;
+  TBranch *b_kfactor;
+  TBranch *b_nsim;
+
+  float xsec = 0.0;
+  float feff = 0.0;
+  float kfactor = 1.0;
+  float nsim = 1;
+
+  t3->SetBranchAddress("xsec",&xsec,&b_xsec);
+  t3->SetBranchAddress("feff",&feff,&b_feff);
+  t3->SetBranchAddress("kfactor",&kfactor,&b_kfactor);
+  t3->SetBranchAddress("nsim",&nsim,&b_nsim);
+
+
+
+  float FileWeight = 1.;
+
+  TBranch *b_FileWeight = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
+  
+  b_xsec->GetEntry(0);
+  b_feff->GetEntry(0);
+  b_kfactor->GetEntry(0);
+  b_nsim->GetEntry(0);
+
+  FileWeight = xsec*feff*kfactor/nsim;
+    
+  for (int i = 0; i< t3->GetEntries();i++){
+    b_FileWeight->Fill();
+  }
+  t3->Write("",TObject::kOverwrite);
+  f4->Close();
+}
+
 
 
 void addAntiWeightToTree(TString fileName, bool isData){
 
 //  Info("run_chorizo::addAntiWeightToTree", Form("Adding anti weights for the lepton efficiency into the AnalysisTree."));
 
-  TFile *f2 = new TFile(fileName.Data(),"update");
-  TTree *t3 = (TTree*)f2->Get("AnalysisTree");
+  TFile *f5 = new TFile(fileName.Data(),"update");
+  TTree *t3 = (TTree*)f5->Get("AnalysisTree");
 
   float e_antiSF=1.;
   float m_antiSF=1.;
@@ -217,7 +260,7 @@ void addAntiWeightToTree(TString fileName, bool isData){
   }
 
   t3->Write("",TObject::kOverwrite);
-//  f2->Close;
+  f5->Close();
 }
 
 void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString outfile, bool isData ){
@@ -250,6 +293,38 @@ void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString out
   for(unsigned int i=0; i<filelist.size(); i++){
     gROOT->ProcessLine(Form(".! rm %s", filelist.at(i).Data()));
   }
+
+  cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
+  addAntiWeightToTree(outfile.Data(), isData);  
+
+  cout << endl;
+  cout << bold("Target file : ") << outfile  << endl;
+  cout << endl;
+}
+
+void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
+
+    //compute fileweight and add branch  
+  for(unsigned int i=0; i<filelist.size(); i++){
+    cout<<"Computing new branches..."<<endl;
+    ComputeNewBranch(filelist.at(i));
+    addAverageWeight(filelist.at(i));
+  }
+  
+  //--- Join the "joined" files in a single root file. Add also FileWeight branch
+  TChain *chain = new TChain("AnalysisTree");
+  for(unsigned int i=0; i<filelist.size(); i++){
+    cout<<"Adding file: "<<filelist.at(i)<<endl;
+    chain->Add(filelist.at(i));
+  }
+
+  chain->SetMaxTreeSize(15000000000LL);
+  chain->Merge(outfile.Data());
+
+  //--- Remove file in the Collateral folder
+  //for(unsigned int i=0; i<filelist.size(); i++){
+  //  gROOT->ProcessLine(Form(".! rm %s", filelist.at(i).Data()));
+  //}
 
   cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
