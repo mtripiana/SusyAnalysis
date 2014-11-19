@@ -11,8 +11,12 @@
 
 void AddNewBranch(TString, Float_t);
 
+void ComputeNewBranch(TString);
+
 void addAntiWeightToTree(TString fileName, bool isData);
 
 void JoinSplittedFiles(TString fileName);
 
 void tadd(std::vector< TString>, vector< Double_t>, TString, bool);
+
+void tadd_grid(std::vector< TString>, TString, bool);
