@@ -1,14 +1,15 @@
 #!/bin/bash
-
-## You can call as 
-## ./dq2get.sh TAG1,TAG2,TAG3,... [output folder] [username]
+## arelycg@cern.ch
+## IFAE 18.nov.14
+## ./dq2get.sh TAG1,TAG2,TAG3,... [output folder] [username] [merge: 0, 1]
 
 : ${ANALYSISROOTFILES:?" You need to set ANALYSISCODE before !! Please do so and try again..."}
 
 TAG=''
 DIRECTORY=$ANALYSISROOTFILES
 GRIDUSER=$USER
-
+MERGE=1
+JOBOPT="Stop"
 
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
@@ -32,7 +33,7 @@ fi
 if [[ $1 != "" ]]; then TAG=$1;fi
 if [[ $2 != "" ]]; then DIRECTORY=$2;fi
 if [[ $3 != "" ]]; then GRIDUSER=$3;fi
-
+if [[ $4 != "" ]]; then MERGE=$4;fi
 
 TAGLIST="${TAG//,/ }"
 
@@ -41,12 +42,11 @@ echo "--------------------------------------------------------------------------
 echo "   Looking for samples from user: "$GRIDUSER"."
 echo "----------------------------------------------------------------------------"
 
-#--- DQ2-LS
+#--- DQ2-GET
 cd $DIRECTORY
 TAGLIST="${TAG//,/ }"
 for tag in $TAGLIST ;
 do
-
    echo "----------------------------------------------------------------------------"
    echo "   TAG: "$tag
    echo "----------------------------------------------------------------------------"
@@ -60,18 +60,25 @@ do
       echo "   Downloading: "$s
       sampleName=`echo $s | cut -d'_' -f 1`
       folderName="output_"$sampleName"_v"$tag
-      #echo $folderName
       mkdir $folderName
       dq2-get -H $folderName $s
+      if [ $MERGE == 1 ] 
+      then
+         DSid=`echo $sampleName | cut -d'.' -f 4 | cut -d'_' -f 1`
+	 echo " "
+         echo "   Proceed to merge files:"
+	 echo "   run_weights_grid "$DSid" "$DIRECTORY"/"$folderName" -j="$JOBOPT
+	 run_weights_grid "$DSid" "$DIRECTORY"/"$folderName"/ -j="$JOBOPT"
+      fi
       echo "----------------------------------------------------------------------------"
    done
    rm tmp_dq2ls.txt
    echo " "
-
 done
 cd -
 
-echo "...sayonara!"
+echo " "
+echo "... Sayonara!"
 
 
 

@@ -1,3 +1,6 @@
+2014-11-19 Arely <arelycg@cern.ch>
+	* Modify dq2get.sh to call run_weights_grid in case the merging of the files is requested.
+
 2014-11-19 Cora <cora.fischer@cern.ch>
 	* add tadd_grid routine to compute weights for grid files
 	* new run_weights_grid.cxx util to execute tadd_grid
@@ -82,7 +85,6 @@
 	* Fix bad_alloc crash.
 	* Tagging SusyAnalysis-00-00-05
 
-
 2014-10-24 Martin <tripiana@cern.ch>
 	* Add overlap removal option to jO.
 	* Fix store cleaning when running in genPU mode.
@@ -97,7 +99,6 @@
 2014-10-20 Martin <tripiana@cern.ch>
 	* Move to Base-2.0.13
 	* Update to new ST decoration
-
 
 2014-08-29 Martin <tripiana@cern.ch>
 	* Move to Base-2.0.12

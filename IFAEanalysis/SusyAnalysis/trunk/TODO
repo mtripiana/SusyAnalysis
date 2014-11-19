@@ -67,6 +67,7 @@ LOW priority
 
 ** move to Sample class inside RunsMap ? so to specify ecm, location (afs, pic, ...), etc. So to map "sampleKey" --> rlist( Rpair(id, Sample("name",...other attributes)))
 
+** Add the --systematics option to the run_weights_grid function (and the dq2get call).
 
 Errors/Warning to take care of (at least understand if we can safely ignore these)
 --------------------------------------------------------------------------------------------------------
