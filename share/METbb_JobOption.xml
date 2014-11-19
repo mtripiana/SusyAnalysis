@@ -12,7 +12,7 @@
 	<!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
         <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
 	<Pileup>
-            <Mode name="ApplyPileupReweighting">true</Mode>
+            <Mode name="ApplyPileupReweighting">false</Mode>
 	    <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
             <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
 	    <!--            <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path> -->
@@ -42,8 +42,7 @@
 
         <OverlapRemoval>
           <Enable>true</Enable>
-          <Harmonisation>true</Harmonisation>
-          <Harmonization>false</Harmonization>
+          <Harmonisation>false</Harmonisation>
         </OverlapRemoval> 
 	  
         <Trigger>

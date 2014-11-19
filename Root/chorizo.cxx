@@ -1234,8 +1234,9 @@ EL::StatusCode chorizo :: initialize ()
   // trick: path in the tool name so it gets saved to the desired place
   //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
   TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
-  if(PURW_Folder.Data()!="")
+  if(PURW_Folder.IsWhitespace())
     PURW_Folder = maindir + "/../../SusyAnalysis/share/PURW/";
+
   if(this->isMC && genPUfile){ 
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
   }

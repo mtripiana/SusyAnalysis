@@ -560,6 +560,9 @@ int main( int argc, char* argv[] ) {
       Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
+      Pdriver.options()->setString("nc_rootVer", "5.34.09");
+      Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc47-opt");
+
       Pdriver.submitOnly( job, tmpdir );
       break;
     }
