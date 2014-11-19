@@ -16,13 +16,12 @@ HIGH PRIORITY
 
 ** Check Pileup jOption config.  PeriodConfig = MC12a??
 
-** set drivers for batch and grid modes
+** set drivers for batch 
    Running on IFAE's batch (PSB) is done with local driver anyways for now.
 
 ** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...) --> 'run' wrapper for now
     *** CHECK CASE for multi-samples+multi-systs
 
-** Overlap removal. Can we just use ST-one? <--- It is what we have now, but check if appropiate.
 
 ** revisit matching everywhere. Use Links? ghost association? 
 
@@ -32,6 +31,8 @@ HIGH PRIORITY
 
 ** apply isolation corrections once IsoTool is ready. It will probably come through SUSYTools anyways.
 
+** TriggerInfo
+     *** not accesible via ROOT for now ...
 
 VALIDATION/CHECK
 --------------------------------------------------------------------------------------------------------
@@ -45,6 +46,8 @@ VALIDATION/CHECK
 
 LOW priority
 --------------------------------------------------------------------------------------------------------
+
+** Move to new JetSmearing package
 
 ** Remove unchecked code warnings for StatusCode and CP::SystematicCode
 

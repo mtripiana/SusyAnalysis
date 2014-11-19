@@ -1682,6 +1682,9 @@ EL::StatusCode chorizo :: loop ()
     this->isTileGood = (eventInfo->eventFlags(xAOD::EventInfo::Tile)!=2);
     this->isTileTrip = !tool_tileTrip->checkEvent(RunNumber,  lb,  EventNumber); //--- Does not depend on the definition of the objects.
     this->isCoreFlag = (eventInfo->eventFlags(xAOD::EventInfo::Core)==0);
+
+    
+
   }
 
   //fill cutflow
@@ -1716,7 +1719,7 @@ EL::StatusCode chorizo :: loop ()
   //   }
   // }
   
-  this->passPreselectionCuts = this->isGRL && this->isTrigger && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && !this->isBadID && !this->isFakeMet && this->isMetCleaned && !this->isTileTrip;
+  this->passPreselectionCuts = this->isGRL && this->isTrigger && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
   
   //skip event no-preselected events for smearing                                       
   if ( this->isQCD  && (!this->passPreselectionCuts) ) 
@@ -1802,9 +1805,22 @@ EL::StatusCode chorizo :: loop ()
     smr_met_jets_eta.push_back( 0. ); //recoJet.Eta() );
     smr_met_jets_phi.push_back( 0. ); //recoJet.Phi() );
     smr_met_jets_E.push_back( 0. ); //recoJet.E() );  //in GeV!
+
   }
 
+
+  //--- Get (recalculated) MissingEt  
+  CHECK( tool_st->GetMET(*metRFC,
+			 jets_sc.first,
+			 electrons_sc.first,
+			 muons_sc.first,
+			 0,
+			 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
   
+  
+  TVector2 metRF = getMET(metRFC, "Final"); 
+    
+
   //--- Do overlap removal   
   if(doOR)
     CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, doORharmo) );
@@ -1955,14 +1971,28 @@ EL::StatusCode chorizo :: loop ()
   if (recoMuons.size()>0) std::sort(recoMuons.begin(), recoMuons.end());
 
 
+
   //-- pre-book good jets now (after OR)
   jet_itr = (jets_sc.first)->begin();
   jet_end = (jets_sc.first)->end();
   Particles::Jet recoJet;
   int iJet = 0;
+  int n_fakemet_jets=0;
   for( ; jet_itr != jet_end; ++jet_itr ){
     
     if( (*jet_itr)->auxdata< char >("baseline")!=1 ) continue;
+    
+    //look for fake-met jets    
+    if (Met_doFakeEtmiss && !this->isTruth){
+      float bchcorrjet;
+      (*jet_itr)->getAttribute(xAOD::JetAttribute::BchCorrJet, bchcorrjet);
+      if((*jet_itr)->pt() > 40000. && 
+	 bchcorrjet > 0.05 && 
+	 deltaPhi(metRF.Phi(), (*jet_itr)->phi()) < 0.3){
+	n_fakemet_jets++;
+      }
+    }
+	
     if( doOR && (*jet_itr)->auxdata< char >("passOR")!=1 ) continue;
 
     //flag event if bad jet is found
@@ -2086,28 +2116,20 @@ EL::StatusCode chorizo :: loop ()
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
 
 
-  //--- Get (recalculated) MissingEt  
-  CHECK( tool_st->GetMET(*metRFC,
-			 jets_sc.first,
-			 electrons_sc.first,
-			 muons_sc.first,
-			 0,
-			 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
-  
-  
-  TVector2 metRF = getMET(metRFC, "Final"); 
-  
-  //--- Remove events with fake Etmiss
-  if (Met_doFakeEtmiss && !this->isTruth){
-    for(unsigned int iJet=0; iJet < jetCandidates.size(); iJet++){
-      if(jetCandidates.at(iJet).Pt() > 40. && 
-	 jetCandidates.at(iJet).BCH_CORR_JET > 0.05 && 
-	 deltaPhi(metRF.Phi(), jetCandidates.at(iJet).Phi()) < 0.3){
-	this->isFakeMet=true;
-      }
-    }
-  }
+  //--- Jet cleaning
+  //  Reject events with at least one looser bad jet.
+  //  *after lepton overlap removal*
+  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
+  this->passPreselectionCuts &= (!this->isBadID);
 
+  //--- Additional jet cleaning 
+  //  To remove events with fake missing Et due to non operational cells in the Tile and the HEC.
+  //  *before lepton overlap removal*
+  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
+  this->isFakeMet = (n_fakemet_jets>0);
+  this->passPreselectionCuts &= (!this->isFakeMet);
+
+  
 
   //--- Get truth electrons 
   if ( this->isMC && !this->isSignal && !this->isTruth ){

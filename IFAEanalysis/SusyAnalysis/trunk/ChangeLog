@@ -1,6 +1,9 @@
 2014-11-19 Martin <tripiana@cern.ch>
 	* Fix PURW_Folder check
 	* Add share/GRL/ and share/PURW/
+	* Fix FakeMET cleaning (before overlap removal now)
+	* Fix passPreselectionCuts flag
+	* Change dq2get.sh now can look for any pattern (TAG).
 
 2014-11-18 Arely <arelycg@cern.ch>
 	* Add script dq2get.sh to download files from the grid
