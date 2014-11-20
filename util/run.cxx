@@ -109,7 +109,12 @@ bool is_data(Sample* sample){
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
-  return (itis=="collisions");
+  if(itis=="collisions") return true;
+  //add extra check for physics containers
+  itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
+  if(TString(itis).Contains("period")) return true;
+
+  return false;
 }
 
 void printSampleMeta(Sample* sample){
