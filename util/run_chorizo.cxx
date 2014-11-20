@@ -354,7 +354,7 @@ int main( int argc, char* argv[] ) {
   bool mgd=false; //make grid direct (for direct access to PIC disks)
   for(unsigned int p=0; p < run_pattern.size(); p++){
         
-    if(single_id>=0 && ((int)p != single_id)) continue; //pick only chosen id (if given)
+    if(single_id>=0 && run_ids[p] != single_id) continue; //pick only chosen id (if given)
 
     //** Run on local samples
     //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
@@ -588,7 +588,7 @@ int main( int argc, char* argv[] ) {
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       
 	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), run_ids[single_id]);
+	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), single_id);
 	
 	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
 	system(("rm -rf "+tmpdir).c_str());

@@ -160,12 +160,14 @@ int main( int argc, char* argv[] ) {
   bool runBatch = false;
   bool runPrun  = false;
   bool runGrid  = false;
+
+  std::string jOption = "METbb";
   TString queue = "at3";
   bool quick_test = false;
   TString version="";
   bool genPU=false;
+  int single_id = -1;
 
-  std::string jOption = "METbb";
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -225,9 +227,9 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("o") ){
       outDir = opts[iop].Copy().ReplaceAll("o=","");
     }
-    // else if (opts[iop].BeginsWith("i") ){
-    //   single_id = opts[iop].ReplaceAll("i=","").Atoi();
-    // }
+    else if (opts[iop].BeginsWith("i") ){
+      single_id = opts[iop].ReplaceAll("i=","").Atoi();
+    }
     else if (opts[iop].BeginsWith("j") ){
       jOption = opts[iop].Copy().ReplaceAll("j=","");
     }
@@ -352,6 +354,8 @@ int main( int argc, char* argv[] ) {
     bool mgd=false;  //make grid direct (for direct access to PIC disks)
     for(unsigned int i_id = 0; i_id < run_ids.size(); i_id++){ //id loop
       
+      if(single_id>=0 && run_ids[i_id] != single_id) continue; //pick only chosen id (if given)
+
       //** Run on local samples
       if(runLocal){
 	if( run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
@@ -425,7 +429,7 @@ int main( int argc, char* argv[] ) {
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
 
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
-	TString torun = Form("run_chorizo %s -i=%d %s %s", allopts.Data(), i_id, args[i_sample].Data(), systematics[i_syst].Data());
+	TString torun = Form("run_chorizo %s -i=%d %s %s", allopts.Data(), run_ids[i_id], args[i_sample].Data(), systematics[i_syst].Data());
 	system(torun.Data());
       }//end of systematics loop
       
