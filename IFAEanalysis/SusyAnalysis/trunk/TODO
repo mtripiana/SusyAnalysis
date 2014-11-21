@@ -4,6 +4,8 @@ HIGH PRIORITY
 
 ** revise track veto
 
+** use only baseline muons to compute MET (not sure we use this anyways)
+
 ** move ntuple creation inside algorithm. It might fix the Histogram filling problem o.O?
 
 ** how to get the original number of events??  --> Through CutFlow service, that should be available (soon?) in the DxAODs. Awaiting news from ASG...
@@ -45,6 +47,8 @@ VALIDATION/CHECK
 
 LOW priority
 --------------------------------------------------------------------------------------------------------
+
+** Implement PROOF driver? 
 
 ** Move to new JetSmearing package
 
