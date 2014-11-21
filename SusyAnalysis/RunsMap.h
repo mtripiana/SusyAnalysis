@@ -227,6 +227,23 @@ void RunsMap::LoadMap(){
   //SIGNAL
   m_map["13TEV_Sbottom_800_1"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
   m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
+
+  m_map["13TEV_Sbottom_800_1_af"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_a266_a265_r5853/"));
+  m_map["13TEV_Sbottom_300_290_af"] = rlist( Rpair(202249, ""));
+
+  //  m_map["TestSbottom_af"]= rlist( Rpair(202266, "/tmp/tripiana/sbottom/af/"));
+  m_map["TestSbottom_af"]= rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/mc14/sbottom/af/"));
+
+  m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
+  m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
+
+  m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
+  m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
+
+  m_map["TestStop"] = rlist( Rpair(204422, "/tmp/tripiana/stop/full/"));
+  m_map["TestStop_af"] = rlist( Rpair(204422, "/tmp/tripiana/stop/af/"));
+  /* m_map["TestStop"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/full/")); */
+  /* m_map["TestStop_af"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/af/")); */
   
   //BACKGROUND
   m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_s1982_s2008_r5787_r5853/"));
