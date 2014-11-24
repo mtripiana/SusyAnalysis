@@ -8,9 +8,6 @@
 
 #include <EventLoop/StatusCode.h>
 
-//ST includes (inside chorizoEDM.h now)
-//#include "SUSYTools/SUSYObjDef_xAOD.h"
-
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
 
@@ -31,6 +28,12 @@
 //Dummy values for variables initialization
 #define DUMMYUP  99999
 #define DUMMYDN -99999
+
+//For code profiling tests
+//#define PROFCODE
+#ifdef PROFCODE
+#include <valgrind/callgrind.h>
+#endif
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
@@ -1367,6 +1370,10 @@ void chorizo :: loadMetaData(){
   meta_nsim        = wk()->metaData()->getDouble( SH::MetaFields::numEvents );
   meta_lumi        = wk()->metaData()->getDouble( SH::MetaFields::lumi );
   //  meta_id = (int)wk()->metaData()->getDouble( "DSID" ));
+
+  //protect some samples for kfactor=0
+  if(meta_kfactor==0) meta_kfactor=1.;
+  
 }
 
 EL::StatusCode chorizo :: nextEvent(){
@@ -1384,6 +1391,10 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
+#ifdef PROFCODE
+  CALLGRIND_START_INSTRUMENTATION;
+#endif  
+
   return loop();
 }
 
@@ -1415,7 +1426,6 @@ EL::StatusCode chorizo :: loop ()
   }
 
   loadMetaData();
-  //  isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION ); //already set
 
   //-- Retrieve objects Containers
   m_truthE= 0;
@@ -1427,34 +1437,18 @@ EL::StatusCode chorizo :: loop ()
   
   //  -- Jets
   CHECK( m_event->retrieve( m_jets, "AntiKt4LCTopoJets" ) );
-  // if ( !m_event->retrieve( m_jets, "AntiKt4LCTopoJets" ).isSuccess() ){ 
-  //   Error("loop()", "Failed to retrieve 'AntiKt4LCTopoJets' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
+
   //  -- Electrons
-  if ( !m_event->retrieve( m_electrons, "ElectronCollection" ).isSuccess() ){ 
-    Error("loop()", "Failed to retrieve 'ElectronCollection' container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( m_electrons, "ElectronCollection" ) );
+
   //  -- Muons
-  if ( !m_event->retrieve( m_muons, "Muons" ).isSuccess() ){ 
-    Error("loop()", "Failed to retrieve 'Muons' container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( m_muons, "Muons" ) );
+
   //  -- Truth Particles
   if(isMC){
-    if ( !m_event->retrieve( m_truthE, "TruthEvent" ).isSuccess() ){ 
-      Error("loop()", "Failed to retrieve 'TruthEvent' container. Exiting." );
-      return EL::StatusCode::FAILURE;
-    }
-    if ( !m_event->retrieve( m_truthP, "TruthParticle" ).isSuccess() ){ 
-      Error("loop()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-      return EL::StatusCode::FAILURE;
-    }
-    if( ! m_event->retrieve( m_truth_jets, "AntiKt4TruthJets").isSuccess() ){
-      Error("loop()", "Failed to retrieve Truth jets collection : AntiKt4TruthJets. Exiting." );
-      return EL::StatusCode::FAILURE;
-    }
+    CHECK( m_event->retrieve( m_truthE, "TruthEvent" ) );
+    CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
+    CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
   }
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;
@@ -2008,9 +2002,11 @@ EL::StatusCode chorizo :: loop ()
     iJet++;
     
     int local_truth_flavor=0;         //for bjets ID
-    if ( this->isMC )
-      (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME
-    //      (*jet_itr)->getAttribute(xAOD::JetAttribute::TruthLabelID, local_truth_flavor); 
+    if ( this->isMC ){
+      //      (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
+      local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID");
+    }    
+
     
     
     //--- Get some other jet attributes
@@ -3123,6 +3119,11 @@ EL::StatusCode chorizo :: finalize ()
   //  Info("finalize()", Form("Execution time = %f (%f/ev)", watch.CpuTime(), watch.CpuTime()/(float)m_event->getEntries()));
   Info("finalize()", Form("Execution time = %f", watch.CpuTime()));
 
+#ifdef PROFCODE
+  CALLGRIND_STOP_INSTRUMENTATION;
+  CALLGRIND_DUMP_STATS;
+#endif
+  
   return EL::StatusCode::SUCCESS;
 }
 
@@ -3795,22 +3796,8 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
   int nTruthJets=0;
   int sampleId=0;
 
-  // //--- Count the truth jets above 30GeV in the event  //CHECK_ME
-  // const xAOD::JetContainer* truth_jets = 0;
-  // if( ! m_event->retrieve( truth_jets, "AntiKt4TruthJets").isSuccess() ){
-  //   Error("GetGeneratorUncertaintiesSherpa()", "Failed to retrieve Truth jets collection : AntiKt4TruthJets. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
-
   xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
   xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
-
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetGeneratorUncertaintiesSherpa()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
 
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;

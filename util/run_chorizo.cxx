@@ -538,13 +538,13 @@ int main( int argc, char* argv[] ) {
     //submit the job
     if(runLocal){ //local mode 
       Ddriver.submit( job, tmpdir );
-
+      
       // ProofDriver.numWorkers = 4;
       // ProofDriver.submit( job, tmpdir );
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
-      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.14 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh || exit $?;";
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.18 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }
