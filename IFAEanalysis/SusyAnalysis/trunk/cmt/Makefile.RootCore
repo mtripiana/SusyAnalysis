@@ -13,7 +13,9 @@ PACKAGE          = SusyAnalysis
 PACKAGE_PRELOAD  = 
 
 # additional compilation flags to pass (not propagated to dependent packages):
-PACKAGE_CXXFLAGS = -I$(FASTJET_DIR)/include -L$(FASTJET_DIR)/lib -I.../for_rootcint_only
+PACKAGE_CXXFLAGS = -I$(FASTJET_DIR)/include -L$(FASTJET_DIR)/lib -I.../for_rootcint_only -D__USE_XOPEN2K8 -I/afs/cern.ch/sw/lcg/external/valgrind/3.8.0/x86_64-slc6-gcc48-opt/include/
+#PACKAGE_CXXFLAGS = -D__USE_XOPEN2K8 -I/afs/cern.ch/sw/lcg/external/valgrind/3.8.0/x86_64-slc6-gcc48-opt/include/
+
 
 # additional compilation flags to pass (propagated to dependent packages):
 PACKAGE_OBJFLAGS = 
