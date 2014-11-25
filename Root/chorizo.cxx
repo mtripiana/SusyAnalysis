@@ -137,7 +137,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
       output->tree()->Branch("isFakeMet",&isFakeMet,"isFakeMet/O", 10000);
       output->tree()->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
-      output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 10000);
+      output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 9998);
     }
 
     
@@ -1696,7 +1696,7 @@ EL::StatusCode chorizo :: loop ()
   // 	    h_presel_flow->Fill(4.5);
   // 	    if(this->isCoreFlag){
   // 	      h_presel_flow->Fill(5.5);
-  // 	      if(!this->isBadID){
+  // 	      if(!this->sBadIDisBadID){
   // 		h_presel_flow->Fill(6.5);
   // 		if(!this->isFakeMet){
   // 		  h_presel_flow->Fill(7.5);
@@ -3368,7 +3368,7 @@ bool chorizo :: passMCor(){
       v3+=v1;
       v3+=v2;
       
-      cutting_var=v3.Pt()/1000.;
+      cutting_var=bosonVec_truth_pt;
       bos_pt=cutting_var;
       if( ! DoIHaveToKeepIt(mc_channel_number,cutting_var) )
 	return false; 
