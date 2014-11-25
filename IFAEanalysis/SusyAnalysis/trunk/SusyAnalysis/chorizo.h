@@ -665,6 +665,7 @@ private:
   //- Jet info
   bool  JVF_min;
   int   n_jets;
+  int   n_tjets;
   int   n_jets40;
   int   n_jets50;
   int   n_jets60;
