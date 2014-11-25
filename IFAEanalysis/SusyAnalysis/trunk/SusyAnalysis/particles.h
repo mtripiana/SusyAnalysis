@@ -87,6 +87,7 @@ class Jet : public Particle {
     float                   BCH_CORR_JET;
 
     bool isTauJet(float metphi, TString Tagger="MV1");
+    bool isBTagged(TString Tagger, float op);
     bool isBTagged(TString Tagger);
     bool isBTagged_80eff(TString Tagger);    
     float getBweight(TString Tagger);

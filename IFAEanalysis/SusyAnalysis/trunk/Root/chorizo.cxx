@@ -1794,7 +1794,13 @@ EL::StatusCode chorizo :: loop ()
     
     tool_st->FillJet( **jet_itr );
     tool_st->IsGoodJet( **jet_itr, Jet_PreselPtCut, Jet_PreselEtaCut );
-    tool_st->IsBJet( **jet_itr ); //CHECK ME! replace decoration with our own?
+    //** Bjet decoration 
+    //tool_st->IsBJet( **jet_itr );   //SUSYTools
+    float bw=0.; //our own
+    if(Jet_Tagger=="MV1") bw = (*jet_itr)->btagging()->MV1_discriminant(); 
+    else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
+    (**jet_itr).auxdata< char >("bjet") = (char)(bw > Jet_TaggerOp);
+
 
     //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
     smr_met_jets_pt.push_back( 0. ); //recoJet.Pt() ); //in GeV!
@@ -2071,7 +2077,6 @@ EL::StatusCode chorizo :: loop ()
     recoJet.isbjet = (bool)(*jet_itr)->auxdata< char >("bjet");
 
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
-
     recoJet.MV1 = btag->MV1_discriminant();
     recoJet.SV1plusIP3D = btag->SV1plusIP3D_discriminant();
 
