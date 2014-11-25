@@ -254,11 +254,11 @@ void RunsMap::LoadMap(){
   
 
   m_map["13TEV_ttbarV_MadGraphPythia"] = rlist( Rpair(119353,"mc14_13TeV.119353.MadGraphPythia_AUET2BCTEQ6L1_ttbarW.merge.AOD.e3214_s1982_s2008_r5787_r5853/"),
-				 Rpair(119355,"mc14_13TeV.119355.MadGraphPythia_AUET2BCTEQ6L1_ttbarZ.merge.AOD.e3214_s1982_s2008_r5787_r5853/"),
-				 Rpair(174830,"mc14_13TeV.174830.MadGraphPythia_AUET2BCTEQ6L1_ttbarWjExcl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"),
-				 Rpair(174832,"mc14_13TeV.174832.MadGraphPythia_AUET2BCTEQ6L1_ttbarZjExcl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"),				 
-				 Rpair(174831,"mc14_13TeV.174831.MadGraphPythia_AUET2BCTEQ6L1_ttbarWjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"),
-				 Rpair(174833,"mc14_13TeV.174833.MadGraphPythia_AUET2BCTEQ6L1_ttbarZjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"));				 
+						Rpair(119355,"mc14_13TeV.119355.MadGraphPythia_AUET2BCTEQ6L1_ttbarZ.merge.AOD.e3214_s1982_s2008_r5787_r5853/"));
+				 /* Rpair(174830,"mc14_13TeV.174830.MadGraphPythia_AUET2BCTEQ6L1_ttbarWjExcl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"), */
+				 /* Rpair(174832,"mc14_13TeV.174832.MadGraphPythia_AUET2BCTEQ6L1_ttbarZjExcl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"),				  */
+				 /* Rpair(174831,"mc14_13TeV.174831.MadGraphPythia_AUET2BCTEQ6L1_ttbarWjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"), */
+				 /* Rpair(174833,"mc14_13TeV.174833.MadGraphPythia_AUET2BCTEQ6L1_ttbarZjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"));				  */
 				 
   m_map["13TEV_ttbargamma_MadGraphPythia"] = rlist( Rpair(177998,"mc14_8TeV.177998.MadGraphPythia_AUET2BCTEQ6L1_ttbargammaPt80_noAllHad_fixed.merge.AOD.e2189_s1933_s1911_r5591_r5625/"));
 				 
