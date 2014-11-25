@@ -421,9 +421,14 @@ int main( int argc, char* argv[] ) {
 
     
   //  fetch meta-data from AMI
-  if(amiFound)
+  if(amiFound){
     fetchMetaData (sh, false); 
-  
+    for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
+      float newxs = (*iter)->getMetaDouble( MetaFields::crossSection )*1000.;
+      (*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
+    }                                                          
+  }
+
   //  then override some meta-data from SUSYTools
   readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
   

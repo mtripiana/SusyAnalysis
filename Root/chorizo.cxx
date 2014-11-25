@@ -261,6 +261,7 @@ void chorizo :: bookTree(){
       //jets
       output->tree()->Branch("JVF_min",&JVF_min,"JVF_min/O", 10000);                           
       output->tree()->Branch("n_jets",&n_jets,"n_jets/I", 10000);
+      output->tree()->Branch("n_tjets",&n_tjets,"n_tjets/I", 10000);
       output->tree()->Branch("n_jets40",&n_jets40,"n_jets40/I", 10000);
       output->tree()->Branch("n_jets50",&n_jets50,"n_jets50/I", 10000);
       output->tree()->Branch("n_jets60",&n_jets60,"n_jets60/I", 10000);
@@ -671,6 +672,7 @@ void chorizo :: InitVars()
   //- Jet Info
   JVF_min=false;
   n_jets=0;
+  n_tjets=0;
   n_jets40=0;
   n_jets50=0;
   n_jets60=0;
@@ -2243,9 +2245,13 @@ EL::StatusCode chorizo :: loop ()
     xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
     
     //loop over truth jets & save 'high-pt' jets for later use 
+    n_tjets=0;
     for( ; tjet_itr != tjet_end; ++tjet_itr ) {
       
       if ( (*tjet_itr)->pt() < 10000. ) continue;
+      
+      if ( (*tjet_itr)->pt() > 20000. )
+	n_tjets++;
       
       TLorentzVector truthJet;
       truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 

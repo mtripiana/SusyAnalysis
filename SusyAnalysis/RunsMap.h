@@ -260,7 +260,7 @@ void RunsMap::LoadMap(){
 				 Rpair(174831,"mc14_13TeV.174831.MadGraphPythia_AUET2BCTEQ6L1_ttbarWjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"),
 				 Rpair(174833,"mc14_13TeV.174833.MadGraphPythia_AUET2BCTEQ6L1_ttbarZjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"));				 
 				 
-				 
+  m_map["13TEV_ttbargamma_MadGraphPythia"] = rlist( Rpair(177998,"mc14_8TeV.177998.MadGraphPythia_AUET2BCTEQ6L1_ttbargammaPt80_noAllHad_fixed.merge.AOD.e2189_s1933_s1911_r5591_r5625/"));
 				 
   m_map["13TEV_ttbarVV_MadGraphPythia"] = rlist( Rpair(119583,"mc14_13TeV.119583.MadgraphPythia_AUET2B_CTEQ6L1_ttbarWW.merge.AOD.e3214_s1982_s2008_r5787_r5853/"));
   
@@ -788,19 +788,9 @@ void RunsMap::LoadMap(){
   //New DAOD_IFAE3G derivation
   m_map["TestIFAE3G"] = rlist( Rpair(117050, "/nfs/at3users/users/tripiana/Derivations/WorkArea/run/test/"));
   
-  //New test on primary xAODs
-  m_map["TestP1"] = rlist( Rpair(117050, "/tmp/tripiana/prim1/"));
-  m_map["TestP2"] = rlist( Rpair(117050, "/tmp/tripiana/prim2/"));
-  m_map["TestP3"] = rlist( Rpair(117050, "/tmp/tripiana/prim3/"));
-  m_map["TestP4"] = rlist( Rpair(117050, "/tmp/tripiana/prim4/"));
-  m_map["TestP5"] = rlist( Rpair(117050, "/tmp/tripiana/prim5/"));
-
-  m_map["TestPall"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar/")); //10 files 
-  m_map["TestPall1"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar/prim1/")); //5 files 
-  m_map["TestPall2"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar/prim2/")); //5 files 
-
   //New test xAOD mc14 (SUSY1 derivation)
   m_map["TestDF"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbarD/"));
+  m_map["TestTT13"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar13/"));
   
   //New test on 8TeV Znunu xAODs
   m_map["TestZnunu167818"] = rlist( Rpair(167818, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167818/"));

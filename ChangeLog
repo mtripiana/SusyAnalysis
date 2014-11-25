@@ -1,3 +1,7 @@
+2014-11-25 Martin <tripiana@cern.ch>
+	* Add protection against null kfactors.
+	* Fix cross section fetch from AMI.
+
 2014-11-20 Martin <tripiana@cern.ch>
 	* Add -i option to specify a given id within a multisample set.
 	* Add extra check for physics containers metadata.
