@@ -138,7 +138,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
       output->tree()->Branch("isFakeMet",&isFakeMet,"isFakeMet/O", 10000);
       output->tree()->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
-      output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 9998);
+      output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 10000);
     }
 
     
@@ -1697,7 +1697,7 @@ EL::StatusCode chorizo :: loop ()
   // 	    h_presel_flow->Fill(4.5);
   // 	    if(this->isCoreFlag){
   // 	      h_presel_flow->Fill(5.5);
-  // 	      if(!this->sBadIDisBadID){
+  // 	      if(!this->isBadID){
   // 		h_presel_flow->Fill(6.5);
   // 		if(!this->isFakeMet){
   // 		  h_presel_flow->Fill(7.5);
@@ -3485,7 +3485,7 @@ std::vector<float> chorizo :: GetTruthBosonPt(float &_M, float &_MT, bool &_Muon
   for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 
     if( isHard(*truthP_itr) && isLepNeut(*truthP_itr) ){
-      if (!foundFirst){
+      if (!foundFirst){     
 	fillTLV( l1, (*truthP_itr) );
 	foundFirst = true;
         _pt1 = l1.Pt()/1000.;
