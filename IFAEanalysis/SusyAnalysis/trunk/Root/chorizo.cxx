@@ -118,7 +118,8 @@ void chorizo :: bookTree(){
     output->tree()->Branch ("RunNumber", &RunNumber, "RunNumber/I");
     output->tree()->Branch ("EventNumber", &EventNumber, "EventNumber/I");
     //    output->tree()->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
-    output->tree()->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");                        
+    output->tree()->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
+    output->tree()->Branch ("nVertex", &nVertex, "nVertex/I");                        
     //common vars
     output->tree()->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
     output->tree()->Branch ("MC_w", &MC_w, "MC_w/F");                       
@@ -3368,7 +3369,9 @@ bool chorizo :: passMCor(){
       v3+=v1;
       v3+=v2;
       
+
       cutting_var=bosonVec_truth_pt;
+
       bos_pt=cutting_var;
       if( ! DoIHaveToKeepIt(mc_channel_number,cutting_var) )
 	return false; 
@@ -3494,8 +3497,8 @@ std::vector<float> chorizo :: GetTruthBosonPt(float &_M, float &_MT, bool &_Muon
 	fillTLV( l2, (*truthP_itr) );
 	foundSecond = true;
         _pt2 = l2.Pt()/1000.;
-	
-        if ( (*truthP_itr)->absPdgId() == 13 ){
+
+	if ( (*truthP_itr)->absPdgId() == 13 ){
           _Muon_pt  = l2.Pt()/1000.;
           _Muon_eta = l2.Eta();
         }
@@ -4562,7 +4565,8 @@ void chorizo :: fillTLV( TLorentzVector &v, xAODPart* p, bool inGeV ){
     v.SetPtEtaPhiM( p->pt()*0.001, p->eta(), p->phi(), p->m()*0.001 );
   }
   else{
-    v = p->p4();
+    //    v = p->p4();
+    v.SetPtEtaPhiM( p->pt(), p->eta(), p->phi(), p->m() );
   }
 } 
 
