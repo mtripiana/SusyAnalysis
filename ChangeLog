@@ -1,3 +1,6 @@
+2014-11-27 Arely <arelycg@cern.ch>
+	* Add script to check list of files (and the # of events).
+
 2014-11-25 Martin <tripiana@cern.ch>
 	* Add protection against null kfactors.
 	* Fix cross section fetch from AMI.
