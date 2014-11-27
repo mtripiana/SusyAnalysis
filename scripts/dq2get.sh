@@ -8,7 +8,7 @@
 TAG=''
 DIRECTORY=$ANALYSISROOTFILES
 GRIDUSER=$USER
-MERGE=1
+MERGE=0
 JOBOPT="Stop"
 
 #------------------------------------
@@ -50,15 +50,15 @@ do
    echo "----------------------------------------------------------------------------"
    echo "   TAG: "$tag
    echo "----------------------------------------------------------------------------"
-   echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"*_output.root/ > tmp_dq2ls.txt"
-   dq2-ls "user."$GRIDUSER".*_v*"$tag"*_output.root/" > tmp_dq2ls.txt
+   echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"_output.root > tmp_dq2ls.txt"
+   dq2-ls "user."$GRIDUSER".*_v*"$tag"_output.root" > tmp_dq2ls.txt
    cat tmp_dq2ls.txt
    echo " "
 
    for s in $(cat tmp_dq2ls.txt);  
    do 
       echo "   Downloading: "$s
-      sampleName=`echo $s | cut -d'_' -f 1`
+      sampleName=`echo $s | cut -d':' -f 2 | cut -d'_' -f 1`
       folderName="output_"$sampleName"_v"$tag
       mkdir $folderName
       dq2-get -H $folderName $s
