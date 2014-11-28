@@ -61,7 +61,7 @@ then
 
     for syst in $ALLSYSTLIST
     do
-        echo "Sendig systematic: "$syst
+        echo "Sending systematic: "$syst
 
         if [ "$syst" == "GENERATOR" ]; then
             for sample in $BKGLISTGEN
