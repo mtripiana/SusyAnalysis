@@ -9,7 +9,7 @@ TAG=''
 DIRECTORY=$ANALYSISROOTFILES
 GRIDUSER=$USER
 MERGE=0
-JOBOPT="Stop"
+JOBOPT="METbb"
 
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
@@ -50,8 +50,10 @@ do
    echo "----------------------------------------------------------------------------"
    echo "   TAG: "$tag
    echo "----------------------------------------------------------------------------"
-   echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"_output.root > tmp_dq2ls.txt"
-   dq2-ls "user."$GRIDUSER".*_v*"$tag"_output.root" > tmp_dq2ls.txt
+
+   echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"*_output.root/ | grep -v \"hist-output\" > tmp_dq2ls.txt"
+   dq2-ls "user."$GRIDUSER".*_v*"$tag"*_output.root/" > tmp_dq2ls.txt
+
    cat tmp_dq2ls.txt
    echo " "
 
