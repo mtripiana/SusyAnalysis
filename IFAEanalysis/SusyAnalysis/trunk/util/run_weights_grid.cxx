@@ -132,7 +132,7 @@ int main( int argc, char* argv[] ) {
     TIter next(files);
     while ((file=(TSystemFile*)next())) {
       fname = file->GetName();
-      if (!file->IsDirectory() && fname.EndsWith(ext)) {
+      if (!file->IsDirectory() && fname.Contains(ext)) {
 	cout << fname.Data() << endl;
 	fileNames.push_back(DirPath+"/"+fname);
       }

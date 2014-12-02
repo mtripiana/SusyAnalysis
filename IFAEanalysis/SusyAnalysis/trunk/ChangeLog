@@ -1,3 +1,6 @@
+2014-12-02 Arely <arelycg@cern.ch>
+	* corrected run_weights_grid function, in case we have root.# extensions.
+
 2014-11-27 Arely <arelycg@cern.ch>
 	* Add script to check list of files (and the # of events).
 
