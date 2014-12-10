@@ -39,9 +39,11 @@ bool  is_Tau(int pid);
 bool  is_Lepton(int pid);
 bool  is_Neutrino(int pid);
 bool  is_LepNeut(int pid);
+bool  is_Parton(int status);
 bool  is_HF(int pid);
 bool  is_Stable(int status);
 bool  is_Hard(int status);
+
 
 bool  isHard(const xAOD::TruthParticle* p);
 bool  isStable(const xAOD::TruthParticle* p);

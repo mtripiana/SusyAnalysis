@@ -91,6 +91,10 @@ void RunsMap::LoadMap(){
   m_map["8TEV_singleTop_PowhegPythia"] = rlist( Rpair(110101,"mc14_8TeV.110101.AcerMCPythia_P2011CCTEQ6L1_singletop_tchan_l.merge.DAOD_SUSY1.e2096_s1933_s1911_r5591_r5625_p1784/"),
 						Rpair(110119,"mc14_8TeV.110119.PowhegPythia_P2011C_st_schan_lep.merge.DAOD_SUSY1.e1720_s1933_s1911_r5591_r5625_p1784/"),
 						Rpair(110140,"mc14_8TeV.110140.PowhegPythia_P2011C_st_Wtchan_incl_DR.merge.DAOD_SUSY1.e1743_s1933_s1911_r5591_r5625_p1784/"));
+
+  m_map["8TEV_ttbarG_MadGraphPythia"] = rlist( Rpair(177998,"mc14_8TeV.177998.MadGraphPythia_AUET2BCTEQ6L1_ttbargammaPt80_noAllHad_fixed.merge.AOD.e2189_s1933_s1911_r5591_r5625/"));
+
+  m_map["8TEV_ttbarZ_MadGraphPythia"] = rlist( Rpair(119355,"mc14_8TeV.119355.MadGraphPythia_AUET2BCTEQ6L1_ttbarZ.merge.AOD.e1352_s1933_s1911_r5591_r5625/"));
   
   m_map["8TEV_Wenu_Sherpa"] = rlist( Rpair(167740,"mc14_8TeV.167740.Sherpa_CT10_WenuMassiveCBPt0_BFilter.merge.DAOD_SUSY1.e1585_s1933_s1911_r5591_r5625_p1784/"),
 				     Rpair(167741,"mc14_8TeV.167741.Sherpa_CT10_WenuMassiveCBPt0_CJetFilterBVeto.merge.DAOD_SUSY1.e1585_s1933_s1911_r5591_r5625_p1784/"),
@@ -231,14 +235,14 @@ void RunsMap::LoadMap(){
   m_map["13TEV_Sbottom_800_1_af"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_a266_a265_r5853/"));
   m_map["13TEV_Sbottom_300_290_af"] = rlist( Rpair(202249, ""));
 
-  //  m_map["TestSbottom_af"]= rlist( Rpair(202266, "/tmp/tripiana/sbottom/af/"));
+  m_map["TestSbottom"]= rlist( Rpair(202266, "/tmp/tripiana/sbottom/full/"));
   m_map["TestSbottom_af"]= rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/mc14/sbottom/af/"));
 
   m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
   m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
 
-  m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
-  m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
+  /* m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));   */
+  /* m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/")); */
 
   m_map["TestStop"] = rlist( Rpair(204422, "/tmp/tripiana/stop/full/"));
   m_map["TestStop_af"] = rlist( Rpair(204422, "/tmp/tripiana/stop/af/"));
@@ -247,6 +251,8 @@ void RunsMap::LoadMap(){
   
   //BACKGROUND
   m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_s1982_s2008_r5787_r5853/"));
+  m_map["13TEV_ttbar_PowhegPythia_af"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_a266_a265_r5853/"));
+
   m_map["13TEV_singleTop_PowhegPythia"] = rlist( Rpair(110070,"mc14_13TeV.110070.PowhegPythia_P2012_singletop_tchan_lept_top.merge.AOD.e3049_s1982_s2008_r5787_r5853/"),
 						 Rpair(110071,"mc14_13TeV.110071.PowhegPythia_P2012_singletop_tchan_lept_antitop.merge.AOD.e3049_s1982_s2008_r5787_r5853/"),
 						 Rpair(110305,"mc14_13TeV.110305.PowhegPythia_P2012_st_Wtchan_incl_DR.merge.AOD.e3049_s1982_s2008_r5787_r5853/"),
@@ -260,9 +266,21 @@ void RunsMap::LoadMap(){
 				 /* Rpair(174831,"mc14_13TeV.174831.MadGraphPythia_AUET2BCTEQ6L1_ttbarWjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"), */
 				 /* Rpair(174833,"mc14_13TeV.174833.MadGraphPythia_AUET2BCTEQ6L1_ttbarZjjIncl.merge.AOD.e3214_s1982_s2008_r5787_r5853/"));				  */
 				 
-  m_map["13TEV_ttbargamma_MadGraphPythia"] = rlist( Rpair(177998,"mc14_8TeV.177998.MadGraphPythia_AUET2BCTEQ6L1_ttbargammaPt80_noAllHad_fixed.merge.AOD.e2189_s1933_s1911_r5591_r5625/"));
+  //  m_map["13TEV_ttbarG_MadGraphPythia"] = rlist( Rpair(177998,"mc14_8TeV.177998.MadGraphPythia_AUET2BCTEQ6L1_ttbargammaPt80_noAllHad_fixed.merge.AOD.e2189_s1933_s1911_r5591_r5625/"));
 				 
   m_map["13TEV_ttbarVV_MadGraphPythia"] = rlist( Rpair(119583,"mc14_13TeV.119583.MadgraphPythia_AUET2B_CTEQ6L1_ttbarWW.merge.AOD.e3214_s1982_s2008_r5787_r5853/"));
+
+
+  m_map["13TEV_gjetDP_Pythia8"] = rlist( Rpair(129200,"mc14_13TeV.129200.Pythia8_AU2CTEQ6L1_gammajet_DP17_35.merge.AOD.e2981_s1982_s2008_r5787_r5853/"),
+					 Rpair(129201,"mc14_13TeV.129201.Pythia8_AU2CTEQ6L1_gammajet_DP35_50.merge.AOD.e2981_s1982_s2008_r5787_r5853/"),
+					 Rpair(129202,"mc14_13TeV.129202.Pythia8_AU2CTEQ6L1_gammajet_DP50_70.merge.AOD.e3023_s1982_s2008_r5787_r5853/"),
+					 Rpair(129203,"mc14_13TeV.129203.Pythia8_AU2CTEQ6L1_gammajet_DP70_140.merge.AOD.e2981_s1982_s2008_r5787_r5853/"),
+					 Rpair(129204,"mc14_13TeV.129204.Pythia8_AU2CTEQ6L1_gammajet_DP140_280.merge.AOD.e2981_s1982_s2008_r5787_r5853/"),
+					 Rpair(129205,"mc14_13TeV.129205.Pythia8_AU2CTEQ6L1_gammajet_DP280_500.merge.AOD.e2981_s1982_s2008_r5787_r5853/"),
+					 Rpair(129206,"mc14_13TeV.129206.Pythia8_AU2CTEQ6L1_gammajet_DP500_800.merge.AOD.e2981_s1982_s2008_r5787_r5853/"),
+					 Rpair(129207,"mc14_13TeV.129207.Pythia8_AU2CTEQ6L1_gammajet_DP800_1000.merge.AOD.e2981_s1982_s2008_r5787_r5853/"),
+					 Rpair(129208,"mc14_13TeV.129208.Pythia8_AU2CTEQ6L1_gammajet_DP1000_inf.merge.AOD.e2981_s1982_s2008_r5787_r5853/"));
+  
   
   m_map["13TEV_Znunu_Sherpa"] = rlist( Rpair(167758,"mc14_13TeV.167758.Sherpa_CT10_ZnunuMassiveCBPt0_BFilter.merge.AOD.e2798_s1982_s2008_r5787_r5853/"),
 				       Rpair(167759,"mc14_13TeV.167759.Sherpa_CT10_ZnunuMassiveCBPt0_CFilterBVeto.merge.AOD.e2798_s1982_s2008_r5787_r5853/"),
@@ -791,7 +809,13 @@ void RunsMap::LoadMap(){
   //New test xAOD mc14 (SUSY1 derivation)
   m_map["TestDF"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbarD/"));
   m_map["TestTT13"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar13/"));
-  
+
+  //TTbargamma
+  m_map["TestTTbarG"] = rlist( Rpair(177998,"/tmp/tripiana/ttbargamma/"));
+
+  //TTbargamma
+  m_map["TestTTbarV"] = rlist( Rpair(177998,"/tmp/tripiana/ttbarV/"));
+
   //New test on 8TeV Znunu xAODs
   m_map["TestZnunu167818"] = rlist( Rpair(167818, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167818/"));
   m_map["TestZnunu167819"] = rlist( Rpair(167819, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"));
