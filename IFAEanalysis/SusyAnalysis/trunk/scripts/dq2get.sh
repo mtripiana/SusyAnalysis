@@ -52,7 +52,9 @@ do
    echo "----------------------------------------------------------------------------"
 
    echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"*_output.root/ | grep -v \"hist-output\" > tmp_dq2ls.txt"
-   dq2-ls "user."$GRIDUSER".*_v*"$tag"*_output.root/" > tmp_dq2ls.txt
+   dq2-ls "user."$GRIDUSER".*"$tag"*_output.root/" | grep -v hist-output  > tmp_dq2ls.txt
+   
+   echo " " >> tmp_dq2ls.txt
 
    cat tmp_dq2ls.txt
    echo " "

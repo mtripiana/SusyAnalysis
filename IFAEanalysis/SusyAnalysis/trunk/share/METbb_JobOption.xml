@@ -41,6 +41,7 @@
         <OverlapRemoval>
           <Enable>true</Enable>
           <Harmonisation>false</Harmonisation>
+          <doPhotons>false</doPhotons>
         </OverlapRemoval> 
 	  
         <Trigger>
@@ -87,6 +88,19 @@
                 <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
             </region>
         </Muon>
+        <Photon>
+            <region name="SR">
+                <PreselPtCut>20000.</PreselPtCut>
+                <PreselEtaCut>2.37</PreselEtaCut>
+                <RecoPtCut>20000.</RecoPtCut>
+                <RecoEtaCut>2.37</RecoEtaCut>
+
+                <recoSF>true</recoSF>
+                <idSF>true</idSF>
+                <triggerSF>false</triggerSF>
+                <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+            </region>
+        </Photon>
         <Jet>
             <region name="SR">
                 <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
@@ -101,12 +115,12 @@
                 <RecoEtaCut>2.8</RecoEtaCut>
 
                 <!--- For the c/b-tagger -->
-                <Tagger>MV1</Tagger>
-                <TaggerOpPoint>0_7892</TaggerOpPoint>
-                <TaggerOpPoint2>0_3511</TaggerOpPoint2>
-		<!-- <Tagger>IP3DSV1</Tagger> -->
-                <!-- <TaggerOpPoint>1_85</TaggerOpPoint> -->
-                <!-- <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
+                <!-- <Tagger>MV1</Tagger> -->
+                <!-- <TaggerOpPoint>0_7892</TaggerOpPoint> -->
+                <!-- <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
+		<Tagger>IP3DSV1</Tagger>
+                <TaggerOpPoint>1_85</TaggerOpPoint>
+                <TaggerOpPoint2>m0_70</TaggerOpPoint2>
                 <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
             </region>
         </Jet>

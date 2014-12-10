@@ -6,7 +6,7 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.0.19
+# Extra tags needed for Base,2.0.20
 #svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-14 SUSYTools
 

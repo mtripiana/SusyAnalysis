@@ -43,6 +43,7 @@
         <OverlapRemoval>
             <Enable>true</Enable>
             <Harmonisation>true</Harmonisation>
+            <doPhotons>false</doPhotons>
         </OverlapRemoval> 
 
         <Trigger>

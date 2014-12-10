@@ -1,5 +1,16 @@
+2014-12-10 Martin <tripiana@cern.ch>
+	* Update to Base,2.0.20
+	* Add photon variables
+	* Add met-recoiling system projections (rmet_par,_per)
+	* Add static accessors for xAOD auxdata
+	* Add doPhotons flag to jO to (not) take into account photons in the overlap removal.
+	* Fix pattern search in dq2get.sh
+	* Code cleaning
+
+
 2014-12-02 Arely <arelycg@cern.ch>
 	* corrected run_weights_grid function, in case we have root.# extensions.
+
 
 2014-11-27 Arely <arelycg@cern.ch>
 	* Add script to check list of files (and the # of events).

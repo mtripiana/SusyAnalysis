@@ -113,9 +113,11 @@ bool  is_Tau(int pid){ return (fabs(pid)==15); };
 bool  is_Lepton(int pid){ return (is_Electron(pid) || is_Muon(pid) || is_Tau(pid)); };
 bool  is_Neutrino(int pid){ return (fabs(pid)==12 || fabs(pid)==14 || fabs(pid)==16); };
 bool  is_LepNeut(int pid){ return (is_Lepton(pid) || is_Neutrino(pid)); };
+bool  is_Parton(int pid){ return ((fabs(pid)>0 && fabs(pid)<7) || fabs(pid)==21);};
 bool  is_HF(int pid){ return (fabs(pid)==4 || fabs(pid)==5); };
 bool  is_Stable(int status){ return (status==1); };
 bool  is_Hard(int status){ return (status==3); };
+
 
 bool  isHard(const xAOD::TruthParticle* p){ return is_Hard( p->status() ); };
 bool  isLepton(const xAOD::TruthParticle *p){ return is_Lepton( p->pdgId() ); };

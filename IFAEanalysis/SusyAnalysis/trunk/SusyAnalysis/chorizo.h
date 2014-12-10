@@ -45,7 +45,6 @@
 #include "SUSYTools/SUSYCrossSection.h"
 
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
-//#include "SUSYTools/BTagCalib.h"
 #include "fastjet/ClusterSequence.hh"
 #include "BCHCleaningTool/BCHCleaningToolRoot.h"
 
@@ -56,7 +55,6 @@
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
-//#include "boost/unordered_map.hpp"
 
 
 #ifndef __MAKECINT__
@@ -65,17 +63,16 @@
 #include "xAODTruth/TruthParticle.h"
 #endif // not __MAKECINT__
 
-/* #include "METSmearing/MissingETSmearing.h" */
-/* #include "TruthToRecoFunctions/ElectronParam.h" */
-/* #include "TruthToRecoFunctions/JetParam.h" */
-/* #include "TruthToRecoFunctions/TauParam.h" */
-/* #include "TruthToRecoFunctions/METParam.h" */
-/* #include <TruthToRecoFunctions/MCP_resol.h> */
-/* #include "TruthToRecoFunctions/btag_performance.h" */
+//TeV unit (w.r.t MeV)
+#ifndef TEV
+#define TEV 1000000.
+#endif
 
-/* namespace METSmear{ */
-/*   class MissingETSmearing; */
-/* } */
+//GeV unit (w.r.t MeV)
+#ifndef GEV
+#define GEV 1000.
+#endif 
+
 
 namespace LHAPDF{
   class PDF;
@@ -103,18 +100,21 @@ using namespace fastjet;
 typedef std::pair<std::vector<float>, std::vector<float> > VFloatPair;     
 typedef std::vector<std::vector<float> > VVFloat;                          
 
-
 class JetCleaningTool;
+
+enum ZDecayMode{
+  None = -1,
+  Unknown,
+  ee,
+  mumu,
+  hadronic,
+  invisible
+};
 
 
 class chorizo : public EL::Algorithm
 {
-  // put your configuration variables here as public variables.
-  // that way they can be set directly from CINT and python.
 public:
-  // float cutValue;
-
-
 
   // variables that don't get filled at submission time should be
   // protected from being send from the submission node to the worker
@@ -206,7 +206,6 @@ private:
 #endif // not __CINT__
 
   DataPeriod     tool_DPeriod; //!
-  //METUtility*    tool_metutil; //NOT USED YET
   FakeMetEstimator* tool_fakeMet; //!
   JVFUncertaintyTool* tool_jvf; //!
   JetCleaningTool* tool_jClean; //!  
@@ -227,6 +226,7 @@ private:
   virtual void bookTree();
 
   virtual void dumpLeptons();
+  virtual void dumpPhotons();
   virtual void dumpJets();
   virtual void fillRazor();
 
@@ -242,6 +242,8 @@ private:
   virtual int GetNTruthLeptons();
 
   virtual void GetTruthShat(long int sigSamPdgId);
+
+  std::vector<int> GetTruthZDecay(TLorentzVector &ztlv);
 
   virtual double GetGeneratorUncertaintiesSherpa();
 
@@ -355,6 +357,7 @@ private:
   //OverlapRemoval
   bool  doOR;
   bool  doORharmo;
+  bool  doORphotons;
 
   //track veto
   bool  tVeto_Enable; //! 
@@ -385,6 +388,16 @@ private:
   float Mu_RecoPtCut; //!
   float Mu_RecoEtaCut; //!
   TString Mu_isoType; //!
+
+  //photons
+  float Ph_PreselPtCut; //!
+  float Ph_PreselEtaCut; //!
+  float Ph_RecoPtCut; //!
+  float Ph_RecoEtaCut; //!
+  TString Ph_isoType; //!
+  bool Ph_recoSF; //!
+  bool Ph_idSF; //!
+  bool Ph_triggerSF; //!  
 
 #ifndef __CINT__
   ST::IsSignalElectronExpCutArgs* elIsoArgs; //
@@ -439,16 +452,6 @@ private:
   /* std::vector<float> btag_weight_L_up; //! */
   /* std::vector<float> btag_weight_L_up_80eff; //! */
 
-  //RecoToTruth smearing                                                           
-  bool recalc_jetflav; //!
-  //  TRandom1* myRand; //!
-
-  /* ElectronParam m_ElectronParam; */
-  /* //PhotonParam m_PhotonParam; */
-  /* JetParam m_JetParam; */
-  /* TauParam m_TauParam; */
-  /* METParam m_METParam; */
-
   //smeared jets kin (for QCD estimation)
   std::vector<float> smr_met_jets_pt; //!
   std::vector<float> smr_met_jets_eta; //!
@@ -478,6 +481,7 @@ private:
 
   //Particle collections
   std::vector<Particle> recoElectrons; //!
+  std::vector<Particle> recoPhotons; //!
   std::vector<Particle> truthElectrons; //!
   std::vector<Particle> recoMuons; //!
   std::vector<Particles::Jet> recoJets; //!
@@ -576,6 +580,11 @@ private:
   float   bosonVec_truth_eta;
   float   bosonVec_truth_phi;
 
+  int     Z_decay; //0=unknown, 1=ee, 2=mumu, 3=qq, 4=nunu, -99=no-Z-found
+  float   Z_pt; 
+  float   Z_eta;
+  float   Z_phi;
+
   //- truth kin info
   float truth_MT;
   float truth_M;
@@ -614,6 +623,8 @@ private:
   float ph_ptiso30;
   float ph_etiso30;
   bool  ph_tight; 
+  int   ph_type; 
+  int   ph_origin; 
   float photonSF;
   float photonSFu;
   float photonSFd;
@@ -769,6 +780,9 @@ private:
   float met_lochadtopo;
   float met_reffinalNoMu;
 
+  //recoiling system
+  float rmet_par;  //parallel
+  float rmet_per;  //perpendicular
 
   //- Topologic variables
   float dPhi_met_j1;
