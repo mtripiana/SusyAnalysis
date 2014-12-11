@@ -50,13 +50,13 @@ static SG::AuxElement::Decorator<char> dec_bjet("bjet");
 static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
 static SG::AuxElement::Decorator<char> dec_final("final");
 
-//static SG::AuxElement::Decorator<float> dec_ptcone20("ptcone20");
-//static SG::AuxElement::Decorator<float> dec_ptcone30("ptcone30");
-//static SG::AuxElement::Decorator<float> dec_etcone20("etcone20");
-//static SG::AuxElement::Decorator<float> dec_etcone30("etcone30");
+static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
+static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
+static SG::AuxElement::Accessor<float> acc_etcone20("etcone20");
+static SG::AuxElement::Accessor<float> acc_etcone30("etcone30");
 
-static SG::AuxElement::Decorator<unsigned char> dec_nPixHits("numberOfPixelHits");
-static SG::AuxElement::Decorator<unsigned char> dec_nSCTHits("numberOfSCTHits");
+static SG::AuxElement::Accesor<unsigned char> acc_nPixHits("numberOfPixelHits");
+static SG::AuxElement::Accesor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
 
 chorizo :: chorizo ()
@@ -1929,14 +1929,10 @@ EL::StatusCode chorizo :: loop ()
       if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
 
       recoElectron.id = iEl;
-      //      recoElectron.ptcone20 = dec_ptcone20(*el_itr) * 0.001;
-      //      recoElectron.etcone20 = dec_etcone20(*el_itr) * 0.001;
-      //      recoElectron.ptcone30 = dec_ptcone30(*el_itr) * 0.001;
-      //      recoElectron.etcone30 = dec_etcone30(*el_itr) * 0.001;
-      recoElectron.ptcone20 = (*el_itr).auxdata<float>("ptcone20");
-      recoElectron.etcone20 = (*el_itr).auxdata<float>("etcone20");
-      recoElectron.ptcone30 = (*el_itr).auxdata<float>("ptcone30");
-      recoElectron.etcone30 = (*el_itr).auxdata<float>("etcone30");
+      recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
+      recoElectron.etcone20 = acc_etcone20(*el_itr) * 0.001;
+      recoElectron.ptcone30 = acc_ptcone30(*el_itr) * 0.001;
+      recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
       (*el_itr).passSelection(recoElectron.isTight, "Tight");
 
       recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
@@ -2000,14 +1996,10 @@ EL::StatusCode chorizo :: loop ()
       recoMuon.SetVector( getTLV( &(*mu_itr) ));
 
       recoMuon.id = iMu;
-      //      recoMuon.ptcone20 = dec_ptcone20(*mu_itr) * 0.001;
-      //      recoMuon.etcone20 = dec_etcone20(*mu_itr) * 0.001;
-      // recoMuon.ptcone30 = dec_ptcone30(*mu_itr) * 0.001;
-      // recoMuon.etcone30 = dec_etcone30(*mu_itr) * 0.001;
-      recoMuon.ptcone20 = (*mu_itr).auxdata<float>("ptcone20");
-      recoMuon.etcone20 = (*mu_itr).auxdata<float>("etcone20");
-      recoMuon.ptcone30 = (*mu_itr).auxdata<float>("ptcone30");
-      recoMuon.etcone30 = (*mu_itr).auxdata<float>("etcone30");
+      recoMuon.ptcone20 = acc_ptcone20(*mu_itr) * 0.001;
+      recoMuon.etcone20 = acc_etcone20(*mu_itr) * 0.001;
+      recoMuon.ptcone30 = acc_ptcone30(*mu_itr) * 0.001;
+      recoMuon.etcone30 = acc_etcone30(*mu_itr) * 0.001;
       recoMuon.charge   = (float) (*mu_itr).charge();
       //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
       
@@ -2075,14 +2067,10 @@ EL::StatusCode chorizo :: loop ()
       if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
 
       recoPhoton.id = iEl;
-      //      recoPhoton.ptcone20 = dec_ptcone20(*ph_itr) * 0.001;
-      //      recoPhoton.etcone20 = dec_etcone20(*ph_itr) * 0.001;
-      // recoPhoton.ptcone30 = dec_ptcone30(*ph_itr) * 0.001;
-      // recoPhoton.etcone30 = dec_etcone30(*ph_itr) * 0.001;
-      recoPhoton.ptcone20 = (*ph_itr).auxdata<float>("ptcone20");
-      recoPhoton.etcone20 = (*ph_itr).auxdata<float>("etcone20");
-      recoPhoton.ptcone30 = (*ph_itr).auxdata<float>("ptcone30");
-      recoPhoton.etcone30 = (*ph_itr).auxdata<float>("etcone30");
+      recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
+      recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
+      recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
+      recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
       (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
 
       recoPhoton.type   = xAOD::EgammaHelpers::getParticleTruthType( ph_itr );

@@ -1,3 +1,6 @@
+2014-12-11 Martin <tripiana@cern.ch>
+	* Add accesors for isolation variables.
+
 2014-12-10 Martin <tripiana@cern.ch>
 	* Update to Base,2.0.20
 	* Add photon variables
