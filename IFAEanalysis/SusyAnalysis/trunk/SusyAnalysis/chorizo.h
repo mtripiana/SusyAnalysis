@@ -73,6 +73,9 @@
 #define GEV 1000.
 #endif 
 
+//MET flavours
+enum class MetDef {InvMu, VisMu, InvPh, N};
+
 
 namespace LHAPDF{
   class PDF;

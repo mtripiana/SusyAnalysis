@@ -55,8 +55,8 @@ static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
 static SG::AuxElement::Accessor<float> acc_etcone20("etcone20");
 static SG::AuxElement::Accessor<float> acc_etcone30("etcone30");
 
-static SG::AuxElement::Accesor<unsigned char> acc_nPixHits("numberOfPixelHits");
-static SG::AuxElement::Accesor<unsigned char> acc_nSCTHits("numberOfSCTHits");
+static SG::AuxElement::Accessor<unsigned char> acc_nPixHits("numberOfPixelHits");
+static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
 
 chorizo :: chorizo ()
@@ -493,7 +493,6 @@ EL::StatusCode chorizo :: histInitialize ()
 
   //JopOption
   meta_jOption= new TNamed("jOption", jOption.c_str());
-  //meta_jOption= new TNamed("jOption", "METbb");
   wk()->addOutput(meta_jOption);     
 
   //Histos
@@ -1246,10 +1245,8 @@ EL::StatusCode chorizo :: initialize ()
 
   // get event info needed for tool's config
   const xAOD::EventInfo* eventInfo = 0;
-  if( ! m_event->retrieve( eventInfo, "EventInfo").isSuccess() ){
-    Error("initialize()", "Failed to retrieve event info collection. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( eventInfo, "EventInfo") );
+
   isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
 
   //*** Initialize all CP tools
@@ -1270,7 +1267,8 @@ EL::StatusCode chorizo :: initialize ()
   if(syst_CP.size()){
 
     // Tell the SUSYObjDef_xAOD which variation to apply
-    if (tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){
+    CP::SystematicCode ret = tool_st->applySystematicVariation( syst_CP );
+    if (ret != CP::SystematicCode::Ok){
       Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
     }else{
       Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
@@ -1489,10 +1487,7 @@ EL::StatusCode chorizo :: loop ()
   // Event information
   //--------------------------- 
   const xAOD::EventInfo* eventInfo = 0;
-  if( ! m_event->retrieve( eventInfo, "EventInfo").isSuccess() ){
-    Error("loop()", "Failed to retrieve 'EventInfo' collection. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
   loadMetaData();
 
@@ -1696,10 +1691,8 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Vertex selection   (Note: It might not be needed at all in Run2!)
   const xAOD::VertexContainer* vertices = 0;
-  if( ! m_event->retrieve( vertices, "PrimaryVertices").isSuccess() ){
-    Error("loop()", "Failed to retrieve PrimaryVertices container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( vertices, "PrimaryVertices") );
+
   nVertex = static_cast< int >( vertices->size() );
 
   // if (!doFlowTree && nVertex==0)
@@ -1943,7 +1936,12 @@ EL::StatusCode chorizo :: loop ()
 	//nominal
 	recoElectron.SF = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF );
 	
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+
+	//reset back to requested systematic!
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
+
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
 	}
@@ -1956,8 +1954,10 @@ EL::StatusCode chorizo :: loop ()
 	}
 	recoElectron.SFd = tool_st->GetSignalElecSF( *el_itr );
 	
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
-	
+	CP::SystematicCode ret = tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if( ret != CP::SystematicCode::Ok){
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
       }
       
       electronCandidates.push_back(recoElectron);
@@ -2294,6 +2294,7 @@ EL::StatusCode chorizo :: loop ()
       Particle electron;
       electron.SetVector( getTLV( *truthP_itr ) ); 
       truthElectrons.push_back(electron);
+
     }
     //sort truth electrons in pt 
     if (truthElectrons.size()>0) std::sort(truthElectrons.begin(), truthElectrons.end());
@@ -2539,23 +2540,14 @@ EL::StatusCode chorizo :: loop ()
   const xAOD::MissingETContainer* cmet_lhtopo;
   const xAOD::MissingETContainer* cmet_track;
 
-  if( ! m_event->retrieve( cmet_reffinal, "MET_RefFinal").isSuccess() ){
-    Error("loop()", "Failed to retrieve MET_RefFinal container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
-  if( ! m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo").isSuccess() ){
-    Error("loop()", "Failed to retrieve MET_LocHadTopo container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
-  if( ! m_event->retrieve( cmet_track, "MET_Track").isSuccess() ){
-    Error("loop()", "Failed to retrieve MET_Track container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") );
+  CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );
+  CHECK( m_event->retrieve( cmet_track, "MET_Track") );
 
   const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
   const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-  //  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
-  const xAOD::MissingET* mtrack = (*cmet_track)["Track"];
+  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
+  //const xAOD::MissingET* mtrack = (*cmet_track)["Track"];
 
   //** Met components
   //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
@@ -2641,6 +2633,17 @@ EL::StatusCode chorizo :: loop ()
   v_met_phinv_ST.Set( v_met_phinv_ST.Px() + vphs.Px(), v_met_phinv_ST.Py() + vphs.Py() );
 
   met_obj.SetVector(v_met_phinv_ST, "met_phcorr", true); //already in GeV    
+
+
+
+  //***development
+  // book MET flavours
+  std::map<MetDef, TVector2> metmap;
+  metmap[MetDef::InvMu] = met_obj.GetVector();
+  metmap[MetDef::VisMu] = met_obj.GetVector("met_mu");
+
+  //***
+
 
   //***
   if(doORphotons) //FIX_ME //temporary hack to accomodate ttbargamma studies. This way all met-related variables are computed with invisible photons
@@ -3379,13 +3382,6 @@ bool chorizo :: vetoMCevent(){
   if(!this->isMC) return false; //do not veto data events!
 
   bool doVeto=false;
-
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("vetoMCevent()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
   
   //to loop over  
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
@@ -3625,10 +3621,8 @@ bool chorizo :: passMCor(){
   if( count(check_ids, check_ids+84, this->mc_channel_number) ){
     TVector2 met(0.,0.);
     xAOD::MissingETContainer* metRFcutvar; // = new xAOD::MissingETContainer;
-    if( ! m_event->retrieve( metRFcutvar, "MET_RefFinal").isSuccess() ){
-      Error("loop()", "Failed to retrieve MET_RefFinal container. Exiting." );
-      return EL::StatusCode::FAILURE;
-    }
+    CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
+
     met = getMET( metRFcutvar, "Final"); //METRefFinal for now... //FIX_ME !! Reco MET??
 
     bos_pt = met.Mod();
@@ -3752,13 +3746,6 @@ float chorizo :: GetTTbarReweight(float &Top_truth_pt, float &Topbar_truth_pt, f
   bool foundTop = false;
   bool foundTopbar = false;
 
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetTTbarReweight()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
-
   xAOD::TruthParticleContainer::const_iterator truthP_itr = m_truthP->begin();
   xAOD::TruthParticleContainer::const_iterator truthP_end = m_truthP->end();
   
@@ -3808,12 +3795,6 @@ int chorizo::GetNTruthB(){
   float truth_bjet_threshold = 30.;
   float truth_bjet_eta = 2.5;
 
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetNTruthB()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
 
   xAOD::TruthParticleContainer::const_iterator truthP_itr = m_truthP->begin();
   xAOD::TruthParticleContainer::const_iterator truthP_end = m_truthP->end();
@@ -3838,13 +3819,6 @@ int chorizo :: GetNTruthHF(){
   float truth_HFjet_threshold = 30.;
   float truth_HFjet_eta = 2.5;
 
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetNTruthHF()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
-
   xAOD::TruthParticleContainer::const_iterator truthP_itr = m_truthP->begin();
   xAOD::TruthParticleContainer::const_iterator truthP_end = m_truthP->end();  
 
@@ -3866,13 +3840,6 @@ int chorizo :: GetNTruthHF(){
 int chorizo :: GetNTruthLeptons(){
   
   int lep_counter = 0;
-
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetNTruthLeptons()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   return EL::StatusCode::FAILURE;
-  // }
 
   xAOD::TruthParticleContainer::const_iterator truthP_itr = m_truthP->begin();
   xAOD::TruthParticleContainer::const_iterator truthP_end = m_truthP->end();  
@@ -3976,14 +3943,6 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
   TLorentzVector V(0.,0.,0.,0.);
   TLorentzVector l1, l2;
   int i= 0;
-
-  // //retrieve truth particles container 
-  // const xAOD::TruthParticleContainer* truthP;    
-  // if ( !m_event->retrieve( truthP, "TruthParticle" ).isSuccess() ){ 
-  //   Error("GetTruthShat()", "Failed to retrieve 'TruthParticle' container. Exiting." );
-  //   throw EL::StatusCode::FAILURE;
-  //   //return 
-  // }
 
   xAOD::TruthParticleContainer::const_iterator truthP_itr = m_truthP->begin();
   xAOD::TruthParticleContainer::const_iterator truthP_end = m_truthP->end();
@@ -4878,10 +4837,7 @@ EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, 
   
   //retrieve track container
   const xAOD::TrackParticleContainer* tracks;
-  if ( !m_event->retrieve( tracks, "GSFTrackParticles" ).isSuccess() ){ 
-    Error("doTrackVeto()", "Failed to retrieve 'GSFTrackParticles' container. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( m_event->retrieve( tracks, "GSFTrackParticles" ) );
 
   //track loop
   xAOD::TrackParticleContainer::const_iterator trk_itr = tracks->begin();
@@ -4899,8 +4855,8 @@ EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, 
     if( (*trk_itr)->numberDoF() == tVeto_ndof ) continue;
     double trch = (*trk_itr)->chiSquared() / (*trk_itr)->numberDoF();
     if( (trch < tVeto_chi2OverNdof_min) || (trch > tVeto_chi2OverNdof_max) ) continue;
-    int trk_PixHits = dec_nPixHits(**trk_itr);
-    int trk_SCTHits = dec_nSCTHits(**trk_itr);
+    int trk_PixHits = acc_nPixHits(**trk_itr);
+    int trk_SCTHits = acc_nSCTHits(**trk_itr);
     if( trk_PixHits+trk_SCTHits < PixHitsAndSCTHits ) continue;
     
     // require track isolation
