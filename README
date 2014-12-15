@@ -96,6 +96,7 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 			         -b            : run in batch          
 				 -p            : run on the grid    (prun)   
 				 -g            : run on the grid    (ganga)     
+				 -u            : generate pileup file (overrides jOption config)
 				 -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
 				 -t            : run just a test over 50 events
 				 -n=<N>        : run over N events
