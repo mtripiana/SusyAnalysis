@@ -30,7 +30,7 @@
 #define DUMMYDN -99999
 
 //For code profiling tests
-#define PROFCODE
+//#define PROFCODE
 #ifdef PROFCODE
 #include <valgrind/callgrind.h>
 #endif
@@ -292,7 +292,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("n_jets50",&n_jets50,"n_jets50/I", 10000);
       output->tree()->Branch("n_jets60",&n_jets60,"n_jets60/I", 10000);
       output->tree()->Branch("n_jets80",&n_jets80,"n_jets80/I", 10000);
-      output->tree()->Branch("n_taujets",&n_taujets,"n_taujets/I", 10000);
+      output->tree()->Branch("n_taujets",&n_taujets);
       output->tree()->Branch("pt1",&pt1,"pt1/F", 10000);
       output->tree()->Branch("pt2",&pt2,"pt2/F", 10000);
       output->tree()->Branch("pt3",&pt3,"pt3/F", 10000);
@@ -327,10 +327,10 @@ void chorizo :: bookTree(){
       output->tree()->Branch("j2_time",&j2_time,"j2_time/F", 10000);
       output->tree()->Branch("j3_time",&j3_time,"j3_time/F", 10000);
       output->tree()->Branch("j4_time",&j4_time,"j4_time/F", 10000);
-      output->tree()->Branch("j1_mT",&j1_mT,"j1_mT/F", 10000);
-      output->tree()->Branch("j2_mT",&j2_mT,"j2_mT/F", 10000);
-      output->tree()->Branch("j3_mT",&j3_mT,"j3_mT/F", 10000);
-      output->tree()->Branch("j4_mT",&j4_mT,"j4_mT/F", 10000);
+      output->tree()->Branch("j1_mT",&j1_mT);
+      output->tree()->Branch("j2_mT",&j2_mT);
+      output->tree()->Branch("j3_mT",&j3_mT);
+      output->tree()->Branch("j4_mT",&j4_mT);
       output->tree()->Branch("j1_nTrk",&j1_nTrk,"j1_nTrk/F", 10000);
       output->tree()->Branch("j2_nTrk",&j2_nTrk,"j2_nTrk/F", 10000);
       output->tree()->Branch("j3_nTrk",&j3_nTrk,"j3_nTrk/F", 10000);
@@ -381,31 +381,40 @@ void chorizo :: bookTree(){
       output->tree()->Branch("tag_JetFitterCb_4",&tag_JetFitterCb_4,"tag_JetFitterCb_4/F", 10000);
       
       //met 
-      output->tree()->Branch("met",&met,"met/F", 10000);
-      output->tree()->Branch("met_phi",&met_phi,"met_phi/F", 10000);
-      output->tree()->Branch("met_trk", &met_trk, "met_trk/F", 10000);
-      output->tree()->Branch("mettrk_phi",&mettrk_phi,"mettrk_phi/F", 10000);    
-      output->tree()->Branch("met_mu", &met_mu, "met_mu/F", 10000);
-      output->tree()->Branch("met_ecorr", &met_ecorr, "met_ecorr/F", 10000);
+      
+      // save vector
+      output->tree()->Branch("met",&met);   
+      output->tree()->Branch("met_phi",&met_phi);           
+      output->tree()->Branch("met_trk", &met_trk, "met_trk/F", 10000);      
+      output->tree()->Branch("mettrk_phi",&mettrk_phi, "mettrk_phi/F", 10000);       
       output->tree()->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
       output->tree()->Branch("met_reffinalNoMu", &met_reffinalNoMu, "met_reffinalNoMu/F", 10000);
 
-      output->tree()->Branch("rmet_par", &rmet_par, "rmet_par/F", 10000);
-      output->tree()->Branch("rmet_per", &rmet_per, "rmet_per/F", 10000);
-
+      output->tree()->Branch("rmet_par", &rmet_par);
+      output->tree()->Branch("rmet_norm", &rmet_norm);
+      output->tree()->Branch("rmet_par_div", &rmet_par_div);
+      output->tree()->Branch("rmet_norm_div", &rmet_norm_div);
+      output->tree()->Branch("rmet_dPhi_jet_system", &rmet_dPhi_jet_system);      
+      
       //event variables
       //dphi
-      output->tree()->Branch("dPhi_met_j1",&dPhi_met_j1,"dPhi_met_j1/f", 10000);
-      output->tree()->Branch("dPhi_met_j2",&dPhi_met_j2,"dPhi_met_j2/f", 10000);
-      output->tree()->Branch("dPhi_met_j3",&dPhi_met_j3,"dPhi_met_j3/f", 10000);
-      output->tree()->Branch("dPhi_met_j4",&dPhi_met_j4,"dPhi_met_j4/f", 10000);
+      
+      output->tree()->Branch("dPhi_met_j1",&dPhi_met_j1);
+      output->tree()->Branch("dPhi_met_j2",&dPhi_met_j2);
+      output->tree()->Branch("dPhi_met_j3",&dPhi_met_j3);
+      output->tree()->Branch("dPhi_met_j4",&dPhi_met_j4);	   
+     
+    
       output->tree()->Branch("dPhi_mettrk_j1",&dPhi_mettrk_j1,"dPhi_mettrk_j1/f", 10000);
       output->tree()->Branch("dPhi_mettrk_j2",&dPhi_mettrk_j2,"dPhi_mettrk_j2/f", 10000);
       output->tree()->Branch("dPhi_mettrk_j3",&dPhi_mettrk_j3,"dPhi_mettrk_j3/f", 10000);
-      output->tree()->Branch("dPhi_mettrk_j4",&dPhi_mettrk_j4,"dPhi_mettrk_j4/f", 10000);
-      output->tree()->Branch("dPhi_met_mettrk",&dPhi_met_mettrk,"dPhi_met_mettrk/f", 10000);
-      output->tree()->Branch("dPhi_min",&dPhi_min,"dPhi_min/f", 10000);
-      output->tree()->Branch("dPhi_min_alljets",&dPhi_min_alljets,"dPhi_min_alljets/f", 10000);
+      output->tree()->Branch("dPhi_mettrk_j4",&dPhi_mettrk_j4,"dPhi_mettrk_j4/f", 10000);      
+
+      
+      output->tree()->Branch("dPhi_met_mettrk",&dPhi_met_mettrk);
+      output->tree()->Branch("dPhi_min",&dPhi_min);
+      output->tree()->Branch("dPhi_min_alljets",&dPhi_min_alljets);
+      
 
       output->tree()->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
       output->tree()->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
@@ -428,29 +437,35 @@ void chorizo :: bookTree(){
       output->tree()->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
 
       //MTs
-      output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met,"MT_min_jet_met/F", 10000);      output->tree()->Branch("MT_bcl_met",&MT_bcl_met,"MT_bcl_met/F", 10000);        
-      output->tree()->Branch("MT_bfar_met",&MT_bfar_met,"MT_bfar_met/F", 10000);        
-      output->tree()->Branch("MT_lcl_met",&MT_lcl_met,"MT_lcl_met/F", 10000);        
-      output->tree()->Branch("MT_jsoft_met",&MT_jsoft_met,"MT_jsoft_met/F", 10000);   
-
+      output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met);      
+      output->tree()->Branch("MT_bcl_met",&MT_bcl_met);        
+      output->tree()->Branch("MT_bfar_met",&MT_bfar_met);        
+      output->tree()->Branch("MT_lcl_met",&MT_lcl_met);        
+      output->tree()->Branch("MT_jsoft_met",&MT_jsoft_met); 
+      
+      
       //Misc
       output->tree()->Branch("DiJet_Mass",&DiJet_Mass,"DiJet_Mass/F", 10000);  
       output->tree()->Branch("DiBJet_Mass",&DiBJet_Mass,"DiBJet_Mass/F", 10000);         
       
       output->tree()->Branch("mct",&mct,"mct/F", 10000);    
-      output->tree()->Branch("meff",&meff,"meff/F", 10000);    
-      output->tree()->Branch("HT",&HT,"HT/F", 10000);    
+      output->tree()->Branch("meff",&meff);        
+      output->tree()->Branch("HT",&HT,"HT/F", 10000);         
       output->tree()->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
       
       //Razor
       output->tree()->Branch("MR",&MR,"MR/F", 10000);
-      output->tree()->Branch("MTR",&MTR,"MTR/F", 10000);
-      output->tree()->Branch("R",&R,"R/F", 10000); 
-            
-      output->tree()->Branch("shatR",&shatR,"shatR/F", 10000);
-      output->tree()->Branch("gaminvR",&gaminvR,"gaminvR/F", 10000);
-      output->tree()->Branch("mdeltaR",&mdeltaR,"mdeltaR/F", 10000);
-      output->tree()->Branch("cosptR",&cosptR,"cosptR/F", 10000);
+      
+      output->tree()->Branch("MTR",&MTR);
+      output->tree()->Branch("R",&R);       
+      
+      output->tree()->Branch("shatR",&shatR);
+      output->tree()->Branch("gaminvR",&gaminvR);
+      output->tree()->Branch("mdeltaR",&mdeltaR);
+      output->tree()->Branch("cosptR",&cosptR);            
+
+     
+      
       
       //top reconstruction
       output->tree()->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
@@ -466,8 +481,12 @@ void chorizo :: bookTree(){
       output->tree()->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
       output->tree()->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
       output->tree()->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
-      output->tree()->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
+      output->tree()->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);  
       
+      //(transverse) sphericity
+      output->tree()->Branch("tr_spher",&tr_spher);      
+      //(transverse) thrust
+      output->tree()->Branch("tr_thrust",&tr_thrust);                   
 
     }
     else if(doPUTree){
@@ -711,7 +730,7 @@ void chorizo :: InitVars()
   n_jets50=0;
   n_jets60=0;
   n_jets80=0;
-  n_taujets=0;
+  n_taujets.clear();
   pt1 = DUMMYDN;              
   pt2 = DUMMYDN;              
   pt3 = DUMMYDN;              
@@ -746,10 +765,10 @@ void chorizo :: InitVars()
   j2_time = DUMMYDN;          
   j3_time = DUMMYDN;          
   j4_time = DUMMYDN;          
-  j1_mT = DUMMYDN;            
-  j2_mT = DUMMYDN;            
-  j3_mT = DUMMYDN;            
-  j4_mT = DUMMYDN;            
+  j1_mT.clear();            
+  j2_mT.clear();            
+  j3_mT.clear();            
+  j4_mT.clear();            
   j1_nTrk = DUMMYDN;                               
   j2_nTrk = DUMMYDN;                               
   j3_nTrk = DUMMYDN;                               
@@ -830,34 +849,38 @@ void chorizo :: InitVars()
   Jet3_BCH_CORR_CELL = DUMMYDN;     
 
   //met 
-  met = DUMMYDN;
-  met_phi = DUMMYDN;
-  met_trk = DUMMYDN;
-  mettrk_phi = DUMMYDN;
-  met_mu = DUMMYDN;
-  met_ecorr = DUMMYDN;
+  met.clear();  
+  met_phi.clear();
+  met_trk= DUMMYDN;
+  mettrk_phi= DUMMYDN;
   met_lochadtopo = DUMMYDN;
   met_reffinalNoMu = DUMMYDN;
 
-  rmet_par = DUMMYDN;
-  rmet_per = DUMMYDN;
+  rmet_par.clear();
+  rmet_norm.clear();
+  rmet_par_div.clear();
+  rmet_norm_div.clear();
+  rmet_dPhi_jet_system.clear();
+  
 
   //event variables 
-  dPhi_met_j1 = DUMMYDN;                         
-  dPhi_met_j2 = DUMMYDN;                         
-  dPhi_met_j3 = DUMMYDN;                         
-  dPhi_met_j4 = DUMMYDN;                         
-  dPhi_mettrk_j1 = DUMMYDN;                      
-  dPhi_mettrk_j2 = DUMMYDN;                      
-  dPhi_mettrk_j3 = DUMMYDN;                      
-  dPhi_mettrk_j4 = DUMMYDN;                      
-  dPhi_met_mettrk = DUMMYDN;                     
+  dPhi_met_j1.clear();                         
+  dPhi_met_j2.clear();                         
+  dPhi_met_j3.clear();                         
+  dPhi_met_j4.clear();                           
+  dPhi_mettrk_j1= DUMMYDN;                      
+  dPhi_mettrk_j2= DUMMYDN;                      
+  dPhi_mettrk_j3= DUMMYDN;                      
+  dPhi_mettrk_j4= DUMMYDN;                      
+  dPhi_met_mettrk.clear();                     
+  
+  
   dPhi_j1_j2 = DUMMYDN;                          
   dPhi_j1_j3 = DUMMYDN;                          
   dPhi_j2_j3 = DUMMYDN;                          
   dPhi_b1_b2 = DUMMYDN;                          
-  dPhi_min = DUMMYDN;                            
-  dPhi_min_alljets = DUMMYDN;                    
+  dPhi_min.clear();                            
+  dPhi_min_alljets.clear();                    
   dR_j1_j2 = DUMMYDN;                            
   dR_j1_j3 = DUMMYDN;                            
   dR_j2_j3 = DUMMYDN;                            
@@ -871,30 +894,31 @@ void chorizo :: InitVars()
 
   M12 = DUMMYDN;
 
-  MT_min_jet_met = DUMMYDN;  
-  MT_bcl_met = DUMMYDN;  
-  MT_bfar_met = DUMMYDN;  
-  MT_lcl_met = DUMMYDN;  
-  MT_jsoft_met = DUMMYDN;  
-
+  MT_min_jet_met.clear();  
+  MT_bcl_met.clear();  
+  MT_bfar_met.clear();  
+  MT_lcl_met.clear();  
+  MT_jsoft_met.clear();  
+  
   DiJet_Mass=0;
   DiBJet_Mass=0;
 
   mct=0.;
-  meff=0.;
+  meff.clear();
   HT=0.;
 
   AlphaT=DUMMYDN;
 
   //Razor
   MR=DUMMYDN;
-  MTR=DUMMYDN;
-  R=DUMMYDN;
-  shatR=DUMMYDN;
-  gaminvR=DUMMYDN;
-  mdeltaR=DUMMYDN;
-  cosptR=DUMMYDN;
-    
+  MTR.clear();
+  R.clear();
+  shatR.clear();
+  gaminvR.clear();
+  mdeltaR.clear();
+  cosptR.clear();
+  
+  
   //top reconstruction
   MtTop = DUMMYDN;
   m_top_had1 = DUMMYDN;
@@ -911,6 +935,13 @@ void chorizo :: InitVars()
   pt1_antikt08 = DUMMYDN;
   mtasym12 = DUMMYDN;
   mtasym08 = DUMMYDN;
+  
+  //(transverse) sphericity
+  spher_obj_px.clear();
+  spher_obj_py.clear();    
+  spher_obj_pz.clear();
+  tr_spher.clear(); 
+  tr_thrust.clear();   
 
   warningPileup = true; //to do some warnings prints first time only! (GetAverageWeight())
 
@@ -2665,32 +2696,39 @@ EL::StatusCode chorizo :: loop ()
     cout<<endl;
   }
 
-  //Recoiling system against MET
-  TLorentzVector sjet(0.,0.,0.,0.);
-  for (unsigned int iJet=0; iJet < recoJets.size(); ++iJet){
-    sjet += recoJets[iJet].GetVector();
-  }
- TVector2 sjet2(sjet.Px(), sjet.Py());
+   //Recoiling system against MET
+//   TLorentzVector sjet(0.,0.,0.,0.);
+//   for (unsigned int iJet=0; iJet < recoJets.size(); ++iJet){
+//     sjet += recoJets[iJet].GetVector();
+//   }
+//  TVector2 sjet2(sjet.Px(), sjet.Py());
+// 
+//  rmet_par = sjet2.Proj(v_met_ST).Mod();
+//  //keep the sign!
+//  if(sjet2.Proj(v_met_ST).DeltaPhi(v_met_ST) > TMath::Pi()/2.)
+//    rmet_par *= (-1);
+// 
+//  rmet_per = (sjet2-sjet2.Proj(v_met_ST)).Mod();
 
- rmet_par = sjet2.Proj(v_met_ST).Mod();
- //keep the sign!
- if(sjet2.Proj(v_met_ST).DeltaPhi(v_met_ST) > TMath::Pi()/2.)
-   rmet_par *= (-1);
 
- rmet_per = (sjet2-sjet2.Proj(v_met_ST)).Mod();
-
-
-  
+  //std::cout << "dommyno" << std::endl;
   //--- Fill metPhi and metMod data members
-  met = met_obj.GetVector("").Mod();
   met_trk = met_obj.GetVector("met_trk").Mod();
-  met_mu = met_obj.GetVector("met_mu").Mod();
   met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();
-  met_reffinalNoMu = met_obj.GetVector("met_refFinal_mu").Mod();
-  met_ecorr = met_obj.GetVector("met_ecorr").Mod();
-  met_phcorr = met_obj.GetVector("met_phcorr").Mod();
+  met_reffinalNoMu = met_obj.GetVector("met_refFinal_mu").Mod();  
   
-  met_phi = TVector2::Phi_mpi_pi( met_obj.GetVector("").Phi() ); //--- Phi defined between -pi and pi
+  
+  
+  met.push_back(met_obj.GetVector("").Mod());
+  met.push_back(met_obj.GetVector("met_mu").Mod());
+  met.push_back(met_obj.GetVector("met_ecorr").Mod());   
+  met.push_back(met_obj.GetVector("met_phcorr").Mod()); 
+  
+  met_phi.push_back(TVector2::Phi_mpi_pi( met_obj.GetVector("").Phi() )); //--- Phi defined between -pi and pi
+  met_phi.push_back(TVector2::Phi_mpi_pi( met_obj.GetVector("met_mu").Phi() )); //--- Phi defined between -pi and pi
+  met_phi.push_back(TVector2::Phi_mpi_pi( met_obj.GetVector("met_ecorr").Phi() )); //--- Phi defined between -pi and pi
+  met_phi.push_back(TVector2::Phi_mpi_pi( met_obj.GetVector("met_phcorr").Phi() )); //--- Phi defined between -pi and pi
+ 
   mettrk_phi = TVector2::Phi_mpi_pi( met_obj.GetVector("met_trk").Phi() ); //--- Phi defined between -pi and pi	
 
 
@@ -2749,10 +2787,16 @@ EL::StatusCode chorizo :: loop ()
   }
   
   //- dPhi & dR
-  dPhi_met_mettrk = deltaPhi(met_obj.Phi("met_trk"), met_obj.Phi("met"));
+  dPhi_met_mettrk.push_back(deltaPhi(met_obj.Phi("met_trk"), met_obj.Phi("met")));
+  dPhi_met_mettrk.push_back(deltaPhi(met_obj.Phi("met_trk"), met_obj.Phi("met_mu")));  
+  dPhi_met_mettrk.push_back(deltaPhi(met_obj.Phi("met_trk"), met_obj.Phi("met_ecorr"))); 
+  dPhi_met_mettrk.push_back(deltaPhi(met_obj.Phi("met_trk"), met_obj.Phi("met_phcorr"))); 
   
   if (n_jets>0){
-    dPhi_met_j1    = deltaPhi( met_obj.Phi(""), recoJets.at(0).Phi());
+    dPhi_met_j1.push_back(deltaPhi( met_obj.Phi(""), recoJets.at(0).Phi()));
+    dPhi_met_j1.push_back(deltaPhi( met_obj.Phi("met_mu"), recoJets.at(0).Phi()));    
+    dPhi_met_j1.push_back(deltaPhi( met_obj.Phi("met_ecorr"), recoJets.at(0).Phi()));    
+    dPhi_met_j1.push_back(deltaPhi( met_obj.Phi("met_phcorr"), recoJets.at(0).Phi()));    
     dPhi_mettrk_j1 = deltaPhi( met_obj.Phi("met_trk"), recoJets.at(0).Phi());	
     dPhi_j1_bp1 = deltaPhi(recoJets.at(0).Phi(), t_b_phi1);
     dPhi_j1_bp2 = deltaPhi(recoJets.at(0).Phi(), t_b_phi2);
@@ -2766,7 +2810,11 @@ EL::StatusCode chorizo :: loop ()
     }
     
     if (n_jets>1){
-      dPhi_met_j2    = deltaPhi( met_obj.Phi(""), recoJets.at(1).Phi());
+      dPhi_met_j2.push_back(deltaPhi( met_obj.Phi(""), recoJets.at(1).Phi()));
+      dPhi_met_j2.push_back(deltaPhi( met_obj.Phi("met_mu"), recoJets.at(1).Phi()));    
+      dPhi_met_j2.push_back(deltaPhi( met_obj.Phi("met_ecorr"), recoJets.at(1).Phi()));    
+      dPhi_met_j2.push_back(deltaPhi( met_obj.Phi("met_phcorr"), recoJets.at(1).Phi())); 
+      
       dPhi_mettrk_j2 = deltaPhi( met_obj.Phi("met_trk"), recoJets.at(1).Phi());	
       
       dPhi_j1_j2  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(1).Phi());
@@ -2785,7 +2833,11 @@ EL::StatusCode chorizo :: loop ()
       }
 
       if (n_jets>2){
-	dPhi_met_j3    = deltaPhi( met_obj.Phi(""), recoJets.at(2).Phi());
+	dPhi_met_j3.push_back(deltaPhi( met_obj.Phi(""), recoJets.at(2).Phi()));
+        dPhi_met_j3.push_back(deltaPhi( met_obj.Phi("met_mu"), recoJets.at(2).Phi()));    
+        dPhi_met_j3.push_back(deltaPhi( met_obj.Phi("met_ecorr"), recoJets.at(2).Phi()));    
+        dPhi_met_j3.push_back(deltaPhi( met_obj.Phi("met_phcorr"), recoJets.at(2).Phi())); 
+	
 	dPhi_mettrk_j3 = deltaPhi( met_obj.Phi("met_trk"), recoJets.at(2).Phi());	
 	dPhi_j1_j3  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(2).Phi());
 	dPhi_j2_j3  = deltaPhi(recoJets.at(1).Phi(), recoJets.at(2).Phi());
@@ -2804,7 +2856,10 @@ EL::StatusCode chorizo :: loop ()
 	}
 	
 	if(n_jets>3){
-	  dPhi_met_j4    = deltaPhi( met_obj.Phi(""), recoJets.at(3).Phi());
+	  dPhi_met_j4.push_back(deltaPhi( met_obj.Phi(""), recoJets.at(3).Phi()));
+          dPhi_met_j4.push_back(deltaPhi( met_obj.Phi("met_mu"), recoJets.at(3).Phi()));    
+          dPhi_met_j4.push_back(deltaPhi( met_obj.Phi("met_ecorr"), recoJets.at(3).Phi()));    
+          dPhi_met_j4.push_back(deltaPhi( met_obj.Phi("met_phcorr"), recoJets.at(3).Phi()));
 	  dPhi_mettrk_j4 = deltaPhi( met_obj.Phi("met_trk"), recoJets.at(3).Phi());
 	}   	    
       }
@@ -2826,13 +2881,26 @@ EL::StatusCode chorizo :: loop ()
   
   //- MT
   if(n_jets>0){
-    j1_mT = Calc_MT( recoJets.at(0), met_obj.GetVector("") );
+    j1_mT.push_back(Calc_MT( recoJets.at(0), met_obj.GetVector("") ));
+    j1_mT.push_back(Calc_MT( recoJets.at(0), met_obj.GetVector("met_mu") ));    
+    j1_mT.push_back(Calc_MT( recoJets.at(0), met_obj.GetVector("met_ecorr") ));    
+    j1_mT.push_back(Calc_MT( recoJets.at(0), met_obj.GetVector("met_phcorr") ));    
     if(n_jets>1){
-      j2_mT = Calc_MT( recoJets.at(1), met_obj.GetVector("") );
+          j2_mT.push_back(Calc_MT( recoJets.at(1), met_obj.GetVector("") ));
+    	  j2_mT.push_back(Calc_MT( recoJets.at(1), met_obj.GetVector("met_mu") ));    
+          j2_mT.push_back(Calc_MT( recoJets.at(1), met_obj.GetVector("met_ecorr") ));    
+          j2_mT.push_back(Calc_MT( recoJets.at(1), met_obj.GetVector("met_phcorr") ));
       if(n_jets>2){
-	j3_mT = Calc_MT( recoJets.at(2), met_obj.GetVector("") );
+          j3_mT.push_back(Calc_MT( recoJets.at(2), met_obj.GetVector("") ));
+    	  j3_mT.push_back(Calc_MT( recoJets.at(2), met_obj.GetVector("met_mu") ));    
+          j3_mT.push_back(Calc_MT( recoJets.at(2), met_obj.GetVector("met_ecorr") ));    
+          j3_mT.push_back(Calc_MT( recoJets.at(2), met_obj.GetVector("met_phcorr") ));	
+	
 	if(n_jets>3){
-	  j4_mT = Calc_MT( recoJets.at(3), met_obj.GetVector("") );    
+          j4_mT.push_back(Calc_MT( recoJets.at(3), met_obj.GetVector("") ));
+    	  j4_mT.push_back(Calc_MT( recoJets.at(3), met_obj.GetVector("met_mu") ));    
+          j4_mT.push_back(Calc_MT( recoJets.at(3), met_obj.GetVector("met_ecorr") ));    
+          j4_mT.push_back(Calc_MT( recoJets.at(3), met_obj.GetVector("met_phcorr") ));	      
 	}
       }
     }
@@ -2849,7 +2917,7 @@ EL::StatusCode chorizo :: loop ()
       TLorentzVector TruthTau3(0.,0.,0.,0.);
       TLorentzVector TruthTau4(0.,0.,0.,0.);
       
-      if(recoJets.at(2).nTrk>0 && recoJets.at(2).nTrk<5 && dPhi_met_j3 < TMath::Pi()/5. && j3_mT<100.){
+      if(recoJets.at(2).nTrk>0 && recoJets.at(2).nTrk<5 && dPhi_met_j3.at(0) < TMath::Pi()/5. && j3_mT.at(0)<100.){
 	
 	truthP_itr = m_truthP->begin();
 	for( ; truthP_itr != truthP_end; ++truthP_itr ) {
@@ -2863,7 +2931,7 @@ EL::StatusCode chorizo :: loop ()
       } 
       
       if (n_jets>3){
-	if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4 < TMath::Pi()/5. && j4_mT<100.){
+	if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4.at(0) < TMath::Pi()/5. && j4_mT.at(0)<100.){
 	  
 	  truthP_itr = m_truthP->begin();
 	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
@@ -2879,100 +2947,230 @@ EL::StatusCode chorizo :: loop ()
     }
   }
   
-  
-  float min_mt_jm=999999.;
-  int ibcl=-1;  //closest bjet to met
-  int ibfar=-1; //most faraway bjet from met
-  int ilcl=-1;  //closest light jet to met
-  float min_dphi_bm=999.;
-  float max_dphi_bm=0.;
-  float min_dphi_lm=999.;
-    
   int ibtop1=-1; //book two highest btag-weight jets for later use
   int ibtop2=-1;
   int iblead1=-1;
   int iblead2=-1;
-  float maxbw1=0;
-  float maxbw2=0;
   
-  std::vector<float> jets_mT;
-  std::vector<float> jets_dPhi_met;
-  std::vector<float> jets_dPhi_mettrk;
+  //met flavors loop
+  for(int ifl=0; ifl<4; ifl++){ 
   
-  for(int ijet=0; ijet < n_jets; ijet++){        
+    float min_mt_jm=999999.;
+    int ibcl=-1;  //closest bjet to met
+    int ibfar=-1; //most faraway bjet from met
+    int ilcl=-1;  //closest light jet to met
+    float min_dphi_bm=999.;
+    float max_dphi_bm=0.;
+    float min_dphi_lm=999.;
+    float maxbw1=0;
+    float maxbw2=0;
     
-    float dphi_jm = deltaPhi( recoJets.at(ijet).Phi(), met_phi );
+    float mt_jm=0.;
     
-    jets_dPhi_met.push_back( dphi_jm );
-    jets_dPhi_mettrk.push_back( deltaPhi(recoJets.at(ijet).Phi(), mettrk_phi) );
+    //std::vector<float> jets_mT;
+    //std::vector<float> jets_dPhi_met;
+    //std::vector<float> jets_dPhi_mettrk;
+    spher_obj_px.clear();
+    spher_obj_py.clear();  
+    spher_obj_pz.clear();    
     
-    jets_mT.push_back( Calc_MT( recoJets.at(0), met_obj.GetVector("") ) );
+    for(int ijet=0; ijet < n_jets; ijet++){        
+      float dphi_jm = deltaPhi( recoJets.at(ijet).Phi(), met_phi.at(ifl) );
     
-    if(dPhi_min_alljets < 0 || dPhi_min_alljets > deltaPhi(recoJets.at(ijet).Phi(), met_phi) )
-      dPhi_min_alljets = deltaPhi(recoJets.at(ijet).Phi(), met_phi);
-    
-    if(ijet < 3 && (dPhi_min < 0 || dPhi_min > deltaPhi(recoJets.at(ijet).Phi(), met_phi) ))
-      dPhi_min = deltaPhi(recoJets.at(ijet).Phi(), met_phi );
+      //jets_dPhi_met.push_back( dphi_jm );
+      //jets_dPhi_mettrk.push_back( deltaPhi(recoJets.at(ijet).Phi(), mettrk_phi) );
+      //jets_mT.push_back( Calc_MT( recoJets.at(0), met_obj.GetVector("") ) );
     
     
-    //--- check for 'tau' jets
-    if ( recoJets.at(ijet).isTauJet(met_phi, Jet_Tagger.Data()) ) 
-      n_taujets += 1;
-	
-    //--- look for min MT(jet,MET)
-    float mt_jm = Calc_MT( recoJets.at(ijet), met_obj.GetVector("") );
-    if(mt_jm < min_mt_jm){
-      min_mt_jm = mt_jm;
-    }
-
-    //--- look for closest/faraway bjet and closer light jet to MET
-    if( recoJets.at(ijet).isBTagged(Jet_Tagger) ){
-
-      if(iblead1<0)//leadings
-	iblead1=ijet;
-      else if(iblead2<0)
-	iblead2=ijet;
+      if(ijet==0) dPhi_min_alljets.push_back(deltaPhi(recoJets.at(ijet).Phi(), met_phi.at(ifl)));
+      if(dPhi_min_alljets.at(ifl) < 0 || dPhi_min_alljets.at(ifl) > deltaPhi(recoJets.at(ijet).Phi(), met_phi.at(ifl)) ){
+	dPhi_min_alljets.at(ifl) = deltaPhi(recoJets.at(ijet).Phi(), met_phi.at(ifl));
+      }     
       
-      if( dphi_jm < min_dphi_bm){ //closest
-	min_dphi_bm = dphi_jm;
-	ibcl = ijet;
+      if(ijet==0) dPhi_min.push_back(deltaPhi(recoJets.at(ijet).Phi(), met_phi.at(ifl) ));
+      if(ijet < 3 && (dPhi_min.at(ifl) < 0 || dPhi_min.at(ifl) > deltaPhi(recoJets.at(ijet).Phi(), met_phi.at(ifl)) )){
+	dPhi_min.at(ifl) = (deltaPhi(recoJets.at(ijet).Phi(), met_phi.at(ifl) ));
+      }   
+      
+      //--- check for 'tau' jets
+      n_taujets.push_back(0.);
+      if ( recoJets.at(ijet).isTauJet(met_phi.at(ifl), Jet_Tagger.Data()) ) {
+	n_taujets.at(ifl)+=1;
+      } 
+      
+      
+      //--- look for min MT(jet,MET)
+      if (ifl==0) mt_jm = Calc_MT( recoJets.at(ijet), met_obj.GetVector("") );
+      else if (ifl==1) mt_jm = Calc_MT( recoJets.at(ijet), met_obj.GetVector("met_mu") );
+    else if (ifl==2) mt_jm = Calc_MT( recoJets.at(ijet), met_obj.GetVector("met_ecorr") );
+    else if (ifl==3) mt_jm = Calc_MT( recoJets.at(ijet), met_obj.GetVector("met_phcorr") );
+      
+      
+      if(mt_jm < min_mt_jm){
+	min_mt_jm = mt_jm;
       }
-
-      if( dphi_jm > max_dphi_bm){ //most faraway
+      
+      
+      //--- look for closest/faraway bjet and closer light jet to MET
+      if( recoJets.at(ijet).isBTagged(Jet_Tagger) ){
+	
+	if(iblead1<0)//leadings
+	  iblead1=ijet;
+	else if(iblead2<0)
+	  iblead2=ijet;
+	
+	if( dphi_jm < min_dphi_bm){ //closest
+	  min_dphi_bm = dphi_jm;
+	ibcl = ijet;
+	}
+	
+	
+	if( dphi_jm > max_dphi_bm){ //most faraway
 	max_dphi_bm = dphi_jm;
 	ibfar = ijet;
-      }
-
-      float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
-      if(locbw > maxbw1){
-	if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
-	  maxbw2 = maxbw1;
+	}
+	
+	
+	float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
+	if(locbw > maxbw1){
+	  if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
+	    maxbw2 = maxbw1;
 	  ibtop2 = ibtop1;
 	}
-	ibtop1 = ijet;
-	maxbw1 = locbw;
+	  ibtop1 = ijet;
+	  maxbw1 = locbw;
       }
-      else if(locbw > maxbw2){
+	else if(locbw > maxbw2){
 	ibtop2 = ijet;
 	maxbw2 = locbw;
       }
     }
-    else{
-      if( dphi_jm < min_dphi_lm){
+      else{
+	if( dphi_jm < min_dphi_lm){
 	min_dphi_lm = dphi_jm;
 	ilcl = ijet;
       }
+   
+            
     }
 
     //--- use jet info for other variables
-    HT   += recoJets.at(ijet).Pt();
-    meff += recoJets.at(ijet).Pt();
+      if(ifl==0) HT   += recoJets.at(ijet).Pt();
+      
+      //if (ijet==0) meff.push_back(0.);
+    //meff.at(ifl)+= recoJets.at(ijet).Pt();
+  
+      spher_obj_px.push_back(recoJets.at(ijet).Px());
+      spher_obj_py.push_back(recoJets.at(ijet).Py());
+      spher_obj_pz.push_back(recoJets.at(ijet).Pz());
+      
+      
+    }//end n_jets loop
+  
+  
+    if(ifl==0){ 
+      spher_obj_px.push_back(met_obj.GetVector("").Px());  
+      spher_obj_py.push_back(met_obj.GetVector("").Py());
+      spher_obj_pz.push_back(0.);   
+    }
+    else if(ifl==1){ 
+      spher_obj_px.push_back(met_obj.GetVector("met_mu").Px());  
+      spher_obj_py.push_back(met_obj.GetVector("met_mu").Py());
+      spher_obj_pz.push_back(0.);   
+    }  
+    else if(ifl==2){ 
+      spher_obj_px.push_back(met_obj.GetVector("met_ecorr").Px());  
+      spher_obj_py.push_back(met_obj.GetVector("met_ecorr").Py());
+  spher_obj_pz.push_back(0.);   
+    }  
+    else if(ifl==3){ 
+      spher_obj_px.push_back(met_obj.GetVector("met_phcorr").Px());  
+      spher_obj_py.push_back(met_obj.GetVector("met_phcorr").Py());
+      spher_obj_pz.push_back(0.);   
+    }  
     
-  }//end n_jets loop
+    //Sphericity
+    tr_spher.push_back(Sphericity(spher_obj_px, spher_obj_py, spher_obj_pz, true));  
+   
+    //thrust
+    if (ifl==0) tr_thrust.push_back(Calc_Thrust(""));   
+    else if (ifl==1) tr_thrust.push_back(Calc_Thrust("met_mu"));      
+    else if (ifl==2) tr_thrust.push_back(Calc_Thrust("met_ecorr"));         
+    else if (ifl==3) tr_thrust.push_back(Calc_Thrust("met_phcorr"));    
+    
+    
+    //met recoil projections
+    if (ifl==0) { 
+      rmet_par.push_back(met_recoil_projections("").at(0)); 
+      rmet_norm.push_back(met_recoil_projections("").at(1));       
+      rmet_par_div.push_back(met_recoil_projections("").at(2));       
+      rmet_norm_div.push_back(met_recoil_projections("").at(3));       
+      rmet_dPhi_jet_system.push_back(met_recoil_projections("").at(4));    
+	}        
+    else if (ifl==1) { 
+      rmet_par.push_back(met_recoil_projections("met_mu").at(0)); 
+      rmet_norm.push_back(met_recoil_projections("met_mu").at(1));       
+      rmet_par_div.push_back(met_recoil_projections("met_mu").at(2));       
+      rmet_norm_div.push_back(met_recoil_projections("met_mu").at(3));       
+      rmet_dPhi_jet_system.push_back(met_recoil_projections("met_mu").at(4));         
+	} 
+    else if (ifl==2) { 
+      rmet_par.push_back(met_recoil_projections("met_ecorr").at(0)); 
+      rmet_norm.push_back(met_recoil_projections("met_ecorr").at(1));       
+      rmet_par_div.push_back(met_recoil_projections("met_ecorr").at(2));       
+      rmet_norm_div.push_back(met_recoil_projections("met_ecorr").at(3));       
+      rmet_dPhi_jet_system.push_back(met_recoil_projections("met_ecorr").at(4));         
+	} 
+    else if (ifl==3) { 
+      rmet_par.push_back(met_recoil_projections("met_phcorr").at(0)); 
+      rmet_norm.push_back(met_recoil_projections("met_phcorr").at(1));       
+      rmet_par_div.push_back(met_recoil_projections("met_phcorr").at(2));       
+      rmet_norm_div.push_back(met_recoil_projections("met_phcorr").at(3));       
+      rmet_dPhi_jet_system.push_back(met_recoil_projections("met_phcorr").at(4));         
+	} 
 
-  //meff = HT + met
-  meff += met;
-
+    //meff = HT + met
+    //std::cout << ifl << " meff.at(ifl): " << meff.at(ifl) << " met.at(ifl): " << met.at(ifl) << std::endl;
+    meff.push_back(0.);
+    meff.at(ifl) = HT + met.at(ifl);  
+    //std::cout << "AFTER: " << ifl << " meff.at(ifl): " << meff.at(ifl) << " met.at(ifl): " << met.at(ifl) << std::endl;  
+    
+    if( min_mt_jm==999999. )
+      min_mt_jm=0.; //it shouldn't matter, but let's force zero-jets events to fail this!
+    
+    MT_min_jet_met.push_back(min_mt_jm);
+    if(ifl==0){
+      MT_bcl_met.push_back(ibcl >= 0 ? Calc_MT( recoJets.at(ibcl), met_obj.GetVector("") ) : 0.);
+      MT_bfar_met.push_back(ibfar >= 0 ? Calc_MT( recoJets.at(ibfar), met_obj.GetVector("") ) : 0.);
+      MT_lcl_met.push_back(ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), met_obj.GetVector("") ) : 0.);
+      MT_jsoft_met.push_back(recoJets.size()>0 ? Calc_MT( recoJets.back(), met_obj.GetVector("") ) : 0.); //it assumes jets are pt ordered!
+    }  
+    else if(ifl==1){
+      MT_bcl_met.push_back(ibcl >= 0 ? Calc_MT( recoJets.at(ibcl), met_obj.GetVector("met_mu") ) : 0.);
+      MT_bfar_met.push_back(ibfar >= 0 ? Calc_MT( recoJets.at(ibfar), met_obj.GetVector("met_mu") ) : 0.);
+      MT_lcl_met.push_back(ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), met_obj.GetVector("met_mu") ) : 0.);
+      MT_jsoft_met.push_back(recoJets.size()>0 ? Calc_MT( recoJets.back(), met_obj.GetVector("met_mu") ) : 0.); //it assumes jets are pt ordered!
+    }    
+    else if(ifl==2){
+      MT_bcl_met.push_back(ibcl >= 0 ? Calc_MT( recoJets.at(ibcl), met_obj.GetVector("met_ecorr") ) : 0.);
+      MT_bfar_met.push_back(ibfar >= 0 ? Calc_MT( recoJets.at(ibfar), met_obj.GetVector("met_ecorr") ) : 0.);
+      MT_lcl_met.push_back(ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), met_obj.GetVector("met_ecorr") ) : 0.);
+      MT_jsoft_met.push_back(recoJets.size()>0 ? Calc_MT( recoJets.back(), met_obj.GetVector("met_ecorr") ) : 0.); //it assumes jets are pt ordered!
+    }    
+    else if(ifl==3){
+      MT_bcl_met.push_back(ibcl >= 0 ? Calc_MT( recoJets.at(ibcl), met_obj.GetVector("met_phcorr") ) : 0.);
+      MT_bfar_met.push_back(ibfar >= 0 ? Calc_MT( recoJets.at(ibfar), met_obj.GetVector("met_phcorr") ) : 0.);
+      MT_lcl_met.push_back(ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), met_obj.GetVector("met_phcorr") ) : 0.);
+      MT_jsoft_met.push_back(recoJets.size()>0 ? Calc_MT( recoJets.back(), met_obj.GetVector("met_phcorr") ) : 0.); //it assumes jets are pt ordered!
+    }    
+    
+    shatR.push_back(0.); 
+    gaminvR.push_back(0.); 
+    mdeltaR.push_back(0.); 
+    cosptR.push_back(0.); 
+    
+    
+  }//end n met flavours loop
   
   //Dijet Mass
   if (n_jets>1){  
@@ -2982,16 +3180,7 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //Mct
-  mct = Calc_mct();
-
-  if( min_mt_jm==999999. )
-    min_mt_jm=0.; //it shouldn't matter, but let's force zero-jets events to fail this!
-  
-  MT_min_jet_met = min_mt_jm;
-  MT_bcl_met = (ibcl >= 0 ? Calc_MT( recoJets.at(ibcl), met_obj.GetVector("") ) : 0.);
-  MT_bfar_met = (ibfar >= 0 ? Calc_MT( recoJets.at(ibfar), met_obj.GetVector("") ) : 0.);
-  MT_lcl_met = (ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), met_obj.GetVector("") ) : 0.);
-  MT_jsoft_met = (recoJets.size()>0 ? Calc_MT( recoJets.back(), met_obj.GetVector("") ) : 0.); //it assumes jets are pt ordered!
+  mct = Calc_mct();  
   
   dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
   
@@ -3018,6 +3207,8 @@ EL::StatusCode chorizo :: loop ()
   pt1_antikt08 = (jets_R_08.size()>1 ? jets_R_08.at(1).Pt() : 0.);
   mtasym08     = getAsymmetry( m0_antikt08, m1_antikt08 );
   
+  
+
   
   //--- Inv masses involving leptons
   //- Define the invariant mass mu-mu (m_M) and the Pt of the mu-mu system (m_Zpt)
@@ -3058,7 +3249,7 @@ EL::StatusCode chorizo :: loop ()
       met_muon = met_obj.GetVector("met") - v_m1;
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
   }
-  
+
   
   //--- Boson Pt   <---  V(lv).Pt()
   TVector2 V_lnu = met_obj.GetVector();
@@ -3635,6 +3826,324 @@ bool chorizo :: passMCor(){
   
   return true;
 }
+
+
+std::vector<float> chorizo :: met_recoil_projections(TString met_flavour){
+  
+  TLorentzVector jet_system(0.,0.,0.,0.);
+  TLorentzVector leading_jet(0.,0.,0.,0.); 
+  
+  if(recoJets.size()>0) leading_jet = recoJets.at(0).GetVector() ; 
+  
+  for (unsigned int ij=0; ij < recoJets.size(); ij++)   
+    jet_system += recoJets.at(ij).GetVector() ;
+   
+  TLorentzVector mymet(0.,0.,0.,0.);
+  TLorentzVector mymet_pos(0.,0.,0.,0.);  
+ 
+  if (met_flavour=="") {
+    mymet.SetPxPyPzE(-met_obj.GetVector("").Px(), -met_obj.GetVector("").Py(), 0., met_obj.GetVector("").Mod()); 
+    mymet_pos.SetPxPyPzE(met_obj.GetVector("").Px(), met_obj.GetVector("").Py(), 0., met_obj.GetVector("").Mod());     
+  }
+  else if (met_flavour=="met_mu") {
+    mymet.SetPxPyPzE(-met_obj.GetVector("met_mu").Px(), -met_obj.GetVector("met_mu").Py(), 0., met_obj.GetVector("met_mu").Mod()); 
+    mymet_pos.SetPxPyPzE(met_obj.GetVector("met_mu").Px(), met_obj.GetVector("met_mu").Py(), 0., met_obj.GetVector("met_mu").Mod());     
+  }
+  else if (met_flavour=="met_ecorr") {
+    mymet.SetPxPyPzE(-met_obj.GetVector("met_ecorr").Px(), -met_obj.GetVector("met_ecorr").Py(), 0., met_obj.GetVector("met_ecorr").Mod()); 
+    mymet_pos.SetPxPyPzE(met_obj.GetVector("met_ecorr").Px(), met_obj.GetVector("met_ecorr").Py(), 0., met_obj.GetVector("met_ecorr").Mod());     
+  }
+  else if (met_flavour=="met_phcorr"){ 
+    mymet.SetPxPyPzE(-met_obj.GetVector("met_phcorr").Px(), -met_obj.GetVector("met_phcorr").Py(), 0., met_obj.GetVector("met_phcorr").Mod()); 
+    mymet_pos.SetPxPyPzE(met_obj.GetVector("met_phcorr").Px(), met_obj.GetVector("met_phcorr").Py(), 0., met_obj.GetVector("met_phcorr").Mod());     
+  }
+  
+  return met_recoil_projections(leading_jet, jet_system, mymet, mymet_pos);
+}  
+ 
+std::vector<float> chorizo :: met_recoil_projections(TLorentzVector leading_jet, TLorentzVector jet_system, TLorentzVector mymet, TLorentzVector mymet_pos){ 
+     
+   float pT_par = 0.;     float pT_norm = 0.;      float pT_par_div = 0.;   float pT_norm_div = 0.;	float dPhi_met_jetsyst = 0.;
+   std::vector<float> projections;
+   
+   
+   // proiezione parallela del pt del sistema di jets che rinculano la met
+   //pT_par = jet_system.Mod()*cos(deltaPhi(jet_system.Phi(),mymet.Phi()));
+   //pT_norm = jet_system.Mod()*sin(deltaPhi(jet_system.Phi(),mymet.Phi())); 
+   //pT_par_div = cos(deltaPhi(jet_system.Phi(),mymet.Phi()));
+   //pT_norm_div = sin(deltaPhi(jet_system.Phi(),mymet.Phi()));   
+   //dPhi_met_jetsyst = deltaPhi(jet_system.Phi(),mymet_pos.Phi());
+   
+   // proiezione parallela del pt del leading jet che rincula la met   
+   pT_par = leading_jet.Pt()*cos(deltaPhi(leading_jet.Phi(),mymet.Phi()));
+   pT_norm = leading_jet.Pt()*sin(deltaPhi(leading_jet.Phi(),mymet.Phi())); 
+   pT_par_div = cos(deltaPhi(leading_jet.Phi(),mymet.Phi()));
+   pT_norm_div = sin(deltaPhi(leading_jet.Phi(),mymet.Phi()));   
+   dPhi_met_jetsyst = deltaPhi(leading_jet.Phi(),mymet_pos.Phi());   
+   
+   projections.push_back(pT_par);
+   projections.push_back(pT_norm);   
+   projections.push_back(pT_par_div);   
+   projections.push_back(pT_norm_div);  
+   projections.push_back(dPhi_met_jetsyst);   
+   
+   return projections;
+}
+
+
+float chorizo :: Sphericity(std::vector<float> pxVector,
+                 std::vector<float> pyVector,
+                 std::vector<float> pzVector,
+                 bool IsTransverseSphericity)
+{
+//!matrix elements are set to 0
+  // Defines the Sphericity Matrix
+  TMatrixD sphericityMatrix(3, 3);
+  for (int i = 0; i < 3; i++)
+    for(int j = 0; j < 3; j++)
+      sphericityMatrix[i][j] = 0.;
+  Double_t d_sph_p = 0.;
+
+//////////////////////////
+//! Calculates Sphericity Matrix S_{ij} = \sum_k p_k^j p_k^j  / \sum_k |p_k|^2
+  Double_t d_sph_Pxyz[3];
+  for(int i = 0; i < 3; i++) d_sph_Pxyz[i] = 0.;
+  for(unsigned int indexI = 0;indexI < pxVector.size();indexI++) {
+    for(int i = 0; i < 3; i++) d_sph_Pxyz[i] = 0.;
+    d_sph_Pxyz[0] = pxVector[indexI];
+    d_sph_Pxyz[1] = pyVector[indexI];
+
+//! only if the 3D Sph is calculated, one needs pz != 0
+    if (!IsTransverseSphericity) d_sph_Pxyz[2] = pzVector[indexI];
+
+//! The Sphericity Matrix is calculated. If pz = 0 it
+//! is the needed 2x2 Matrix
+    for(int iMatrixI = 0; iMatrixI < 3; iMatrixI++)
+      for(int iMatrixJ = 0; iMatrixJ < 3; iMatrixJ++)
+        sphericityMatrix[iMatrixI][iMatrixJ] += d_sph_Pxyz[iMatrixI]*d_sph_Pxyz[iMatrixJ];
+
+//! calculates \sum_k |p_k|^2
+    d_sph_p += d_sph_Pxyz[0]*d_sph_Pxyz[0] +
+               d_sph_Pxyz[1]*d_sph_Pxyz[1] +
+               d_sph_Pxyz[2]*d_sph_Pxyz[2];
+  }
+
+//!  Normalizes S_{ij}
+  if(d_sph_p != 0.) {
+    for(int iMatrixI = 0; iMatrixI < 3; iMatrixI++) {
+      for(int iMatrixJ = 0; iMatrixJ < 3; iMatrixJ++) {
+        sphericityMatrix[iMatrixI][iMatrixJ]=
+          sphericityMatrix[iMatrixI][iMatrixJ]/d_sph_p;
+      }
+    }
+//! if there are no values available, it crashes.
+  } else {
+    // Cleaning
+    return -99.;
+  }
+
+//! Calculate the EigenValues
+  TVectorD eigenValues;
+  const TMatrixD eigenVectoren = sphericityMatrix.EigenVectors(eigenValues);
+
+//! The EigenValues have to be sorted: Lambda1 > Lambda2 > Lambda3
+  Int_t eigenLambda1 = 0, eigenLambda2 = 1, eigenLambda3 = 2;
+  // from the babar sphericity code...
+  double Emax = eigenValues[0];
+  double Emin = eigenValues[0];
+  for ( int i = 0; i <= 2 ; ++i ) {
+    if ( eigenValues[i] > Emax ) {
+      Emax = eigenValues[i];
+      eigenLambda1 = i;
+    }
+    if ( eigenValues[i] < Emin ) {
+      Emin = eigenValues[i];
+      eigenLambda3 = i;
+    }
+  }
+  eigenLambda2 = 3 - eigenLambda3 - eigenLambda1;
+
+//! Calculates the Sphericity with
+//! S_T = 2 \lambda_2/(\lambda_1 + \lambda_2)
+//! TDR Vol II, May 1999, Page 820
+  double sphericity = -99.;
+  if (IsTransverseSphericity)
+    sphericity = 2.*eigenValues[eigenLambda2]/
+                 (eigenValues[eigenLambda1] + eigenValues[eigenLambda2]);
+  else
+    sphericity = (3./2.)*
+                 (eigenValues[eigenLambda2] + eigenValues[eigenLambda3]);
+
+  return sphericity;
+}
+
+
+/* ************************************************************************************* */
+/* Thrust_func_collection.C                                                              */
+/*                                                                                       */     
+/* Author:      Consorti Valerio, valerio.consorti@physik.uni-freiburg.de                */
+/* created:     June 2010                                                                */
+/* Description: A small collection of functions to compute the transverse thrust.        */
+/*              The thrust value is normalized in the range [0,1] where 1 is for         */
+/*              perfectly spherical events and 0 is for "pencil like" events             */
+/*                                                                                       */
+/* ************************************************************************************* */
+
+//A modified step function used to compute the thrust axis
+double chorizo::epsilon(double x){
+  if(x>=0) return 1;
+  if(x<0) return -1;
+  return -99;
+}
+
+//This function return the transverse thrust value for a given thrust axis
+double chorizo::thrustService(TVector2 &n, std::vector<TVector2> &obj){
+  double num=0;
+  double den=0;
+
+  for(unsigned int i=0; i<obj.size(); i++){
+    num+=TMath::Abs(n*obj[i]);
+    den+=obj[i].Mod();
+  }
+
+  if(den==0) return -99;
+  return num/den;
+}
+
+double chorizo :: Calc_Thrust(TString met_flavour){ //from recoJets collection
+
+  vector<TLorentzVector> Vector;
+  for (unsigned int ij=0; ij < recoJets.size(); ij++)
+    Vector.push_back( recoJets.at(ij).GetVector() );
+   
+  TLorentzVector etmiss(0.,0.,0.,0.);
+  if (met_flavour=="") etmiss.SetPxPyPzE(met_obj.GetVector("").Px(), met_obj.GetVector("").Py(), 0., met_obj.GetVector("").Mod()); 
+  else if (met_flavour=="met_mu") etmiss.SetPxPyPzE(met_obj.GetVector("met_mu").Px(), met_obj.GetVector("met_mu").Py(), 0., met_obj.GetVector("met_mu").Mod()); 
+  else if (met_flavour=="met_ecorr") etmiss.SetPxPyPzE(met_obj.GetVector("met_ecorr").Px(), met_obj.GetVector("met_ecorr").Py(), 0., met_obj.GetVector("met_ecorr").Mod()); 
+  else if (met_flavour=="met_phcorr") etmiss.SetPxPyPzE(met_obj.GetVector("met_phcorr").Px(), met_obj.GetVector("met_phcorr").Py(), 0., met_obj.GetVector("met_phcorr").Mod()); 
+  
+  Vector.push_back( etmiss );
+  
+  return Calc_Thrust(Vector);
+}
+
+
+//Main function where the thrust axis which maximize the transverse thrust value is computed
+double chorizo::Calc_Thrust(std::vector<TLorentzVector> Vector) {
+  
+  if(Vector.size()==1) return 0;
+
+  std::vector<TVector2> obj;
+ 
+  for(unsigned int index=0; index<Vector.size(); index++){
+    obj.push_back(Vector[index].Vect().XYvector());
+  }
+
+  if(obj.size()==0) return -99;
+
+  TVector2 n;
+  TVector2 np1(obj[0]);
+  np1=np1.Unit();
+  bool loop_controller=true;
+
+  int iloop=0;
+  int iloop2=0;
+  double thrust_old=0;
+  double thrust_new=-1;
+  double thrust_larger=0;
+  double T=-99;
+  int n_lar_T_with_same_value=0;
+
+//Initializing Thrust axis. By default it use the leading jet direction to initialize the thrust axis
+  for(unsigned int i=1; i<obj.size();i++) np1+=obj[i];
+  if(np1.X()==0 && np1.Y()==0) np1.Set(obj[0]);
+  np1=np1.Unit();
+ 
+
+//Computing transverse Thrust value. To ensure the convergence the algorithm requires to obtain 3 times the same maximum transverse Thrust value using 3 different initializations for the thrust axis
+  do{
+    loop_controller=true;
+
+    //changing thrust axis initialization after the first loop
+    if(iloop2>0){
+      np1.Set(1.,0.);
+      np1=np1.Rotate((iloop2-1));
+      np1=np1.Unit();
+    }
+    iloop=0;
+
+    //loop to find the axis which maximize the transverse Thrust value
+    do{
+      n=np1;
+      iloop++;
+
+      if(iloop==1000){
+        loop_controller=false;
+        thrust_new=-1;
+        break;
+      }
+
+      thrust_old=thrustService(np1,obj);
+
+      //the axis which maximize the thrust value is the result of the convergence of this series
+      for(unsigned int i=0; i<obj.size(); i++){
+        np1+=epsilon(n*obj[i])*obj[i];
+      }
+
+      np1=np1.Unit();
+      thrust_new=thrustService(np1,obj);
+
+    }while(fabs(thrust_new-thrust_old)>10e-9);
+
+
+    if(thrust_new>thrust_larger && loop_controller ){
+      thrust_larger=thrust_new;
+      n_lar_T_with_same_value=0;
+    }
+
+   
+    if(fabs((thrust_new-thrust_larger)<10e-9) && loop_controller ) n_lar_T_with_same_value++;
+
+    iloop2++;
+
+    loop_controller=true;
+
+    if(iloop2==1000){
+      loop_controller=false;
+      std::cout<<"Thrust Computation: convergence 2 failed after: "<<iloop2<<" loop"<<std::endl;
+      std::cout<<"n_lar_T_with_same_value: "<<n_lar_T_with_same_value<<std::endl;
+      std::cout<<"(1-thrust_larger)/(1-2/TMath::Pi()): "<<(1-thrust_larger)/(1-2/TMath::Pi())<<std::endl;
+      std::cout<<"Vector.size(): "<<Vector.size()<<std::endl;
+      std::cout<<"i     pt      px      py      pxobj   pyobj"<<std::endl;
+      for(unsigned int i=0; i<Vector.size();i++){
+       std::cout<<i<<"  "<<Vector[i].Pt()<<"    "<<Vector[i].Px()<<"    "<<Vector[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
+      }
+      return -99;
+    }
+//to accept the thrust value we require:
+//1- it has to be into [2/pi,1] which is the range for the transverse thrust
+//2- The maximum thrust value has to be obtain 3 times using 3 different initializations for the trust axis
+
+  }while( ( thrust_larger<2/TMath::Pi() || n_lar_T_with_same_value<3 ) && loop_controller==true );
+
+  T=(1-thrust_larger)/(1-2/TMath::Pi());
+
+  if(T<0-10e-9 || T>1){
+    if(Vector.size()>1){
+    std::cout<<"Thrust Computation: ERROR, thrust value out of range: "<<T<<std::endl;
+
+    std::cout<<"i       pt      px      py      pxobj   pyobj"<<std::endl;
+      for(unsigned int i=0; i<Vector.size();i++){
+       std::cout<<i<<"  "<<Vector[i].Pt()<<"    "<<Vector[i].Px()<<"    "<<Vector[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
+      }
+    }
+    return -99;
+  }
+
+   return T;
+ 
+}
+
 
 
 float chorizo :: GetTruthEtmiss(bool noEleTau){
@@ -4454,14 +4963,25 @@ void chorizo :: fillRazor(){
   
   MR = Calc_MR(megajets.at(0), megajets.at(1));
   
-  MTR = Calc_MTR(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor());
+  for (int ifl=0; ifl<4; ifl++){
+    
+    if(ifl==0) MTR.push_back(Calc_MTR(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor("")));
+    if(ifl==1) MTR.push_back(Calc_MTR(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor("met_mu"))); 
+    if(ifl==2) MTR.push_back(Calc_MTR(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor("met_ecorr")));  
+    if(ifl==3) MTR.push_back(Calc_MTR(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor("met_phcorr")));  
   
-  if(MR > 0.) R = MTR/MR;
-
-  AlphaT = Calc_AlphaT(megajets.at(0), megajets.at(1));
   
+  if(MR > 0.) R.push_back(MTR.at(ifl)/MR);
+  else R.push_back(-1.);
+    
   //new super-razor variables
-  Calc_SuperRazor(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor(), shatR, gaminvR, mdeltaR, cosptR);
+  if(ifl==0) Calc_SuperRazor(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor(""), shatR.at(ifl), gaminvR.at(ifl), mdeltaR.at(ifl), cosptR.at(ifl));
+  if(ifl==1) Calc_SuperRazor(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor("met_mu"), shatR.at(ifl), gaminvR.at(ifl), mdeltaR.at(ifl), cosptR.at(ifl));  
+  if(ifl==2) Calc_SuperRazor(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor("met_ecorr"), shatR.at(ifl), gaminvR.at(ifl), mdeltaR.at(ifl), cosptR.at(ifl));  
+  if(ifl==3) Calc_SuperRazor(megajets.at(0), megajets.at(1), met_obj.GetMET_Razor("met_phcorr"), shatR.at(ifl), gaminvR.at(ifl), mdeltaR.at(ifl), cosptR.at(ifl)); 
+   
+}
+  AlphaT = Calc_AlphaT(megajets.at(0), megajets.at(1));
   
 }
 
