@@ -236,6 +236,19 @@ private:
   virtual bool vetoMCevent();
   virtual bool passMCor();
 
+  virtual float Sphericity(std::vector<float> pxVector,
+                 std::vector<float> pyVector,
+                 std::vector<float> pzVector,
+                 bool IsTransverseSphericity=false); 
+		 
+  virtual double epsilon(double x);
+  virtual double thrustService(TVector2 &n, std::vector<TVector2> &obj);
+  virtual double Calc_Thrust(TString met_flavour="");
+  virtual double Calc_Thrust(std::vector<TLorentzVector> Vector);
+  
+  virtual std::vector<float> met_recoil_projections(TString met_flavour="");	
+  virtual std::vector<float> met_recoil_projections(TLorentzVector leading_jet, TLorentzVector jet_system, TLorentzVector mymet, TLorentzVector mymet_pos);	  	  
+  
   virtual float GetTruthEtmiss(bool noEleTau=false);
   virtual float GetTruthEtmiss_noEleTau(){ return GetTruthEtmiss(true); };
   virtual std::vector<float> GetTruthBosonPt(float &_M, float &_MT, bool &_Muon, float &_pt1, float &_pt2);
@@ -493,6 +506,11 @@ private:
   std::vector<TLorentzVector> RecoUnmatchedTracksElMu; //!
   std::vector<int> RecoUnmatchedTracksIdx; //!
 
+  //Sphericity stuff
+  std::vector<float> spher_obj_px; //!
+  std::vector<float> spher_obj_py; //!
+  std::vector<float> spher_obj_pz; //!  
+  
   //Track veto stuff
   int   m_isolatedUnmatchedTracks; //!
   int   m_isolatedUnmatchedTracksPlusJets; //!
@@ -684,7 +702,7 @@ private:
   int   n_jets50;
   int   n_jets60;
   int   n_jets80;
-  int   n_taujets;
+  std::vector<int>   n_taujets;
 
   float pt1;
   float pt2;
@@ -770,39 +788,38 @@ private:
   float Jet3_BCH_CORR_CELL; 
   
   //- MET
-  float met;
-  float met_phi;
+  std::vector<float> met;
+  std::vector<float> met_phi;
 
   float met_trk;
   float mettrk_phi;
-
-  float met_mu;
-  float met_ecorr;
-  float met_phcorr;
-
   float met_lochadtopo;
   float met_reffinalNoMu;
 
   //recoiling system
-  float rmet_par;  //parallel
-  float rmet_per;  //perpendicular
+  std::vector<float> rmet_par;  //parallel
+  std::vector<float> rmet_norm;  //perpendicular
+  std::vector<float> rmet_par_div;  //parallel divided by module
+  std::vector<float> rmet_norm_div;  //perpendicular  divided by module
+  std::vector<float> rmet_dPhi_jet_system;   
+  
 
   //- Topologic variables
-  float dPhi_met_j1;
-  float dPhi_met_j2;
-  float dPhi_met_j3;
-  float dPhi_met_j4;
+  std::vector<float> dPhi_met_j1;
+  std::vector<float> dPhi_met_j2;
+  std::vector<float> dPhi_met_j3;
+  std::vector<float> dPhi_met_j4;
   float dPhi_mettrk_j1;
   float dPhi_mettrk_j2;
   float dPhi_mettrk_j3;
   float dPhi_mettrk_j4;    
-  float dPhi_met_mettrk;
+  std::vector<float> dPhi_met_mettrk;
   float dPhi_j1_j2;
   float dPhi_j1_j3;
   float dPhi_j2_j3;
   float dPhi_b1_b2;
-  float dPhi_min;
-  float dPhi_min_alljets;
+  std::vector<float> dPhi_min;
+  std::vector<float> dPhi_min_alljets;
   float dR_j1_j2;
   float dR_j1_j3;
   float dR_j2_j3;
@@ -814,38 +831,38 @@ private:
   float dR_j3_m2;
   float dEta_j1_j2;
 
-  float j1_mT;
-  float j2_mT;
-  float j3_mT;
-  float j4_mT;  
+  std::vector<float> j1_mT;
+  std::vector<float> j2_mT;
+  std::vector<float> j3_mT;
+  std::vector<float> j4_mT;  
 
   float M12;
 
-  float MT_min_jet_met;  
-  float MT_bcl_met;  
-  float MT_bfar_met;  
-  float MT_lcl_met;  
-  float MT_jsoft_met;  
+  std::vector<float> MT_min_jet_met;  
+  std::vector<float> MT_bcl_met;  
+  std::vector<float> MT_bfar_met;  
+  std::vector<float> MT_lcl_met;  
+  std::vector<float> MT_jsoft_met;    
 
   float DiJet_Mass;  
   float DiBJet_Mass;    
   
   float mct;   
-  float meff;
+  std::vector<float> meff; 
   float HT;   
 
   float AlphaT;
 
   //Razor
   float MR;  
-  float MTR;
-  float R;
-  
+  std::vector<float> MTR;
+  std::vector<float> R;  
+
   //new super-razor (Martin)
-  float shatR;  
-  float gaminvR;
-  float mdeltaR;
-  float cosptR;
+  std::vector<float> shatR;  
+  std::vector<float> gaminvR;
+  std::vector<float> mdeltaR;
+  std::vector<float> cosptR;
 
   //top reconstruction
   float MtTop;
@@ -863,6 +880,12 @@ private:
   float pt1_antikt08;
   float mtasym12; //build these offline ?
   float mtasym08;
+  
+  //(transverse) sphericity
+  std::vector<float> tr_spher;
+  std::vector<double> tr_thrust;  
+  
+  
 };
 
 #endif
