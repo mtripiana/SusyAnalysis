@@ -230,14 +230,9 @@ float MET::Phi(TString which){
 };
 
 //--------------------------------- 3D MET -----------------------------
-TVector3 MET::GetMET_Razor(TString met_flavour){
-  TVector2 met_2D(0.,0.);
+TVector3 MET::GetMET_Razor(){
   
-  if (met_flavour=="met_mu") met_2D = this->met_mu;  
-  else if (met_flavour=="met_ecorr") met_2D = this->met_ecorr;  
-  else if (met_flavour=="met_phcorr") met_2D = this->met_phcorr; 
-  else met_2D = this->met;
-  
+  TVector2 met_2D(this->met);
   double met_x = met_2D.X();
   double met_y = met_2D.Y();
  

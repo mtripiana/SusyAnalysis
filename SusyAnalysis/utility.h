@@ -7,6 +7,8 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TString.h"
+#include "TVector3.h"
+#include "TLorentzVector.h"
 #include <string>
 
 TString bold(TString t);
@@ -34,6 +36,10 @@ float rapidity(float, float, float);
 float deltaPhi(Float_t, Float_t);
 
 float deltaR(Float_t, Float_t, Float_t, Float_t);
+
+TVector3 makeV3(TVector2 v2);
+
+TLorentzVector makeTLV(TVector2 v2);
 
 bool isBeamHalo(int, int);
 

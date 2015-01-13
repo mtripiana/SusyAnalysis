@@ -215,6 +215,16 @@ float BtagEta(float eta){
   return eta;
 };
 
+TVector3 makeV3(TVector2 v2){
+  return TVector3(v2.X(), v2.Y(), 0.);
+};
+
+TLorentzVector makeTLV(TVector2 v2){
+  TLorentzVector tlv(0.,0.,0.,0.);
+  tlv.SetPxPyPzE( v2.X(), v2.Y(), 0., 0. );
+  return tlv;
+};
+
 float getAsymmetry(float a, float b){
   if( ! (a+b > 0)) return -1;
 
