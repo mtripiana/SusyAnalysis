@@ -112,7 +112,7 @@ class MET : public TVector2{
     void SetVector(TVector2 vec, TString which="", bool inGeV=false); 
 
     TVector2 GetVector(TString which="");
-    TVector3 GetMET_Razor(TString met_flavour="");
+    TVector3 GetMET_Razor();
 
     bool gev;
 
