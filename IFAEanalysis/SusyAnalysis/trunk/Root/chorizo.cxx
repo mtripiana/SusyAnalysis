@@ -2643,7 +2643,7 @@ EL::StatusCode chorizo :: loop ()
   //***
 
 
-  //***development
+  //*** CONFIG
   // book MET flavours
   std::map<MetDef, TVector2> metmap;
   metmap[MetDef::InvMu] = met_obj.GetVector();
@@ -2693,10 +2693,10 @@ EL::StatusCode chorizo :: loop ()
     met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
   
     //Recoiling system against MET (prebooking)
-    rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), -mk.second.Phi())) ); //leading jet only
-    rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), -mk.second.Phi())) );
-    rmet_par_mod.push_back( TMath::Cos(deltaPhi(sjet2.Phi(), -mk.second.Phi())) );
-    rmet_norm_mod.push_back( TMath::Sin(deltaPhi(sjet2.Phi(), -mk.second.Phi())) );
+    rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) ); //leading jet only
+    rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+    rmet_par_mod.push_back( TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+    rmet_norm_mod.push_back( TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
     rmet_dPhi_met_jetsys.push_back( deltaPhi(sjet2.Phi(), mk.second.Phi()) ); 
 
 
