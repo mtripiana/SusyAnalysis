@@ -52,6 +52,7 @@ TString stripName(TString name){ //remove not-official tags for AMI search (so t
   
   TString new_name="";
   TString tmp_name="";
+  TString tmp2_name="";
   std::vector<TString> tokens;
 
   //remove tid and der tokens (last are added when asking a partial transfer to IFAE_LOCALDISK)  
@@ -64,7 +65,13 @@ TString stripName(TString name){ //remove not-official tags for AMI search (so t
     tmp_name += Form("%s", tokens.at(it).Data());
   } 
 
-  tokens = getTokens(tmp_name, ".");
+  //remove rucio identifier
+  tokens = getTokens(tmp_name, ":");
+  if(tokens.size()) tmp2_name = tokens[1];
+  else tmp2_name = tokens[0];
+
+  //remove user tag 
+  tokens = getTokens(tmp2_name, ".");
   for(unsigned int it=0; it < tokens.size(); it++){
     if(tokens[it].BeginsWith("user")){
       it++; //remove next one too (i.e. the user)
