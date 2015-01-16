@@ -7,23 +7,22 @@
 cd $ANALYSISCODE
 
 # Extra tags needed for Base,2.0.22
-#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-15 SUSYTools
+#rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-16 
 
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 JVFUncertaintyTool
+rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
 
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/Event/xAOD/xAODMissingET/tags/xAODMissingET-00-01-12 xAODMissingET         
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/Reconstruction/MET/METInterface/tags/METInterface-00-01-02 METInterface    
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/Reconstruction/MET/METUtilities/tags/METUtilities-00-01-08 METUtilities    
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-04-20 JetCalibTools                             
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags/ElectronEfficiencyCorrection-00-01-13 ElectronEfficiencyCorrection
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/InnerDetector/InDetRecTools/InDetTrackSelectionTool/tags/InDetTrackSelectionTool-00-00-02 InDetTrackSelectionTool # (needs patching)
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/Reconstruction/EventShapes/EventShapeTools/tags/EventShapeTools-00-01-03 EventShapeTools # (needs patching)
+rc checkout_pkg $SVNOFF/Event/xAOD/xAODMissingET/tags/xAODMissingET-00-01-13
+rc checkout_pkg $SVNOFF/Reconstruction/MET/METInterface/tags/METInterface-00-01-02
+rc checkout_pkg $SVNOFF/Reconstruction/MET/METUtilities/tags/METUtilities-00-01-11-01
+rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-04-20
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags/ElectronEfficiencyCorrection-00-01-13
+rc checkout_pkg $SVNOFF/InnerDetector/InDetRecTools/InDetTrackSelectionTool/tags/InDetTrackSelectionTool-00-01-10
+rc checkout_pkg $SVNOFF/Reconstruction/EventShapes/EventShapeTools/tags/EventShapeTools-00-01-03 # (needs patching)
 
 #
 # Apply needed patches:
 #
-patch -p0 -i /nfs/pic.es/user/t/tripiana/public/IFAE/SusyAnalysis_patches/patch_IInDetTrackSelectionTool.diff
 patch -p0 -i /nfs/pic.es/user/t/tripiana/public/IFAE/SusyAnalysis_patches/patch_EventShapeCopier.cxx.diff
 patch -p0 -i /nfs/pic.es/user/t/tripiana/public/IFAE/SusyAnalysis_patches/patch_SUSYObjDef_xAOD.cxx.diff  # add photon stuff
 patch -p0 -i /nfs/pic.es/user/t/tripiana/public/IFAE/SusyAnalysis_patches/patch_SUSYObjDef_xAOD.h.diff
