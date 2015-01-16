@@ -76,7 +76,7 @@
 #endif 
 
 //MET flavours
-enum class MetDef {InvMu, AllVis, InvMuEl, InvMuPh, Track, InvMuRef, N};
+enum class MetDef {InvMu, AllVis, InvMuEl, InvMuPh, Track, InvMuRef, InvMuTST, N};
 
 
 namespace LHAPDF{

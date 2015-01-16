@@ -43,13 +43,13 @@ ClassImp(chorizo)
 
 
 //decorators and accessors
-static SG::AuxElement::Decorator<char> dec_baseline("baseline");
-static SG::AuxElement::Decorator<char> dec_signal("signal");
-static SG::AuxElement::Decorator<char> dec_passOR("passOR");
-static SG::AuxElement::Decorator<char> dec_badjet("bad");
-static SG::AuxElement::Decorator<char> dec_bjet("bjet");
-static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
-static SG::AuxElement::Decorator<char> dec_final("final");
+static SG::AuxElement::Decorator<bool> dec_baseline("baseline");
+static SG::AuxElement::Decorator<bool> dec_signal("signal");
+static SG::AuxElement::Decorator<bool> dec_passOR("passOR");
+static SG::AuxElement::Decorator<bool> dec_badjet("bad");
+static SG::AuxElement::Decorator<bool> dec_bjet("bjet");
+static SG::AuxElement::Decorator<bool> dec_cosmic("cosmic");
+static SG::AuxElement::Decorator<bool> dec_final("final");
 
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
@@ -1490,12 +1490,18 @@ EL::StatusCode chorizo :: loop ()
   m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
   CHECK( m_store->record( m_goodJets, "MySelJets" ) );
 
+  // MET (cluster soft term)
   xAOD::MissingETContainer* metRFC = new xAOD::MissingETContainer;
   xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
   metRFC->setStore(metRFCAux);
 
-  CHECK( m_store->record( metRFC, "MET_MyRefFinal" ) );
-  CHECK( m_store->record( metRFCAux, "MET_MyRefFinalAux." ) );
+  // MET (track soft term)
+  xAOD::MissingETContainer* metRFC_TST = new xAOD::MissingETContainer;
+  xAOD::MissingETAuxContainer* metRFCAux_TST = new xAOD::MissingETAuxContainer;
+  metRFC_TST->setStore(metRFCAux_TST);
+
+  // CHECK( m_store->record( metRFC, "MET_MyRefFinal" ) );
+  // CHECK( m_store->record( metRFCAux, "MET_MyRefFinalAux." ) );
 
 
   //--- Analysis Code 
@@ -1827,7 +1833,7 @@ EL::StatusCode chorizo :: loop ()
     float bw=0.; //our own
     if(Jet_Tagger=="MV1") bw = (*jet_itr)->btagging()->MV1_discriminant(); 
     else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
-    dec_bjet(**jet_itr) = (char)(bw > Jet_TaggerOp);
+    dec_bjet(**jet_itr) = (bw > Jet_TaggerOp);
 
 
     //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
@@ -2149,7 +2155,7 @@ EL::StatusCode chorizo :: loop ()
     //--- B-tagging
     
     //from SUSYTools (based on SV1plusIP3D (70%) at the moment!)
-    recoJet.isbjet = (bool)dec_bjet(**jet_itr);
+    recoJet.isbjet = dec_bjet(**jet_itr);
 
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
     recoJet.MV1 = btag->MV1_discriminant();
@@ -2470,7 +2476,7 @@ EL::StatusCode chorizo :: loop ()
   //  const xAOD::MissingET* mrf_refjetjvf = (*cmet_reffinal)["RefJetJVF"];  //refined
   //  const xAOD::MissingET* mrf_refpvstrk = (*cmet_reffinal)["PVSoftTrk"]; 
 
-  //- Recomputed MET via SUSYTools
+  //- Recomputed MET via SUSYTools  (Cluster Soft Term)
   //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
   if(Met_doMuons){
     CHECK( tool_st->GetMET(*metRFC,
@@ -2493,6 +2499,18 @@ EL::StatusCode chorizo :: loop ()
 
   met_obj.SetVector(v_met_ST,"");  //- Copy met vector to the met data member
   met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
+
+  //- Recomputed MET via SUSYTools (Track Soft Term (TST))
+  CHECK( tool_st->GetMET(*metRFC_TST,
+			 jets_sc.first,
+			 electrons_sc.first,
+			 0,
+			 0,
+			 0,
+			 true));
+
+  met_obj.SetVector( getMET( metRFC_TST, "Final"), "met_tst");  //- Copy met vector to the met data member
+  
   
   //- Track met
   TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
@@ -2559,6 +2577,7 @@ EL::StatusCode chorizo :: loop ()
   metmap[MetDef::InvMuPh] = met_obj.GetVector("met_phcorr");
   metmap[MetDef::Track] = met_obj.GetVector("met_trk");
   metmap[MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_mu");
+  metmap[MetDef::InvMuTST] = met_obj.GetVector("met_tst");
 
 
   //***

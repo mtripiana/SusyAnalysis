@@ -154,6 +154,7 @@ void Jet::PrintInfo(){
 
 MET::MET(){
   met.Set(0., 0.);
+  met_tst.Set(0., 0.);
   met_trk.Set(0., 0.);
   met_mu.Set(0., 0.);
   met_reffinal.Set(0., 0.);
@@ -172,7 +173,10 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
 
   this->gev=true; //book it always in GeV
 
-  if(which=="met_trk"){
+  if(which=="met_tst"){
+    this->met_tst.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_trk"){
     this->met_trk.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_mu"){
@@ -199,6 +203,9 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
 }
 
 TVector2 MET::GetVector(TString which){
+  if(which=="met_tst"){
+    return TVector2(this->met_tst);
+  }
   if(which=="met_trk"){
     return TVector2(this->met_trk);
   }
@@ -250,12 +257,13 @@ bool MET::GetHasMuons(){
 }
 
 void MET::PrintInfo(){
-  cout<<"MET: "<<this->met.Mod()<<" MET_Trk: "<<this->met_trk.Mod()<<" MET_mu: "<<this->met_mu.Mod()<<endl;
+  cout<<"MET: "<<this->met.Mod()<<" MET_TST: "<<this->met_tst.Mod()<<" MET_Trk: "<<this->met_trk.Mod()<<" MET_mu: "<<this->met_mu.Mod()<<endl;
 }
 
 void MET::Reset(){
   //--- Probably there's a better way
   met.Set(0., 0.);
+  met_tst.Set(0., 0.);
   met_trk.Set(0., 0.);
   met_mu.Set(0., 0.);
   met_lochadtopo.Set(0., 0.);
