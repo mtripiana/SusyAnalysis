@@ -67,8 +67,8 @@ TString stripName(TString name){ //remove not-official tags for AMI search (so t
 
   //remove rucio identifier
   tokens = getTokens(tmp_name, ":");
-  if(tokens.size()) tmp2_name = tokens[1];
-  else tmp2_name = tokens[0];
+  if(tokens.size()>1) tmp2_name = tokens[1];
+  else tmp2_name = tmp_name;
 
   //remove user tag 
   tokens = getTokens(tmp2_name, ".");

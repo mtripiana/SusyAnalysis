@@ -93,8 +93,7 @@ chorizo :: chorizo ()
   syst_ST  = SystErr::NONE;
   syst_PU  = pileupErr::NONE; 
   syst_JVF = JvfUncErr::NONE;
-  syst_BCH = BCHCorrMediumErr::NONE;
-
+  
   systListOnly = false;
   errIgnoreLevel = kInfo;
 }
@@ -170,19 +169,6 @@ void chorizo :: bookTree(){
     output->tree()->Branch ("lumi", &meta_lumi, "lumi/F");
 
 
-    //bch
-    output->tree()->Branch("JetsFailBCHTight",&JetsFailBCHTight,"JetsFailBCHTight/O", 10000);
-    output->tree()->Branch("JetsFailBCHMedium",&JetsFailBCHMedium,"JetsFailBCHMedium/O", 10000);
-    output->tree()->Branch("Jet1FailBCHTight",&Jet1FailBCHTight,"Jet1FailBCHTight/O", 10000);
-    output->tree()->Branch("Jet1FailBCHMedium",&Jet1FailBCHMedium,"Jet1FailBCHMedium/O", 10000);
-    output->tree()->Branch("Jet2FailBCHTight",&Jet2FailBCHTight,"Jet2FailBCHTight/O", 10000);
-    output->tree()->Branch("Jet2FailBCHMedium",&Jet2FailBCHMedium,"Jet2FailBCHMedium/O", 10000);
-    output->tree()->Branch("Jet3FailBCHTight",&Jet3FailBCHTight,"Jet3FailBCHTight/O", 10000);
-    output->tree()->Branch("Jet3FailBCHMedium",&Jet3FailBCHMedium,"Jet3FailBCHMedium/O", 10000);
-    output->tree()->Branch("Jet1_BCH_CORR_CELL",&Jet1_BCH_CORR_CELL,"Jet1_BCH_CORR_CELL/F", 10000);
-    output->tree()->Branch("Jet2_BCH_CORR_CELL",&Jet2_BCH_CORR_CELL,"Jet2_BCH_CORR_CELL/F", 10000);
-    output->tree()->Branch("Jet3_BCH_CORR_CELL",&Jet3_BCH_CORR_CELL,"Jet3_BCH_CORR_CELL/F", 10000);
- 
     if(doAnaTree){ //AnalysisTree
       //weights
       //output->tree()->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
@@ -818,19 +804,6 @@ void chorizo :: InitVars()
   tag_JetFitterCb_3 = DUMMYDN;
   tag_JetFitterCb_4 = DUMMYDN;
   
-  //BCH cleaning
-  JetsFailBCHTight = false;        
-  JetsFailBCHMedium = false;       
-  Jet1FailBCHTight = false;        
-  Jet1FailBCHMedium = false;       
-  Jet2FailBCHTight = false;        
-  Jet2FailBCHMedium = false;       
-  Jet3FailBCHTight = false;        
-  Jet3FailBCHMedium = false;       
-  Jet1_BCH_CORR_CELL = DUMMYDN;     
-  Jet2_BCH_CORR_CELL = DUMMYDN;     
-  Jet3_BCH_CORR_CELL = DUMMYDN;     
-
   //met 
   met.clear();
   met_phi.clear();
@@ -1277,13 +1250,7 @@ EL::StatusCode chorizo :: initialize ()
     }
   }
 
-  //    --- For the BCH correction
-  tool_DPeriod = DataPeriod();
-  tool_DPeriod.initialize();
-
   //--- MET
-  //    --- Used in the SmartVeto function.
-  tool_fakeMet = new FakeMetEstimator(TString(maindir + Met_FakeMetEstimator).Data());
 
   //--- B-tagging
   tool_btag  = new BTaggingEfficiencyTool("BTag70");
@@ -1359,10 +1326,6 @@ EL::StatusCode chorizo :: initialize ()
   tool_tileTrip = new Root::TTileTripReader("TileTripReader");
   std::string TileTripReader_file = "CompleteTripList_2011-2012.root";
   tool_tileTrip->setTripFile((maindir + "TileTripReader/" + TileTripReader_file).data());
-
-  //--- BCH cleaning
-  tool_BCH = new BCHTool::BCHCleaningToolRoot();
-  tool_BCH->InitializeTool(!isMC, tool_tileTrip, maindir+"BCHCleaningTool/FractionsRejectedJetsMC.root");
 
   //--- JVF uncertainty
   tool_jvf = new JVFUncertaintyTool();
@@ -1543,21 +1506,6 @@ EL::StatusCode chorizo :: loop ()
 
   int lb = eventInfo->lumiBlock();
   averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
-
-  int bch_runN = -999; //for BCH correction
-  int bch_lb   = -999; //for BCH correction
-  if(isMC){  
-    bch_runN = tool_DPeriod.getRandomRunNumber(RunNumber, averageIntPerXing, 0);
-    if(bch_runN>0)
-      bch_lb   = tool_DPeriod.getRandomLumiBlockNumber(RunNumber);
-    // Info("execute()", Form("BCH random Generated run = %d", bch_runN));
-    // Info("execute()", Form("BCH random Generated lb  = %d", bch_lb));
-  }
-  else{
-    bch_runN = RunNumber;
-    bch_lb   = lb;       
-  }
-
 
   //PURW
   if(isMC && applyPURW)
@@ -2197,28 +2145,6 @@ EL::StatusCode chorizo :: loop ()
     
     recoJet.jvtxf = (v_jvf.size() ? v_jvf[0] : 0.);
     
-    //--- BCH correction
-    (*jet_itr)->getAttribute(xAOD::JetAttribute::BchCorrCell, recoJet.BCH_CORR_CELL); //CHECK_ME
-    (*jet_itr)->getAttribute(xAOD::JetAttribute::BchCorrJet, recoJet.BCH_CORR_JET);
-    
-    recoJet.failBCHTight = false;
-    recoJet.failBCHMedium = false;
-    
-    if (bch_runN == 0){ //CHECK_ME
-      recoJet.failBCHTight = true;
-      recoJet.failBCHMedium = true;
-    }
-    else{ //--> getRandomRunNumber has worked
-      if ( tool_BCH->IsBadTightBCH(bch_runN, bch_lb, recoJet.Eta(), recoJet.Phi(), recoJet.BCH_CORR_CELL, recoJet.emf, recoJet.Pt() )) {
-	recoJet.failBCHTight = true;
-      }
-      int BCHUncNumber = 0;
-      if (syst_BCH == BCHCorrMediumErr::BCHCorrHigh) BCHUncNumber=1;
-      if (syst_BCH == BCHCorrMediumErr::BCHCorrLow)  BCHUncNumber=-1;
-      if ( tool_BCH->IsBadMediumBCH(bch_runN, bch_lb, recoJet.Eta(), recoJet.Phi(), recoJet.BCH_CORR_CELL, recoJet.emf, recoJet.Pt(), BCHUncNumber)) {
-	recoJet.failBCHMedium = true;
-      }
-    }
     
     //--- B-tagging
     
@@ -2416,7 +2342,6 @@ EL::StatusCode chorizo :: loop ()
   }
   
   //--- Define signal jets
-  int bch_cntr = 0;
   std::vector<float> calibJets_pt;
   std::vector<float> calibJets_eta;
   std::vector<float> calibJets_MV1;
@@ -2477,24 +2402,6 @@ EL::StatusCode chorizo :: loop ()
     calibJets_MV1.push_back(jetCandidates.at(iJet).MV1);
     calibJets_flavor.push_back(jetCandidates.at(iJet).FlavorTruth);
 
-
-    //--- BCH correction
-    if (bch_cntr==0) this->Jet1_BCH_CORR_CELL = jetCandidates.at(iJet).BCH_CORR_CELL;
-    if (bch_cntr==1) this->Jet2_BCH_CORR_CELL = jetCandidates.at(iJet).BCH_CORR_CELL;
-    if (bch_cntr==2) this->Jet3_BCH_CORR_CELL = jetCandidates.at(iJet).BCH_CORR_CELL;
-    if (jetCandidates.at(iJet).failBCHTight==true){
-      this->JetsFailBCHTight = true;
-      if (bch_cntr==0) this->Jet1FailBCHTight = true;
-      if (bch_cntr==1) this->Jet2FailBCHTight = true;
-      if (bch_cntr==2) this->Jet3FailBCHTight = true;
-    }
-    if (jetCandidates.at(iJet).failBCHMedium==true){
-      this->JetsFailBCHMedium = true;
-      if (bch_cntr==0) this->Jet1FailBCHMedium = true;
-      if (bch_cntr==1) this->Jet2FailBCHMedium = true;
-      if (bch_cntr==2) this->Jet3FailBCHMedium = true;
-    }
-    ++bch_cntr;
   }//end of jets loop
 
   n_jets = recoJets.size();
