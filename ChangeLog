@@ -1,3 +1,8 @@
+2014-01-16 Martin <tripiana@cern.ch>
+	* Fix decorators.
+	* Add MET flavor with track soft term (InvMuTST).
+
+
 2014-01-15 Martin <tripiana@cern.ch>
 	* Updated to Base,2.0.22
 	* Updated to SUSYTools-00-05-00-15
