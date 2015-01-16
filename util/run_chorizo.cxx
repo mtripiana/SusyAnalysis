@@ -137,6 +137,15 @@ bool is_data(Sample* sample){
   return (itis=="collisions");
 }
 
+
+double getNPrimary(Sample* sample){ 
+  TString sampleName(sample->getMetaString( MetaFields::sampleName ));
+  std::string newName = stripName(sampleName).Data();
+  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= -1\" | tail -1");
+  std::string nev = getCmdOutput( "ami dataset info "+provname+" | grep totalEvents | awk '{print $2}'");
+  return stod(nev);
+}
+
 void printSampleMeta(Sample* sample){
   cout << endl;
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
@@ -181,7 +190,7 @@ void printSystList(){
 
 
 int main( int argc, char* argv[] ) {
-
+  
   std::vector<TString> args,opts;
   bool runLocal = true;
   bool runBatch = false;
@@ -380,6 +389,8 @@ int main( int argc, char* argv[] ) {
   }
   if(mgd)
     makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
+  //    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
+   
 
   sh.print(); //print what we found
 
@@ -391,6 +402,9 @@ int main( int argc, char* argv[] ) {
     //save original name in a new meta field
     (*iter)->setMetaString( "inputName", (*iter)->getMetaString( MetaFields::sampleName) ); //no longer needed?
     (*iter)->setMetaString( MetaFields::gridName, (stripName( TString( (*iter)->getMetaString( MetaFields::sampleName)))+"/").Data() );
+
+    //get the number of events of the primary AOD (relevant for running on derivations)
+    (*iter)->setMetaDouble( MetaFields::numEvents, getNPrimary(*iter) );
 
     //set Data flag correctly
     (*iter)->setMetaString( MetaFields::isData, (is_data(*iter) ? "Y" : "N") );
@@ -507,7 +521,7 @@ int main( int argc, char* argv[] ) {
     alg->syst_Scale = syst_Scale;
     alg->syst_PU    = syst_PU;
     alg->syst_JVF   = syst_JVF;
-    alg->syst_BCH   = syst_BCH;
+    //    alg->syst_BCH   = syst_BCH;
     
     
     alg->printMet      = false;     //debug printing

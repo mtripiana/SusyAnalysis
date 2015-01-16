@@ -29,7 +29,7 @@
 
 // code includes
 #include "SusyAnalysis/XMLReader.h"
-#include "SusyAnalysis/SmartVeto.h"
+//#include "SusyAnalysis/SmartVeto.h"
 #include "SusyAnalysis/utility.h"
 #include "SusyAnalysis/particles.h"
 #include "SusyAnalysis/Systematics.h"
@@ -40,13 +40,15 @@
 #include <string>
 
 // Tools includes
-#include "SUSYTools/DataPeriod.h"
-#include "SUSYTools/ScaleVariatioReweighter.hpp"
+//#include "SUSYTools/DataPeriod.h"
+//#include "SUSYTools/ScaleVariatioReweighter.hpp"
+#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "SUSYTools/SUSYCrossSection.h"
 
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
 #include "fastjet/ClusterSequence.hh"
-#include "BCHCleaningTool/BCHCleaningToolRoot.h"
+//#include "BCHCleaningTool/BCHCleaningToolRoot.h"
+#include "TileTripReader/TTileTripReader.h"
 
 
 // Systematics includes
@@ -98,7 +100,11 @@ namespace ST{
 using namespace Particles;
 using namespace xAOD;
 using namespace std;
-using namespace fastjet;
+//using namespace fastjet;
+using fastjet::PseudoJet;
+using fastjet::ClusterSequence;
+using fastjet::JetDefinition;
+using fastjet::antikt_algorithm;
 
 typedef std::vector<float> VFloat;                          
 typedef std::pair<VFloat, VFloat > VFloatPair;     
@@ -153,7 +159,6 @@ public:
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
   JvfUncErr::JvfSyste syst_JVF;
-  BCHCorrMediumErr::BCHSyste syst_BCH;
 
   bool printMet;
   bool printJet;
@@ -209,12 +214,10 @@ private:
   ST::SUSYObjDef_xAOD* tool_st; 
 #endif // not __CINT__
 
-  DataPeriod     tool_DPeriod; //!
-  FakeMetEstimator* tool_fakeMet; //!
+  //  DataPeriod     tool_DPeriod; //!
   JVFUncertaintyTool* tool_jvf; //!
   JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
-  BCHTool::BCHCleaningToolRoot* tool_BCH; //!
 #ifndef __CINT__
   CP::PileupReweightingTool* tool_purw; 
   GoodRunsListSelectionTool *tool_grl;
@@ -767,18 +770,6 @@ private:
   float tag_JetFitterCu_1, tag_JetFitterCu_2, tag_JetFitterCu_3, tag_JetFitterCu_4;
   float tag_JetFitterCb_1, tag_JetFitterCb_2, tag_JetFitterCb_3, tag_JetFitterCb_4;
 
-  //- BCH cleaning
-  bool JetsFailBCHTight; 
-  bool JetsFailBCHMedium; 
-  bool Jet1FailBCHTight; 
-  bool Jet1FailBCHMedium; 
-  bool Jet2FailBCHTight; 
-  bool Jet2FailBCHMedium; 
-  bool Jet3FailBCHTight; 
-  bool Jet3FailBCHMedium; 
-  float Jet1_BCH_CORR_CELL; 
-  float Jet2_BCH_CORR_CELL; 
-  float Jet3_BCH_CORR_CELL; 
   
   //- MET
   VFloat met; 

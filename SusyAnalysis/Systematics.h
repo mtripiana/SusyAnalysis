@@ -11,7 +11,8 @@
 #include "TString.h"
 #include "TError.h"
 
-#include "SUSYTools/ScaleVariatioReweighter.hpp"
+//#include "SUSYTools/ScaleVariatioReweighter.hpp"
+#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "PATInterfaces/SystematicSet.h"
 
 namespace pileupErr

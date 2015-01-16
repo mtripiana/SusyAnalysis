@@ -1,3 +1,13 @@
+2014-01-15 Martin <tripiana@cern.ch>
+	* Updated to Base,2.0.22
+	* Updated to SUSYTools-00-05-00-15
+	* Remove obsolete tools (FakeMetEstimator, DataPeriod).
+	* Remove SmartVeto.h
+	* Fix number of events for derived samples.
+	* Add ScaleVariatioReweighter.cxx/hpp files (removed in last SUSYTools tag).
+	* Add patches needed for extra packages.
+	* Add some misc/ scripts.
+
 2014-01-13 Martin <tripiana@cern.ch>
 	* Change all MET-related variables --> all vectors now, to accomodate different MET flavors.
 	* Add transverse thrust and sphericity variables (Silvia).
