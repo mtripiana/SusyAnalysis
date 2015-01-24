@@ -121,8 +121,11 @@ bool is_data(Sample* sample){
 double getNPrimary(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= -1\" | tail -1");
-  std::string nev = getCmdOutput( "ami dataset info "+provname+" | grep totalEvents | awk '{print $2}'");
+  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= 0\" | tail -1");
+  std::string nev="0";
+  if(provname != "")
+    nev = getCmdOutput( "ami dataset info "+provname+" | grep totalEvents | awk '{print $2}'");
+
   return stod(nev);
 }
 
@@ -177,11 +180,9 @@ int main( int argc, char* argv[] ) {
 
   std::string jOption = "METbb";
   TString queue = "at3";
-  bool quick_test = false;
-  TString version="";
   bool genPU=false;
   int single_id = -1;
-
+  bool isTruth=false;
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -229,8 +230,8 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
     }
-    else if (opts[iop] == "t"){ //limit run to 50 events
-      quick_test = true;
+    else if (opts[iop] == "t"){ //run on truth xAOD
+      isTruth = true;
     }
     else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
       genPU = true;
@@ -250,9 +251,6 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("n") ){ //limit run to n events
       nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
     }
-    // else if (opts[iop].BeginsWith("v") ){
-    //   version = opts[iop].ReplaceAll("v=","");
-    // }
   }
 
 

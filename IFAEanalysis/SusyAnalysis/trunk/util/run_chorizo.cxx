@@ -63,7 +63,7 @@ void usage(){
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
-  cout << "       -v=<V>            : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
+  cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
   cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
   cout << "                       Just nominal is run by default (Nom)." << endl;       
@@ -141,8 +141,10 @@ bool is_data(Sample* sample){
 double getNPrimary(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= -1\" | tail -1");
-  std::string nev = getCmdOutput( "ami dataset info "+provname+" | grep totalEvents | awk '{print $2}'");
+  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= 0\" | tail -1");
+  std::string nev="0";
+  if(provname != "")
+    nev = getCmdOutput( "ami dataset info "+provname+" | grep totalEvents | awk '{print $2}'");
   return stod(nev);
 }
 
@@ -197,9 +199,9 @@ int main( int argc, char* argv[] ) {
   bool runGrid  = false;
   bool runPrun  = false;
   TString queue = "at3";
-  bool quick_test = false;
   TString version="";
   bool genPU=false;
+  bool isTruth=false;
 
   std::string jOption = "METbb_JobOption.xml";
 
@@ -255,8 +257,8 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
     }
-    else if (opts[iop] == "t"){ //limit run to n events
-      quick_test = true;
+    else if (opts[iop] == "t"){ //run over truth xAODs
+      isTruth = true;
     }
     else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
       genPU = true;
@@ -509,6 +511,8 @@ int main( int argc, char* argv[] ) {
     alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
     alg->isNCBG     = false;   //get it from the XML!!
+
+    alg->isTruth    = isTruth;   //to run over truth xAOD (e.g. MGN1 derivation)
     
     alg->doAnaTree  = doAnaTree;     // Output trees
     alg->doFlowTree = doFlowTree;
@@ -536,7 +540,6 @@ int main( int argc, char* argv[] ) {
     job.algsAdd( alg );
     
     //Set Max number of events (for testing)
-    if(quick_test) job.options()->setDouble (EL::Job::optMaxEvents, 5);
     if(nMax > 0) job.options()->setDouble (EL::Job::optMaxEvents, nMax);
     
     if(systListOnly)
@@ -564,7 +567,7 @@ int main( int argc, char* argv[] ) {
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
-      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.18 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.22 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }
@@ -574,14 +577,12 @@ int main( int argc, char* argv[] ) {
       std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
-      if(quick_test)
-	Pdriver.options()->setDouble("nc_nFiles", 1);
-      //      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
+      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
       Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
-      Pdriver.options()->setString("nc_rootVer", "5.34.09");
-      Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc47-opt");
+      // Pdriver.options()->setString("nc_rootVer", "5.34.09");
+      // Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc47-opt");
 
       Pdriver.submitOnly( job, tmpdir );
       break;
