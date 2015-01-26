@@ -234,12 +234,17 @@ void RunsMap::LoadMap(){
 
   m_map["13TEV_Sbottom_800_1_af"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_a266_a265_r5853/"));
   m_map["13TEV_Sbottom_300_290_af"] = rlist( Rpair(202249, ""));
+  
+  m_map["13TEV_Sbottom_800_1_LOCAL"] = rlist( Rpair(202266, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_800_1_202266_13TeV/"));
+  m_map["13TEV_Sbottom_300_290_LOCAL"] = rlist( Rpair(202249, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_300_290_202249_13TeV/"));
 
   m_map["TestSbottom"]= rlist( Rpair(202266, "/tmp/tripiana/sbottom/full/"));
   m_map["TestSbottom_af"]= rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/mc14/sbottom/af/"));
 
   m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
   m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
+  
+  m_map["13TEV_Stop_LOCAL"] = rlist( Rpair(204422, "/nfs/at3/scratch/sfracchia/SUSY/stop_signal/Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1/"));
 
   /* m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));   */
   /* m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/")); */
@@ -542,6 +547,9 @@ void RunsMap::LoadMap(){
 					Rpair(167787,"mc14_13TeV.167787.Sherpa_CT10_WtaunuMassiveCBPt280_500_CJetVetoBVeto.merge.AOD.e2822_s1982_s2008_r5787_r5853/"),
 					Rpair(167796,"mc14_13TeV.167796.Sherpa_CT10_WtaunuMassiveCBPt500_CJetVetoBVeto.merge.AOD.e2822_s1982_s2008_r5787_r5853/"),
 					Rpair(180542,"mc14_13TeV.180542.Sherpa_CT10_WtaunuMassiveCBPt40_70_CJetVetoBVeto.merge.AOD.e2822_s1982_s2008_r5787_r5853/")); 
+
+   m_map["TestZnunu167758Pt0"] = rlist( Rpair(167758, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Znunu_167758/"));
+
 
   //======================================================================================================================
   //                                                 Grid Data
@@ -1000,7 +1008,7 @@ void RunsMap::LoadMap(){
 
   m_map["TestMClocal5"] = rlist( Rpair(117050,"/nfs/at3/scratch/tripiana/xAOD/mc14/ttbar/"));
 
- 
+  m_map["Wtaunu167777_13TeV"] = rlist( Rpair(167777, "mc14_13TeV.167777.Sherpa_CT10_WtaunuMassiveCBPt140_280_CJetFilterBVeto.merge.DAOD_SUSY1.e2822_s1982_s2008_r5787_r5853_p1816*"));
   //======================================================================================================================
   //                                                 List of backgrounds for the Baseline analysis
   //======================================================================================================================
