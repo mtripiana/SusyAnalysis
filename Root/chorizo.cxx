@@ -239,6 +239,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_pt",&e_pt,"e_pt/F", 10000);
       output->tree()->Branch("e_eta",&e_eta,"e_eta/F", 10000);
       output->tree()->Branch("e_phi",&e_phi,"e_phi/F", 10000);
+      output->tree()->Branch("e2_pt",&e2_pt,"e2_pt/F", 10000);
+      output->tree()->Branch("e2_eta",&e2_eta,"e2_eta/F", 10000);
+      output->tree()->Branch("e2_phi",&e2_phi,"e2_phi/F", 10000);      
       output->tree()->Branch("e_etiso30",&e_etiso30,"e_etiso30/F", 10000);
       output->tree()->Branch("e_ptiso30",&e_ptiso30,"e_ptiso30/F", 10000);
       output->tree()->Branch("e_tight",&e_tight,"e_tight/O", 10000);
@@ -298,6 +301,12 @@ void chorizo :: bookTree(){
       output->tree()->Branch("phi4",&phi4,"phi4/F", 10000);
       output->tree()->Branch("phi5",&phi5,"phi5/F", 10000);
       output->tree()->Branch("phi6",&phi6,"phi6/F", 10000);
+      output->tree()->Branch("j1_E",&j1_E,"j1_E/F", 10000);   
+      output->tree()->Branch("j2_E",&j2_E,"j2_E/F", 10000);      
+      output->tree()->Branch("j3_E",&j3_E,"j3_E/F", 10000);      
+      output->tree()->Branch("j4_E",&j4_E,"j4_E/F", 10000);        
+      output->tree()->Branch("j5_E",&j5_E,"j5_E/F", 10000);      
+      output->tree()->Branch("j6_E",&j6_E,"j6_E/F", 10000);      
       output->tree()->Branch("j1_chf",&j1_chf,"j1_chf/F", 10000);
       output->tree()->Branch("j2_chf",&j2_chf,"j2_chf/F", 10000);
       output->tree()->Branch("j3_chf",&j3_chf,"j3_chf/F", 10000);
@@ -414,6 +423,10 @@ void chorizo :: bookTree(){
       //dEta
       output->tree()->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
 
+      //Mbl_min  (for single top CR)
+      output->tree()->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
+      output->tree()->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
+      
       //MTs
       output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met);
       output->tree()->Branch("MT_bcl_met",&MT_bcl_met);
@@ -617,12 +630,15 @@ void chorizo :: InitVars()
 
   //- Electron Info
   e_N = 0; //DUMMYDN;               
-  e_pt = 0; //DUMMYDN;              
+  e_pt = 0; //DUMMYDN;    
+  e2_pt = 0; //DUMMYDN;                
   e_truth_pt = DUMMYDN;        
   e_truth_eta = DUMMYDN;       
   e_truth_phi = DUMMYDN;       
   e_eta = 0.; //DUMMYDN;             
-  e_phi = 0.; //DUMMYDN;             
+  e_phi = 0.; //DUMMYDN;  
+  e2_eta = 0.; //DUMMYDN;             
+  e2_phi = 0.; //DUMMYDN;               
   e_ptiso30 = 0.; //DUMMYDN;         
   e_etiso30 = 0.; //DUMMYDN;         
   e_tight = false;           
@@ -717,7 +733,13 @@ void chorizo :: InitVars()
   phi3 = DUMMYDN;             
   phi4 = DUMMYDN;             
   phi5 = DUMMYDN;             
-  phi6 = DUMMYDN;             
+  phi6 = DUMMYDN; 
+  j1_E = DUMMYDN;             
+  j2_E = DUMMYDN;             
+  j3_E = DUMMYDN;             
+  j4_E = DUMMYDN;             
+  j5_E = DUMMYDN;             
+  j6_E = DUMMYDN;   
   j1_chf = DUMMYDN;           
   j2_chf = DUMMYDN;           
   j3_chf = DUMMYDN;           
@@ -845,7 +867,10 @@ void chorizo :: InitVars()
   dEta_j1_j2 = DUMMYDN;                          
 
   M12 = DUMMYDN;
-
+  
+  Melb_min = DUMMYDN; 
+  Mmub_min = DUMMYDN;   
+  
   MT_min_jet_met.clear();  
   MT_bcl_met.clear();  
   MT_bfar_met.clear();  
@@ -2617,7 +2642,7 @@ EL::StatusCode chorizo :: loop ()
 
     met.push_back(mk.second.Mod());
     met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
-  
+    
     //Recoiling system against MET (prebooking)
     rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) ); //leading jet only
     rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
@@ -2837,10 +2862,29 @@ EL::StatusCode chorizo :: loop ()
 
       if (recoMuons.size()>0){
 	dR_j2_m1 = recoJets.at(1).DeltaR(recoMuons.at(0));
+	
+	TLorentzVector j1 = recoJets.at(0).GetVector();
+	TLorentzVector j2 = recoJets.at(1).GetVector();	
+	TLorentzVector mu = recoMuons.at(0).GetVector();	
+	
+	Mmub_min = min((j1+mu).M(), (j2+mu).M());
+	
+	
 	if (recoMuons.size()>1) 
 	  dR_j2_m2=recoJets.at(1).DeltaR(recoMuons.at(1));
       }
-
+      
+      if (recoElectrons.size()>0){      
+      
+	TLorentzVector j1 = recoJets.at(0).GetVector();
+	TLorentzVector j2 = recoJets.at(1).GetVector();	
+	TLorentzVector el = recoElectrons.at(0).GetVector();	
+	
+	Melb_min = min((j1+el).M(), (j2+el).M());      
+      
+      }
+      
+      
       if (n_jets>2){
 	dPhi_j1_j3  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(2).Phi());
 	dPhi_j2_j3  = deltaPhi(recoJets.at(1).Phi(), recoJets.at(2).Phi());
@@ -3096,6 +3140,13 @@ void chorizo :: dumpLeptons(){
     e_tight = recoElectrons.at(0).isTight;
   }
 
+   if(recoElectrons.size()>1){
+     e2_pt = recoElectrons.at(1).Pt();
+     e2_eta = recoElectrons.at(1).Eta();
+     e2_phi = recoElectrons.at(1).Phi();
+   }
+  
+  
   if (truthElectrons.size()>0){
     e_truth_pt = truthElectrons.at(0).Pt();
     e_truth_eta = truthElectrons.at(0).Eta();
@@ -3151,6 +3202,7 @@ void chorizo :: dumpJets(){
     pt1 = recoJets.at(0).Pt();
     eta1 = recoJets.at(0).Eta();
     phi1 = recoJets.at(0).Phi();
+    j1_E = recoJets.at(0).E();
     j1_chf = recoJets.at(0).chf;
     j1_emf = recoJets.at(0).emf;
     j1_fsm = recoJets.at(0).fsm;
@@ -3178,6 +3230,7 @@ void chorizo :: dumpJets(){
       pt2 = recoJets.at(1).Pt();
       eta2 = recoJets.at(1).Eta();
       phi2 = recoJets.at(1).Phi();
+      j2_E = recoJets.at(1).E();      
       j2_chf = recoJets.at(1).chf;
       j2_emf = recoJets.at(1).emf;
       j2_fsm = recoJets.at(1).fsm;
@@ -3199,6 +3252,7 @@ void chorizo :: dumpJets(){
 	pt3 = recoJets.at(2).Pt();
 	eta3 = recoJets.at(2).Eta();
 	phi3 = recoJets.at(2).Phi();
+	j3_E = recoJets.at(2).E();	
 	j3_chf = recoJets.at(2).chf;
 	j3_emf = recoJets.at(2).emf;
 	j3_fsm = recoJets.at(2).fsm;
@@ -3220,6 +3274,7 @@ void chorizo :: dumpJets(){
 	  pt4 = recoJets.at(3).Pt();
 	  eta4 = recoJets.at(3).Eta();
 	  phi4 = recoJets.at(3).Phi();
+	  j4_E = recoJets.at(3).E();	  
 	  j4_chf = recoJets.at(3).chf;
 	  j4_emf = recoJets.at(3).emf;
 	  j4_fsm = recoJets.at(3).fsm;
@@ -3234,11 +3289,13 @@ void chorizo :: dumpJets(){
 	    pt5 = recoJets.at(4).Pt();
 	    eta5 = recoJets.at(4).Eta();
 	    phi5 = recoJets.at(4).Phi();
+	    j5_E = recoJets.at(4).E();	    
 
 	    if (n_jets>5){
 	      pt6 = recoJets.at(5).Pt();
 	      eta6 = recoJets.at(5).Eta();
 	      phi6 = recoJets.at(5).Phi();
+	      j6_E = recoJets.at(5).E();	      
 	    } // end n_jets>5 
 	  } // end n_jets>4
 	} // end n_jets>3
