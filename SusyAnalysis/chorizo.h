@@ -649,11 +649,14 @@ private:
   //- Electron Info
   int   e_N;
   float e_pt;
+  float e2_pt;  
   float e_truth_pt;
   float e_truth_eta;
   float e_truth_phi;
   float e_eta;
   float e_phi;
+  float e2_eta;
+  float e2_phi;  
   float e_ptiso30;
   float e_etiso30;
   bool  e_tight; 
@@ -817,6 +820,16 @@ private:
   VFloat j4_mT;  
 
   float M12;
+  
+  float Melb_min;
+  float Mmub_min; 
+  
+  float j1_E;
+  float j2_E;  
+  float j3_E;   
+  float j4_E;     
+  float j5_E;     
+  float j6_E;     
 
   VFloat MT_min_jet_met;  
   VFloat MT_bcl_met;  
