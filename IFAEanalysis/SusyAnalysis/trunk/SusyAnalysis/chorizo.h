@@ -363,6 +363,8 @@ private:
   //selection
   std::string DirectoryPath; //! 
 
+  bool doCutFlow;
+  
   TString GRLxmlFile; //!
   bool    applyPURW;
   TString PURW_Folder; //!

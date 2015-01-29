@@ -5,6 +5,8 @@
 #include <SusyAnalysis/chorizo.h>
 #include <SusyAnalysis/chorizoEDM.h>
 #include <SusyAnalysis/MCUtils.h>
+#include <iostream>
+#include <fstream>
 
 #include <EventLoop/StatusCode.h>
 
@@ -951,6 +953,9 @@ void chorizo :: ReadXML(){
   xmlReader->readXML(maindir+"/data/SusyAnalysis/"+jOption);
 
   //------ Define and read global variables from the XML
+  Info(whereAmI, Form(" - Cut Flow") );
+  doCutFlow = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");  
+  
   Info(whereAmI, Form(" - PDF reweighting") );
   doPDFrw = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
   beamE_to = xmlReader->retrieveFloat("AnalysisOptions$GeneralSettings$PdfRw$ToBeamE");
@@ -1459,6 +1464,9 @@ EL::StatusCode chorizo :: loop ()
     CALLGRIND_START_INSTRUMENTATION;
 #endif  
 
+  ofstream myfile; //produces a text file with event information
+  if (doCutFlow) myfile.open (gSystem->Getenv("ANALYSISCODE")+'/cutflow.txt', ios::app);
+
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
     wk()->skipEvent();
@@ -1480,7 +1488,7 @@ EL::StatusCode chorizo :: loop ()
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
   loadMetaData();
-
+   
   //-- Retrieve objects Containers
   m_truthE= 0;
   m_truthP= 0;
@@ -1534,6 +1542,8 @@ EL::StatusCode chorizo :: loop ()
   RunNumber = eventInfo->runNumber();
   mc_channel_number = (isMC ? eventInfo->mcChannelNumber() : 0); 
   EventNumber = eventInfo->eventNumber();
+  
+  if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
 
   int lb = eventInfo->lumiBlock();
   averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
@@ -1893,8 +1903,8 @@ EL::StatusCode chorizo :: loop ()
   int iEl = 0;
   e_N=0; //signal electrons
   for(const auto& el_itr : *electrons_sc.first ){
-    if( dec_baseline(*el_itr) &&
-	((!doOR) || dec_passOR(*el_itr) )){
+    if( dec_baseline(*el_itr)){ 
+
       
       //define preselected electron                
       Particle recoElectron;
@@ -1902,6 +1912,14 @@ EL::StatusCode chorizo :: loop ()
       if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
       if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
 
+      if (doCutFlow){
+        myfile << "baseline electron before OR: \n";      
+        myfile << "pt: " << recoElectron.Pt() << " \n";    
+        myfile << "eta: " << recoElectron.Eta() << " \n";          
+        myfile << "phi: " << recoElectron.Phi() << " \n"; 
+      }
+
+      if (((!doOR) || dec_passOR(*el_itr) )){
       recoElectron.id = iEl;
       recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
       recoElectron.etcone20 = acc_etcone20(*el_itr) * 0.001;
@@ -1943,9 +1961,24 @@ EL::StatusCode chorizo :: loop ()
       
       electronCandidates.push_back(recoElectron);
       
+       if (doCutFlow){
+          myfile << "baseline electron after OR: \n";      
+          myfile << "pt: " << recoElectron.Pt() << " \n";    
+          myfile << "eta: " << recoElectron.Eta() << " \n";          
+          myfile << "phi: " << recoElectron.Phi() << " \n";                
+       }
+      
       //save signal electrons
       if( dec_final(*el_itr) ){
 	recoElectrons.push_back(recoElectron);
+       
+       if (doCutFlow){	
+ 	   myfile << "signal electron: \n";      
+	   myfile << "pt: " << recoElectron.Pt() << " \n"; 
+           myfile << "eta: " << recoElectron.Eta() << " \n";          
+           myfile << "phi: " << recoElectron.Phi() << " \n";                
+	}	
+	
 	e_N++;
 	IsElectron=true;
 	if(this->isMC){
@@ -1955,8 +1988,11 @@ EL::StatusCode chorizo :: loop ()
 	}
       }
 
+
+
       iEl++;
     }//if baseline 
+  }//overlap removal
   }//electron loop
 
   //sort the electrons in Pt
@@ -1969,13 +2005,45 @@ EL::StatusCode chorizo :: loop ()
   bool IsMuon = false; // any good not-overlapping muon in the event?
   int iMu=0;
   for(const auto& mu_itr : *muons_sc.first){
+  
+  if (doCutFlow){
+    
+    if( dec_baseline(*mu_itr) ){
+        
+      Particle baseMuon;
+      baseMuon.SetVector( getTLV( &(*mu_itr) ));	
+       
+      myfile << "baseline muon before OR: \n";      
+      myfile << "pt: " << baseMuon.Pt() << " \n"; 
+      myfile << "eta: " << baseMuon.Eta() << " \n";          
+      myfile << "phi: " << baseMuon.Phi() << " \n";   
+	
+	if (((!doOR) || dec_passOR(*mu_itr))) {   
+ 	  myfile << "baseline muon after OR: \n";      
+          myfile << "pt: " << baseMuon.Pt() << " \n"; 
+          myfile << "eta: " << baseMuon.Eta() << " \n";          
+          myfile << "phi: " << baseMuon.Phi() << " \n"; 	
+	}
+    
+    
+    }
+    }
+    
+        
     if( dec_signal(*mu_itr) && 
 	((!doOR) || dec_passOR(*mu_itr)) &&
 	! dec_cosmic(*mu_itr) ){
       
       Particle recoMuon;
       recoMuon.SetVector( getTLV( &(*mu_itr) ));
-
+	  
+      if (doCutFlow){
+      myfile << "signal muon: \n";      
+      myfile << "pt: " << recoMuon.Pt() << " \n"; 
+      myfile << "eta: " << recoMuon.Eta() << " \n";          
+      myfile << "phi: " << recoMuon.Phi() << " \n"; 
+      }
+      
       recoMuon.id = iMu;
       recoMuon.ptcone20 = acc_ptcone20(*mu_itr) * 0.001;
       recoMuon.etcone20 = acc_etcone20(*mu_itr) * 0.001;
@@ -2022,7 +2090,7 @@ EL::StatusCode chorizo :: loop ()
 	  muonSFd *= recoMuon.SFd;
 	}
       }
-      
+       
     }//if baseline 
     
     iMu++;
@@ -2123,6 +2191,7 @@ EL::StatusCode chorizo :: loop ()
       }
     }
 	
+	
     if( doOR && !dec_passOR(**jet_itr) ) continue;
 
     //flag event if bad jet is found
@@ -2211,6 +2280,13 @@ EL::StatusCode chorizo :: loop ()
     recoJet.Pt_down = recoJet.Pt();
 
     jetCandidates.push_back(recoJet);
+    
+    if (doCutFlow){
+      myfile << "baseline jet after OR: \n";      
+      myfile << "pt: " <<  recoJet.Pt() << " \n"; 
+      myfile << "eta: " << recoJet.Eta() << " \n";          
+      myfile << "phi: " << recoJet.Phi() << " \n"; 
+    }    
 
     if(this->printJet){
       std::cout << "Jet " << iJet << ":" << endl;
@@ -2220,7 +2296,11 @@ EL::StatusCode chorizo :: loop ()
     iJet++;
 
   }  //jet loop
+  
+    if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
+            
 
+  
   //sort the jet candidates in Pt
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
 
@@ -2424,6 +2504,13 @@ EL::StatusCode chorizo :: loop ()
       bjet_counter_80eff++;	
     
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
+    
+    if (doCutFlow){
+      myfile << "signal jet: \n";      
+      myfile << "pt: "  << jetCandidates.at(iJet).Pt() << " \n"; 
+      myfile << "eta: " << jetCandidates.at(iJet).Eta() << " \n";          
+      myfile << "phi: " << jetCandidates.at(iJet).Phi() << " \n"; 
+    } 
 
     // //Save jet candidates for razor 
     // VectorJets_Razor.push_back(JetCandidates.at(iJet).GetVector());
@@ -2436,6 +2523,10 @@ EL::StatusCode chorizo :: loop ()
   }//end of jets loop
 
   n_jets = recoJets.size();
+  
+  if (doCutFlow) myfile << "n of signal jets: " << n_jets << " \n"; 
+
+     
 
   //check for higher pt jet multiplicity
   for (unsigned int ij=0; ij<recoJets.size(); ij++){
@@ -2456,7 +2547,8 @@ EL::StatusCode chorizo :: loop ()
 
   n_bjets = bjet_counter; 
   n_bjets_80eff = bjet_counter_80eff; 
-
+  
+  if (doCutFlow) myfile << "n of signal b-jets: " << n_bjets << " \n"; 
 
   //** btagging weights
   if(isMC){
@@ -3125,8 +3217,11 @@ EL::StatusCode chorizo :: loop ()
   
   output->setFilterPassed ();
   
+  myfile.close();
+  
   return nextEvent(); //SUCCESS + cleaning
   }
+  
 
 //Fill lepton data members
 void chorizo :: dumpLeptons(){
@@ -5282,5 +5377,4 @@ EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, 
 
   return EL::StatusCode::SUCCESS; 
 }
-
 
