@@ -47,6 +47,10 @@
             <region name="SR">EF_xe80_tclcw</region>
         </Trigger>
 
+        <Truth>
+            <dressLeptons>true</dressLeptons>
+        </Truth>
+
         <Vertex>
             <region name="SR">4</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
         </Vertex>

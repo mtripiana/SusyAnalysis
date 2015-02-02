@@ -43,6 +43,10 @@
           <Harmonisation>false</Harmonisation>
           <doPhotons>false</doPhotons>
         </OverlapRemoval> 
+
+        <Truth>
+            <dressLeptons>true</dressLeptons>
+        </Truth>
 	  
         <Trigger>
             <region name="SR">EF_xe80_tclcw</region>
@@ -110,7 +114,7 @@
                 <Collection>AntiKt4LCTopo</Collection>
 
                 <PreselPtCut>20000.</PreselPtCut>
-                <PreselEtaCut>10</PreselEtaCut>
+                <PreselEtaCut>2.8</PreselEtaCut>
                 <RecoPtCut>30000.</RecoPtCut>
                 <RecoEtaCut>2.8</RecoEtaCut>
 

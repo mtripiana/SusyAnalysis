@@ -37,6 +37,15 @@
 #include <valgrind/callgrind.h>
 #endif
 
+
+//For branch-use stats
+//#define CODE_STATS
+#ifdef CODE_STATS
+#include "xAODCore/tools/IOStats.h"
+#include "xAODCore/tools/ReadStats.h"
+#endif
+
+
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
 
@@ -48,6 +57,7 @@ ClassImp(chorizo)
 static SG::AuxElement::Decorator<bool> dec_baseline("baseline");
 static SG::AuxElement::Decorator<bool> dec_signal("signal");
 static SG::AuxElement::Decorator<bool> dec_passOR("passOR");
+static SG::AuxElement::Decorator<bool> dec_failOR("overlaps");
 static SG::AuxElement::Decorator<bool> dec_badjet("bad");
 static SG::AuxElement::Decorator<bool> dec_bjet("bjet");
 static SG::AuxElement::Decorator<bool> dec_cosmic("cosmic");
@@ -57,6 +67,13 @@ static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
 static SG::AuxElement::Accessor<float> acc_etcone20("etcone20");
 static SG::AuxElement::Accessor<float> acc_etcone30("etcone30");
+
+static SG::AuxElement::Accessor<float> acc_truth_etcone20("EtCone20");
+static SG::AuxElement::Accessor<float> acc_truth_ptcone30("PtCone30");
+static SG::AuxElement::Accessor<float> acc_pt_dressed("pt_dressed");
+static SG::AuxElement::Accessor<float> acc_eta_dressed("eta_dressed");
+static SG::AuxElement::Accessor<float> acc_phi_dressed("phi_dressed");
+static SG::AuxElement::Accessor<float> acc_e_dressed("e_dressed");
 
 static SG::AuxElement::Accessor<unsigned char> acc_nPixHits("numberOfPixelHits");
 static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
@@ -79,7 +96,8 @@ chorizo :: chorizo ()
 
   isAtlfast=false;
   isQCD=false;
-  isNCBG=false;  doAnaTree=false;
+  isNCBG=false; 
+  doAnaTree=false;
   doPUTree=false;
   doFlowTree=false;
 
@@ -137,6 +155,7 @@ void chorizo :: bookTree(){
   if (output){
     output->tree()->Branch ("RunNumber", &RunNumber, "RunNumber/I");
     output->tree()->Branch ("EventNumber", &EventNumber, "EventNumber/I");
+    output->tree()->Branch ("procID", &procID, "procID/I");
     //    output->tree()->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
     output->tree()->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
     output->tree()->Branch ("nVertex", &nVertex, "nVertex/I");                        
@@ -159,6 +178,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("isFakeMet",&isFakeMet,"isFakeMet/O", 10000);
       output->tree()->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
       output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 10000);
+      output->tree()->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
     }
 
     
@@ -168,6 +188,7 @@ void chorizo :: bookTree(){
     output->tree()->Branch ("kfactor", &meta_kfactor, "kfactor/F");
     output->tree()->Branch ("feff", &meta_feff, "feff/F");
     output->tree()->Branch ("nsim", &meta_nsim, "nsim/F");
+    output->tree()->Branch ("nwsim", &meta_nwsim, "nwsim/F");
     output->tree()->Branch ("lumi", &meta_lumi, "lumi/F");
 
 
@@ -176,7 +197,8 @@ void chorizo :: bookTree(){
       //output->tree()->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
       output->tree()->Branch ("w_average", &w_average, "w_average/F");             
       output->tree()->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
-      output->tree()->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                   output->tree()->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
+      output->tree()->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
+      output->tree()->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
       output->tree()->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
       output->tree()->Branch ("e_SF", &e_SF, "e_SF/F");                       
       output->tree()->Branch ("m_SF", &m_SF, "m_SF/F");                       
@@ -534,8 +556,31 @@ EL::StatusCode chorizo :: histInitialize ()
       }
     }
   }
+  
+  //Sum of weights for primary sample
+  meta_nwsim += getNWeightedEvents(); //load weighted number of events
+  m_cfilename = wk()->metaData()->getString(SH::MetaFields::sampleName); //name of current sample
 
   return EL::StatusCode::SUCCESS;
+}
+
+float chorizo :: getNWeightedEvents(){
+
+  //Try to get the original number of events (relevant in case of derivations)
+  //  const TTree* const MetaData = dynamic_cast<TTree* > (wk()->inputFile()->Get("MetaData"));
+  m_MetaData = dynamic_cast<TTree* > (wk()->inputFile()->Get("MetaData"));
+
+  if (!m_MetaData) {
+    Error("getNWeightedEvents()", "\nDid not manage to get MetaData tree. Leaving...");
+    return EL::StatusCode::FAILURE;
+  }
+
+  TTreeFormula treeform("treeform","EventBookkeepers.m_nWeightedAcceptedEvents",m_MetaData);
+  treeform.UpdateFormulaLeaves();
+  treeform.GetNdata();
+
+  return (float)treeform.EvalInstance(1);
+
 }
 
 void chorizo :: InitVars()
@@ -548,11 +593,13 @@ void chorizo :: InitVars()
   meta_kfactor = 1.;
   meta_feff = 1.;
   meta_nsim = 0.; 
+  //meta_nwsim = 0.; 
   meta_lumi = 1.;
   
   //- Event info
   RunNumber = 0;
   EventNumber = 0;
+  procID = 0;
   averageIntPerXing = 0;
 
   //- Data Quality (event is good by default! (i.e. MC))
@@ -566,6 +613,7 @@ void chorizo :: InitVars()
   isTileGood = true;                
   isTileTrip = false;                
   isCoreFlag = true;          
+  isCosmic = false;          
       
   passPreselectionCuts = false;
 
@@ -986,6 +1034,9 @@ void chorizo :: ReadXML(){
     TriggerNames.push_back(s);
   }
 
+  Info(whereAmI, Form(" - Truth") );
+  dressLeptons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Truth$dressLeptons");
+
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
   doORharmo = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
@@ -1219,6 +1270,8 @@ EL::StatusCode chorizo :: initialize ()
   //Read XML options
   ReadXML();
 
+  //Load SUSY signals map
+  //  m_susymap = new SUSYmap();
 
   //initialize lepton isolation 
   elIsoArgs = new ST::IsSignalElectronExpCutArgs();
@@ -1244,6 +1297,8 @@ EL::StatusCode chorizo :: initialize ()
 
   //Initialize event counter
   m_eventCounter=0;
+  m_metwarnCounter=0;
+  m_pdfwarnCounter=0;
 
   //Initialize variables
   InitVars();
@@ -1279,6 +1334,26 @@ EL::StatusCode chorizo :: initialize ()
       Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
     }
   }
+
+  //--- Trigger Decision
+  // The configuration tool.
+  // tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
+  // ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
+  // configHandle->initialize();                                                                                                                                                
+  // The decision tool                                                                
+  // tool_trigdec = new TrigDecisionTool("TrigDecTool");
+  // tool_trigdec->setProperty("ConfigTool",configHandle);
+  // tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
+  // tool_trigdec->initialize();
+
+  //Overlap Removal
+  tool_or = new OverlapRemovalTool("OverlapRemovalTool");
+  // Turn on the object links for debugging
+  CHECK( tool_or->setProperty("InputLabel", "baseline") );
+  CHECK( tool_or->setProperty("OverlapLabel", "overlaps") );
+  CHECK( tool_or->setProperty("LinkOverlapObjects", false) );
+  tool_or->msg().setLevel(MSG::INFO);
+  CHECK( tool_or->initialize() );
 
   //--- MET
 
@@ -1440,7 +1515,8 @@ EL::StatusCode chorizo :: nextEvent(){
   //*** clean event (store, pointers, etc...) before leaving successfully... ***
   
   // Clear View container
-  m_goodJets->clear();
+  if(m_goodJets)
+    m_goodJets->clear();
 
   // Clear transient store
   m_store->clear();
@@ -1451,14 +1527,17 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
-
+  if(this->isTruth) //truth derivations
+    return loop_truth();
+  
   return loop();
 }
+
 
 EL::StatusCode chorizo :: loop ()
 {
   //Info("loop()", "Inside loop");
-
+  
 #ifdef PROFCODE
   if(m_eventCounter!=0)
     CALLGRIND_START_INSTRUMENTATION;
@@ -1474,7 +1553,7 @@ EL::StatusCode chorizo :: loop ()
 
   InitVars();
 
-  if ( m_eventCounter%50==0 ){ //put back to 2000 or so!
+  if ( m_eventCounter%1000==0 ){ 
     printf("\r %6d/%lld\t[%3.0f]",m_eventCounter,m_event->getEntries(),100*m_eventCounter/float(m_event->getEntries()));
     fflush(stdout);
   }
@@ -1489,6 +1568,11 @@ EL::StatusCode chorizo :: loop ()
 
   loadMetaData();
    
+  if(m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName)){ //name of current file
+    meta_nwsim += getNWeightedEvents(); //load weighted number of events
+    m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName);
+  }
+
   //-- Retrieve objects Containers
   m_truthE= 0;
   m_truthP= 0;
@@ -1516,6 +1600,7 @@ EL::StatusCode chorizo :: loop ()
     CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
     CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
   }
+
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;
 
@@ -1558,7 +1643,7 @@ EL::StatusCode chorizo :: loop ()
     //    averageIntPerXing = (isMC && lb==1 && int(averageIntPerXing+0.5)==1) ? 0. : averageIntPerXing; //--- lb doesn't exist in slimmed ntuples! //CHECK_ME 
 
     if (RunNumber==0){
-      Info("execute()", Form("Skipping event %d because RunNumber=0 !!", EventNumber));
+      Info("loop()", Form("Skipping event %d because RunNumber=0 !!", EventNumber));
       return nextEvent();
     }
     
@@ -1582,7 +1667,8 @@ EL::StatusCode chorizo :: loop ()
     
     //--- PDF reweighting
     xAOD::TruthEventContainer::const_iterator truthE_itr = m_truthE->begin();
-    int id1, id2, pdfId1, pdfId2; //, pdf1, pdf2;
+    int id1=0; int id2=0;
+    int pdfId1, pdfId2, pdf1, pdf2;
     float x1, x2, scalePDF;
 
     //pdf reweighting
@@ -1627,6 +1713,51 @@ EL::StatusCode chorizo :: loop ()
       // cout << "DEBUG :: PDF_w = " << PDF_w << endl; 
       // cout << "-------------------------------------" << endl;
     }
+
+    //procID
+    try { 
+      ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1); 
+    } catch(...) { 
+      if( m_pdfwarnCounter < 2*m_warnLimit )
+	Warning("loop()", "   TruthEvent::PDGID1 not found! procID won't make sense!");
+      ++m_pdfwarnCounter;
+    }
+    try { 
+      ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2); 
+    } catch(...) { 
+      if( m_pdfwarnCounter < 2*m_warnLimit )
+	Warning("loop()", "   TruthEvent::PDGID2 not found! procID won't make sense!");
+      ++m_pdfwarnCounter;
+    }
+
+    //Find Hard Process particles
+    findSusyHP(id1, id2);
+
+    if(id1!=0 && id2!=0) //(just to avoid warnings)
+      procID = SUSY::finalState(id1, id2); // get prospino proc ID
+
+
+    //DEBUGGING!!!!
+    ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1);
+    ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2);
+    ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
+    ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
+    ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
+    ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
+    ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
+    ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
+    cout << "-------------------------------------" << endl;
+    cout << "DEBUG :: x1 = " << x1 << endl; 
+    cout << "DEBUG :: x2 = " << x2 << endl; 
+    cout << "DEBUG :: id1 = " << id1 << endl; 
+    cout << "DEBUG :: id2 = " << id2 << endl; 
+    cout << "DEBUG :: pdfId1 = " << pdfId1 << endl; 
+    cout << "DEBUG :: pdfId2 = " << pdfId2 << endl; 
+    cout << "DEBUG :: pdf1 = " << pdf1 << endl; 
+    cout << "DEBUG :: pdf2 = " << pdf2 << endl; 
+    cout << "-------------------------------------" << endl;
+    //!!!
+
   
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
     this->w_average = this->GetAverageWeight();
@@ -1785,6 +1916,7 @@ EL::StatusCode chorizo :: loop ()
     Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
   }
 
+
   //--- Get Electrons
   std::pair< xAOD::ElectronContainer*, xAOD::ShallowAuxContainer* > electrons_sc = xAOD::shallowCopyContainer( *m_electrons );
   bool setLinks = xAOD::setOriginalObjectLink(*m_electrons, *electrons_sc.first);
@@ -1803,6 +1935,7 @@ EL::StatusCode chorizo :: loop ()
     tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
   
   }
+
 
   //--- Get Muons
   std::pair< xAOD::MuonContainer*, xAOD::ShallowAuxContainer* > muons_sc = xAOD::shallowCopyContainer( *m_muons );
@@ -1870,6 +2003,7 @@ EL::StatusCode chorizo :: loop ()
     else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
     dec_bjet(**jet_itr) = (bw > Jet_TaggerOp);
 
+    dec_baseline(**jet_itr) = ((*jet_itr)->eta() < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
 
     //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
     smr_met_jets_pt.push_back( 0. ); //recoJet.Pt() ); //in GeV!
@@ -1897,50 +2031,59 @@ EL::StatusCode chorizo :: loop ()
       CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, doORharmo) );
   }
 
+  // Apply the overlap removal to all objects (dumb example)
+  CHECK( tool_or->removeOverlaps(electrons_sc.first, muons_sc.first, jets_sc.first, 0, photons_sc.first) );
+
+
   //-- Pre-book baseline electrons (after OR)
   std::vector<Particle> electronCandidates; //intermediate selection electrons
   bool IsElectron = false; // any good not-overlapping electron in the event?
   int iEl = 0;
   e_N=0; //signal electrons
   for(const auto& el_itr : *electrons_sc.first ){
-    if( dec_baseline(*el_itr)){ 
-
+    
+    if(! dec_baseline(*el_itr)) continue;
       
-      //define preselected electron                
-      Particle recoElectron;
-      recoElectron.SetVector( getTLV( &(*el_itr) ));
-      if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
-      if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
-
-      if (doCutFlow){
-        myfile << "baseline electron before OR: \n";      
-        myfile << "pt: " << recoElectron.Pt() << " \n";    
-        myfile << "eta: " << recoElectron.Eta() << " \n";          
-        myfile << "phi: " << recoElectron.Phi() << " \n"; 
-      }
-
-      if (((!doOR) || dec_passOR(*el_itr) )){
+    //define preselected electron                
+    Particle recoElectron;
+    recoElectron.SetVector( getTLV( &(*el_itr) ));
+    if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
+    if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
+    
+    if (doCutFlow){
+      myfile << "baseline electron before OR: \n";      
+      myfile << "pt: " << recoElectron.Pt() << " \n";    
+      myfile << "eta: " << recoElectron.Eta() << " \n";          
+      myfile << "phi: " << recoElectron.Phi() << " \n"; 
+    }
+    
+    //TEST NEW OR tool
+    if(dec_passOR(*el_itr) && dec_failOR(*el_itr)) 
+      Info("loop()"," Electron passed STor but not ORtool");
+    
+    //book not-overlapping electrons
+    if (((!doOR) || dec_passOR(*el_itr) )){
       recoElectron.id = iEl;
       recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
       recoElectron.etcone20 = acc_etcone20(*el_itr) * 0.001;
       recoElectron.ptcone30 = acc_ptcone30(*el_itr) * 0.001;
       recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
       (*el_itr).passSelection(recoElectron.isTight, "Tight");
-
+      
       recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
       recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
-
+      
       //get electron scale factors
       if(this->isMC){
 	//nominal
 	recoElectron.SF = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF );
 	
-
+	
 	//reset back to requested systematic!
 	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
 	  Error("loop()", "Cannot configure SUSYTools for default systematics");
 	}
-
+	
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
 	}
@@ -1961,22 +2104,22 @@ EL::StatusCode chorizo :: loop ()
       
       electronCandidates.push_back(recoElectron);
       
-       if (doCutFlow){
-          myfile << "baseline electron after OR: \n";      
-          myfile << "pt: " << recoElectron.Pt() << " \n";    
-          myfile << "eta: " << recoElectron.Eta() << " \n";          
-          myfile << "phi: " << recoElectron.Phi() << " \n";                
-       }
+      if (doCutFlow){
+	myfile << "baseline electron after OR: \n";      
+	myfile << "pt: " << recoElectron.Pt() << " \n";    
+	myfile << "eta: " << recoElectron.Eta() << " \n";          
+	myfile << "phi: " << recoElectron.Phi() << " \n";                
+      }
       
       //save signal electrons
       if( dec_final(*el_itr) ){
 	recoElectrons.push_back(recoElectron);
-       
-       if (doCutFlow){	
- 	   myfile << "signal electron: \n";      
-	   myfile << "pt: " << recoElectron.Pt() << " \n"; 
-           myfile << "eta: " << recoElectron.Eta() << " \n";          
-           myfile << "phi: " << recoElectron.Phi() << " \n";                
+	
+	if (doCutFlow){	
+	  myfile << "signal electron: \n";      
+	  myfile << "pt: " << recoElectron.Pt() << " \n"; 
+	  myfile << "eta: " << recoElectron.Eta() << " \n";          
+	  myfile << "phi: " << recoElectron.Phi() << " \n";                
 	}	
 	
 	e_N++;
@@ -1987,61 +2130,52 @@ EL::StatusCode chorizo :: loop ()
 	  electronSFd *= recoElectron.SFd;
 	}
       }
-
-
-
+      
       iEl++;
-    }//if baseline 
-  }//overlap removal
+    }//overlap removal
   }//electron loop
 
   //sort the electrons in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end());
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end());
-
-
+  
+  
   //-- Pre-book baseline muons (after OR)
   std::vector<Particle> muonCandidates; //intermediate selection muons
   bool IsMuon = false; // any good not-overlapping muon in the event?
   int iMu=0;
   for(const auto& mu_itr : *muons_sc.first){
-  
-  if (doCutFlow){
     
-    if( dec_baseline(*mu_itr) ){
-        
-      Particle baseMuon;
-      baseMuon.SetVector( getTLV( &(*mu_itr) ));	
-       
+    this->isCosmic |= dec_cosmic(*mu_itr); //check if at least one cosmic in the event
+    
+    if(! dec_baseline(*mu_itr) ) continue; //keep baseline object only
+
+    Particle recoMuon;
+    recoMuon.SetVector( getTLV( &(*mu_itr) ));	
+    
+    if (doCutFlow){
       myfile << "baseline muon before OR: \n";      
-      myfile << "pt: " << baseMuon.Pt() << " \n"; 
-      myfile << "eta: " << baseMuon.Eta() << " \n";          
-      myfile << "phi: " << baseMuon.Phi() << " \n";   
-	
-	if (((!doOR) || dec_passOR(*mu_itr))) {   
- 	  myfile << "baseline muon after OR: \n";      
-          myfile << "pt: " << baseMuon.Pt() << " \n"; 
-          myfile << "eta: " << baseMuon.Eta() << " \n";          
-          myfile << "phi: " << baseMuon.Phi() << " \n"; 	
-	}
-    
-    
-    }
-    }
-    
-        
-    if( dec_signal(*mu_itr) && 
-	((!doOR) || dec_passOR(*mu_itr)) &&
-	! dec_cosmic(*mu_itr) ){
-      
-      Particle recoMuon;
-      recoMuon.SetVector( getTLV( &(*mu_itr) ));
-	  
-      if (doCutFlow){
-      myfile << "signal muon: \n";      
       myfile << "pt: " << recoMuon.Pt() << " \n"; 
       myfile << "eta: " << recoMuon.Eta() << " \n";          
-      myfile << "phi: " << recoMuon.Phi() << " \n"; 
+      myfile << "phi: " << recoMuon.Phi() << " \n";   
+      
+      if (((!doOR) || dec_passOR(*mu_itr))) {   
+	myfile << "baseline muon after OR: \n";      
+	myfile << "pt: " << recoMuon.Pt() << " \n"; 
+	myfile << "eta: " << recoMuon.Eta() << " \n";          
+	myfile << "phi: " << recoMuon.Phi() << " \n"; 	
+      }
+    }
+    
+    if( dec_signal(*mu_itr) && 
+	((!doOR) || dec_passOR(*mu_itr)) &&
+	!dec_cosmic(*mu_itr) ){
+      
+      if (doCutFlow){
+	myfile << "signal muon: \n";      
+	myfile << "pt: " << recoMuon.Pt() << " \n"; 
+	myfile << "eta: " << recoMuon.Eta() << " \n";          
+	myfile << "phi: " << recoMuon.Phi() << " \n"; 
       }
       
       recoMuon.id = iMu;
@@ -2054,12 +2188,12 @@ EL::StatusCode chorizo :: loop ()
       
       recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( mu_itr );
       recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( mu_itr );
-
+      
       //get muon scale factors
       if(this->isMC){
 	//nominal 
 	recoMuon.SF = tool_st->GetSignalMuonSF(*mu_itr);
-
+	
 	//+1 sys up
 	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
@@ -2078,7 +2212,7 @@ EL::StatusCode chorizo :: loop ()
       }
 
       muonCandidates.push_back(recoMuon);
-
+      
       //save signal muons
       if( dec_final(*mu_itr) ){
 	recoMuons.push_back(recoMuon);
@@ -2090,8 +2224,8 @@ EL::StatusCode chorizo :: loop ()
 	  muonSFd *= recoMuon.SFd;
 	}
       }
-       
-    }//if baseline 
+      
+    }//if pass OR
     
     iMu++;
   }//muon loop
@@ -2181,7 +2315,7 @@ EL::StatusCode chorizo :: loop ()
     if( !dec_baseline(**jet_itr)) continue;
     
     //look for fake-met jets    
-    if (Met_doFakeEtmiss && !this->isTruth){
+    if (Met_doFakeEtmiss){
       float bchcorrjet;
       (*jet_itr)->getAttribute(xAOD::JetAttribute::BchCorrJet, bchcorrjet);
       if((*jet_itr)->pt() > 40000. && 
@@ -2208,11 +2342,9 @@ EL::StatusCode chorizo :: loop ()
     
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
-      //      (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
+      //      local_truth_flavor = (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
       local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID");
     }    
-
-    
     
     //--- Get some other jet attributes
     std::vector<float> sumpttrk_vec;                                                   
@@ -2297,20 +2429,20 @@ EL::StatusCode chorizo :: loop ()
 
   }  //jet loop
   
-    if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
-            
-
+  if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
+  
+  
   
   //sort the jet candidates in Pt
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
-
-
+  
+  
   //--- Jet cleaning
   //  Reject events with at least one looser bad jet.
   //  *after lepton overlap removal*
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
   this->passPreselectionCuts &= (!this->isBadID);
-
+  
   //--- Additional jet cleaning 
   //  To remove events with fake missing Et due to non operational cells in the Tile and the HEC.
   //  *before lepton overlap removal*
@@ -2321,7 +2453,7 @@ EL::StatusCode chorizo :: loop ()
   
 
   //--- Get truth electrons 
-  if ( this->isMC && !this->isSignal && !this->isTruth ){
+  if ( this->isMC && !this->isSignal ){
 
     //truth particles loop
     truthP_itr = m_truthP->begin();
@@ -2429,7 +2561,6 @@ EL::StatusCode chorizo :: loop ()
     }
   }
 
-
   //Get truth jets vectors
   std::vector<TLorentzVector> truthJetsJVF;
   if(isMC){
@@ -2466,7 +2597,7 @@ EL::StatusCode chorizo :: loop ()
     if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue;
     
     //--- jvf cut   //CHECK_ME
-    if (!this->isTruth && jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta()) < 2.4) {
+    if (jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta()) < 2.4) {
 
       float jvfCut = 0.5;
       
@@ -2612,23 +2743,29 @@ EL::StatusCode chorizo :: loop ()
 			   0));
   }
   
+
   TVector2 v_met_ST = getMET( metRFC, "Final");
 
   met_obj.SetVector(v_met_ST,"");  //- Copy met vector to the met data member
   met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
 
   //- Recomputed MET via SUSYTools (Track Soft Term (TST))
-  CHECK( tool_st->GetMET(*metRFC_TST,
-			 jets_sc.first,
-			 electrons_sc.first,
-			 0,
-			 0,
-			 0,
-			 true));
+  if(this->isMC || nVertex>1){   //protect against crash in Data from METRebuilder  ///FIX_ME
+    CHECK( tool_st->GetMET(*metRFC_TST,
+			   jets_sc.first,
+			   electrons_sc.first,
+			   0,
+			   0,
+			   0,
+			   true));
+    met_obj.SetVector( getMET( metRFC_TST, "Final"), "met_tst");  //- Copy met vector to the met data member
+  }
+  else{
+    met_obj.SetVector( met_obj.GetVector(""), "met_tst", true );  //- Copy met vector to the met data member
+    Warning("loop()", "MET_CST assigned to MET_TST to avoid METRebuilder crash in data.");
+  }
 
-  met_obj.SetVector( getMET( metRFC_TST, "Final"), "met_tst");  //- Copy met vector to the met data member
-  
-  
+
   //- Track met
   TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
   met_obj.SetVector(v_met_trk, "met_trk");
@@ -2687,14 +2824,13 @@ EL::StatusCode chorizo :: loop ()
 
   //*** CONFIG
   // book MET flavours
-  std::map<MetDef, TVector2> metmap;
-  metmap[MetDef::InvMu] = met_obj.GetVector();
-  metmap[MetDef::AllVis] = met_obj.GetVector("met_mu");
-  metmap[MetDef::InvMuEl] = met_obj.GetVector("met_ecorr");
-  metmap[MetDef::InvMuPh] = met_obj.GetVector("met_phcorr");
-  metmap[MetDef::Track] = met_obj.GetVector("met_trk");
-  metmap[MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_mu");
-  metmap[MetDef::InvMuTST] = met_obj.GetVector("met_tst");
+  metmap[::MetDef::InvMu] = met_obj.GetVector();
+  metmap[::MetDef::AllVis] = met_obj.GetVector("met_mu");
+  metmap[::MetDef::InvMuEl] = met_obj.GetVector("met_ecorr");
+  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_phcorr");
+  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_mu");
+  metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst");
 
 
   //***
@@ -2721,14 +2857,15 @@ EL::StatusCode chorizo :: loop ()
   bool LeadOnly=true; //use only the leading jet 
   std::vector<TLorentzVector> thrust_jets;
   if(LeadOnly && recoJets.size()) sjet = recoJets.at(0).GetVector();   
-  for(auto jet : recoJets){
+  for(const auto& jet : recoJets){
     if(!LeadOnly) sjet += jet.GetVector();
     HT   += jet.Pt();
-    thrust_jets.push_back(jet.GetVector());
+    thrust_jets.push_back( jet.GetVector());
   }
 
   TVector2 sjet2(sjet.Px(), sjet.Py());
   
+
   //--- Fill MET related variables  -  vectorized now!
   for (auto& mk : metmap) {
 
@@ -2778,7 +2915,7 @@ EL::StatusCode chorizo :: loop ()
 
     auto min_mt_jm=99999.;
     auto ijet=0;
-    for(auto jet : recoJets ){  //jet loop
+    for(auto& jet : recoJets ){  //jet loop
 
       //count 'tau' jets candidates
       if ( jet.isTauJet( mk.second.Phi(), Jet_Tagger.Data()) ) 
@@ -2870,7 +3007,7 @@ EL::StatusCode chorizo :: loop ()
 
   met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();
     
-  
+
   //--- Track Veto
   //init vars
   std::vector<float> dR_jet_track_min;                    
@@ -3062,7 +3199,6 @@ EL::StatusCode chorizo :: loop ()
   //Mct
   mct = Calc_mct();
   
-  
 
   //==== Hadronic top reconstruction ====
   int ibtop1=-1; //book two highest btag-weight jets for later use
@@ -3072,9 +3208,9 @@ EL::StatusCode chorizo :: loop ()
   float maxbw1=0;
   float maxbw2=0;
   auto ijet=0;
-  for(auto jet : recoJets ){  //jet loop
+  for( auto& jet : recoJets ){  //jet loop
 
-      if( jet.isBTagged(Jet_Tagger) ){
+    if( jet.isBTagged(Jet_Tagger) ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -3178,20 +3314,23 @@ EL::StatusCode chorizo :: loop ()
   //bosonVec_reco_eta = V_lnu.Eta();  //not accesible!
   bosonVec_reco_phi = TVector2::Phi_mpi_pi( V_lnu.Phi() );       
   
-  if (!isTruth)
-    MtTop = TopTransvMass();
+  MtTop = TopTransvMass();
+
   
   //Z decay mode 
   TLorentzVector Ztlv(0.,0.,0.,0.);
-  std::vector<int> zdecays =  this->GetTruthZDecay(Ztlv);
-  if(zdecays.size()){
-    Z_decay  = zdecays.at(0);
-    Z_pt     = Ztlv.Pt();
-    Z_eta    = Ztlv.Eta();
-    Z_phi    = Ztlv.Phi();
-    //    Z_m      = Ztlv.M(); //not needed! Everyone knows the Z mass :)
+  if( this->isMC ){
+    std::vector<int> zdecays =  this->GetTruthZDecay(Ztlv);
+    if(zdecays.size()){
+      Z_decay  = zdecays.at(0);
+      Z_pt     = Ztlv.Pt();
+      Z_eta    = Ztlv.Eta();
+      Z_phi    = Ztlv.Phi();
+      //    Z_m      = Ztlv.M(); //not needed! Everyone knows the Z mass :)
+    }
   }
   
+
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
   //...
   
@@ -3214,14 +3353,724 @@ EL::StatusCode chorizo :: loop ()
   delete electrons_sc.second;
   delete photons_sc.first;
   delete photons_sc.second;
-  
+  delete metRFC;
+  delete metRFC_TST;
+
   output->setFilterPassed ();
   
   myfile.close();
   
   return nextEvent(); //SUCCESS + cleaning
+}
+
+EL::StatusCode chorizo :: loop_truth()
+{
+  //Info("loop_truth()", "Inside loop_truth");
+
+  InitVars();
+
+  if ( m_eventCounter%1000==0 ){ 
+    printf("\r %6d/%lld\t[%3.0f]",m_eventCounter,m_event->getEntries(),100*m_eventCounter/float(m_event->getEntries()));
+    fflush(stdout);
   }
   
+
+  m_eventCounter++;
+
+  //----------------------------
+  // Event information
+  //--------------------------- 
+  const xAOD::EventInfo* eventInfo = 0;
+  CHECK( m_event->retrieve( eventInfo, "EventInfo") );
+
+  loadMetaData();
+
+  //-- Retrieve objects Containers
+  m_truthE= 0;
+  m_truthP= 0;
+  m_truth_jets= 0;
+  
+ 
+  //  -- Truth Particles
+  CHECK( m_event->retrieve( m_truthE, "TruthEvent" ) );
+  CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
+  CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+
+  // -- Find Signal Subprocess
+  int id1=0; int id2=0;
+  xAOD::TruthEventContainer::const_iterator truthE_itr = m_truthE->begin();
+  try { 
+    ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1); 
+  } catch(...) { 
+    if( m_pdfwarnCounter < 2*m_warnLimit )
+      Warning("loop()", "   TruthEvent::PDGID1 not found! procID won't make sense!");
+    ++m_pdfwarnCounter;
+  }
+  try { 
+    ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2); 
+  } catch(...) { 
+    if( m_pdfwarnCounter < 2*m_warnLimit )
+      Warning("loop()", "   TruthEvent::PDGID2 not found! procID won't make sense!");
+    ++m_pdfwarnCounter;
+  }
+  if(id1!=0 && id2!=0) //(just to avoid warnings)
+    procID = SUSY::finalState(id1, id2); // get prospino proc ID
+  
+
+  xAOD::TruthParticleContainer::const_iterator truthP_itr;
+  xAOD::TruthParticleContainer::const_iterator truthP_end;
+ 
+  //Truth Electrons 
+  CHECK( m_event->retrieve( m_truthEl, "TruthElectrons" ) );
+  xAOD::TruthParticleContainer::const_iterator truthEl_itr = m_truthEl->begin();
+  xAOD::TruthParticleContainer::const_iterator truthEl_end = m_truthEl->end();
+
+  std::vector<Particle> electronCandidates; //intermediate selection electrons
+  for( ; truthEl_itr != truthEl_end; ++truthEl_itr ) {
+
+      //define preselected electron                
+      Particle recoElectron;
+      recoElectron.SetVector( getTLV( (*truthEl_itr) ));
+      if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
+      if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
+      
+      TLorentzVector tlv_d;
+      if( dressLeptons ){
+	tlv_d.SetPtEtaPhiE( ( *truthEl_itr )->auxdata< float >( "pt_dressed" )*0.001,
+			    ( *truthEl_itr )->auxdata< float >( "eta_dressed" ),
+			    ( *truthEl_itr )->auxdata< float >( "phi_dressed" ),
+			    ( *truthEl_itr )->auxdata< float >( "e_dressed" )*0.001);
+      }
+      else{
+	tlv_d.SetPtEtaPhiE( ( *truthEl_itr )->pt()*0.001,
+			    ( *truthEl_itr )->eta(),
+			    ( *truthEl_itr )->phi(),
+			    ( *truthEl_itr )->e()*0.001);
+      }
+      
+      // recoElectron.id = 0;
+      // recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
+      recoElectron.etcone20 = ( *truthEl_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthEl_itr) * 0.001;
+      recoElectron.ptcone30 = ( *truthEl_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthEl_itr) * 0.001;
+      // recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
+      // (*el_itr).passSelection(recoElectron.isTight, "Tight");
+      
+      // recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
+      // recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+      
+      electronCandidates.push_back(recoElectron);
+      
+      //apply signal cuts...
+      //if(...)
+      recoElectrons.push_back(recoElectron);
+      e_N++;
+      
+  }//electron loop
+
+  //sort the electrons in Pt
+  if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end());
+  if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end());
+
+
+  //Truth Muons 
+  CHECK( m_event->retrieve( m_truthMu, "TruthMuons" ) );
+  xAOD::TruthParticleContainer::const_iterator truthMu_itr = m_truthMu->begin();
+  xAOD::TruthParticleContainer::const_iterator truthMu_end = m_truthMu->end();
+
+  std::vector<Particle> muonCandidates; //intermediate selection muons
+  for( ; truthMu_itr != truthMu_end; ++truthMu_itr ) {
+
+      //define preselected muon                
+      Particle recoMuon;
+      recoMuon.SetVector( getTLV( (*truthMu_itr) ));
+      if (recoMuon.Pt() < El_PreselPtCut/1000.)   continue;
+      if (fabs(recoMuon.Eta()) > El_PreselEtaCut) continue;
+
+      TLorentzVector tlv_d;
+      if( dressLeptons ){
+	tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->auxdata< float >( "pt_dressed" )*0.001,
+			    ( *truthMu_itr )->auxdata< float >( "eta_dressed" ),
+			    ( *truthMu_itr )->auxdata< float >( "phi_dressed" ),
+			    ( *truthMu_itr )->auxdata< float >( "e_dressed" )*0.001);
+      }
+      else{
+	tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->pt()*0.001,
+			    ( *truthMu_itr )->eta(),
+			    ( *truthMu_itr )->phi(),
+			    ( *truthMu_itr )->e()*0.001);
+      }
+      
+      // recoMuon.id = 0;
+      // recoMuon.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
+      recoMuon.etcone20 = ( *truthMu_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthMu_itr) * 0.001;
+      recoMuon.ptcone30 = ( *truthMu_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthMu_itr) * 0.001;
+      // recoMuon.etcone30 = acc_etcone30(*el_itr) * 0.001;
+      // (*el_itr).passSelection(recoMuon.isTight, "Tight");
+      
+      // recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
+      // recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+      
+      muonCandidates.push_back(recoMuon);
+      
+      //apply signal cuts...
+      //if(...)
+      recoMuons.push_back(recoMuon);
+      m_N++;
+      
+  }//muon loop
+
+  //sort the muon candidates in Pt
+  if (muonCandidates.size()>0) std::sort(muonCandidates.begin(), muonCandidates.end());
+  if (recoMuons.size()>0) std::sort(recoMuons.begin(), recoMuons.end());
+
+
+  //Truth Photons 
+  CHECK( m_event->retrieve( m_truthPh, "TruthPhotons" ) );
+  xAOD::TruthParticleContainer::const_iterator truthPh_itr = m_truthPh->begin();
+  xAOD::TruthParticleContainer::const_iterator truthPh_end = m_truthPh->end();
+
+  std::vector<Particle> photonCandidates; //intermediate selection photons
+  for( ; truthPh_itr != truthPh_end; ++truthPh_itr ) {
+
+      //define preselected photon                
+      Particle recoPhoton;
+      recoPhoton.SetVector( getTLV( (*truthPh_itr) ));
+      if (recoPhoton.Pt() < El_PreselPtCut/1000.)   continue;
+      if (fabs(recoPhoton.Eta()) > El_PreselEtaCut) continue;
+
+      // recoPhoton.id = 0;
+      // recoPhoton.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
+      recoPhoton.etcone20 = ( *truthPh_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthPh_itr) * 0.001;
+      recoPhoton.ptcone30 = ( *truthPh_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthPh_itr) * 0.001;
+      // recoPhoton.etcone30 = acc_etcone30(*el_itr) * 0.001;
+      // (*el_itr).passSelection(recoPhoton.isTight, "Tight");
+      
+      // recoPhoton.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
+      // recoPhoton.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+      
+      photonCandidates.push_back(recoPhoton);
+      
+      //apply signal cuts...
+      //if(...)
+      recoPhotons.push_back(recoPhoton);
+      ph_N++;
+      
+  }//photon loop
+
+  //sort the photons in Pt
+  if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
+  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+
+
+  //Truth Jets
+  xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
+  xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
+  
+  std::vector<Particles::Jet> jetCandidates; //intermediate selection photons
+  for( ; tjet_itr != tjet_end; ++tjet_itr ) {
+    
+    Particles::Jet recoJet;
+    recoJet.SetVector( getTLV( (*tjet_itr) ));
+    if (recoJet.Pt() < Jet_PreselPtCut/1000.)   continue;
+    if (fabs(recoJet.Eta()) > Jet_PreselEtaCut) continue;
+
+    recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("TruthLabelID"); 
+
+    recoJet.isbjet = recoJet.isBTagged("Truth");
+
+    jetCandidates.push_back(recoJet);
+
+    //apply signal cuts...
+    if ( recoJet.Pt() < (Jet_RecoPtCut/1000.) ) continue;
+    if ( fabs(recoJet.Eta()) > Jet_RecoEtaCut ) continue;
+
+    if ( recoJet.isbjet ){
+      n_bjets++;
+      n_bjets_80eff++;
+    }
+
+    //check for higher pt jet multiplicity
+    if(recoJet.Pt() > 40.){
+      n_jets40++;
+      if(recoJet.Pt() > 50.){
+	n_jets50++;
+	if(recoJet.Pt() > 60.){
+	  n_jets60++;
+	  if(recoJet.Pt() > 80.){
+	    n_jets80++;
+	  }
+        }
+      }
+    }
+
+
+    recoJets.push_back(recoJet);
+    n_jets++;
+  }
+
+  //sort the jet candidates in Pt
+  if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
+
+
+  //MET
+  // NOTE:: Here MET could be recomputed with dressed leptons, as in SUSYTools, but not yet...
+  const xAOD::MissingETContainer* cmet_reffinal;
+  const xAOD::MissingETContainer* cmet_lhtopo;
+  const xAOD::MissingETContainer* cmet_track;
+
+  const xAOD::MissingETContainer* cmet_truth;
+
+  if( m_event->contains<xAOD::MissingETContainer>("MET_RefFinal") ){
+    CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") );
+  } else {
+    if( m_metwarnCounter < m_warnLimit ){
+      Warning("loop_truth()", "   MET_RefFinal can't be found!");
+    }
+    ++m_metwarnCounter;
+  }
+  if( m_event->contains<xAOD::MissingETContainer>("MET_LocHadTopo") ){
+    CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );
+  } else {
+    if( m_metwarnCounter < m_warnLimit ){
+      Warning("loop_truth()", "   MET_LocHadTopo can't be found!");
+    }
+    ++m_metwarnCounter;
+  }
+  if( m_event->contains<xAOD::MissingETContainer>("MET_Track") ){
+    CHECK( m_event->retrieve( cmet_track, "MET_Track") );
+  } else {
+    if( m_metwarnCounter < m_warnLimit ){
+      Warning("loop_truth()", "   MET_Track can't be found!");
+    }
+    ++m_metwarnCounter;
+  }
+  CHECK( m_event->retrieve( cmet_truth, "MET_Truth") );
+
+  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
+  const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];
+  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
+
+  const xAOD::MissingET* mtruth_inv = (*cmet_truth)["Int"];
+  const xAOD::MissingET* mtruth_vis = (*cmet_truth)["NonInt"];
+
+  met_obj.SetVector(TVector2(mtruth_inv->mpx(), mtruth_inv->mpy()), "");  //- Copy met vector to the met data member
+  met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
+
+  met_obj.SetVector( TVector2(0.,0.), "met_tst");  //- dummy for now 
+  met_obj.SetVector( TVector2(mtrack->mpx(), mtrack->mpy()), "met_trk");  //-  
+
+  met_obj.SetVector( TVector2(mtopo->mpx(), mtopo->mpy()), "met_locHadTopo");
+  met_obj.SetVector( TVector2(mtruth_vis->mpx(), mtruth_vis->mpy()), "met_mu", true); //to be redone with dressed leptons?
+
+  met_obj.SetVector( TVector2(mrf->mpx(), mrf->mpy()), "met_refFinal");
+
+  //--- Met with muons as invisible (as from the branches)
+  TVector2 v_met_rfinal_muinv = met_obj.GetVector("met_refFinal"); //in GeV
+  for ( const auto& muon : recoMuons){
+    v_met_rfinal_muinv += muon.GetVector2();
+  }
+  met_obj.SetVector(v_met_rfinal_muinv, "met_refFinal_mu", true); //already in GeV
+  
+  //--- Met with electrons as invisible 
+  TVector2 v_met_elinv_ST = met_obj.GetVector(); //== met_ST (GeV) 
+  for ( const auto& ele : recoElectrons){
+    v_met_elinv_ST += ele.GetVector2();
+  }
+  met_obj.SetVector(v_met_elinv_ST, "met_ecorr", true); //already in GeV    
+
+  //--- Met with photons as invisible 
+  TVector2 v_met_phinv_ST = met_obj.GetVector(); //== met_ST (GeV) 
+  for ( const auto& pho : recoPhotons){
+    v_met_phinv_ST += pho.GetVector2();
+  }
+  met_obj.SetVector(v_met_phinv_ST, "met_phcorr", true); //already in GeV    
+
+
+  // book MET flavours (to global map)
+  metmap[::MetDef::InvMu] = met_obj.GetVector();
+  metmap[::MetDef::AllVis] = met_obj.GetVector("met_mu");
+  metmap[::MetDef::InvMuEl] = met_obj.GetVector("met_ecorr");
+  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_phcorr");
+  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_mu");
+  metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst");
+
+
+  //Recoiling system against MET (prebooking)
+  TLorentzVector sjet(0.,0.,0.,0.);
+  bool LeadOnly=true; //use only the leading jet 
+  std::vector<TLorentzVector> thrust_jets;
+  if(LeadOnly && recoJets.size()) sjet = recoJets.at(0).GetVector();   
+  for(const auto& jet : recoJets){
+    if(!LeadOnly) sjet += jet.GetVector();
+    HT   += jet.Pt();
+    thrust_jets.push_back( jet.GetVector());
+  }
+
+  TVector2 sjet2(sjet.Px(), sjet.Py());
+
+  //--- Fill MET related variables  -  vectorized now!
+  for (auto& mk : metmap) {
+
+    met.push_back(mk.second.Mod());
+    met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
+  
+    //Recoiling system against MET (prebooking)
+    rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) ); //leading jet only
+    rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+    rmet_par_mod.push_back( TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+    rmet_norm_mod.push_back( TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+    rmet_dPhi_met_jetsys.push_back( deltaPhi(sjet2.Phi(), mk.second.Phi()) ); 
+
+
+    //sphericity and thrust
+    thrust_jets.push_back( makeTLV(mk.second) ); //add met to jet vectors
+
+    tr_spher.push_back( Calc_Sphericity(thrust_jets, true) );
+    tr_thrust.push_back( Calc_Thrust(thrust_jets) );
+
+    thrust_jets.pop_back(); //remove met from jet vectors
+
+    //dPhi(jet,MET)
+    if( n_jets>0 ){
+      dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );
+      if( n_jets>1 ){
+	dPhi_met_j2.push_back( deltaPhi( mk.second.Phi(), recoJets.at(1).Phi()) );
+	if( n_jets>2 ){
+	  dPhi_met_j3.push_back( deltaPhi( mk.second.Phi(), recoJets.at(2).Phi()) );
+	  if( n_jets>3 ){
+	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );
+	  }
+	}
+      }
+    }      
+
+    auto ntaujs =0;
+    auto dphi_min_allj_tmp=-1.;
+    auto dphi_min_tmp=-1.;
+    int ibcl=-1;  //closest bjet to met
+    int ibfar=-1; //most faraway bjet from met
+    int ilcl=-1;  //closest light jet to met
+    float min_dphi_bm=999.;
+    float max_dphi_bm=0.;
+    float min_dphi_lm=999.;
+
+    auto min_mt_jm=99999.;
+    auto ijet=0;
+    for( auto jet : recoJets ){  //jet loop
+
+      //count 'tau' jets candidates
+      if ( jet.isTauJet( mk.second.Phi(), Jet_Tagger.Data()) ) 
+	ntaujs += 1;
+
+
+      //look for min dphi(jet,met)   
+      float dphi_jm = deltaPhi( jet.Phi(), mk.second.Phi() );
+      
+      if(dphi_min_allj_tmp < 0 || dphi_min_allj_tmp > deltaPhi(jet.Phi(), mk.second.Phi()) ) //closest jet to met (all)
+	dphi_min_allj_tmp = deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
+      
+      if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
+	dphi_min_tmp = dphi_jm;
+
+
+      //--- look for min MT(jet,MET)
+      float mt_jm = Calc_MT( jet, mk.second );
+      if(mt_jm < min_mt_jm){
+	min_mt_jm = mt_jm;
+      }
+      
+      
+      //--- look for closest/faraway bjet and closer light jet to MET
+      if( jet.isBTagged(Jet_Tagger) ){
+	
+	if( dphi_jm < min_dphi_bm){ //closest bjet
+	  min_dphi_bm = dphi_jm;
+	  ibcl = ijet;
+	}
+	
+	if( dphi_jm > max_dphi_bm){ //most faraway bjet
+	  max_dphi_bm = dphi_jm;
+	  ibfar = ijet;
+	}
+	
+      }
+      else{
+	if( dphi_jm < min_dphi_lm){ //closest light-jet
+	  min_dphi_lm = dphi_jm;
+	  ilcl = ijet;
+	}
+      }
+      
+      ijet++;
+    }
+    dPhi_min_alljets.push_back(dphi_min_allj_tmp);
+    dPhi_min.push_back(dphi_min_tmp);
+
+    if( min_mt_jm==999999. )
+      min_mt_jm=0.; //it shouldn't matter, but let's force zero-jets events to fail this!
+
+    //fill MT variables from found values above
+    MT_min_jet_met.push_back( min_mt_jm );
+    MT_bcl_met.push_back( (ibcl >= 0 ? Calc_MT( recoJets.at(ibcl), mk.second ): 0.) );
+    MT_bfar_met.push_back( (ibfar >= 0 ? Calc_MT( recoJets.at(ibfar), mk.second ) : 0.) );
+    MT_lcl_met.push_back( (ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), mk.second ) : 0.) );
+    MT_jsoft_met.push_back( (recoJets.size() > 0 ? Calc_MT( recoJets.back(), mk.second ) : 0.) ); //it assumes jets are pt ordered!
+
+
+    //dphi(jet_i, met+j) ,  MT(j_i, met_j)
+    if (n_jets>0){
+      dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );	
+      j1_mT.push_back( Calc_MT( recoJets.at(0), mk.second ));
+      if (n_jets>1){
+	dPhi_met_j2.push_back( deltaPhi( mk.second.Phi(), recoJets.at(1).Phi()) );	
+	j2_mT.push_back( Calc_MT( recoJets.at(1), mk.second ));
+	if (n_jets>2){
+	  dPhi_met_j3.push_back( deltaPhi( mk.second.Phi(), recoJets.at(2).Phi()) );	
+	  j3_mT.push_back( Calc_MT( recoJets.at(2), mk.second ));
+	  if (n_jets>3){
+	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );	
+	    j4_mT.push_back( Calc_MT( recoJets.at(3), mk.second ));
+	  }
+	}
+      }
+    }
+
+    //meff = HT + met
+    meff.push_back( HT + mk.second.Mod() );
+    
+    //tau jet candidates
+    n_taujets.push_back( ntaujs );
+
+    //==== Razor ====
+    fillRazor( makeV3( mk.second ) );
+
+  }//end of met flavor loop
+
+  met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();
+
+
+  //--- Some other event variables
+  
+  //fill info for truth b-sb decay
+  findBparton();  //FIX_ME  //needed?
+  //*** otherwise t_b_*** variables are not filled otherwise!
+  
+  //--- Invariant mass of the 2 first jets (M12)
+  if(n_jets>1){
+    TLorentzVector jet_M = (recoJets[0].GetVector() + recoJets[1].GetVector());
+    M12 = jet_M.M();
+  }
+  
+  //- dPhi & dR
+  dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
+  
+  if (n_jets>0){
+
+    dPhi_j1_bp1 = deltaPhi(recoJets.at(0).Phi(), t_b_phi1);
+    dPhi_j1_bp2 = deltaPhi(recoJets.at(0).Phi(), t_b_phi2);
+    dR_j1_bp1   = deltaR(recoJets.at(0).Phi(), recoJets.at(0).Eta(), t_b_phi1, t_b_eta1);
+    dR_j1_bp2   = deltaR(recoJets.at(0).Phi(), recoJets.at(0).Eta(), t_b_phi2, t_b_eta2);
+    
+    if (recoMuons.size()>0){
+      dR_j1_m1 = recoJets.at(0).DeltaR(recoMuons.at(0));
+      if (recoMuons.size()>1) 
+	dR_j1_m2 = recoJets.at(0).DeltaR(recoMuons.at(1));
+    }
+    
+    if (n_jets>1){
+      
+      dPhi_j1_j2  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(1).Phi());
+      dPhi_j2_bp1 = deltaPhi(recoJets.at(1).Phi(), t_b_phi1);
+      dPhi_j2_bp2 = deltaPhi(recoJets.at(1).Phi(), t_b_phi2);
+      dEta_j1_j2  = fabs(recoJets.at(0).Eta()-recoJets.at(1).Eta());
+      
+      dR_j1_j2    = recoJets.at(0).DeltaR(recoJets.at(1));
+      dR_j2_bp1   = deltaR(recoJets.at(1).Phi(),recoJets.at(1).Eta(),t_b_phi1,t_b_eta1);
+      dR_j2_bp2   = deltaR(recoJets.at(1).Phi(),recoJets.at(1).Eta(),t_b_phi2,t_b_eta2);
+
+      if (recoMuons.size()>0){
+	dR_j2_m1 = recoJets.at(1).DeltaR(recoMuons.at(0));
+	if (recoMuons.size()>1) 
+	  dR_j2_m2=recoJets.at(1).DeltaR(recoMuons.at(1));
+      }
+
+      if (n_jets>2){
+	dPhi_j1_j3  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(2).Phi());
+	dPhi_j2_j3  = deltaPhi(recoJets.at(1).Phi(), recoJets.at(2).Phi());
+	dPhi_j3_bp1 = deltaPhi(recoJets.at(2).Phi(), t_b_phi1);
+	dPhi_j3_bp2 = deltaPhi(recoJets.at(2).Phi(), t_b_phi2);
+
+	dR_j1_j3    = recoJets.at(0).DeltaR(recoJets.at(2));
+	dR_j2_j3    = recoJets.at(1).DeltaR(recoJets.at(2));
+	dR_j3_bp1   = deltaR(recoJets.at(2).Phi(),recoJets.at(2).Eta(),t_b_phi1,t_b_eta1);
+	dR_j3_bp2   = deltaR(recoJets.at(2).Phi(),recoJets.at(2).Eta(),t_b_phi2,t_b_eta2);
+
+	if(recoMuons.size()>0){
+	  dR_j3_m1  = recoJets.at(2).DeltaR(recoMuons.at(0));
+	  if(recoMuons.size()>1) 
+	    dR_j3_m2 = recoJets.at(2).DeltaR(recoMuons.at(1));
+	}
+      }
+    }
+  }
+
+  
+  //Dijet Mass
+  if (n_jets>1){  
+    DiJet_Mass = Calc_dijetMass();
+    if( recoJets.at(0).isBTagged(Jet_Tagger) && recoJets.at(1).isBTagged(Jet_Tagger) )
+      DiBJet_Mass = DiJet_Mass;
+  }
+
+  //Mct
+  mct = Calc_mct();
+
+
+  //==== Hadronic top reconstruction ====
+  int ibtop1=-1; //book two highest btag-weight jets for later use
+  int ibtop2=-1;
+  int iblead1=-1;
+  int iblead2=-1;
+  float maxbw1=0;
+  float maxbw2=0;
+  auto ijet=0;
+  for( auto jet : recoJets ){  //jet loop
+
+    if( jet.isBTagged(Jet_Tagger) ){
+	
+	if(iblead1<0)//leadings
+	  iblead1=ijet;
+	else if(iblead2<0)
+	  iblead2=ijet;
+
+	float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
+	if(locbw > maxbw1){
+	  if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
+	    maxbw2 = maxbw1;
+	    ibtop2 = ibtop1;
+	  }
+	  ibtop1 = ijet;
+	  maxbw1 = locbw;
+	}
+	else if(locbw > maxbw2){
+	  ibtop2 = ijet;
+	  maxbw2 = locbw;
+	}
+      }
+
+      ijet++;
+  }
+  RecoHadTops(ibtop1, ibtop2);
+
+
+  //dPhi_b1_b2  
+  dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
+
+  //==== Fat Jets building ==============
+  //run algo_jet algorithm over RecoJets collection to build new-R jets
+  std::vector<TLorentzVector> jets_R_12 = getFatJets(1.2);
+  m0_antikt12  = (jets_R_12.size()>0 ? jets_R_12.at(0).M() : 0.);
+  m1_antikt12  = (jets_R_12.size()>1 ? jets_R_12.at(1).M() : 0.);
+  pt0_antikt12 = (jets_R_12.size()>0 ? jets_R_12.at(0).Pt() : 0.);
+  pt1_antikt12 = (jets_R_12.size()>1 ? jets_R_12.at(1).Pt() : 0.);
+  mtasym12     = getAsymmetry( m0_antikt12, m1_antikt12 );
+  
+  std::vector<TLorentzVector> jets_R_08 = getFatJets(0.8);
+  m0_antikt08  = (jets_R_08.size()>0 ? jets_R_08.at(0).M() : 0.);
+  m1_antikt08  = (jets_R_08.size()>1 ? jets_R_08.at(1).M() : 0.);
+  pt0_antikt08 = (jets_R_08.size()>0 ? jets_R_08.at(0).Pt() : 0.);
+  pt1_antikt08 = (jets_R_08.size()>1 ? jets_R_08.at(1).Pt() : 0.);
+  mtasym08     = getAsymmetry( m0_antikt08, m1_antikt08 );
+  
+  
+  //--- Inv masses involving leptons
+  //- Define the invariant mass mu-mu (m_M) and the Pt of the mu-mu system (m_Zpt)
+  if (recoMuons.size()==2){
+    TLorentzVector m12 = (recoMuons.at(0).GetVector() + recoMuons.at(1).GetVector());
+    m_M = m12.M();
+    m_Zpt = m12.Pt();
+  }
+  
+  //- Define the invariant mass e-e (m_E) and the Pt of the e-e system (e_Zpt)
+  if (recoElectrons.size()==2){
+    TLorentzVector e12 = (recoElectrons.at(0).GetVector() + recoElectrons.at(1).GetVector());
+    e_M = e12.M();
+    e_Zpt = e12.Pt();
+  }
+  
+  //- Define the invariant mass between the electron and the muon
+  if (recoMuons.size()==1 && recoElectrons.size()==1){
+    TLorentzVector inv_EM = (recoElectrons.at(0).GetVector() + recoMuons.at(0).GetVector());
+    m_EM = inv_EM.M();
+  }
+  
+
+  //--- Define the transverse mass e_MT - we recompute the MET with the electron in order to have the pt of the nu
+  if(recoElectrons.size()){
+    TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
+    //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
+    TVector2 met_electron = met_obj.GetVector("met"); //arely
+    e_MT = Calc_MT( recoElectrons.at(0), met_electron);
+  }
+  
+  //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
+  if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
+    TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
+    //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
+    TVector2 met_muon = met_obj.GetVector("met"); //arely
+    if (!met_obj.GetHasMuons())//muons are invisible, need to remove them from MET
+      met_muon = met_obj.GetVector("met") - v_m1;
+    m_MT = Calc_MT( recoMuons.at(0), met_muon);
+  }
+  
+  
+  //--- Boson Pt   <---  V(lv).Pt()
+  TVector2 V_lnu = met_obj.GetVector();
+  for (unsigned int iEl=0; iEl < recoElectrons.size(); iEl++){
+    TVector2 electron_vector2(recoElectrons.at(iEl).GetVector().Px(), recoElectrons.at(iEl).GetVector().Py());
+    V_lnu += electron_vector2;
+  }
+  if (met_obj.GetHasMuons()){
+    for (unsigned int iMu=0; iMu < recoMuons.size(); iMu++){
+      TVector2 muon_vector2(recoMuons.at(iMu).GetVector().Px(), recoMuons.at(iMu).GetVector().Py());
+      V_lnu += muon_vector2;
+    }
+  }
+    
+  bosonVec_reco_pt = V_lnu.Mod();
+  //bosonVec_reco_eta = V_lnu.Eta();  //not accesible!
+  bosonVec_reco_phi = TVector2::Phi_mpi_pi( V_lnu.Phi() );       
+  
+  MtTop = TopTransvMass();
+  
+  //Z decay mode 
+  TLorentzVector Ztlv(0.,0.,0.,0.);
+  std::vector<int> zdecays =  this->GetTruthZDecay(Ztlv);
+  if(zdecays.size()){
+    Z_decay  = zdecays.at(0);
+    Z_pt     = Ztlv.Pt();
+    Z_eta    = Ztlv.Eta();
+    Z_phi    = Ztlv.Phi();
+    //    Z_m      = Ztlv.M(); //not needed! Everyone knows the Z mass :)
+  }
+  
+
+
+  //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
+  if(isMC) RunNumber = mc_channel_number;
+  
+
+  //---Fill missing data members 
+  this->dumpLeptons();
+  this->dumpPhotons();
+  this->dumpJets();
+
+
+  output->setFilterPassed ();
+  
+  return nextEvent(); //SUCCESS + cleaning
+}
 
 //Fill lepton data members
 void chorizo :: dumpLeptons(){
@@ -3423,6 +4272,7 @@ EL::StatusCode chorizo :: finalize ()
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
 
+  //PURW
   if(tool_purw){
     if(genPUfile)
       tool_purw->finalize();
@@ -3461,6 +4311,10 @@ EL::StatusCode chorizo :: finalize ()
   }
 #endif
   
+#ifdef CODE_STATS
+  xAOD::IOStats::instance().stats().printSmartSlimmingBranchList();
+#endif
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -3468,16 +4322,6 @@ EL::StatusCode chorizo :: finalize ()
 
 EL::StatusCode chorizo :: histFinalize ()
 {
-  // This method is the mirror image of histInitialize(), meaning it
-  // gets called after the last event has been processed on the worker
-  // node and allows you to finish up any objects you created in
-  // histInitialize() before they are written to disk.  This is
-  // actually fairly rare, since this happens separately for each
-  // worker node.  Most of the time you want to do your
-  // post-processing on the submission node after all your histogram
-  // outputs have been merged.  This is different from finalize() in
-  // that it gets called on all worker nodes regardless of whether
-  // they processed input events.  
   return EL::StatusCode::SUCCESS;
 }
 
@@ -3737,7 +4581,7 @@ bool chorizo :: passMCor(){
   
   if( count(check_ids, check_ids+84, this->mc_channel_number) ){
     TVector2 met(0.,0.);
-    xAOD::MissingETContainer* metRFcutvar; // = new xAOD::MissingETContainer;
+    xAOD::MissingETContainer* metRFcutvar = 0; // = new xAOD::MissingETContainer;
     CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
 
     met = getMET( metRFcutvar, "Final"); //METRefFinal for now... //FIX_ME !! Reco MET??
@@ -4259,7 +5103,7 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 {
   float totalSF = 1.;
   
-  if (this->isTruth || this->isMC) return totalSF;
+  if (this->isMC) return totalSF;
   
   xAOD::JetContainer::const_iterator jet_itr = goodJets->begin();
   xAOD::JetContainer::const_iterator jet_end = goodJets->end();
@@ -4489,7 +5333,7 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
 };
 
 
-std::vector<TLorentzVector> chorizo :: getFatJets(double R) {
+std::vector<TLorentzVector> chorizo :: getFatJets(double R, double fcut) {
 
   //==== Jet Reclustering ====
   // Recluster good antikt04 jets into new R-jets.
@@ -4531,17 +5375,24 @@ std::vector<TLorentzVector> chorizo :: getFatJets(double R) {
 
   // run the clustering, extract the jets
   ClusterSequence cs(particles, jet_def);
-  vector<PseudoJet> new_jets = sorted_by_pt(cs.inclusive_jets());
+  vector<PseudoJet> rc_jets = sorted_by_pt(cs.inclusive_jets());
 
-  //fill new fat jets
-  for(unsigned int ifjet=0; ifjet < new_jets.size(); ifjet++){
-    //fill      px    py  pz      E
-    TLorentzVector p;
-    p.SetPxPyPzE(new_jets[ifjet].px(),
-		 new_jets[ifjet].py(),
-		 new_jets[ifjet].pz(),
-		 new_jets[ifjet].E());
-    new_jets_tlv.push_back( p );
+  //trim & fill new fat jets
+  for(const auto& rcjet : rc_jets){
+    TLorentzVector trimjet = TLorentzVector();
+    vector<PseudoJet> constituents = rcjet.constituents();
+    
+    for(const auto& jconst : constituents){
+      if(fcut>0 && jconst.pt()<fcut*rcjet.pt()) continue; //skip soft subjets
+      TLorentzVector subjet = TLorentzVector();
+      subjet.SetPxPyPzE(jconst.px(),
+			jconst.py(),
+			jconst.pz(),
+			jconst.E());
+      trimjet += subjet;
+    }
+
+    new_jets_tlv.push_back( trimjet );
   }
 
   //recover original jet vector
@@ -4676,7 +5527,7 @@ double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 
   //transform to TVector2
   std::vector<TVector2> obj;
-  for(auto tlv : pvectors)
+  for(const auto& tlv : pvectors)
     obj.push_back( tlv.Vect().XYvector() );
 
   if(obj.size()==0) return -99; //?
@@ -4750,13 +5601,15 @@ double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 
     if(iloop2==1000){
       loop_controller=false;
-      std::cout<<"Thrust Computation: convergence 2 failed after: "<<iloop2<<" loop"<<std::endl;
-      std::cout<<"n_lar_T_with_same_value: "<<n_lar_T_with_same_value<<std::endl;
-      std::cout<<"(1-thrust_larger)/(1-2/TMath::Pi()): "<<(1-thrust_larger)/(1-2/TMath::Pi())<<std::endl;
-      std::cout<<"pvectors.size(): "<<pvectors.size()<<std::endl;
-      std::cout<<"i     pt      px      py      pxobj   pyobj"<<std::endl;
-      for(unsigned int i=0; i<pvectors.size();i++){
-	std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
+      if(errIgnoreLevel==kPrint){ //Debugging
+	Warning("Calc_Thrust()", Form("Thrust Computation: convergence 2 failed after: %d loop", iloop2));
+	std::cout<<"n_lar_T_with_same_value: "<<n_lar_T_with_same_value<<std::endl;
+	std::cout<<"(1-thrust_larger)/(1-2/TMath::Pi()): "<<(1-thrust_larger)/(1-2/TMath::Pi())<<std::endl;
+	std::cout<<"pvectors.size(): "<<pvectors.size()<<std::endl;
+	std::cout<<"i     pt      px      py      pxobj   pyobj"<<std::endl;
+	for(unsigned int i=0; i<pvectors.size();i++){
+	  std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
+	}
       }
       return -99;
     }
@@ -4770,8 +5623,7 @@ double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 
   if(T<0-10e-9 || T>1){
     if(pvectors.size()>1){
-      std::cout<<"Thrust Computation: ERROR, thrust value out of range: "<<T<<std::endl;
-
+      Warning("Calc_Thrust()", Form("Thrust Computation: ERROR, thrust value out of range: %.2f", T));
       std::cout<<"i       pt      px      py      pxobj   pyobj"<<std::endl;
       for(unsigned int i=0; i<pvectors.size();i++){
 	std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
@@ -5378,3 +6230,9 @@ EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, 
   return EL::StatusCode::SUCCESS; 
 }
 
+void chorizo :: findSusyHP(int& id1, int& id2){
+
+  id1=0;
+  id2=0;
+  
+}

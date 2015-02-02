@@ -84,6 +84,22 @@ float boson_sherpa_stop_charm(const Int_t mc_n,
   return weight;
 }
 
+int getProcessID(int id1, int id2){
+
+  //Prospino subprocess ID
+  //https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SUSYSignalUncertainties#Subprocess_IDs
+  std::pair<int,int> ids(id1,id2);
+  
+  if( id1==0 && id2==0 ) return 249;
+  if( id1==0 && id2==0 ) return 249;
+  
+
+  if(abs(id1) == 5 && abs(id2) == 5)
+    return 51;
+
+  return 0;
+}
+
 //==== AUX ==========//
 
 

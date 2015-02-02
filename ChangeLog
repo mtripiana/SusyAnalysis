@@ -1,3 +1,20 @@
+2014-02-02 Martin <tripiana@cern.ch>
+	* Fix conflicts with CutFlow code
+	* Move jets Presel eta cut to 2.8 (METbb only)
+
+2014-01-30 Martin <tripiana@cern.ch>
+	* Fix memleak (!)
+	* Add isCosmic flag to tag events with at least one cosmic muon
+	* Add procID flag to indicate the signal process (prospino's Subprocess IDs)
+	* Add patches/ folder to host .diff files (in my public area before)
+
+2014-01-23 Martin <tripiana@cern.ch>
+	* Fix run script
+	* Add code+option to run on truth xAODs
+	* Add code for branch use stats
+	* Add trimming to reclustering functions (optional)
+
+
 2014-01-16 Martin <tripiana@cern.ch>
 	* Updated to SUSYTools-00-05-00-16
 	* Fix decorators.
