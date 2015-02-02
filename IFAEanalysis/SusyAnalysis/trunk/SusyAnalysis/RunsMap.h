@@ -244,10 +244,7 @@ void RunsMap::LoadMap(){
   m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
   m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
   
-  m_map["13TEV_Stop_LOCAL"] = rlist( Rpair(204422, "/nfs/at3/scratch/sfracchia/SUSY/stop_signal/Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1/"));
-
-  /* m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));   */
-  /* m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/")); */
+  m_map["13TEV_Stop_LOCAL"] = rlist( Rpair(204422, "/tmp/tripiana/stop/"));
 
   m_map["TestStop"] = rlist( Rpair(204422, "/tmp/tripiana/stop/full/"));
   m_map["TestStop_af"] = rlist( Rpair(204422, "/tmp/tripiana/stop/af/"));
@@ -555,9 +552,9 @@ void RunsMap::LoadMap(){
   //                                                 Grid Data
   //======================================================================================================================
 
-  //DC14 data reproc (repro16_v01)
+  //DC14 data reproc (repro16_v04) //Updated : this reproc includes trigger info, accesible via TDT
   //note: Run numbers for data containers follow this convention:   '9900XY'  , X=period, Y=sub-period (0 for whole container)
-  m_map["8TEV_data12_B"] = rlist( Rpair(990020, "data12_8TeV.periodB.physics_JetTauEtmiss.PhysCont.AOD.repro16_v01/")); //period B
+  m_map["8TEV_data12_B"] = rlist( Rpair(990020, "data12_8TeV.periodB.physics_JetTauEtmiss.PhysCont.AOD.repro16_v04/")); //period B
   
   
   //======================================================================================================================
@@ -928,18 +925,30 @@ void RunsMap::LoadMap(){
   //                                                 Local afs/nfs tests
   //======================================================================================================================
   
+  //Test SUSY1
+  m_map["TestSUSY1"] = rlist( Rpair(167784,"/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Wmunu167784_13TeV_SUSY1/"));
+
   //Test cutflow (vs Kerim's)
   m_map["CF_Zee"] =  rlist( Rpair(167750, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zee/"));
   m_map["CF_Zmumu"] =  rlist( Rpair(167754, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zmumu/"));
+
+  //Test trigger
+  m_map["TestTruth"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/"));
+  m_map["TestTruth2"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/stop/"));
+  m_map["TestTruth3"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/Gtt/"));
   
+  //Test trigger
+  m_map["TestTrig"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/xAOD/test/"));
+
   //Data 
-  m_map["TestDataB"] = rlist( Rpair(202798, "/tmp/tripiana/data/"));
+  m_map["TestDataB"] = rlist( Rpair(203432, "/nfs/at3/scratch/tripiana/xAOD/data12/JetTauEtmiss/"));
   
   //New DAOD_IFAE3G derivation
   m_map["TestIFAE3G"] = rlist( Rpair(117050, "/nfs/at3users/users/tripiana/Derivations/WorkArea/run/test/"));
   
   //New test xAOD mc14 (SUSY1 derivation)
   m_map["TestDF"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbarD/"));
+  m_map["TestDF13"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/mc14/ttbarD13/"));
   m_map["TestTT13"] = rlist( Rpair(117050, "/tmp/tripiana/ttbar13/"));
 
   //TTbargamma

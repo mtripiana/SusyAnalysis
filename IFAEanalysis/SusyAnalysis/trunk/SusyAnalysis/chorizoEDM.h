@@ -60,4 +60,10 @@ const xAOD::PhotonContainer* m_photons;
 const xAOD::TruthEventContainer* m_truthE;
 const xAOD::TruthParticleContainer* m_truthP;
 
+//for truth xAODs
+const xAOD::TruthParticleContainer* m_truthPh;
+const xAOD::TruthParticleContainer* m_truthEl;
+const xAOD::TruthParticleContainer* m_truthMu;
+const xAOD::TruthParticleContainer* m_truthTau;
+
 #endif //chorizoEDM_H

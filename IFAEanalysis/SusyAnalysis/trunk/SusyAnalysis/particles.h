@@ -37,7 +37,9 @@ class Particle : public TLorentzVector {
     int    type;
     int    origin;
 
-    TLorentzVector GetVector();
+
+    TLorentzVector GetVector() const;
+    TVector2 GetVector2() const;
     void SetVector(TLorentzVector vec, bool inGeV = false);
     void SetVector(float ,float, float ,float, bool inGeV = false);
     void PrintInfo();

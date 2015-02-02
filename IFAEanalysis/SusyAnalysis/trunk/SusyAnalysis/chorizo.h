@@ -25,14 +25,15 @@
 #include <TError.h>
 #include <TRandom1.h>
 #include <TRandom.h>
+#include <TTreeFormula.h>
 #include "TStopwatch.h"
 
 // code includes
 #include "SusyAnalysis/XMLReader.h"
-//#include "SusyAnalysis/SmartVeto.h"
 #include "SusyAnalysis/utility.h"
 #include "SusyAnalysis/particles.h"
 #include "SusyAnalysis/Systematics.h"
+//#include "SusyAnalysis/SUSYSignal.h"
 
 // std includes
 #include <iostream>
@@ -40,14 +41,11 @@
 #include <string>
 
 // Tools includes
-//#include "SUSYTools/DataPeriod.h"
-//#include "SUSYTools/ScaleVariatioReweighter.hpp"
 #include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "SUSYTools/SUSYCrossSection.h"
 
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
 #include "fastjet/ClusterSequence.hh"
-//#include "BCHCleaningTool/BCHCleaningToolRoot.h"
 #include "TileTripReader/TTileTripReader.h"
 
 
@@ -60,6 +58,13 @@
 
 
 #ifndef __MAKECINT__
+#include "AssociationUtils/OverlapRemovalTool.h"
+
+#include "TrigDecisionTool/TrigDecisionTool.h"
+#include "TrigConfxAOD/xAODConfigTool.h"
+using namespace Trig;
+using namespace TrigConf;
+
 #include "xAODJet/JetContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
 #include "xAODTruth/TruthParticle.h"
@@ -75,9 +80,7 @@
 #define GEV 1000.
 #endif 
 
-//MET flavours
-enum class MetDef {InvMu, AllVis, InvMuEl, InvMuPh, Track, InvMuRef, InvMuTST, N};
-
+#define m_warnLimit 5
 
 namespace LHAPDF{
   class PDF;
@@ -100,7 +103,7 @@ namespace ST{
 using namespace Particles;
 using namespace xAOD;
 using namespace std;
-//using namespace fastjet;
+//using namespace fastjet;  //conflicts with TError function
 using fastjet::PseudoJet;
 using fastjet::ClusterSequence;
 using fastjet::JetDefinition;
@@ -121,11 +124,15 @@ enum ZDecayMode{
   invisible
 };
 
+//MET flavours
+enum class MetDef {InvMu, AllVis, InvMuEl, InvMuPh, Track, InvMuRef, InvMuTST, Truth, N};
+
 
 class chorizo : public EL::Algorithm
 {
-public:
 
+public:
+  
   // variables that don't get filled at submission time should be
   // protected from being send from the submission node to the worker
   // node (done by the //!)
@@ -133,6 +140,9 @@ public:
 
   //Ntuple
   EL::NTupleSvc *output; //!
+
+  //SUSYmap
+  //  SUSYmap* m_susymap; //!
 
   //algo options
   std::string outputName;
@@ -143,10 +153,12 @@ public:
   bool isQCD;
   bool isSignal;
   bool isTop;
-  bool isTruth;
   bool isAtlfast;
   bool isNCBG;
   TString leptonType;
+
+  bool isTruth;
+  bool dressLeptons;
 
   bool doAnaTree;
   bool doPUTree; 
@@ -189,6 +201,7 @@ public:
   virtual EL::StatusCode initialize ();
   virtual EL::StatusCode execute ();
   virtual EL::StatusCode loop ();
+  virtual EL::StatusCode loop_truth ();
   virtual EL::StatusCode postExecute ();
   virtual EL::StatusCode finalize ();
   virtual EL::StatusCode histFinalize ();
@@ -198,6 +211,9 @@ public:
 
 private:
   xAOD::TEvent *m_event;  //!
+
+  TString m_cfilename; //! 
+  TTree*  m_MetaData; //!
 
   //Histograms
   //raw 
@@ -212,14 +228,20 @@ private:
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; 
+
+  //MET map
+  std::map<MetDef, TVector2> metmap; //!
 #endif // not __CINT__
 
   //  DataPeriod     tool_DPeriod; //!
   JVFUncertaintyTool* tool_jvf; //!
   JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
+  
 #ifndef __CINT__
-  CP::PileupReweightingTool* tool_purw; 
+  OverlapRemovalTool* tool_or; 
+  TrigDecisionTool *tool_trigdec; 
+  CP::PileupReweightingTool *tool_purw; 
   GoodRunsListSelectionTool *tool_grl;
   LHAPDF::PDF* m_PDF;
   BTaggingEfficiencyTool* tool_btag;  //70%op
@@ -229,6 +251,8 @@ private:
   //Member Functions
   virtual void InitVars();
   virtual void ReadXML();
+
+  virtual float getNWeightedEvents();
 
   virtual void bookTree();
 
@@ -286,10 +310,11 @@ private:
 
   virtual float TopTransvMass();
   virtual void  RecoHadTops(int ibtop1, int ibtop2);
-  virtual std::vector<TLorentzVector> getFatJets(double R);
+  virtual std::vector<TLorentzVector> getFatJets(double R, double fcut=-1);
 
   virtual void  findBparton(); 
 
+  virtual void  findSusyHP(int& id1, int& id2);
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
@@ -310,6 +335,8 @@ private:
   bool isMC; //!  
 
   int  m_eventCounter; //!
+  int  m_metwarnCounter; //!
+  int  m_pdfwarnCounter; //!
 
   bool isGRL; //! //event cleaning
   bool isFakeMet; //!
@@ -321,6 +348,7 @@ private:
   bool isTileGood; //!
   bool isTileTrip; //!
   bool isCoreFlag; //!
+  bool isCosmic; //!
   
   bool passPreselectionCuts; //!
 
@@ -560,6 +588,7 @@ private:
   float meta_kfactor;
   float meta_feff;
   float meta_nsim;
+  float meta_nwsim;
   float meta_lumi;
 
   //Ntuple branches
@@ -567,6 +596,7 @@ private:
   //- Event Info
   UInt_t  RunNumber;        
   UInt_t  EventNumber;
+  UInt_t  procID;
   UInt_t  mc_channel_number;
   float   averageIntPerXing;
 

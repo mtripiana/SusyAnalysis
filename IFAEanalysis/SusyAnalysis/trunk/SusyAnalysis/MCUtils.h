@@ -26,6 +26,8 @@ float boson_sherpa_stop_charm(const Int_t mc_n,
 			      std::vector<float> mc_phi,
 			      std::vector<float> mc_m);
 
+int   getProcessID(int id1, int id2);
+ 
 //---aux
 float BtagEta(float eta); //saturates eta to 2.5 (btag calib defined region)
 

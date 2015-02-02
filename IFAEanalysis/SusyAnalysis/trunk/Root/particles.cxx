@@ -26,8 +26,12 @@ Particle::Particle(){
 
 Particle::~Particle(){}
 
-TLorentzVector Particle::GetVector(){
+TLorentzVector Particle::GetVector() const{
   return TLorentzVector(*this);
+}
+
+TVector2 Particle::GetVector2() const{
+  return TVector2(this->Px(), this->Py());
 }
 
 void Particle::SetVector(TLorentzVector vec, bool inGeV){ //inGeV=true if it is already in GeV!
@@ -99,7 +103,8 @@ Jet::~Jet(){}
 bool Jet::isBTagged(TString Tagger, float op){ 
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
   if      (Tagger=="MV1"              && (this->MV1 > op))              {return true;}
-  else if (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > op))         {return true;}
+  else if (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > op))      {return true;}
+  else if (Tagger=="Truth"            && (abs(this->FlavorTruth)==5))        {return true;}
   // else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > op && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
   // else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
  

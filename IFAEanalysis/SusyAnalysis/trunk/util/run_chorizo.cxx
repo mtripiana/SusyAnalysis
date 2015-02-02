@@ -513,7 +513,7 @@ int main( int argc, char* argv[] ) {
     alg->isNCBG     = false;   //get it from the XML!!
 
     alg->isTruth    = isTruth;   //to run over truth xAOD (e.g. MGN1 derivation)
-    
+
     alg->doAnaTree  = doAnaTree;     // Output trees
     alg->doFlowTree = doFlowTree;
     alg->doPUTree   = false;         //get it from the XML!!
