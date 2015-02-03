@@ -67,7 +67,7 @@ using namespace TrigConf;
 
 #include "xAODJet/JetContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
-#include "xAODTruth/TruthParticle.h"
+#include "xAODTruth/TruthParticleContainer.h"
 #endif // not __MAKECINT__
 
 //TeV unit (w.r.t MeV)
@@ -314,7 +314,8 @@ private:
 
   virtual void  findBparton(); 
 
-  virtual void  findSusyHP(int& id1, int& id2);
+  virtual void  findSusyHP(int& pdgid1, int& pdgid2);
+  virtual void  findSusyHP(const xAOD::TruthParticleContainer* truthP, int& pdgid1, int& pdgid2);
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );

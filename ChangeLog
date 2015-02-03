@@ -1,3 +1,7 @@
+2014-02-03 Martin <tripiana@cern.ch>
+	* Fix procID calculation
+	* Add new findSusyHP function
+
 2014-02-02 Martin <tripiana@cern.ch>
 	* Fix conflicts with CutFlow code
 	* Move jets Presel eta cut to 2.8 (METbb only)
