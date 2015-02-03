@@ -1714,49 +1714,13 @@ EL::StatusCode chorizo :: loop ()
       // cout << "-------------------------------------" << endl;
     }
 
-    //procID
-    try { 
-      ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1); 
-    } catch(...) { 
-      if( m_pdfwarnCounter < 2*m_warnLimit )
-	Warning("loop()", "   TruthEvent::PDGID1 not found! procID won't make sense!");
-      ++m_pdfwarnCounter;
-    }
-    try { 
-      ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2); 
-    } catch(...) { 
-      if( m_pdfwarnCounter < 2*m_warnLimit )
-	Warning("loop()", "   TruthEvent::PDGID2 not found! procID won't make sense!");
-      ++m_pdfwarnCounter;
-    }
 
     //Find Hard Process particles
     findSusyHP(id1, id2);
 
+    //procID
     if(id1!=0 && id2!=0) //(just to avoid warnings)
       procID = SUSY::finalState(id1, id2); // get prospino proc ID
-
-
-    //DEBUGGING!!!!
-    ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1);
-    ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2);
-    ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
-    ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
-    ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
-    ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
-    ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
-    ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
-    cout << "-------------------------------------" << endl;
-    cout << "DEBUG :: x1 = " << x1 << endl; 
-    cout << "DEBUG :: x2 = " << x2 << endl; 
-    cout << "DEBUG :: id1 = " << id1 << endl; 
-    cout << "DEBUG :: id2 = " << id2 << endl; 
-    cout << "DEBUG :: pdfId1 = " << pdfId1 << endl; 
-    cout << "DEBUG :: pdfId2 = " << pdfId2 << endl; 
-    cout << "DEBUG :: pdf1 = " << pdf1 << endl; 
-    cout << "DEBUG :: pdf2 = " << pdf2 << endl; 
-    cout << "-------------------------------------" << endl;
-    //!!!
 
   
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
@@ -6230,9 +6194,84 @@ EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, 
   return EL::StatusCode::SUCCESS; 
 }
 
-void chorizo :: findSusyHP(int& id1, int& id2){
-
-  id1=0;
-  id2=0;
-  
+void chorizo :: findSusyHP(int& pdgid1, int& pdgid2){
+  findSusyHP(m_truthP, pdgid1, pdgid2);
 }
+
+void chorizo :: findSusyHP(const xAOD::TruthParticleContainer *truthP, int& pdgid1, int& pdgid2){
+
+  pdgid1=0;
+  pdgid2=0;
+
+  xAOD::TruthParticleContainer::const_iterator tpItr = truthP->begin();
+  xAOD::TruthParticleContainer::const_iterator tpBeg = truthP->begin();
+  xAOD::TruthParticleContainer::const_iterator tpEnd = truthP->end();
+  
+  int first=0;
+  const xAOD::TruthParticle* firstsp = *tpItr;
+  const xAOD::TruthParticle* secondsp = *tpItr;
+
+  if(tpBeg == tpEnd)    Error("findSusyHP()", " Empty TruthParticleContainer!!");
+
+  for(tpItr = tpBeg; tpItr != tpEnd; ++ tpItr){
+    
+    //check if SUSY particle
+    if ((abs((*tpItr)->pdgId())>1000000 && abs((*tpItr)->pdgId())<1000007) || // squarkL
+	(abs((*tpItr)->pdgId())>1000010 && abs((*tpItr)->pdgId())<1000017) || // sleptonL
+	(abs((*tpItr)->pdgId())>2000000 && abs((*tpItr)->pdgId())<2000007) || // squarkR
+	(abs((*tpItr)->pdgId())>2000010 && abs((*tpItr)->pdgId())<2000017) || // sleptonR
+	(abs((*tpItr)->pdgId())>1000020 && abs((*tpItr)->pdgId())<1000040)) { // gauginos
+      
+      if((*tpItr)->nParents()!=0) {
+	if( (*((*tpItr)->parent(0))).absPdgId()  < 1000000) {
+	  if(first==0) {
+	    firstsp = *tpItr;
+	    first=1;
+	  }
+	  else if(first==1){
+	    secondsp = *tpItr;
+	    first=2;
+	  }
+	  else {
+	    if(firstsp->nChildren()!=0 && (*tpItr)->barcode()==(*(firstsp->child(0))).barcode()) {
+	      firstsp=*tpItr;
+	    }
+	    else if(secondsp->nChildren()!=0 && (*tpItr)->barcode()==(*(secondsp->child(0))).barcode()) { 
+	      secondsp=*tpItr;
+	    }
+	    else if(firstsp->nChildren()!=0 && (*(firstsp->child(0))).barcode()==secondsp->barcode()) {
+	      firstsp=secondsp;
+	      secondsp=*tpItr;				
+	    }
+	    else if(secondsp->nChildren()!=0 && (*(secondsp->child(0))).barcode()==firstsp->barcode()) {
+	      secondsp=firstsp;
+	      firstsp=*tpItr;
+	    }					
+	  }
+	}
+      }
+    }      
+  }
+
+  if(firstsp->nChildren()==1){
+    for(tpItr = tpBeg; tpItr != tpEnd; ++tpItr){
+      if((*tpItr)->barcode()==(*(firstsp->child(0))).barcode() && (*tpItr)->pdgId()!=firstsp->pdgId()){
+	firstsp=*tpItr;
+	break;
+      }
+    }
+  }
+  
+  if(secondsp->nChildren()==1){
+    for(tpItr = tpBeg; tpItr != tpEnd; ++tpItr){
+      if((*tpItr)->barcode()==(*(secondsp->child(0))).barcode() && (*tpItr)->pdgId()!=secondsp->pdgId()){
+	secondsp=*tpItr;
+	break;
+      }
+    }
+  }
+  
+  if(abs(firstsp->pdgId())>1000000) pdgid1 = firstsp->pdgId();
+  if(abs(secondsp->pdgId())>1000000) pdgid2 = secondsp->pdgId();
+
+}//end of findSusyHP()
