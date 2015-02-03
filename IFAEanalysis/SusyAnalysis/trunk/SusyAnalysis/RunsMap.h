@@ -928,17 +928,21 @@ void RunsMap::LoadMap(){
   //Test SUSY1
   m_map["TestSUSY1"] = rlist( Rpair(167784,"/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Wmunu167784_13TeV_SUSY1/"));
 
+  //Test Smart slimming
+  m_map["TestSmart"] = rlist( Rpair(117050, "/nfs/at3/scratch/tripiana/xAOD/smart/"));
+
   //Test cutflow (vs Kerim's)
   m_map["CF_Zee"] =  rlist( Rpair(167750, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zee/"));
   m_map["CF_Zmumu"] =  rlist( Rpair(167754, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zmumu/"));
 
-  //Test trigger
+  //Test truth
   m_map["TestTruth"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/"));
   m_map["TestTruth2"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/stop/"));
   m_map["TestTruth3"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/Gtt/"));
   
   //Test trigger
-  m_map["TestTrig"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/xAOD/test/"));
+  m_map["TestTrig"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/test/"));
+  m_map["TestTrig2"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/xAOD/test/"));
 
   //Data 
   m_map["TestDataB"] = rlist( Rpair(203432, "/nfs/at3/scratch/tripiana/xAOD/data12/JetTauEtmiss/"));

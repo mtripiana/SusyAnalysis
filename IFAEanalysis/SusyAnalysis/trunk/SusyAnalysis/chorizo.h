@@ -56,7 +56,6 @@
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
 
-
 #ifndef __MAKECINT__
 #include "AssociationUtils/OverlapRemovalTool.h"
 
@@ -239,8 +238,10 @@ private:
   Root::TTileTripReader* tool_tileTrip; //!
   
 #ifndef __CINT__
+  TrigDecisionTool *tool_trigdec; //! 
+  TrigConf::xAODConfigTool* tool_trigconfig; //!
+
   OverlapRemovalTool* tool_or; 
-  TrigDecisionTool *tool_trigdec; 
   CP::PileupReweightingTool *tool_purw; 
   GoodRunsListSelectionTool *tool_grl;
   LHAPDF::PDF* m_PDF;
@@ -343,7 +344,7 @@ private:
   bool isFakeMet; //!
   bool isBadID; //!
   bool isMetCleaned; //!
-  bool isTrigger; //!
+  std::vector<int> isTrigger; //!
   bool isVertexOk; //!
   bool isLarGood; //!
   bool isTileGood; //!
@@ -354,6 +355,7 @@ private:
   bool passPreselectionCuts; //!
 
   TNamed *meta_jOption; //!
+  TNamed *meta_triggers; //!
 
   //----- Jet smearing config (QCD)
   float   QCD_JetsPtPreselection; //!
