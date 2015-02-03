@@ -547,10 +547,13 @@ int main( int argc, char* argv[] ) {
     
     //TTreeCache use
     job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
+
+    job.options()->setString (EL::Job::optXaodAccessMode, EL::Job::optXaodAccessMode_branch);
     
     //create tmp output dir
     string tmpdir = tmpdirname();
-    
+    cout << tmpdir << endl;
+
     // Run the job using the appropiate driver:
     EL::DirectDriver Ddriver;
     EL::ProofDriver  ProofDriver;

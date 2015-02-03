@@ -2,7 +2,7 @@
 HIGH PRIORITY
 --------------------------------------------------------------------------------------------------------
 
-** add TST MET flavour to MetDef 
+** merge meta data output into output files.
 
 ** add JVT cut (at least to check)
 

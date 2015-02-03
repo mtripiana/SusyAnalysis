@@ -45,6 +45,8 @@
 #include "xAODCore/tools/ReadStats.h"
 #endif
 
+//For trigger test
+#define TRIGGERTEST
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
@@ -169,7 +171,7 @@ void chorizo :: bookTree(){
     //FlowTree
     if (doFlowTree){
       output->tree()->Branch("isGRL",&isGRL,"isGRL/O", 10000);
-      output->tree()->Branch("isTrigger",&isTrigger,"isTrigger/O", 10000);
+      output->tree()->Branch("isTrigger",&isTrigger);
       output->tree()->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
       output->tree()->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
       output->tree()->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
@@ -607,7 +609,7 @@ void chorizo :: InitVars()
   isFakeMet = false;                 
   isBadID = false;                   
   isMetCleaned = true; //CHECK_ME
-  isTrigger = true;                 
+  isTrigger.clear();
   isVertexOk = true;                
   isLarGood = true;                 
   isTileGood = true;                
@@ -1021,16 +1023,12 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Trigger") );
   std::string triggerNameStr="";
-  try{
-    triggerNameStr = (xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Trigger$region/name/%s", cRegion))).c_str();
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    triggerNameStr = (xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Trigger$region/name/%s", defRegion))).c_str();
-  }
+  triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Trigger$chains");
+
   std::istringstream triggerNameIStr(triggerNameStr);
   std::string s;
   while (std::getline(triggerNameIStr, s, ',')) {
+    cout << "ADDING TRIGGER = " << s << endl;
     TriggerNames.push_back(s);
   }
 
@@ -1262,6 +1260,7 @@ EL::StatusCode chorizo :: initialize ()
   watch.Start();
 
   m_event = wk()->xaodEvent();
+  //  TEvent::kBranchAccess
 
   // Create a transient object store. Needed for the tools.
   // Like m_event but does not assume new objects are written to file
@@ -1270,8 +1269,11 @@ EL::StatusCode chorizo :: initialize ()
   //Read XML options
   ReadXML();
 
-  //Load SUSY signals map
-  //  m_susymap = new SUSYmap();
+  //save Trigger metadata
+  std::string trigchains="";
+  for(const auto& s : TriggerNames)  trigchains += (s+",");
+  meta_triggers = new TNamed("Triggers", trigchains.c_str());
+  wk()->addOutput(meta_triggers);     
 
   //initialize lepton isolation 
   elIsoArgs = new ST::IsSignalElectronExpCutArgs();
@@ -1335,18 +1337,20 @@ EL::StatusCode chorizo :: initialize ()
     }
   }
 
+#ifdef TRIGGERTEST
   //--- Trigger Decision
   // The configuration tool.
-  // tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
-  // ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
-  // configHandle->initialize();                                                                                                                                                
+  tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
+  ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
+  configHandle->initialize();                                                                                                                                                
   // The decision tool                                                                
-  // tool_trigdec = new TrigDecisionTool("TrigDecTool");
-  // tool_trigdec->setProperty("ConfigTool",configHandle);
-  // tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
-  // tool_trigdec->initialize();
+  tool_trigdec = new TrigDecisionTool("TrigDecTool");
+  tool_trigdec->setProperty("ConfigTool",configHandle);
+  tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
+  tool_trigdec->initialize();
+#endif
 
-  //Overlap Removal
+  //--- Overlap Removal
   tool_or = new OverlapRemovalTool("OverlapRemovalTool");
   // Turn on the object links for debugging
   CHECK( tool_or->setProperty("InputLabel", "baseline") );
@@ -1786,10 +1790,21 @@ EL::StatusCode chorizo :: loop ()
 
   this->isVertexOk = (nVertex>0);
 
+  //trigger debugging (check all MET triggers in menu)
+  if(m_eventCounter<2){
+    Info("loop()", "  MET TRIGGERS IN MENU ");
+    Info("loop()", "--------------------------------");
+    auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
+    for(auto &trig : chainGroup->getListOfTriggers()) {
+      Info("loop()", trig.c_str()); 
+    }
+    Info("loop()", "--------------------------------");
+  }
+
   //--- Trigger 
-  //
-  // ... NOT YET
-  this->isTrigger = true;
+  for(const auto& chain : TriggerNames)
+    this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+
   //
   //--- Do a pre-selection for QCD
     // if (this->isQCD){
@@ -1865,7 +1880,7 @@ EL::StatusCode chorizo :: loop ()
   //   }
   // }
   
-  this->passPreselectionCuts = this->isGRL && this->isTrigger && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+  this->passPreselectionCuts = this->isGRL && this->isTrigger[0] && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
   
   //skip event no-preselected events for smearing                                       
   if ( this->isQCD  && (!this->passPreselectionCuts) ) 
@@ -1963,11 +1978,12 @@ EL::StatusCode chorizo :: loop ()
     //** Bjet decoration 
     //tool_st->IsBJet( **jet_itr );   //SUSYTools
     float bw=0.; //our own
-    if(Jet_Tagger=="MV1") bw = (*jet_itr)->btagging()->MV1_discriminant(); 
+    if(Jet_Tagger=="MV1") bw = (*jet_itr)->btagging()->MV1_discriminant();
+    if(Jet_Tagger=="MV1") bw = 0.;
     else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
     dec_bjet(**jet_itr) = (bw > Jet_TaggerOp);
 
-    dec_baseline(**jet_itr) = ((*jet_itr)->eta() < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
+    dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
 
     //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
     smr_met_jets_pt.push_back( 0. ); //recoJet.Pt() ); //in GeV!
@@ -2348,15 +2364,15 @@ EL::StatusCode chorizo :: loop ()
     recoJet.isbjet = dec_bjet(**jet_itr);
 
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
-    recoJet.MV1 = btag->MV1_discriminant();
+    recoJet.MV1 = btag->MV1_discriminant(); 
     recoJet.SV1plusIP3D = btag->SV1plusIP3D_discriminant();
 
     recoJet.IP3D_pb = btag->IP3D_pb(); 
-    recoJet.IP3D_pc = btag->IP3D_pc(); 
+    recoJet.IP3D_pc = btag->IP3D_pc();
     recoJet.IP3D_pu = btag->IP3D_pu(); 
 
     recoJet.SV1_pb = btag->SV1_pb(); 
-    recoJet.SV1_pc = btag->SV1_pc(); 
+    recoJet.SV1_pc = btag->SV1_pc();  
     recoJet.SV1_pu = btag->SV1_pu(); 
 
     recoJet.JetFitterCombNN  = 0;// btag->JetFitterCombNN_pb(); //not saved yet! //FIX_ME
@@ -3362,27 +3378,14 @@ EL::StatusCode chorizo :: loop_truth()
 
   // -- Find Signal Subprocess
   int id1=0; int id2=0;
-  xAOD::TruthEventContainer::const_iterator truthE_itr = m_truthE->begin();
-  try { 
-    ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1); 
-  } catch(...) { 
-    if( m_pdfwarnCounter < 2*m_warnLimit )
-      Warning("loop()", "   TruthEvent::PDGID1 not found! procID won't make sense!");
-    ++m_pdfwarnCounter;
-  }
-  try { 
-    ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2); 
-  } catch(...) { 
-    if( m_pdfwarnCounter < 2*m_warnLimit )
-      Warning("loop()", "   TruthEvent::PDGID2 not found! procID won't make sense!");
-    ++m_pdfwarnCounter;
-  }
+
+  //Find Hard Process particles
+  findSusyHP(id1, id2);
+  
+  //procID
   if(id1!=0 && id2!=0) //(just to avoid warnings)
     procID = SUSY::finalState(id1, id2); // get prospino proc ID
   
-
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
  
   //Truth Electrons 
   CHECK( m_event->retrieve( m_truthEl, "TruthElectrons" ) );
