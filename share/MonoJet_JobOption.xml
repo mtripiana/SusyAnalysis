@@ -44,7 +44,7 @@
         </OverlapRemoval> 
 	  
         <Trigger>
-            <region name="SR">EF_xe80_tclcw</region>
+            <chains>HLT_xe100,HLT_xe50</chains>
         </Trigger>
 
         <Truth>
