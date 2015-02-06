@@ -464,6 +464,7 @@ private:
   float Jet_RecoEtaCut; //!
   /* float Jet_ORElPt; //! */
   /* float Jet_ORMuPt; //! */
+  bool Jet_DoOR;
   TString Jet_Tagger;
   TString Jet_TaggerOp;
   TString Jet_TaggerOp2;  
@@ -662,7 +663,7 @@ private:
   float sigSam_E2;
 
   float truth_shat;
-
+  float truth_shat_pt;
 
   //- Event selection
   int nVertex;
@@ -737,6 +738,10 @@ private:
   int   n_jets60;
   int   n_jets80;
   std::vector<int> n_taujets;
+
+  int truth_n_jets;
+  float truth_pt1;
+  float truth_eta1;
 
   float pt1;
   float pt2;
