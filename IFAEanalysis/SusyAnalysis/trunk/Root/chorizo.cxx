@@ -233,6 +233,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
       output->tree()->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
       output->tree()->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
+      output->tree()->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
       output->tree()->Branch("truth_met",&truth_met,"truth_met/F", 10000);
       output->tree()->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
 
@@ -309,6 +310,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("n_jets60",&n_jets60,"n_jets60/I", 10000);
       output->tree()->Branch("n_jets80",&n_jets80,"n_jets80/I", 10000);
       output->tree()->Branch("n_taujets",&n_taujets);
+      output->tree()->Branch("truth_n_jets",&truth_n_jets,"truth_n_jets/I", 10000);
+      output->tree()->Branch("truth_pt1",&truth_pt1,"truth_pt1/F", 10000);
+      output->tree()->Branch("truth_eta1",&truth_eta1,"truth_eta1/F", 10000);
       output->tree()->Branch("pt1",&pt1,"pt1/F", 10000);
       output->tree()->Branch("pt2",&pt2,"pt2/F", 10000);
       output->tree()->Branch("pt3",&pt3,"pt3/F", 10000);
@@ -676,6 +680,7 @@ void chorizo :: InitVars()
   sigSam_phi2 = DUMMYDN;        
   sigSam_E2 = DUMMYDN;          
   truth_shat = DUMMYDN;         
+  truth_shat_pt = DUMMYDN;        
 
   //- Event selection
   nVertex = 0;
@@ -763,6 +768,9 @@ void chorizo :: InitVars()
   JVF_min=false;
   n_jets=0;
   n_tjets=0;
+  truth_n_jets=0;
+  truth_pt1=DUMMYDN;
+  truth_eta1=DUMMYDN;
   n_jets40=0;
   n_jets50=0;
   n_jets60=0;
@@ -1785,10 +1793,16 @@ EL::StatusCode chorizo :: loop ()
 
   nVertex = static_cast< int >( vertices->size() );
 
+  xAOD::VertexContainer::const_iterator pv_itr = vertices->begin();
+
+  auto n_tracks = (*pv_itr)-> nTrackParticles();
+
+  //    cout << "######### number of tracks " << nTracks << endl;
+
   // if (!doFlowTree && nVertex==0)
   //   return EL::StatusCode::SUCCESS; //skip event
 
-  this->isVertexOk = (nVertex>0);
+  this->isVertexOk = (nVertex>0) && n_tracks>=nTracks;
 
   //trigger debugging (check all MET triggers in menu)
   if(m_eventCounter<2){
@@ -2549,13 +2563,18 @@ EL::StatusCode chorizo :: loop ()
     
     //loop over truth jets & save 'high-pt' jets for later use 
     n_tjets=0;
+    truth_pt1=0.;
     for( ; tjet_itr != tjet_end; ++tjet_itr ) {
-      
+      if ( (*tjet_itr)->pt()/1000.0 > truth_pt1 ){
+	truth_pt1 = (*tjet_itr)->pt()/1000.0;
+	truth_eta1 = (*tjet_itr)->eta();
+      }
       if ( (*tjet_itr)->pt() < 10000. ) continue;
       
       if ( (*tjet_itr)->pt() > 20000. )
 	n_tjets++;
-      
+      if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
+
       TLorentzVector truthJet;
       truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 
       
@@ -4865,6 +4884,7 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
   sigSam_phi2 = 0.;
   sigSam_E2 = 0.;
   truth_shat = 0.;
+  truth_shat_pt = 0.;
  
   if (sigSamPdgId==0) return;
  
@@ -4926,6 +4946,10 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
   }
 
   truth_shat = V.M();//magnitude or V.M()
+  //  cout << "-----------------------truth_shat: " << V.M() << endl;
+  //cout << "-----------------------truth_shat_pt: " << V.Pt() << endl;
+  truth_shat_pt = V.Pt();//some sort of truth met
+
 }
 
 
