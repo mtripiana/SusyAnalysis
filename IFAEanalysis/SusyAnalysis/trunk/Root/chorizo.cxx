@@ -46,7 +46,7 @@
 #endif
 
 //For trigger test
-#define TRIGGERTEST
+//#define TRIGGERTEST
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
@@ -1029,6 +1029,7 @@ void chorizo :: ReadXML(){
   Info(whereAmI, Form(" - LeptonEff Unitarity") );
   leptonEfficiencyUnitarity = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$LeptonEfficiency$Unitarity");
 
+#ifdef TRIGGERTEST
   Info(whereAmI, Form(" - Trigger") );
   std::string triggerNameStr="";
   triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Trigger$chains");
@@ -1039,6 +1040,7 @@ void chorizo :: ReadXML(){
     cout << "ADDING TRIGGER = " << s << endl;
     TriggerNames.push_back(s);
   }
+#endif
 
   Info(whereAmI, Form(" - Truth") );
   dressLeptons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Truth$dressLeptons");
@@ -1346,16 +1348,18 @@ EL::StatusCode chorizo :: initialize ()
   }
 
 #ifdef TRIGGERTEST
-  //--- Trigger Decision
-  // The configuration tool.
-  tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
-  ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
-  configHandle->initialize();                                                                                                                                                
-  // The decision tool                                                                
-  tool_trigdec = new TrigDecisionTool("TrigDecTool");
-  tool_trigdec->setProperty("ConfigTool",configHandle);
-  tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
-  tool_trigdec->initialize();
+  if(!this->isTruth){
+    //--- Trigger Decision
+    // The configuration tool.
+    tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
+    ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
+    configHandle->initialize();                                                                                                                                                
+    // The decision tool                                                                
+    tool_trigdec = new TrigDecisionTool("TrigDecTool");
+    tool_trigdec->setProperty("ConfigTool",configHandle);
+    tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
+    tool_trigdec->initialize();
+  }
 #endif
 
   //--- Overlap Removal
@@ -1805,6 +1809,7 @@ EL::StatusCode chorizo :: loop ()
   this->isVertexOk = (nVertex>0) && n_tracks>=nTracks;
 
   //trigger debugging (check all MET triggers in menu)
+#ifdef TRIGGERTEST
   if(m_eventCounter<2){
     Info("loop()", "  MET TRIGGERS IN MENU ");
     Info("loop()", "--------------------------------");
@@ -1818,6 +1823,7 @@ EL::StatusCode chorizo :: loop ()
   //--- Trigger 
   for(const auto& chain : TriggerNames)
     this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+#endif
 
   //
   //--- Do a pre-selection for QCD
