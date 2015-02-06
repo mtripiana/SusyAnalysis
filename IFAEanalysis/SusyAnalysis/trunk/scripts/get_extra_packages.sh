@@ -35,7 +35,8 @@ patch -p0 -i SusyAnalysis/patches/patch_SUSYObjDef_xAOD.h.diff
 patch -p0 -i SusyAnalysis/patches/patch_SUSYToolsInit.cxx.diff    # lower msg output of some tools!
 patch -p0 -i SusyAnalysis/patches/patch_DecisionObjectHandleStandalone.cxx.diff  # fix trigger dec access
 patch -p0 -i SusyAnalysis/patches/patch_DecisionUnpackerStandalone.cxx.diff
-patch -p0 -i SusyAnalysis/patches/patch_prepareTriggerMenu.cxx.diff
+#patch -p0 -i SusyAnalysis/patches/patch_prepareTriggerMenu.cxx.diff  #not working for some reason
+cp SusyAnalysis/patches/prepareTriggerMenu.cxx TrigConfxAOD/Root/
 
 
 # Boost libraries

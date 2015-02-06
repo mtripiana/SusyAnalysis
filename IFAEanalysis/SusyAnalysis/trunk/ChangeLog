@@ -1,4 +1,7 @@
 2014-02-04 Martin <tripiana@cern.ch>
+	* Move to Base,2.0.24
+
+2014-02-04 Martin <tripiana@cern.ch>
 	* Add trigger decisions (tuneable via jOption)  . Check needed packages and patches!
 	* Add trigger meta data ('Triggers' = comma separated list of saved chains)
 	* Update passPreselectionCuts does not longer include the trigger (due to diff triggers in SR/CR).

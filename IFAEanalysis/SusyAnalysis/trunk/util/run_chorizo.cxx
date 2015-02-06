@@ -552,7 +552,6 @@ int main( int argc, char* argv[] ) {
     
     //create tmp output dir
     string tmpdir = tmpdirname();
-    cout << tmpdir << endl;
 
     // Run the job using the appropiate driver:
     EL::DirectDriver Ddriver;

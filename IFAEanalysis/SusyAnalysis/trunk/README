@@ -10,7 +10,7 @@ The first thing you need to do is to set the Analysis release, so to have access
 
 For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
 
-     >  rcSetup Base,2.0.22
+     >  rcSetup Base,2.0.24
  
      Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
 
@@ -57,7 +57,7 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 
 	If it is not the case please set it up, soing something like :
  
-        echo "export LHAPDF_DATA_PATH="$ANALYSISCODE"/RootCoreBin/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:" > $HOME/.bashrc
+        echo "export LHAPDF_DATA_PATH="$ANALYSISCODE"/RootCoreBin/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:" >> $HOME/.bashrc
 
         (and source your .bashrc . Or just start a new session and re-do 'rcsetup'). 
 

@@ -49,7 +49,7 @@
         </Truth>
 	  
         <Trigger>
-            <chains>HLT_xe100,HLT_xe50</chains>
+            <chains>HLT_xe100,HLT_xe70,HLT_xe50</chains>
         </Trigger>
 
         <Vertex>
