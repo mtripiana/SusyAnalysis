@@ -1900,8 +1900,11 @@ EL::StatusCode chorizo :: loop ()
   //   }
   // }
   
-  this->passPreselectionCuts = this->isGRL && this->isTrigger[0] && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
-  
+  if(this->isTrigger.size())
+    this->passPreselectionCuts = this->isGRL && this->isTrigger[0] && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+  else
+    this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+
   //skip event no-preselected events for smearing                                       
   if ( this->isQCD  && (!this->passPreselectionCuts) ) 
     return nextEvent();
