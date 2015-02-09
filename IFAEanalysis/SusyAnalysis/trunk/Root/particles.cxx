@@ -158,14 +158,21 @@ void Jet::PrintInfo(){
 
 
 MET::MET(){
-  met.Set(0., 0.);
-  met_tst.Set(0., 0.);
+  met_imu.Set(0., 0.);
+  met_vmu.Set(0., 0.);  
+  met_tst_imu.Set(0., 0.);
+  met_tst_vmu.Set(0., 0.);  
   met_trk.Set(0., 0.);
-  met_mu.Set(0., 0.);
-  met_reffinal.Set(0., 0.);
+  met_vmu_mucorr.Set(0., 0.);
+  met_vmu_ecorr.Set(0., 0.);
+  met_reffinal_imu.Set(0., 0.);
+  met_reffinal_vmu.Set(0., 0.);  
   met_lochadtopo.Set(0., 0.);
-  met_ecorr.Set(0., 0.);
-  met_phcorr.Set(0., 0.);
+  met_imu_ecorr.Set(0., 0.);
+  met_phcorr_imu.Set(0., 0.);
+  met_phcorr_vmu.Set(0., 0.);  
+  met_truth_imu.Set(0., 0.);
+  met_truth_vmu.Set(0., 0.);    
   m_hasMuons = false;
   gev=false;
 }
@@ -177,62 +184,102 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   float sf = (inGeV ? 1. : 0.001); 
 
   this->gev=true; //book it always in GeV
-
-  if(which=="met_tst"){
-    this->met_tst.Set(vec.X() * sf, vec.Y() * sf);
+  
+  if(which=="met_imu"){
+    this->met_imu.Set(vec.X() * sf, vec.Y() * sf);
   }
+  else if(which=="met_vmu"){
+    this->met_vmu.Set(vec.X() * sf, vec.Y() * sf);
+  }  
+  else if(which=="met_tst_imu"){
+    this->met_tst_imu.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_tst_vmu"){
+    this->met_tst_vmu.Set(vec.X() * sf, vec.Y() * sf);
+  }  
   else if(which=="met_trk"){
     this->met_trk.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_mu"){
-    this->met_mu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_vmu_mucorr"){
+    this->met_vmu_mucorr.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_refFinal"){
-    this->met_reffinal.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_vmu_ecorr"){
+    this->met_vmu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
+  }    
+  else if(which=="met_refFinal_imu"){
+    this->met_reffinal_imu.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_refFinal_mu"){
-    this->met_reffinal_mu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_refFinal_vmu"){
+    this->met_reffinal_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_locHadTopo"){
     this->met_lochadtopo.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_ecorr"){
-    this->met_ecorr.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_imu_ecorr"){
+    this->met_imu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_phcorr"){
-    this->met_phcorr.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_phcorr_imu"){
+    this->met_phcorr_imu.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else { //re-computed flavor
-    this->met.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_phcorr_vmu"){
+    this->met_phcorr_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }
+  else if(which=="met_truth_imu"){
+    this->met_truth_imu.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_truth_vmu"){
+    this->met_truth_vmu.Set(vec.X() * sf, vec.Y() * sf);
+  }  
 }
 
 TVector2 MET::GetVector(TString which){
-  if(which=="met_tst"){
-    return TVector2(this->met_tst);
+  
+  if(which=="met_imu"){
+    return TVector2(this->met_imu);
   }
+  if(which=="met_vmu"){
+    return TVector2(this->met_vmu);
+  }    
+  if(which=="met_tst_imu"){
+    return TVector2(this->met_tst_imu);
+  }
+  if(which=="met_tst_vmu"){
+    return TVector2(this->met_tst_vmu);
+  }  
   if(which=="met_trk"){
     return TVector2(this->met_trk);
   }
-  if(which=="met_mu"){
-    return TVector2(this->met_mu);
+  if(which=="met_vmu_mucorr"){
+    return TVector2(this->met_vmu_mucorr);
   }
-  if(which=="met_refFinal"){
-    return TVector2(this->met_reffinal);
+  if(which=="met_vmu_ecorr"){
+    return TVector2(this->met_vmu_ecorr);
+  }  
+  if(which=="met_refFinal_vmu"){
+    return TVector2(this->met_reffinal_vmu);
   }
-  if(which=="met_refFinal_mu"){
-    return TVector2(this->met_reffinal_mu);
+  if(which=="met_refFinal_imu"){
+    return TVector2(this->met_reffinal_imu);
   }
   if(which=="met_locHadTopo"){
     return TVector2(this->met_lochadtopo);
   }
-  if(which=="met_ecorr"){
-    return TVector2(this->met_ecorr);
+  if(which=="met_imu_ecorr"){
+    return TVector2(this->met_imu_ecorr);
   }
-  if(which=="met_phcorr"){
-    return TVector2(this->met_phcorr);
+  if(which=="met_phcorr_imu"){
+    return TVector2(this->met_phcorr_imu);
   }
-  return TVector2(this->met);
+  if(which=="met_phcorr_vmu"){
+    return TVector2(this->met_phcorr_vmu);
+  }  
+  if(which=="met_truth_imu"){
+    return TVector2(this->met_truth_imu);
+  }
+  if(which=="met_truth_vmu"){
+    return TVector2(this->met_truth_vmu);
+  }      
+
 }
 
 float MET::Phi(TString which){
@@ -244,7 +291,7 @@ float MET::Phi(TString which){
 //--------------------------------- 3D MET -----------------------------
 TVector3 MET::GetMET_Razor(){
   
-  TVector2 met_2D(this->met);
+  TVector2 met_2D(this->met_imu);
   double met_x = met_2D.X();
   double met_y = met_2D.Y();
  
@@ -262,18 +309,26 @@ bool MET::GetHasMuons(){
 }
 
 void MET::PrintInfo(){
-  cout<<"MET: "<<this->met.Mod()<<" MET_TST: "<<this->met_tst.Mod()<<" MET_Trk: "<<this->met_trk.Mod()<<" MET_mu: "<<this->met_mu.Mod()<<endl;
+  cout<<"MET: "<<this->met_imu.Mod()<<" MET_TST: "<<this->met_tst_imu.Mod()<<" MET_Trk: "<<this->met_trk.Mod()<<" MET_mu: "<<this->met_vmu.Mod()<<endl;
 }
 
 void MET::Reset(){
   //--- Probably there's a better way
-  met.Set(0., 0.);
-  met_tst.Set(0., 0.);
+  met_imu.Set(0., 0.);
+  met_vmu.Set(0., 0.);  
+  met_tst_imu.Set(0., 0.);
+  met_tst_vmu.Set(0., 0.);  
   met_trk.Set(0., 0.);
-  met_mu.Set(0., 0.);
+  met_imu_ecorr.Set(0., 0.);
+  met_vmu_mucorr.Set(0., 0.);  
+  met_vmu_ecorr.Set(0., 0.);  
   met_lochadtopo.Set(0., 0.);
-  met_reffinal.Set(0., 0.);
-  met_reffinal_mu.Set(0., 0.);
+  met_reffinal_vmu.Set(0., 0.);
+  met_reffinal_imu.Set(0., 0.);
+  met_phcorr_vmu.Set(0., 0.);
+  met_phcorr_imu.Set(0., 0.);  
+  met_truth_vmu.Set(0., 0.);
+  met_truth_imu.Set(0., 0.);  
 }
 
 bool operator<(const Jet& Jet1, const Jet& Jet2){
