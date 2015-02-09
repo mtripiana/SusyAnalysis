@@ -124,7 +124,7 @@ enum ZDecayMode{
 };
 
 //MET flavours
-enum class MetDef {InvMu, AllVis, InvMuEl, InvMuPh, Track, InvMuRef, InvMuTST, Truth, N};
+enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPh, VisMuPh, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTruth, VisMuTruth, locHadTopo, N};
 
 
 class chorizo : public EL::Algorithm
@@ -227,6 +227,7 @@ private:
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; 
+  ST::SUSYObjDef_xAOD* tool_st_1;  
 
   //MET map
   std::map<MetDef, TVector2> metmap; //!
@@ -537,7 +538,7 @@ private:
   std::vector<Particle> recoMuons; //!
   std::vector<Particles::Jet> recoJets; //!
   std::vector<Particles::Jet> seedJets; //!
-  Particles::MET met_obj;
+  Particles::MET met_obj; 
   std::vector<TLorentzVector> RecoUnmatchedTracksElMu; //!
   std::vector<int> RecoUnmatchedTracksIdx; //!
 
@@ -629,6 +630,8 @@ private:
   float   bosonVec_reco_pt;
   float   bosonVec_reco_eta;
   float   bosonVec_reco_phi;
+  float   bosonVec_reco_pt_vmu;
+  float   bosonVec_reco_phi_vmu;  
   float   bosonVec_truth_pt;
   float   bosonVec_truth_eta;
   float   bosonVec_truth_phi;
@@ -723,9 +726,11 @@ private:
   //- 'boson' properties
   float e_M;
   float e_MT;
+  float e_MT_vmu;  
   float e_Zpt;
   float m_M;
   float m_MT;
+  float m_MT_vmu;  
   float m_Zpt;
   float m_EM;
 
