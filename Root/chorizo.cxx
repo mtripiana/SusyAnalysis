@@ -7,11 +7,13 @@
 #include <SusyAnalysis/MCUtils.h>
 #include <iostream>
 #include <fstream>
-
 #include <EventLoop/StatusCode.h>
 
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
+
+//Jet Smearing
+#include "JetSmearing/JetMCSmearingTool.h"
 
 //GRL
 #include "GoodRunsLists/GoodRunsListSelectionTool.h"
@@ -21,6 +23,9 @@
 
 //Pileup Reweighting
 #include "PileupReweighting/PileupReweightingTool.h"
+
+//Jet Truth Labeling
+#include "ParticleJetTools/JetQuarkLabel.h"
 
 //TeV unit (w.r.t MeV)
 #ifndef TEV
@@ -46,7 +51,9 @@
 #endif
 
 //For trigger test
-//#define TRIGGERTEST
+#define TRIGGERTEST
+#include "TrigDecisionTool/TrigDecisionTool.h"
+#include "TrigConfxAOD/xAODConfigTool.h"
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
@@ -82,7 +89,9 @@ static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
 
 chorizo :: chorizo ()
+  : tool_trigdec(0), tool_trigconfig(0)
 {
+
   outputName="";
   Region="";
   defaultRegion="SR";
@@ -1048,7 +1057,7 @@ void chorizo :: ReadXML(){
   std::istringstream triggerNameIStr(triggerNameStr);
   std::string s;
   while (std::getline(triggerNameIStr, s, ',')) {
-    cout << "ADDING TRIGGER = " << s << endl;
+    Info(whereAmI, Form("adding trigger chain = %s",s.c_str()));
     TriggerNames.push_back(s);
   }
 #endif
@@ -1222,7 +1231,9 @@ void chorizo :: ReadXML(){
   }
 
   Info(whereAmI, Form("- QCD") );
+  std::string QCD_triggerNameStr="";
   try{
+    QCD_triggerNameStr = xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$TrigChains", cRegion));
     QCD_JetsPtPreselection = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", cRegion));
     QCD_JetsPtSelection    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
     QCD_JetsEtaSelection   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
@@ -1239,6 +1250,7 @@ void chorizo :: ReadXML(){
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion)); 
+    QCD_triggerNameStr = xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$TrigChains", defRegion));
     QCD_JetsPtPreselection = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", defRegion));
     QCD_JetsPtSelection    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
     QCD_JetsEtaSelection   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
@@ -1253,7 +1265,13 @@ void chorizo :: ReadXML(){
     QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", defRegion));
     QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
   }
-  
+  std::istringstream QCD_triggerNameIStr(QCD_triggerNameStr);
+  std::string stqcd;
+  while (std::getline(QCD_triggerNameIStr, stqcd, ',')) {
+    JS_triggers.push_back(stqcd);
+  }
+
+
   //--- To know if we gonna smear a truth sample                                         
   doTTR = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$Enable");
   ttr_mu = xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$Mu");
@@ -1328,6 +1346,27 @@ EL::StatusCode chorizo :: initialize ()
   //Initialize variables
   InitVars();
 
+#ifdef TRIGGERTEST
+  if(!this->isTruth){
+    //--- Trigger Decision
+    // The configuration tool.
+    if(!tool_trigconfig)
+      tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
+    tool_trigconfig->initialize();                                                  
+    ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
+    //    configHandle->initialize();                                                   
+                                                                                     
+    // The decision tool  
+    if(!tool_trigdec)
+      tool_trigdec = new Trig::TrigDecisionTool("TrigDecTool");
+    tool_trigdec->setProperty("ConfigTool",configHandle);
+    tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
+    //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
+    tool_trigdec->initialize();
+  }
+#endif
+
+
   // get event info needed for tool's config
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
@@ -1381,22 +1420,6 @@ EL::StatusCode chorizo :: initialize ()
       Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
     }
   }  
-
-#ifdef TRIGGERTEST
-  if(!this->isTruth){
-    //--- Trigger Decision
-    // The configuration tool.
-    tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
-    ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
-    configHandle->initialize();                                                                                                                                                
-    // The decision tool                                                                
-    tool_trigdec = new TrigDecisionTool("TrigDecTool");
-    tool_trigdec->setProperty("ConfigTool",configHandle);
-    tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
-    tool_trigdec->initialize();
-  }
-#endif
-
   
   //--- Overlap Removal
   tool_or = new OverlapRemovalTool("OverlapRemovalTool");
@@ -1424,6 +1447,14 @@ EL::StatusCode chorizo :: initialize ()
   tool_btag2->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()); 
   tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root");
   tool_btag2->initialize();
+
+
+  //--- truth jet labeling
+  tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
+  tool_jetlabel->setProperty("McEventCollection","TruthEvent");
+  tool_jetlabel->initialize();
+
+
 
   //--- Pileup Reweighting
   // trick: path in the tool name so it gets saved to the desired place
@@ -1858,7 +1889,7 @@ EL::StatusCode chorizo :: loop ()
   // if (!doFlowTree && nVertex==0)
   //   return EL::StatusCode::SUCCESS; //skip event
 
-  this->isVertexOk = (nVertex>0) && n_tracks>=nTracks;
+  this->isVertexOk = (nVertex>1) && n_tracks>=nTracks; 
 
   //trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
@@ -1873,40 +1904,30 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //--- Trigger 
-  for(const auto& chain : TriggerNames)
-    this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+  if(!this->isQCD){
+    for(const auto& chain : TriggerNames)
+      this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+  }
+  else{ //-- preselection for QCD jet smearing (trigger)
+    bool oktrig=false;
+    for(const auto& chain : JS_triggers){
+      this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+      oktrig |= this->isTrigger.back();
+    }
+    if(!oktrig)
+      return nextEvent();  //skip event
+  }
 #endif
-  //
-  //--- Do a pre-selection for QCD
-    // if (this->isQCD){
-   
-    //   // GRL
-    //   if (goodrunslist.HasRunLumiBlock(RunNumber, lb)!=1) continue;
-	
-    //   //Trigger
-    //   if (!(EF_j460_a4tchad ||  
-    // 	    EF_j360_a4tchad || 
-    // 	    EF_j280_a4tchad || 
-    // 	    EF_j220_a4tchad || 
-    // 	    EF_j180_a4tchad || 
-    // 	    EF_j145_a4tchad || 
-    // 	    EF_j110_a4tchad || 
-    // 	    EF_j80_a4tchad  || 
-    // 	    EF_j55_a4tchad  )) continue;
-    //   //EF_j55_a4tchad  || 
-    //   //EF_j45_a4tchad  || 
-    //   //EF_j35_a4tchad  )) continue;
-	      
-    // }
-    
+
 
   //--- GRL
   if( !this->isMC )
     this->isGRL = tool_grl->passRunLB(RunNumber, lb);
 
-  //smearing data pre-selection (QCD-mode) to save some time
-  if( this->isQCD && !this->isGRL )
-    return nextEvent(); //EL::StatusCode::SUCCESS; //skip event
+  //---   preselection for QCD jet smearing data (GRL on data) [time saver]
+  if( this->isQCD && !this->isGRL)
+    return nextEvent(); //skip event
+ 
 
   //--- Quality cuts applied only on data
   if (!this->isMC) {
@@ -1914,9 +1935,6 @@ EL::StatusCode chorizo :: loop ()
     this->isTileGood = (eventInfo->eventFlags(xAOD::EventInfo::Tile)!=2);
     this->isTileTrip = !tool_tileTrip->checkEvent(RunNumber,  lb,  EventNumber); //--- Does not depend on the definition of the objects.
     this->isCoreFlag = (eventInfo->eventFlags(xAOD::EventInfo::Core)==0);
-
-    
-
   }
 
   //fill cutflow
@@ -2830,7 +2848,7 @@ EL::StatusCode chorizo :: loop ()
   else{
     met_obj.SetVector( met_obj.GetVector("met_imu"), "met_tst_imu", true );  //- Copy met vector to the met data member
     met_obj.SetVector( met_obj.GetVector("met_vmu"), "met_tst_vmu", true );  //- Copy met vector to the met data member
-    Warning("loop()", "MET_CST assigned to MET_TST to avoid METRebuilder crash in data.");
+    Warning("loop()", "MET_CST assigned to MET_TST to avoid METRebuilder crash.");
   }
 
   //- Track met
@@ -2913,6 +2931,7 @@ EL::StatusCode chorizo :: loop ()
 
   //*** CONFIG
   // book MET flavours
+  metmap={};
   metmap[::MetDef::InvMu] = met_obj.GetVector("met_imu");
   metmap[::MetDef::VisMu] = met_obj.GetVector("met_vmu");  
   metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_imu_ecorr");
@@ -2985,20 +3004,7 @@ EL::StatusCode chorizo :: loop ()
 
     thrust_jets.pop_back(); //remove met from jet vectors
 
-    //dPhi(jet,MET)
-    if( n_jets>0 ){
-      dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );
-      if( n_jets>1 ){
-	dPhi_met_j2.push_back( deltaPhi( mk.second.Phi(), recoJets.at(1).Phi()) );
-	if( n_jets>2 ){
-	  dPhi_met_j3.push_back( deltaPhi( mk.second.Phi(), recoJets.at(2).Phi()) );
-	  if( n_jets>3 ){
-	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );
-	  }
-	}
-      }
-    }      
-
+    //some extra variables
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
     auto dphi_min_tmp=-1.;
@@ -3086,9 +3092,26 @@ EL::StatusCode chorizo :: loop ()
 	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );	
 	    j4_mT.push_back( Calc_MT( recoJets.at(3), mk.second ));
 	  }
+	  else{
+	    dPhi_met_j4.push_back( DUMMYUP );
+	    j4_mT.push_back( DUMMYUP );
+	  }
+	}
+	else{
+	  dPhi_met_j3.push_back( DUMMYUP );
+	  j3_mT.push_back( DUMMYUP );
 	}
       }
+      else{
+	dPhi_met_j2.push_back( DUMMYUP );
+	j2_mT.push_back( DUMMYUP );
+      }
     }
+    else{
+      dPhi_met_j1.push_back( DUMMYUP );
+      j1_mT.push_back( DUMMYUP );
+    }
+
 
     //meff = HT + met
     meff.push_back( HT + mk.second.Mod() );
@@ -3488,6 +3511,9 @@ EL::StatusCode chorizo :: loop_truth()
 
   loadMetaData();
 
+  //--- Weigths for Sherpa, MC@NLO, Acer, ...
+  MC_w = eventInfo->mcEventWeight();
+
   //-- Retrieve objects Containers
   m_truthE= 0;
   m_truthP= 0;
@@ -3518,12 +3544,20 @@ EL::StatusCode chorizo :: loop_truth()
   std::vector<Particle> electronCandidates; //intermediate selection electrons
   for( ; truthEl_itr != truthEl_end; ++truthEl_itr ) {
 
+      // FS selection
+      if( !isStable( *truthEl_itr ) ) continue; 
+      
       //define preselected electron                
       Particle recoElectron;
-      recoElectron.SetVector( getTLV( (*truthEl_itr) ));
-      if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
-      if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
-      
+
+      // if(( *truthEl_itr )->pt()*0.001 > 100.){ //TESTING
+      // 	cout << "   pt = " << ( *truthEl_itr )->pt()*0.001 
+      // 	     << ",  eta = " << ( *truthEl_itr )->eta() 
+      // 	     << ",  phi = " << ( *truthEl_itr )->phi() 
+      // 	     << ",  barcode = " << ( *truthEl_itr )->barcode() 
+      // 	     << ",  status  = " << ( *truthEl_itr )->status() << endl;
+      // }
+
       TLorentzVector tlv_d;
       if( dressLeptons ){
 	tlv_d.SetPtEtaPhiE( ( *truthEl_itr )->auxdata< float >( "pt_dressed" )*0.001,
@@ -3537,7 +3571,12 @@ EL::StatusCode chorizo :: loop_truth()
 			    ( *truthEl_itr )->phi(),
 			    ( *truthEl_itr )->e()*0.001);
       }
-      
+
+      recoElectron.SetVector( tlv_d, true );
+
+      if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
+      if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
+            
       // recoElectron.id = 0;
       // recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
       recoElectron.etcone20 = ( *truthEl_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthEl_itr) * 0.001;
@@ -3545,21 +3584,15 @@ EL::StatusCode chorizo :: loop_truth()
       // recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
       // (*el_itr).passSelection(recoElectron.isTight, "Tight");
       
-      // recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-      // recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+      // recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( *truthEl_itr );
+      // recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( *truthEl_itr );
       
       electronCandidates.push_back(recoElectron);
-      
-      //apply signal cuts...
-      //if(...)
-      recoElectrons.push_back(recoElectron);
-      e_N++;
       
   }//electron loop
 
   //sort the electrons in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end());
-  if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end());
 
 
   //Truth Muons 
@@ -3570,48 +3603,47 @@ EL::StatusCode chorizo :: loop_truth()
   std::vector<Particle> muonCandidates; //intermediate selection muons
   for( ; truthMu_itr != truthMu_end; ++truthMu_itr ) {
 
-      //define preselected muon                
-      Particle recoMuon;
-      recoMuon.SetVector( getTLV( (*truthMu_itr) ));
-      if (recoMuon.Pt() < El_PreselPtCut/1000.)   continue;
-      if (fabs(recoMuon.Eta()) > El_PreselEtaCut) continue;
+    // FS selection
+    if( !isStable( *truthMu_itr ) ) continue; 
 
-      TLorentzVector tlv_d;
-      if( dressLeptons ){
-	tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->auxdata< float >( "pt_dressed" )*0.001,
-			    ( *truthMu_itr )->auxdata< float >( "eta_dressed" ),
-			    ( *truthMu_itr )->auxdata< float >( "phi_dressed" ),
-			    ( *truthMu_itr )->auxdata< float >( "e_dressed" )*0.001);
-      }
-      else{
-	tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->pt()*0.001,
-			    ( *truthMu_itr )->eta(),
-			    ( *truthMu_itr )->phi(),
-			    ( *truthMu_itr )->e()*0.001);
-      }
-      
-      // recoMuon.id = 0;
-      // recoMuon.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
-      recoMuon.etcone20 = ( *truthMu_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthMu_itr) * 0.001;
-      recoMuon.ptcone30 = ( *truthMu_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthMu_itr) * 0.001;
-      // recoMuon.etcone30 = acc_etcone30(*el_itr) * 0.001;
-      // (*el_itr).passSelection(recoMuon.isTight, "Tight");
-      
-      // recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-      // recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
-      
-      muonCandidates.push_back(recoMuon);
-      
-      //apply signal cuts...
-      //if(...)
-      recoMuons.push_back(recoMuon);
-      m_N++;
-      
+    //define preselected muon                
+    Particle recoMuon;
+    
+    TLorentzVector tlv_d;
+    if( dressLeptons ){
+      tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->auxdata< float >( "pt_dressed" )*0.001,
+			  ( *truthMu_itr )->auxdata< float >( "eta_dressed" ),
+			  ( *truthMu_itr )->auxdata< float >( "phi_dressed" ),
+			  ( *truthMu_itr )->auxdata< float >( "e_dressed" )*0.001);
+    }
+    else{
+      tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->pt()*0.001,
+			  ( *truthMu_itr )->eta(),
+			  ( *truthMu_itr )->phi(),
+			  ( *truthMu_itr )->e()*0.001);
+    }
+    
+    recoMuon.SetVector( tlv_d, true );
+    if (recoMuon.Pt() < Mu_PreselPtCut/1000.)   continue;
+    if (fabs(recoMuon.Eta()) > Mu_PreselEtaCut) continue;
+    
+    
+    // recoMuon.id = 0;
+    // recoMuon.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
+    recoMuon.etcone20 = ( *truthMu_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthMu_itr) * 0.001;
+    recoMuon.ptcone30 = ( *truthMu_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthMu_itr) * 0.001;
+    // recoMuon.etcone30 = acc_etcone30(*el_itr) * 0.001;
+    // (*el_itr).passSelection(recoMuon.isTight, "Tight");
+    
+    // recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
+    // recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+    
+    muonCandidates.push_back(recoMuon);
+        
   }//muon loop
-
+  
   //sort the muon candidates in Pt
   if (muonCandidates.size()>0) std::sort(muonCandidates.begin(), muonCandidates.end());
-  if (recoMuons.size()>0) std::sort(recoMuons.begin(), recoMuons.end());
 
 
   //Truth Photons 
@@ -3621,6 +3653,9 @@ EL::StatusCode chorizo :: loop_truth()
 
   std::vector<Particle> photonCandidates; //intermediate selection photons
   for( ; truthPh_itr != truthPh_end; ++truthPh_itr ) {
+
+      // FS selection
+      if( !isStable( *truthPh_itr ) ) continue; 
 
       //define preselected photon                
       Particle recoPhoton;
@@ -3639,17 +3674,11 @@ EL::StatusCode chorizo :: loop_truth()
       // recoPhoton.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
       
       photonCandidates.push_back(recoPhoton);
-      
-      //apply signal cuts...
-      //if(...)
-      recoPhotons.push_back(recoPhoton);
-      ph_N++;
-      
+            
   }//photon loop
 
   //sort the photons in Pt
   if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
-  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
 
 
   //Truth Jets
@@ -3664,7 +3693,16 @@ EL::StatusCode chorizo :: loop_truth()
     if (recoJet.Pt() < Jet_PreselPtCut/1000.)   continue;
     if (fabs(recoJet.Eta()) > Jet_PreselEtaCut) continue;
 
-    recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("TruthLabelID"); 
+    try{
+      recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("TruthLabelID"); 
+    }
+    catch(...){
+      bool matched = tool_jetlabel->matchJet(**tjet_itr);
+      if(matched)
+	recoJet.FlavorTruth = tool_jetlabel->pdgCode();
+      else
+	recoJet.FlavorTruth = 0;
+    }
 
     recoJet.isbjet = recoJet.isBTagged("Truth");
 
@@ -3694,6 +3732,26 @@ EL::StatusCode chorizo :: loop_truth()
     }
 
 
+    //check for overlapping jets
+    if(doOR){
+      bool overlap=false;
+      for(const auto& c_el : electronCandidates){
+	if(recoJet.GetVector().DeltaR(c_el) < 0.2){
+	  overlap=true;
+	  break;
+	}
+      }
+      if(overlap) continue;
+      
+      for(const auto& c_ph : photonCandidates){
+	if(recoJet.GetVector().DeltaR(c_ph) < 0.2){
+	  overlap=true;
+	  break;
+	}
+      }
+      if(overlap) continue;
+    }
+
     recoJets.push_back(recoJet);
     n_jets++;
   }
@@ -3702,89 +3760,100 @@ EL::StatusCode chorizo :: loop_truth()
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
 
 
+  //Remove leptons/photons overlapping with jets now
+  for(const auto& c_el : electronCandidates){
+    
+    if(doOR){
+      bool overlap=false;
+      for(const auto& c_jet : recoJets){
+	
+	if( c_el.GetVector().DeltaR(c_jet) < 0.4 ){
+	  overlap=true;
+	  break;
+	}
+      }
+      if(overlap) continue;
+    }
+
+    //apply signal cuts...
+    //if(...)
+
+    recoElectrons.push_back(c_el);
+    e_N++;
+  }  
+  //sort the electrons in Pt (they should be already, but anyways)
+  if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end());
+
+
+  for(const auto& c_ph : photonCandidates){
+
+    if(doOR){    
+      bool overlap=false;
+      for(const auto& c_jet : recoJets){
+	if( c_ph.GetVector().DeltaR(c_jet) < 0.4 ){
+	  overlap=true;
+	  break;
+	}
+      }
+      if(overlap) continue;
+    }
+
+    //apply signal cuts...
+    //if(...)
+    
+    recoPhotons.push_back(c_ph);
+    ph_N++;
+  }  
+  //sort the photons in Pt (they should be already, but anyways)
+  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+
+  //just to TEST directHG thing
+  // if(recoPhotons.size()>1){
+  //   double mgg = (recoPhotons.at(0).GetVector()+recoPhotons.at(1).GetVector()).M();
+  //   //cout << "INV MGG = " << mgg << endl;
+  //   pileup_w = mgg;   //TAKE THIS OUT!!
+  // }
+
+  for(const auto& c_mu : muonCandidates){
+
+    if(doOR){    
+      bool overlap=false;
+      for(const auto& c_jet : recoJets){
+	if( c_mu.GetVector().DeltaR(c_jet) < 0.4 ){
+	  overlap=true;
+	  break;
+	}
+      }
+      if(overlap) continue;
+    }
+
+    //apply signal cuts...
+    //if(...)
+    
+    recoMuons.push_back(c_mu);
+    m_N++;
+  }  
+  //sort the muons in Pt (they should be already, but anyways)
+  if (recoMuons.size()>0) std::sort(recoMuons.begin(), recoMuons.end());
+
+
   //MET
   // NOTE:: Here MET could be recomputed with dressed leptons, as in SUSYTools, but not yet...
-  const xAOD::MissingETContainer* cmet_reffinal;
-  const xAOD::MissingETContainer* cmet_lhtopo;
-  const xAOD::MissingETContainer* cmet_track;
-
   const xAOD::MissingETContainer* cmet_truth;
-
-  if( m_event->contains<xAOD::MissingETContainer>("MET_RefFinal") ){
-    CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") );
-  } else {
-    if( m_metwarnCounter < m_warnLimit ){
-      Warning("loop_truth()", "   MET_RefFinal can't be found!");
-    }
-    ++m_metwarnCounter;
-  }
-  if( m_event->contains<xAOD::MissingETContainer>("MET_LocHadTopo") ){
-    CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );
-  } else {
-    if( m_metwarnCounter < m_warnLimit ){
-      Warning("loop_truth()", "   MET_LocHadTopo can't be found!");
-    }
-    ++m_metwarnCounter;
-  }
-  if( m_event->contains<xAOD::MissingETContainer>("MET_Track") ){
-    CHECK( m_event->retrieve( cmet_track, "MET_Track") );
-  } else {
-    if( m_metwarnCounter < m_warnLimit ){
-      Warning("loop_truth()", "   MET_Track can't be found!");
-    }
-    ++m_metwarnCounter;
-  }
   CHECK( m_event->retrieve( cmet_truth, "MET_Truth") );
-
-  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
-  const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
 
   const xAOD::MissingET* mtruth_inv = (*cmet_truth)["Int"];
   const xAOD::MissingET* mtruth_vis = (*cmet_truth)["NonInt"];
 
-  met_obj.SetVector(TVector2(mtruth_inv->mpx(), mtruth_inv->mpy()), "met_imu");  //- Copy met vector to the met data member
-  //met_obj.SetHasMuons( Met_doMuons );  //-- Set if muons enter into the MET computation
-
-  met_obj.SetVector( TVector2(0.,0.), "met_tst_imu");  //- dummy for now 
-  met_obj.SetVector( TVector2(mtrack->mpx(), mtrack->mpy()), "met_trk");  //-  
-
-  met_obj.SetVector( TVector2(mtopo->mpx(), mtopo->mpy()), "met_locHadTopo");
-  met_obj.SetVector( TVector2(mtruth_vis->mpx(), mtruth_vis->mpy()), "met_vmu", true); //to be redone with dressed leptons?
-
-  met_obj.SetVector( TVector2(mrf->mpx(), mrf->mpy()), "met_refFinal_vmu");
-
-  //--- Met with muons as invisible (as from the branches)
-  TVector2 v_met_rfinal_muinv = met_obj.GetVector("met_refFinal_vmu"); //in GeV
-  for ( const auto& muon : recoMuons){
-    v_met_rfinal_muinv += muon.GetVector2();
-  }
-  met_obj.SetVector(v_met_rfinal_muinv, "met_refFinal_imu", true); //already in GeV
+  met_obj.SetVector(TVector2(mtruth_inv->mpx(), mtruth_inv->mpy()), "met_truth_imu");  //- Copy met vector to the met data member
   
-  //--- Met with electrons as invisible 
-  TVector2 v_met_elinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
-  for ( const auto& ele : recoElectrons){
-    v_met_elinv_ST += ele.GetVector2();
-  }
-  met_obj.SetVector(v_met_elinv_ST, "met_imu_ecorr", true); //already in GeV    
-
-  //--- Met with photons as invisible 
-  TVector2 v_met_phinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
-  for ( const auto& pho : recoPhotons){
-    v_met_phinv_ST += pho.GetVector2();
-  }
-  met_obj.SetVector(v_met_phinv_ST, "met_imu_phcorr", true); //already in GeV    
+  met_obj.SetVector(TVector2(mtruth_vis->mpx(), mtruth_vis->mpy()), "met_truth_vmu"); //to be redone with dressed leptons?
 
 
   // book MET flavours (to global map)
-  metmap[::MetDef::InvMu] = met_obj.GetVector("met_imu");
-  metmap[::MetDef::VisMu] = met_obj.GetVector("met_vmu");
-  metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_ecorr_imu");
-  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_phcorr_imu");
-  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
-  metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
-  metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst_imu");
-
+  metmap={};
+  metmap[::MetDef::InvMuTruth] = met_obj.GetVector("met_truth_imu");
+  metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");
 
   //Recoiling system against MET (prebooking)
   TLorentzVector sjet(0.,0.,0.,0.);
@@ -3800,7 +3869,9 @@ EL::StatusCode chorizo :: loop_truth()
   TVector2 sjet2(sjet.Px(), sjet.Py());
 
   //--- Fill MET related variables  -  vectorized now!
-  for (auto& mk : metmap) {
+  for (const auto& mk : metmap) {
+
+    cout << (int)mk.first << endl;
 
     met.push_back(mk.second.Mod());
     met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
@@ -3821,19 +3892,6 @@ EL::StatusCode chorizo :: loop_truth()
 
     thrust_jets.pop_back(); //remove met from jet vectors
 
-    //dPhi(jet,MET)
-    if( n_jets>0 ){
-      dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );
-      if( n_jets>1 ){
-	dPhi_met_j2.push_back( deltaPhi( mk.second.Phi(), recoJets.at(1).Phi()) );
-	if( n_jets>2 ){
-	  dPhi_met_j3.push_back( deltaPhi( mk.second.Phi(), recoJets.at(2).Phi()) );
-	  if( n_jets>3 ){
-	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );
-	  }
-	}
-      }
-    }      
 
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
@@ -3852,7 +3910,6 @@ EL::StatusCode chorizo :: loop_truth()
       //count 'tau' jets candidates
       if ( jet.isTauJet( mk.second.Phi(), Jet_Tagger.Data()) ) 
 	ntaujs += 1;
-
 
       //look for min dphi(jet,met)   
       float dphi_jm = deltaPhi( jet.Phi(), mk.second.Phi() );
@@ -4376,6 +4433,16 @@ EL::StatusCode chorizo :: finalize ()
 
     delete tool_purw;
     tool_purw=0;
+  }
+
+  //Trigger
+  if(tool_trigdec){
+    delete tool_trigdec;
+    tool_trigdec=0;
+  }
+  if(tool_trigconfig){
+    delete tool_trigconfig;
+    tool_trigconfig=0;
   }
 
   //GRL

@@ -1,3 +1,14 @@
+2014-02-26 Martin <tripiana@cern.ch>
+	* Fix initialization of metmap
+
+2014-02-25 Martin <tripiana@cern.ch>
+	* Use ParticleJetTools to label truth jets (not there for MCGN1 from EVNT yet)
+
+2014-02-19 Martin <tripiana@cern.ch>
+	* Fix triggeDec init (seems to be working now)
+	* Fix metmap dependent variables
+	* Add metadata to output file
+
 2014-02-04 Martin <tripiana@cern.ch>
 	* Move to Base,2.0.24
 

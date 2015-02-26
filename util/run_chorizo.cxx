@@ -141,10 +141,16 @@ bool is_data(Sample* sample){
 double getNPrimary(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= 0\" | tail -1");
+  TString index="0";
+  //check if derivation
+  std::string gname = sample->getMetaString( MetaFields::gridName );
+  if(gname.find("DAOD")!=std::string::npos)
+    index="-1";
+  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= "+string(index.Data())+"\" | tail -1");
   std::string nev="0";
   if(provname != "")
     nev = getCmdOutput( "ami dataset info "+provname+" | grep totalEvents | awk '{print $2}'");
+
   return stod(nev);
 }
 
@@ -507,7 +513,8 @@ int main( int argc, char* argv[] ) {
     
     alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
-    alg->isQCD      = false;   //get it from D3PDReader-like code (add metadata to SH)
+    alg->isQCD      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$Enable");
+false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
     alg->isNCBG     = false;   //get it from the XML!!
@@ -583,8 +590,8 @@ int main( int argc, char* argv[] ) {
       Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
-      // Pdriver.options()->setString("nc_rootVer", "5.34.09");
-      // Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc47-opt");
+      Pdriver.options()->setString("nc_rootVer", "5.34.22");
+      Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
 
       Pdriver.submitOnly( job, tmpdir );
       break;
@@ -604,7 +611,6 @@ int main( int argc, char* argv[] ) {
     if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
     
     if(generatePUfile) return 0; //leave if generating PURW files... no need to merge here... (it seems)
-
     	
     //move output to collateral files' path
     TString sampleName,targetName;
@@ -613,6 +619,8 @@ int main( int argc, char* argv[] ) {
 	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
 	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), single_id);
 	
+	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
+	//	system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
 	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
 	system(("rm -rf "+tmpdir).c_str());
 	
