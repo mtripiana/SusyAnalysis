@@ -48,7 +48,6 @@
 #include "fastjet/ClusterSequence.hh"
 #include "TileTripReader/TTileTripReader.h"
 
-
 // Systematics includes
 #include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicSet.h"
@@ -58,11 +57,6 @@
 
 #ifndef __MAKECINT__
 #include "AssociationUtils/OverlapRemovalTool.h"
-
-#include "TrigDecisionTool/TrigDecisionTool.h"
-#include "TrigConfxAOD/xAODConfigTool.h"
-using namespace Trig;
-using namespace TrigConf;
 
 #include "xAODJet/JetContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
@@ -81,8 +75,21 @@ using namespace TrigConf;
 
 #define m_warnLimit 5
 
+//fwd declares
 namespace LHAPDF{
   class PDF;
+}
+
+namespace TrigConf{
+  class xAODConfigTool;
+}
+
+namespace Trig{
+  class TrigDecisionTool;
+}
+
+namespace Analysis{
+  class JetQuarkLabel;
 }
 
 class GoodRunsListSelectionTool;
@@ -113,6 +120,10 @@ typedef std::pair<VFloat, VFloat > VFloatPair;
 typedef std::vector<VFloat > VVFloat;                          
 
 class JetCleaningTool;
+
+namespace SUSY{
+  class JetMCSmearingTool;
+}
 
 enum ZDecayMode{
   None = -1,
@@ -222,7 +233,6 @@ private:
   
   TH1F* h_cut_var; //!
 
-
   //--- Tools
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
@@ -233,15 +243,20 @@ private:
   std::map<MetDef, TVector2> metmap; //!
 #endif // not __CINT__
 
+  Analysis::JetQuarkLabel* tool_jetlabel; //!
+
   //  DataPeriod     tool_DPeriod; //!
   JVFUncertaintyTool* tool_jvf; //!
   JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
-  
-#ifndef __CINT__
-  TrigDecisionTool *tool_trigdec; //! 
-  TrigConf::xAODConfigTool* tool_trigconfig; //!
 
+  Trig::TrigDecisionTool* tool_trigdec; //! 
+  TrigConf::xAODConfigTool* tool_trigconfig; //!
+   
+#ifndef __CINT__
+  //  TrigDecisionTool *tool_trigdec; //! 
+  //  TrigConf::xAODConfigTool* tool_trigconfig; //!
+  
   OverlapRemovalTool* tool_or; 
   CP::PileupReweightingTool *tool_purw; 
   GoodRunsListSelectionTool *tool_grl;
@@ -249,6 +264,9 @@ private:
   BTaggingEfficiencyTool* tool_btag;  //70%op
   BTaggingEfficiencyTool* tool_btag2; //80%op
 #endif // not __CINT__
+
+  SUSY::JetMCSmearingTool* tool_jsmear; //!
+
 
   //Member Functions
   virtual void InitVars();
@@ -404,6 +422,8 @@ private:
   bool    leptonEfficiencyUnitarity; //!
 
   std::vector<std::string> TriggerNames; //!
+  // for QCD jet smearing 
+  std::vector<std::string> JS_triggers; //!
 
   //OverlapRemoval
   bool  doOR;

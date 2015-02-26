@@ -121,13 +121,19 @@ bool is_data(Sample* sample){
 double getNPrimary(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= 0\" | tail -1");
+  TString index="0";
+  //check if derivation
+  std::string gname = sample->getMetaString( MetaFields::gridName );
+  if(gname.find("DAOD")!=std::string::npos)
+    index="-1";
+  std::string provname = getCmdOutput("ami dataset prov "+newName+" | grep -A 1 \"= "+string(index.Data())+"\" | tail -1");
   std::string nev="0";
   if(provname != "")
     nev = getCmdOutput( "ami dataset info "+provname+" | grep totalEvents | awk '{print $2}'");
 
   return stod(nev);
 }
+
 
 void printSampleMeta(Sample* sample){
   cout << endl;

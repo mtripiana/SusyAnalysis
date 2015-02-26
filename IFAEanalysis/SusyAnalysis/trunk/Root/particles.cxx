@@ -102,9 +102,9 @@ Jet::~Jet(){}
 
 bool Jet::isBTagged(TString Tagger, float op){ 
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
-  if      (Tagger=="MV1"              && (this->MV1 > op))              {return true;}
-  else if (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > op))      {return true;}
-  else if (Tagger=="Truth"            && (abs(this->FlavorTruth)==5))        {return true;}
+  if      (Tagger=="MV1")            return (this->MV1 > op);
+  else if (Tagger=="IP3DSV1")        return (this->SV1plusIP3D > op);
+  else if (Tagger=="Truth")          return (abs(this->FlavorTruth)==5);
   // else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > op && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
   // else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
  
@@ -114,11 +114,11 @@ bool Jet::isBTagged(TString Tagger, float op){
 
 bool Jet::isBTagged(TString Tagger){ 
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
-  if      (Tagger=="MV1"              && (this->MV1 > 0.7892))              {return true;}//70% b eff  
-  else if (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > 1.85))         {return true;}//70% b eff 
-  else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > -2.55 && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
-  else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
- 
+  if      (Tagger=="MV1")              return (this->MV1 > 0.7892); //70% b eff  
+  else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > 1.85); //70% b eff 
+  else if (Tagger=="JetFitterCombNN")  return (this->JetFitterCombNN > -2.55 && this->JetFitterCombNNc < 1.0); //57-80% b eff 
+  else if (Tagger=="JetFitterCombNNc") return (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2);
+  else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 

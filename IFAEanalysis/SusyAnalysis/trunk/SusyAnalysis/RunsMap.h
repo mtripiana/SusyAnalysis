@@ -228,6 +228,54 @@ void RunsMap::LoadMap(){
 					Rpair(167823,"mc14_8TeV.161987.Sherpa_CT10_lllnu_WZ_EW6_noHiggs.merge.DAOD_SUSY1.e1434_s1933_s1911_r5591_r5625_p1784/"),
 					Rpair(167835,"mc14_8TeV.161988.Sherpa_CT10_llll_ZZ_EW6_noHiggs.merge.DAOD_SUSY1.e1434_s1933_s1911_r5591_r5625_p1784/"));
   
+
+  //kt-matching study (SBOTTOM)
+  m_map["13TEV_Sbottom_300_290_msb1"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb1/"));
+  m_map["13TEV_Sbottom_300_290_msb1.5"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb1.5/"));
+  m_map["13TEV_Sbottom_300_290_msb2"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb2/"));
+  m_map["13TEV_Sbottom_300_290_msb2.5"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb2.5/"));
+  m_map["13TEV_Sbottom_300_290_msb3"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb3/"));
+  m_map["13TEV_Sbottom_300_290_msb4"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb4/"));
+  m_map["13TEV_Sbottom_300_290_msb5"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb5/"));
+  m_map["13TEV_Sbottom_300_290_msb6"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb6/"));
+  m_map["13TEV_Sbottom_300_290_msb7"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb7/"));
+  m_map["13TEV_Sbottom_300_290_msb8"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb8/"));
+  m_map["13TEV_Sbottom_300_290_msb9"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb9/"));
+  m_map["13TEV_Sbottom_300_290_msb10"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb10/"));
+  m_map["13TEV_Sbottom_300_290_msb12"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb12/"));
+
+  m_map["13TEV_Sbottom_500_490_msb1"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb1/"));
+  m_map["13TEV_Sbottom_500_490_msb1.5"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb1.5/"));
+  m_map["13TEV_Sbottom_500_490_msb2"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb2/"));
+  m_map["13TEV_Sbottom_500_490_msb2.5"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb2.5/"));
+  m_map["13TEV_Sbottom_500_490_msb3"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb3/"));
+  m_map["13TEV_Sbottom_500_490_msb4"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb4/"));
+  m_map["13TEV_Sbottom_500_490_msb5"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb5/"));
+  m_map["13TEV_Sbottom_500_490_msb6"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb6/"));
+  m_map["13TEV_Sbottom_500_490_msb7"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb7/"));
+  m_map["13TEV_Sbottom_500_490_msb8"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb8/"));
+  m_map["13TEV_Sbottom_500_490_msb9"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb9/"));
+  m_map["13TEV_Sbottom_500_490_msb10"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb10/"));
+  m_map["13TEV_Sbottom_500_490_msb12"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_500_490/msb12/"));
+
+  m_map["13TEV_Sbottom_700_690_msb1"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb1/"));
+  m_map["13TEV_Sbottom_700_690_msb1.5"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb1.5/"));
+  m_map["13TEV_Sbottom_700_690_msb2"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb2/"));
+  m_map["13TEV_Sbottom_700_690_msb2.5"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb2.5/"));
+  m_map["13TEV_Sbottom_700_690_msb3"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb3/"));
+  m_map["13TEV_Sbottom_700_690_msb4"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb4/"));
+  m_map["13TEV_Sbottom_700_690_msb5"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb5/"));
+  m_map["13TEV_Sbottom_700_690_msb6"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb6/"));
+  m_map["13TEV_Sbottom_700_690_msb7"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb7/"));
+  m_map["13TEV_Sbottom_700_690_msb8"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb8/"));
+  m_map["13TEV_Sbottom_700_690_msb9"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb9/"));
+  m_map["13TEV_Sbottom_700_690_msb10"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb10/"));
+  m_map["13TEV_Sbottom_700_690_msb12"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb12/"));
+
+  //EWK directHG study
+  m_map["directHG"] = rlist( Rpair(300604,"/nfs/at3/scratch/tripiana/xAOD/truth/directHG/"));
+
+
   //SIGNAL
   m_map["13TEV_Sbottom_800_1"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
   m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
@@ -244,7 +292,7 @@ void RunsMap::LoadMap(){
   m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
   m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
   
-  m_map["13TEV_Stop_LOCAL"] = rlist( Rpair(204422, "/tmp/tripiana/stop/"));
+  m_map["13TEV_Stop_LOCAL"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/af/"));
 
   m_map["TestStop"] = rlist( Rpair(204422, "/tmp/tripiana/stop/full/"));
   m_map["TestStop_af"] = rlist( Rpair(204422, "/tmp/tripiana/stop/af/"));
@@ -253,7 +301,7 @@ void RunsMap::LoadMap(){
   
   //BACKGROUND
   //  m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_s1982_s2008_r5787_r5853/"));
-  m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1816/"));
+  m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV:mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1816/"));
   m_map["13TEV_ttbar_PowhegPythia_af"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_a266_a265_r5853/"));
 
   m_map["13TEV_singleTop_PowhegPythia"] = rlist( Rpair(110070,"mc14_13TeV.110070.PowhegPythia_P2012_singletop_tchan_lept_top.merge.AOD.e3049_s1982_s2008_r5787_r5853/"),
@@ -924,7 +972,10 @@ void RunsMap::LoadMap(){
   //======================================================================================================================
   //                                                 Local afs/nfs tests
   //======================================================================================================================
-  
+
+  //Test procID  
+  m_map["TestProcID"] = rlist( Rpair(204556,"/tmp/tripiana/procTest/"));
+
   //Test SUSY1
   m_map["TestSUSY1"] = rlist( Rpair(167784,"/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Wmunu167784_13TeV_SUSY1/"));
 
@@ -943,6 +994,9 @@ void RunsMap::LoadMap(){
   //Test trigger
   m_map["TestTrig"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/test/"));
   m_map["TestTrig2"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/xAOD/test/"));
+  m_map["TestTrig3"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/xAOD/test/"),
+			      Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/test/"));
+  m_map["TestTrig4"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/METmon/datasets/"));
 
   //Data 
   m_map["TestDataB"] = rlist( Rpair(203432, "/nfs/at3/scratch/tripiana/xAOD/data12/JetTauEtmiss/"));

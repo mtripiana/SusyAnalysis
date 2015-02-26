@@ -39,6 +39,61 @@ void JoinSplittedFiles(TString fileName){
   chainJoin->Delete();
 }
 
+void MergeFiles(std::vector<TString> files, TString outfile){
+  
+  TFileMerger m;
+  for(auto& s : files)
+    m.AddFile(s);
+
+  m.AddObjectNames("AnalysisTree");
+  m.AddObjectNames("Triggers");
+  m.AddObjectNames("jOption");
+
+  m.OutputFile(outfile);
+  m.Merge();
+}
+
+
+void MergeSplittedFiles(TString fileName){
+
+  TFileMerger m;
+  
+  TString preffix = fileName(0,fileName.Sizeof()-6);
+
+  //--- Check how many splitted files are there                                                                                      
+  int fileCounter=0;
+  bool doesItNotExist=false;
+  while (doesItNotExist==false){
+    FileStat_t buf;
+    fileCounter += 1;
+    doesItNotExist = gSystem->GetPathInfo(Form("%s_%d.root", preffix.Data(), fileCounter), buf);
+  }
+  
+  //--- Add splitted files into a file with the preffix joined.                                                                                                                                                                                                                
+  std::vector<TString> files; files.clear();
+  cout<<Form("Adding file %s", fileName.Data())<<endl;
+  files.push_back(fileName);
+  for(int count=1; count<fileCounter; count++){
+    cout<<Form("Adding file %s_%d.root", preffix.Data(), count)<<endl;    
+    files.push_back(Form("%s_%d.root", preffix.Data(), count));
+  }		  
+  
+  MergeFiles(files, Form("%s_joined.root", preffix.Data()) );
+  
+  cout<<"\nAdded all splitted files into " << Form("%s_joined.root", preffix.Data())<<endl;
+  
+  
+  //--- Delete the files that have been already merged to the joined root file                                                                                                                                                                                                
+  gROOT->ProcessLine(Form(".!rm %s", Form("%s", fileName.Data())));
+  for(int count=1; count<fileCounter; count++){
+    gROOT->ProcessLine(Form(".!rm %s", Form("%s_%d.root", preffix.Data(), count)));
+  }
+  
+  //--- Change the name of the joined file to the final name.                                                                                                                                                                                                                 
+  gROOT->ProcessLine(Form(".!mv %s %s", Form("%s_joined.root", preffix.Data()), Form("%s.root", preffix.Data())));
+}
+
+
 //--- Example from http://root.cern.ch/download/doc/ROOTUsersGuideHTML/ch12s16.html
 
 void AddNewBranch(TString fileName, Float_t FileWeight){
@@ -270,7 +325,8 @@ void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString out
   //--- Join all splitted files
   for(unsigned int i=0; i<filelist.size(); i++){
     cout<<"Joining splitted files..."<<endl;
-    JoinSplittedFiles(filelist.at(i));
+    //JoinSplittedFiles(filelist.at(i));
+    MergeSplittedFiles(filelist.at(i));
   }
 
   //--- Add some new branches
@@ -282,14 +338,7 @@ void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString out
 
   
   //--- Join the "joined" files in a single root file. Add also FileWeight branch
-  TChain *chain = new TChain("AnalysisTree");
-  for(unsigned int i=0; i<filelist.size(); i++){
-    cout<<"Adding file: "<<filelist.at(i)<<" with weight : "<<weights.at(i)<<endl;
-    chain->Add(filelist.at(i));
-  }
-
-  chain->SetMaxTreeSize(15000000000LL);
-  chain->Merge(outfile.Data());
+  MergeFiles(filelist, outfile.Data());
 
   //--- Remove file in the Collateral folder
   for(unsigned int i=0; i<filelist.size(); i++){
@@ -331,4 +380,20 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   cout << endl;
   cout << bold("Target file : ") << outfile  << endl;
   cout << endl;
+}
+
+
+void addMetaData(TString rootName, TString histName, TString outName){
+
+  //MetaData (aka all TNamed objects)
+  TNamed* Triggers = (TNamed*) TFile::Open(histName)->Get("Triggers")->Clone("Triggers");
+  TNamed* jOption = (TNamed*) TFile::Open(histName)->Get("jOption")->Clone("jOption");
+
+  //analysis tree  
+  TFile* newfile = new TFile(rootName, "update");
+
+  Triggers->Write();
+  jOption->Write();
+  
+  newfile->Close();
 }

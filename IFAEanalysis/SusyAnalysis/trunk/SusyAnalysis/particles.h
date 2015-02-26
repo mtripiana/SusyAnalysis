@@ -107,10 +107,10 @@ class MET : public TVector2{
     TVector2  met_tst_vmu;    
     TVector2  met_trk;
     TVector2  met_imu_ecorr;
+    TVector2  met_vmu_ecorr;
     TVector2  met_lochadtopo;
     TVector2  met_reffinal_imu;
     TVector2  met_reffinal_vmu;
-    TVector2  met_vmu_ecorr;
     TVector2  met_vmu_mucorr;    
     TVector2  met_phcorr_imu;
     TVector2  met_phcorr_vmu;

@@ -6,7 +6,7 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.0.22
+# Extra tags needed for Base,2.0.24
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-16 # (needs patching)
 
@@ -23,8 +23,11 @@ rc checkout_pkg $SVNOFF/Reconstruction/EventShapes/EventShapeTools/tags/EventSha
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/AnalysisCommon/AssociationUtils/tags/AssociationUtils-01-00-10
 
 
-rc checkout_pkg $SVNOFF/Trigger/TrigConfiguration/TrigConfxAOD/tags/TrigConfxAOD-00-00-10
+rc checkout_pkg $SVNOFF/Trigger/TrigConfiguration/TrigConfxAOD/tags/TrigConfxAOD-00-00-11
 rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-14
+
+# Offline truth jet tagging for MCGN1 derivations
+svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
 
 #
 # Apply needed patches:
@@ -36,7 +39,7 @@ patch -p0 -i SusyAnalysis/patches/patch_SUSYToolsInit.cxx.diff    # lower msg ou
 patch -p0 -i SusyAnalysis/patches/patch_DecisionObjectHandleStandalone.cxx.diff  # fix trigger dec access
 patch -p0 -i SusyAnalysis/patches/patch_DecisionUnpackerStandalone.cxx.diff
 #patch -p0 -i SusyAnalysis/patches/patch_prepareTriggerMenu.cxx.diff  #not working for some reason
-cp SusyAnalysis/patches/prepareTriggerMenu.cxx TrigConfxAOD/Root/
+#cp SusyAnalysis/patches/prepareTriggerMenu.cxx TrigConfxAOD/Root/
 
 
 # Boost libraries
@@ -52,7 +55,8 @@ svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_Lhapdf/trunk As
 
 
 # JetSmearing (IT will come...)
-#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-01-00-03 JetSmearing
+svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-01-00-03 JetSmearing
+
 
 # METSmearing
 #svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/Reconstruction/MET/METSmearing/tags/METSmearing-00-00-02 METSmearing  ## not used yet
