@@ -299,6 +299,8 @@ void RunsMap::LoadMap(){
   /* m_map["TestStop"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/full/")); */
   /* m_map["TestStop_af"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/af/")); */
   
+  m_map["TestGGM"] = rlist( Rpair(179483, "/nfs/at3/scratch/tripiana/xAOD/truth/GGM/"));
+
   //BACKGROUND
   //  m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_s1982_s2008_r5787_r5853/"));
   m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV:mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1816/"));

@@ -1454,7 +1454,17 @@ EL::StatusCode chorizo :: initialize ()
   tool_jetlabel->setProperty("McEventCollection","TruthEvent");
   tool_jetlabel->initialize();
 
-
+  //--- Jet smearing tool
+  tool_jsmear = new SUSY::JetMCSmearingTool("JStool");
+  tool_jsmear->setProperty("NumberOfSmearedEvents",QCD_SmearedEvents);
+  tool_jsmear->setProperty("DoBJetSmearing",QCD_SmearUseBweight);
+  tool_jsmear->setProperty("BtagWeight",QCD_SmearBtagWeight);
+  tool_jsmear->setProperty("UseTailWeights",true);
+  tool_jsmear->setProperty("DoGaussianCoreSmearing",QCD_SmearExtraSmr);
+  tool_jsmear->setProperty("GaussianCoreSmearingType", QCD_SmearType);
+  tool_jsmear->setProperty("ShiftMeanType",QCD_SmearMeanShift);
+  tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing);
+  tool_jsmear->initialize();
 
   //--- Pileup Reweighting
   // trick: path in the tool name so it gets saved to the desired place
@@ -2346,7 +2356,7 @@ EL::StatusCode chorizo :: loop ()
 	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
 	}
-	recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr );
+	recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
 
 	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 
@@ -3871,8 +3881,6 @@ EL::StatusCode chorizo :: loop_truth()
   //--- Fill MET related variables  -  vectorized now!
   for (const auto& mk : metmap) {
 
-    cout << (int)mk.first << endl;
-
     met.push_back(mk.second.Mod());
     met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
   
@@ -4461,6 +4469,12 @@ EL::StatusCode chorizo :: finalize ()
   if( tool_jClean ) {
     delete tool_jClean;
     tool_jClean = 0;
+  }
+
+  //jet smearing
+  if( tool_jsmear ) {
+    delete tool_jsmear;
+    tool_jsmear = 0;
   }
 
   //Stop clock
