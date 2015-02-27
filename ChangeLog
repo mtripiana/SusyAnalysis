@@ -1,4 +1,7 @@
 2014-02-26 Martin <tripiana@cern.ch>
+	* Add jet smearing tool config
+
+2014-02-26 Martin <tripiana@cern.ch>
 	* Fix initialization of metmap
 
 2014-02-25 Martin <tripiana@cern.ch>
