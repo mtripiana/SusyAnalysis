@@ -26,6 +26,7 @@
 
 //Jet Truth Labeling
 #include "ParticleJetTools/JetQuarkLabel.h"
+//#include "ParticleJetTools/JetFlavourInfo.h"
 
 //TeV unit (w.r.t MeV)
 #ifndef TEV
@@ -3713,6 +3714,11 @@ EL::StatusCode chorizo :: loop_truth()
       else
 	recoJet.FlavorTruth = 0;
     }
+
+    //CHECK
+    // int label = xAOD::jetFlavourLabel(*tjet_itr);
+    // cout << "label = " << label << "   ,   pdg = " << recoJet.FlavorTruth << endl;
+    //
 
     recoJet.isbjet = recoJet.isBTagged("Truth");
 

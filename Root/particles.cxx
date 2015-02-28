@@ -1,5 +1,9 @@
 #include "SusyAnalysis/particles.h"
 
+ClassImp(Particle);
+ClassImp(Jet);
+ClassImp(MET);
+
 using namespace Particles;
 
 // Default constructor for Particle

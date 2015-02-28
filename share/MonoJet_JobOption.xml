@@ -134,7 +134,7 @@
     </Etmiss>
     <QCD>
       <Enable>false</Enable> <!-- Enable jet smearing  -->
-      <region name="SR">
+      <r_egion name="SR">
 	<TrigChains> EF_j460,EF_j55</TrigChains>
 	<JetsPtPreselection>20000.0</JetsPtPreselection>
 	<METSigCut>1.0</METSigCut>
