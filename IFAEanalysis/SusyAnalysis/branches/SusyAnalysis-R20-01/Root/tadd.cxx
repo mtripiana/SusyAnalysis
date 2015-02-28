@@ -1,6 +1,7 @@
 #include "SusyAnalysis/tadd.h"
 #include "SusyAnalysis/utility.h"
 
+
 void JoinSplittedFiles(TString fileName){
   TString preffix = fileName(0,fileName.Sizeof()-6);
   TChain *chainJoin = new TChain("AnalysisTree");
@@ -320,7 +321,7 @@ void addAntiWeightToTree(TString fileName, bool isData){
   f5->Close();
 }
 
-void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString outfile, bool isData ){
+void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TString outfile, bool isData ){
 
   //--- Join all splitted files
   for(unsigned int i=0; i<filelist.size(); i++){

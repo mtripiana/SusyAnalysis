@@ -2178,7 +2178,7 @@ EL::StatusCode chorizo :: loop ()
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
 	}
-	recoElectron.SFd = tool_st->GetSignalElecSF( *el_itr );
+	recoElectron.SFd = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
 	
 	CP::SystematicCode ret = tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if( ret != CP::SystematicCode::Ok){
@@ -2344,20 +2344,20 @@ EL::StatusCode chorizo :: loop ()
       //get photon scale factors
       if(this->isMC){
 	//nominal
-	recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr, Ph_recoSF, Ph_idSF, Ph_triggerSF );
+	recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
 
 	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
 	}
-	recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+	recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
 
 	//+1 sys down
 	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
 	}
-	recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+	recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
 
 	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
 
