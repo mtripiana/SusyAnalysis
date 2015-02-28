@@ -98,7 +98,7 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 				 -g            : run on the grid    (ganga)     
 				 -u            : generate pileup file (overrides jOption config)
 				 -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
-				 -t            : run just a test over 50 events
+				 -t            : run over truth xAODs
 				 -n=<N>        : run over N events
 				 -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)
 				 -s=<S>        : systematics to be considered (comma-separated list) [optional]. 
