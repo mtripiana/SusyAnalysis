@@ -1,1 +1,0 @@
-for i in $(qstat |grep $USER |awk '{print $1}');do qdel $i;done
