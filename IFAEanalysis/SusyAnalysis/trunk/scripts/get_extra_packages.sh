@@ -22,9 +22,12 @@ rc checkout_pkg $SVNOFF/InnerDetector/InDetRecTools/InDetTrackSelectionTool/tags
 rc checkout_pkg $SVNOFF/Reconstruction/EventShapes/EventShapeTools/tags/EventShapeTools-00-01-03 # (needs patching)
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/AnalysisCommon/AssociationUtils/tags/AssociationUtils-01-00-10
 
-
+#trigger stuff
 rc checkout_pkg $SVNOFF/Trigger/TrigConfiguration/TrigConfxAOD/tags/TrigConfxAOD-00-00-11
 rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-14
+
+#downgrade SamplerHandler to run on the grid (for now!)
+rc checkout_pkg atlasoff/PhysicsAnalysis/D3PDTools/SampleHandler/tags/SampleHandler-00-00-83
 
 # Offline truth jet tagging for MCGN1 derivations
 svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
