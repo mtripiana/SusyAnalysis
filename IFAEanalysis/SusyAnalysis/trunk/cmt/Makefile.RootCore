@@ -13,7 +13,8 @@ PACKAGE          = SusyAnalysis
 PACKAGE_PRELOAD  = 
 
 # additional compilation flags to pass (not propagated to dependent packages):
-PACKAGE_CXXFLAGS = -I$(FASTJET_DIR)/include -L$(FASTJET_DIR)/lib -I.../for_rootcint_only -D__USE_XOPEN2K8 -I/afs/cern.ch/sw/lcg/external/valgrind/3.8.0/x86_64-slc6-gcc48-opt/include/
+#PACKAGE_CXXFLAGS = -I$(FASTJET_DIR)/include -L$(FASTJET_DIR)/lib -I.../for_rootcint_only -D__USE_XOPEN2K8 -I/afs/cern.ch/sw/lcg/external/valgrind/3.8.0/x86_64-slc6-gcc48-opt/include/
+PACKAGE_CXXFLAGS = -D__USE_XOPEN2K8 -I/afs/cern.ch/sw/lcg/external/valgrind/3.8.0/x86_64-slc6-gcc48-opt/include/ -I$(ROOTCOREBIN)/include/fastjet/
 #PACKAGE_CXXFLAGS = -D__USE_XOPEN2K8 -I/afs/cern.ch/sw/lcg/external/valgrind/3.8.0/x86_64-slc6-gcc48-opt/include/ -std=c++11
 
 
@@ -21,7 +22,8 @@ PACKAGE_CXXFLAGS = -I$(FASTJET_DIR)/include -L$(FASTJET_DIR)/lib -I.../for_rootc
 PACKAGE_OBJFLAGS = 
 
 # additional linker flags to pass (for compiling the library):
-PACKAGE_LDFLAGS  = $(shell root-config --libs) -lPyROOT -lXMLParser -lEG -L$(FASTJET_DIR)/lib -lfastjet
+#PACKAGE_LDFLAGS  = $(shell root-config --libs) -lPyROOT -lXMLParser -lEG -L$(FASTJET_DIR)/lib -lfastjet
+PACKAGE_LDFLAGS  = $(shell root-config --libs) -lPyROOT -lXMLParser -lEG -L$(ROOTCOREBIN)/lib/x86_64-slc6-gcc48-opt -lfastjet
 
 # additional linker flags to pass (for compiling binaries):
 PACKAGE_BINFLAGS = -g -lXMLParser 
@@ -30,7 +32,7 @@ PACKAGE_BINFLAGS = -g -lXMLParser
 PACKAGE_LIBFLAGS = 
 
 # the list of packages we depend on:
-PACKAGE_DEP = EventLoop EventLoopGrid EventLoopAlgs xAODRootAccess AsgTools SUSYTools xAODEventInfo xAODEgamma xAODMuon xAODJet xAODTau xAODMissingET xAODTruth xAODTracking JetSelectorTools GoodRunsLists Asg_Lhapdf PileupReweighting JVFUncertaintyTool AssociationUtils TrigDecisionTool TrigConfxAOD JetSmearing ParticleJetTools CPAnalysisExamples
+PACKAGE_DEP = EventLoop EventLoopGrid EventLoopAlgs xAODRootAccess AsgTools SUSYTools xAODEventInfo xAODEgamma xAODMuon xAODJet xAODTau xAODMissingET xAODTruth xAODTracking JetSelectorTools GoodRunsLists Asg_Lhapdf PileupReweighting JVFUncertaintyTool AssociationUtils TrigDecisionTool TrigConfxAOD JetSmearing ParticleJetTools CPAnalysisExamples Asg_FastJet
 
 # the list of packages we use if present, but that we can work without :
 PACKAGE_TRYDEP   = 

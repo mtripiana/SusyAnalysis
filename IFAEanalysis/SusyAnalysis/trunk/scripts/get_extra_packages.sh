@@ -6,28 +6,11 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.0.24
+# Extra tags needed for Base,2.0.27
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-16 # (needs patching)
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-20 # (needs patching)
 
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
-
-rc checkout_pkg $SVNOFF/Event/xAOD/xAODMissingET/tags/xAODMissingET-00-01-13
-rc checkout_pkg $SVNOFF/Reconstruction/MET/METInterface/tags/METInterface-00-01-02
-rc checkout_pkg $SVNOFF/Reconstruction/MET/METUtilities/tags/METUtilities-00-01-11-01
-#rc checkout_pkg $SVNOFF/Reconstruction/MET/METUtilities/tags/METUtilities-00-01-18
-rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-04-20
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags/ElectronEfficiencyCorrection-00-01-13
-rc checkout_pkg $SVNOFF/InnerDetector/InDetRecTools/InDetTrackSelectionTool/tags/InDetTrackSelectionTool-00-01-10
-rc checkout_pkg $SVNOFF/Reconstruction/EventShapes/EventShapeTools/tags/EventShapeTools-00-01-03 # (needs patching)
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/AnalysisCommon/AssociationUtils/tags/AssociationUtils-01-00-10
-
-#trigger stuff
-rc checkout_pkg $SVNOFF/Trigger/TrigConfiguration/TrigConfxAOD/tags/TrigConfxAOD-00-00-11
-rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-14
-
-#downgrade SamplerHandler to run on the grid (for now!)
-rc checkout_pkg atlasoff/PhysicsAnalysis/D3PDTools/SampleHandler/tags/SampleHandler-00-00-83
 
 # Offline truth jet tagging for MCGN1 derivations
 svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
@@ -35,12 +18,11 @@ svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/Partic
 #
 # Apply needed patches:
 #
-patch -p0 -i SusyAnalysis/patches/patch_EventShapeCopier.cxx.diff
-patch -p0 -i SusyAnalysis/patches/patch_SUSYObjDef_xAOD.cxx.diff  # add photon stuff
-patch -p0 -i SusyAnalysis/patches/patch_SUSYObjDef_xAOD.h.diff
-patch -p0 -i SusyAnalysis/patches/patch_SUSYToolsInit.cxx.diff    # lower msg output of some tools!
-patch -p0 -i SusyAnalysis/patches/patch_DecisionObjectHandleStandalone.cxx.diff  # fix trigger dec access
-patch -p0 -i SusyAnalysis/patches/patch_DecisionUnpackerStandalone.cxx.diff
+#patch -p0 -i SusyAnalysis/patches/patch_SUSYObjDef_xAOD.cxx.diff  # add photon stuff
+#patch -p0 -i SusyAnalysis/patches/patch_SUSYObjDef_xAOD.h.diff
+#patch -p0 -i SusyAnalysis/patches/patch_SUSYToolsInit.cxx.diff    # lower msg output of some tools!
+#patch -p0 -i SusyAnalysis/patches/patch_DecisionObjectHandleStandalone.cxx.diff  # fix trigger dec access
+#patch -p0 -i SusyAnalysis/patches/patch_DecisionUnpackerStandalone.cxx.diff
 #patch -p0 -i SusyAnalysis/patches/patch_prepareTriggerMenu.cxx.diff  #not working for some reason
 #cp SusyAnalysis/patches/prepareTriggerMenu.cxx TrigConfxAOD/Root/
 
