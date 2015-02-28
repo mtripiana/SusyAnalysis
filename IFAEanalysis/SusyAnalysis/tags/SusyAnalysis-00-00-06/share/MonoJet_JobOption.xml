@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AnalysisOptions>
+
+  <GeneralSettings>
+    <Mode name="setDefinitionRegion">SR</Mode> <!-- Name of the object definition regions, separated by comma -->
+    <Mode name="debug">false</Mode>
+    <Mode name="doTree">true</Mode>
+    <Mode name="GeneratePileupFiles">false</Mode>
+    <Mode name="DoCutFlow">false</Mode>
+    <Path name="RootFilesFolder">/nfs/at3/scratch/arelycg/RunningCode/MonojetAnalysis_11april14_noXsmr/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/arelycg/RunningCode_col/</Path>
+    <Path name="GRLxmlFile">SUSYTools/GRL/Summer2013/data12_8TeV.periodAllYear_DetStatus-v61-pro14-02_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path>
+    <Pileup>
+      <Mode name="ApplyPileupReweighting">true</Mode>
+      <Path name="PileupReweightingConfigFolder">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/data/PileupReweighting/</Path>
+      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
+    </Pileup>
+
+    <LeptonEfficiency>
+      <Unitarity>true</Unitarity>
+    </LeptonEfficiency>
+
+    <PdfRw>
+      <Enable>false</Enable> 
+      <ToBeamE>6.5</ToBeamE> <!-- Final beam energy (in TeV) -->
+    </PdfRw>
+
+    <SmearTruth>
+      <Enable>false</Enable> <!-- Only applicable to truth samples (isTruth==true) -->
+      <Mu>60</Mu> <!-- needed for Jet smearing (hard coded) -->
+      <MetWP>mu60</MetWP> <!--  implemented options: 60,80,140 -->
+      <ElectronWP>0</ElectronWP> <!-- Electron working point . 0=loose 1=tight-->
+      <RecJetFlav>false</RecJetFlav>
+    </SmearTruth>
+
+  </GeneralSettings>
+
+  <ObjectDefinition>
+
+    <OverlapRemoval>
+      <Enable>true</Enable>
+      <Harmonisation>true</Harmonisation>
+      <doPhotons>false</doPhotons>
+    </OverlapRemoval> 
+    
+    <Trigger>
+      <chains>HLT_xe100,HLT_xe50</chains>
+    </Trigger>
+
+    <Truth>
+      <dressLeptons>true</dressLeptons>
+    </Truth>
+
+    <Vertex>
+      <region name="SR">4</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
+    </Vertex>
+
+    <TrackVeto>
+      <Enable>false</Enable>
+      <region name="SR">
+        <Pt>10000</Pt>
+        <Eta>2.5</Eta>
+        <d0>1</d0>
+        <z0>2</z0>
+        <ndof>0</ndof>
+        <chi2OverNdof_min>0</chi2OverNdof_min>
+        <chi2OverNdof_max>3</chi2OverNdof_max>
+        <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
+        <TrackIso>0</TrackIso>
+      </region>
+    </TrackVeto>
+    <Electron>
+      <region name="SR">
+        <PreselPtCut>7000.</PreselPtCut>
+        <PreselEtaCut>2.47</PreselEtaCut>
+        <RecoPtCut>7000.</RecoPtCut>
+        <RecoEtaCut>2.47</RecoEtaCut>
+
+        <recoSF>true</recoSF>
+        <idSF>true</idSF>
+        <triggerSF>false</triggerSF>
+        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      </region>
+    </Electron>
+    <Muon>
+      <region name="SR">
+        <PreselPtCut>7000.</PreselPtCut>
+        <PreselEtaCut>2.4</PreselEtaCut>
+        <RecoPtCut>7000.</RecoPtCut>
+        <RecoEtaCut>2.4</RecoEtaCut>
+        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+	<!-- The monojet group uses mu_staco_ptcone20/pt, is this better? -->
+        <!-- <isolationVar>mu_staco_ptcone20</isolationVar> -->
+        <!-- <isolationThres>1.8</isolationThres> -->          
+	<!-- relative isolation would be 0.1 -->
+      </region>
+    </Muon>
+    <Jet>
+      <region name="SR">
+        <Path name="BtagEnv">SUSYTools/data/BTagCalibration.env</Path>
+        <Path name="BtagCalib">SUSYTools/data/</Path>
+        <dPhiMin>0.5</dPhiMin>
+        <JVFMin>0.0</JVFMin>
+        <Collection>AntiKt4LCTopo</Collection>
+
+        <PreselPtCut>20000.</PreselPtCut>
+        <PreselEtaCut>10</PreselEtaCut>
+        <RecoPtCut>30000.</RecoPtCut>
+        <RecoEtaCut>4.5</RecoEtaCut>
+
+        <OverlapRemovalElPt>5000000.</OverlapRemovalElPt> <!-- Jet pT for el. overlap removal. The el. is removed. -->
+        <OverlapRemovalMuPt>5000000.</OverlapRemovalMuPt> <!-- Jet pT for mu. overlap removal. The muon is removed. -->
+        
+        <!--- For the c/b-tagger -->
+        <Tagger>JetFitterCOMBCharm</Tagger>
+        <TaggerOpPoint>-1_0_-0_82</TaggerOpPoint>
+        <TaggerOpPoint2>-1_0_-0_82</TaggerOpPoint2>
+        <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
+      </region>
+    </Jet>
+    <Etmiss>
+      <region name="SR">
+        <Path name="FakeMetEstimator">RootCore/../SUSYTools/data/fest_periodF_v1.root</Path>
+        <Collection>Egamma10NoTau</Collection>
+        <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
+        <doFakeEtmiss>false</doFakeEtmiss>
+        <Term name="doRefEle">true</Term>
+        <Term name="doRefGamma">true</Term>
+        <Term name="doRefTau">false</Term>
+        <Term name="doRefJet">true</Term>
+        <Term name="doMuons">false</Term>
+        <Term name="doSoftTerms">true</Term>
+      </region>
+    </Etmiss>
+    <QCD>
+      <Enable>false</Enable> <!-- Enable jet smearing  -->
+      <r_egion name="SR">
+	<TrigChains> EF_j460,EF_j55</TrigChains>
+	<JetsPtPreselection>20000.0</JetsPtPreselection>
+	<METSigCut>1.0</METSigCut>
+	<LeadJetPreSel>Monojet</LeadJetPreSel>
+	<RandomSeedOffset>654321</RandomSeedOffset>
+	<SmearType>optimal</SmearType>
+	<SmearUseBweight>true</SmearUseBweight>
+	<SmearBtagWeight>0.772</SmearBtagWeight>
+	<SmearMeanShift>low</SmearMeanShift>
+	<SmearExtraSmr>true</SmearExtraSmr>
+	<DoPhiSmearing>true</DoPhiSmearing>
+	<SmearedEvents>500</SmearedEvents>
+      </region>
+    </QCD>
+  </ObjectDefinition>
+
+</AnalysisOptions>
