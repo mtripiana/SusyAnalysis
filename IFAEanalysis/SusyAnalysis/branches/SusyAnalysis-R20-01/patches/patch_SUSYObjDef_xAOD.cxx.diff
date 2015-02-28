@@ -1,0 +1,260 @@
+Index: SUSYTools/Root/SUSYObjDef_xAOD.cxx
+===================================================================
+--- SUSYTools/Root/SUSYObjDef_xAOD.cxx	(revision 640074)
++++ SUSYTools/Root/SUSYObjDef_xAOD.cxx	(working copy)
+@@ -1639,7 +1639,224 @@
+     return StatusCode::SUCCESS;
+ 		
+   }
++
++
++  StatusCode SUSYObjDef_xAOD::OverlapRemoval(const xAOD::ElectronContainer *electrons, const xAOD::MuonContainer *muons, const xAOD::JetContainer *jets, const xAOD::PhotonContainer *photons, bool doHarmonization, double dRejet, double dRjetmu, double dRjete, double dRphlep, double dRphjet)
++  {
++    xAOD::JetContainer::const_iterator jet_itr = jets->begin();
++    xAOD::JetContainer::const_iterator jet_end = jets->end();
++    for( ; jet_itr != jet_end; ++jet_itr ) {
++      bool jet_sel = dec_baseline(**jet_itr);
++      if(jet_sel)
++	dec_passOR( **jet_itr ) = 1;
++      else
++	dec_passOR( **jet_itr ) = 0;
++    }
++    xAOD::MuonContainer::const_iterator mu_itr = muons->begin();
++    xAOD::MuonContainer::const_iterator mu_end = muons->end();
++    for( ; mu_itr != mu_end; ++mu_itr ) {
++      bool mu_sel;
++      if(doHarmonization) mu_sel = dec_signal(**mu_itr);
++      else mu_sel = dec_baseline(**mu_itr);
++      if(mu_sel) 
++	dec_passOR( **mu_itr ) = 1;
++      else
++	dec_passOR( **mu_itr ) = 0;
++    }
++    xAOD::PhotonContainer::const_iterator ph_itr = photons->begin();
++    xAOD::PhotonContainer::const_iterator ph_end = photons->end();
++    for( ; ph_itr != ph_end; ++ph_itr ) {
++      bool ph_sel;
++      if(doHarmonization) ph_sel = dec_signal(**ph_itr);
++      else ph_sel = dec_baseline(**ph_itr);
++      if(ph_sel) 
++	dec_passOR( **ph_itr ) = 1;
++      else
++	dec_passOR( **ph_itr ) = 0;
++    }
++
++    // remove jets overlapping with (baseline/signal) electrons
++    xAOD::ElectronContainer::const_iterator el_itr = electrons->begin();
++    xAOD::ElectronContainer::const_iterator el_end = electrons->end();
++    for( ; el_itr != el_end; ++el_itr ) {
++      bool el_sel;
++      if(doHarmonization) el_sel = dec_signal(**el_itr);
++      else el_sel = dec_baseline(**el_itr);
++      if( !el_sel ){
++	dec_passOR( **el_itr ) = 0;
++	continue;
++      }else{
++	dec_passOR( **el_itr ) = 1;
++      }
++
++      jet_itr = jets->begin();
++      jet_end = jets->end();
++      for( ; jet_itr != jet_end; ++jet_itr ) {
++	if( !dec_passOR(**jet_itr) ) continue;
++
++	TLorentzVector el4vec = (*el_itr)->p4();
++	TLorentzVector jet4vec = (*jet_itr)->p4();
+ 	
++	if (el4vec.DeltaR(jet4vec)<dRejet) {
++	  ATH_MSG_INFO( " Rejecting jet at (eta,phi)=(" << (*jet_itr)->eta() <<"," << (*jet_itr)->phi() <<") "  
++			<< " due to electron at (eta,phi)=(" << (*el_itr)->eta() <<"," << (*el_itr)->phi() <<")" );   
++	  dec_passOR( **jet_itr ) = 0;
++	}	 		       
++      }
++
++      ph_itr = photons->begin();
++      ph_end = photons->end();
++      for( ; ph_itr != ph_end; ++ph_itr ) {
++
++	if( !dec_passOR(**ph_itr) ) continue;
++
++	TLorentzVector el4vec = (*el_itr)->p4();
++	TLorentzVector ph4vec = (*ph_itr)->p4();
++	
++	if (el4vec.DeltaR(ph4vec)<dRphlep) {
++	  ATH_MSG_INFO( " Rejecting photon at (eta,phi)=(" << (*ph_itr)->eta() <<"," << (*ph_itr)->phi() <<") "  
++			<< " due to electron at (eta,phi)=(" << (*el_itr)->eta() <<"," << (*el_itr)->phi() <<")" );   
++	  dec_passOR( **ph_itr ) = 0;
++	}	 		       
++      }
++
++    } // END loop over electrons
++
++    // Remove electrons and muons overlapping with jets
++    el_itr = electrons->begin();
++    el_end = electrons->end();
++    for( ; el_itr != el_end; ++el_itr ) {
++     
++      if( !dec_passOR(**el_itr) ) continue;
++
++      jet_itr = jets->begin();
++      jet_end = jets->end();
++      for( ; jet_itr != jet_end; ++jet_itr ) {
++	
++	if ( !dec_passOR( **jet_itr ) ) continue;
++		
++	TLorentzVector el4vec = (*el_itr)->p4();
++	TLorentzVector jet4vec = (*jet_itr)->p4();
++	
++	if (el4vec.DeltaR(jet4vec)<dRjete) {
++	  ATH_MSG_INFO( " Rejecting electron at (eta,phi)=(" << (*el_itr)->eta() <<"," << (*el_itr)->phi() <<") "  
++			<< " due to jet at (eta,phi)=(" << (*jet_itr)->eta() <<"," << (*jet_itr)->phi() <<")" );   
++	  dec_passOR( **el_itr ) = 0;
++	}
++      }
++    }
++
++
++    // remove jets and photons overlapping with (baseline/signal) muons
++    mu_itr = muons->begin();
++    mu_end = muons->end();
++    for( ; mu_itr != mu_end; ++mu_itr ) {
++
++      if( !dec_passOR(**mu_itr) ) continue;
++      
++      jets->begin();
++      jets->end();
++      for( ; jet_itr != jet_end; ++jet_itr ) {
++	
++	if ( !dec_passOR( **jet_itr ) ) continue;
++	
++	TLorentzVector mu4vec = (*mu_itr)->p4();
++	TLorentzVector jet4vec = (*jet_itr)->p4();
++	
++	std::vector<int> nTrkVec;
++	(*jet_itr)->getAttribute(xAOD::JetAttribute::NumTrkPt500, nTrkVec);
++	int jet_nTrk = nTrkVec[0];
++	
++	if (mu4vec.DeltaR(jet4vec)<dRjetmu) {
++	  if(doHarmonization && jet_nTrk<3){
++	    ATH_MSG_INFO( " Rejecting jet at (pT,eta,phi)=(" << (*jet_itr)->pt() <<","<< (*jet_itr)->eta() <<"," << (*jet_itr)->phi() <<") with only nTrk=" << jet_nTrk   
++			  << " due to muon at (pT,eta,phi)=(" << (*mu_itr)->pt() <<","<< (*mu_itr)->eta() <<"," << (*mu_itr)->phi() <<")" );   
++	    dec_passOR( **jet_itr ) = 0;
++	  }else{
++	    ATH_MSG_INFO( " Rejecting muon at (eta,phi)=(" << (*mu_itr)->eta() <<"," << (*mu_itr)->phi() <<") "  
++			  << " due to jet at (eta,phi)=(" << (*jet_itr)->eta() <<"," << (*jet_itr)->phi() <<")" );   
++	    dec_passOR( **mu_itr ) = 0;
++	  }
++	}
++      }
++
++      ph_itr = photons->begin();
++      ph_end = photons->end();
++      for( ; ph_itr != ph_end; ++ph_itr ) {
++
++	if( !dec_passOR(**ph_itr) ) continue;
++
++	TLorentzVector mu4vec = (*mu_itr)->p4();
++	TLorentzVector ph4vec = (*ph_itr)->p4();
++	
++	if (mu4vec.DeltaR(ph4vec)<dRphlep) {
++	  ATH_MSG_INFO( " Rejecting photon at (eta,phi)=(" << (*ph_itr)->eta() <<"," << (*ph_itr)->phi() <<") "  
++			<< " due to muon at (eta,phi)=(" << (*mu_itr)->eta() <<"," << (*mu_itr)->phi() <<")" );   
++	  dec_passOR( **ph_itr ) = 0;
++	}	 		       
++      }
++
++    }
++    
++    
++    //remove jets overlapping with photons
++    ph_itr = photons->begin();
++    ph_end = photons->end();
++    for( ; ph_itr != ph_end; ++ph_itr ) {
++      
++      if( !dec_passOR(**ph_itr) ) continue;
++
++      jet_itr = jets->begin();
++      jet_end = jets->end();
++      for( ; jet_itr != jet_end; ++jet_itr ) {
++	
++	if( !dec_passOR(**jet_itr) ) continue;
++	
++	TLorentzVector jet4vec = (*jet_itr)->p4();
++	TLorentzVector ph4vec = (*ph_itr)->p4();
++	
++	if (jet4vec.DeltaR(ph4vec) < dRphjet) {
++	  ATH_MSG_INFO( " Rejecting jet at (eta,phi)=(" << (*jet_itr)->eta() <<"," << (*jet_itr)->phi() <<") "  
++			<< " due to photon at (eta,phi)=(" << (*ph_itr)->eta() <<"," << (*ph_itr)->phi() <<")" );   
++	  dec_passOR( **jet_itr ) = 0;
++	}	 		       
++      }
++    }
++    
++    
++    // Count number of objects after overlap removal
++    int Nel=0;
++    el_itr = electrons->begin();
++    el_end = electrons->end();
++    for( ; el_itr != el_end; ++el_itr ) {
++      if(dec_passOR( **el_itr )) Nel++;
++    }
++
++    int Nmu=0;
++    mu_itr = muons->begin();
++    mu_end = muons->end();
++    for( ; mu_itr != mu_end; ++mu_itr ) {
++      if(dec_passOR( **mu_itr )) Nmu++;
++    }
++
++    int Nph=0;
++    ph_itr = photons->begin();
++    ph_end = photons->end();
++    for( ; ph_itr != ph_end; ++ph_itr ) {
++      if(dec_passOR( **ph_itr )) Nph++;
++    }
++
++    int Njet=0;
++    jet_itr = jets->begin();
++    jet_end = jets->end();
++    for( ; jet_itr != jet_end; ++jet_itr ) {
++      if(dec_passOR( **jet_itr )) Njet++;
++    }
++
++    ATH_MSG_INFO( " After overlap removal: Nel=" << Nel <<", Nmu="<< Nmu <<", Nph=" << Nph <<", Njet=" << Njet );   
++    return StatusCode::SUCCESS;
++
++  }
+  
+ 	
+   float SUSYObjDef_xAOD::BtagSF(const xAOD::JetContainer* goodJets)
+@@ -1740,6 +1957,30 @@
+     return sf;
+   }
+ 	
++  float SUSYObjDef_xAOD::GetSignalPhotonSF(const xAOD::Photon& ph,
++					   const bool recoSF,
++					   const bool idSF,
++					   const bool triggerSF) {
++    float sf = 1.;
++    //  float sf_unc = 0.;
++    
++    // if(recoSF){
++    //   const Root::TResult &result_reco = m_elecEfficiencySFTool_reco->calculate(&el);
++    //   sf *= result_reco.getScaleFactor();
++    // } 
++    // if(idSF){
++    //   const Root::TResult &result_id = m_elecEfficiencySFTool_id->calculate(&el);
++    //   sf *= result_id.getScaleFactor();
++    // }
++    // if(triggerSF){
++    //   const Root::TResult &result_trig = m_elecEfficiencySFTool_trig->calculate(&el);
++    //   sf *= result_trig.getScaleFactor();
++    // }
++
++    dec_effscalefact(ph) = sf;
++    return sf;
++  }
++
+   float SUSYObjDef_xAOD::GetSignalTauSF(const xAOD::TauJet& tau)
+   {
+ 		

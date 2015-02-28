@@ -1,0 +1,36 @@
+Index: EventShapeTools/Root/EventShapeCopier.cxx
+===================================================================
+--- EventShapeTools/Root/EventShapeCopier.cxx	(revision 639773)
++++ EventShapeTools/Root/EventShapeCopier.cxx	(working copy)
+@@ -75,19 +75,19 @@
+   static EventShapeCopier kt6copier("Kt6LCTopoEDCopier");
+   static bool needinit = true;
+   if(needinit){
+-    kt4copier.setProperty("InputEventShape", "LCTopoEventShape");
+-    kt4copier.setProperty("OutputEventShape", "Kt4LCTopoEventShape");
+-    kt4copier.setProperty("EventDensityName", "DensityForJetsR4");
+-
+-    kt6copier.setProperty("InputEventShape", "LCTopoEventShape");
+-    kt6copier.setProperty("OutputEventShape", "Kt6LCTopoEventShape");
+-    kt6copier.setProperty("EventDensityName", "DensityForJetsR6");    
++    kt4copier.setProperty("InputEventShape", "LCTopoEventShape").ignore();
++    kt4copier.setProperty("OutputEventShape", "Kt4LCTopoEventShape").ignore();
++    kt4copier.setProperty("EventDensityName", "DensityForJetsR4").ignore();
++    
++    kt6copier.setProperty("InputEventShape", "LCTopoEventShape").ignore();
++    kt6copier.setProperty("OutputEventShape", "Kt6LCTopoEventShape").ignore();
+     needinit = false;
+   }
+-  kt4copier.fillEventShape();
+-  kt6copier.fillEventShape();
+-}
++    kt4copier.fillEventShape().ignore();
++    kt6copier.fillEventShape().ignore();
++  }
+ #else
+-// In Athena, do nothing. Use an Athena alg as defined in python/EventDensityConfig.py
+-void EventShapeCopier::renameEventDensities(){}
++  // In Athena, do nothing. Use an Athena alg as defined in python/EventDensityConfig.py
++  void EventShapeCopier::renameEventDensities(){}
+ #endif
++  
