@@ -602,7 +602,7 @@ float chorizo :: getNWeightedEvents(){
   treeform.UpdateFormulaLeaves();
   treeform.GetNdata();
 
-  return (float)treeform.EvalInstance(1);
+  return (float)treeform.EvalInstance(1);  // initialSumOfWeightsInThisFile
 
 }
 

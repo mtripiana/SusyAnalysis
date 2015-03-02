@@ -16,6 +16,9 @@ rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/t
 # Offline truth jet tagging for MCGN1 derivations
 svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
 
+# Streamers problems with derivations
+#rc checkout_pkg atlasoff/Event/xAOD/xAODCore/trunk    (it should work too)
+rc checkout_pkg atlasoff/Event/xAOD/xAODCore/tags/xAODCore-00-00-87-01
 
 # Boost libraries
 #
