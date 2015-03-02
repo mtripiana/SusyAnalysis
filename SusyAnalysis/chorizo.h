@@ -45,8 +45,9 @@
 #include "SUSYTools/SUSYCrossSection.h"
 
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
-#include "fastjet/ClusterSequence.hh"
 #include "TileTripReader/TTileTripReader.h"
+#include <fastjet/ClusterSequence.hh>
+//#include "fastjet/ClusterSequence.hh"
 
 // Systematics includes
 #include "PATInterfaces/SystematicList.h"

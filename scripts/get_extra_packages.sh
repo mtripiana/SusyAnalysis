@@ -8,7 +8,7 @@ cd $ANALYSISCODE
 
 # Extra tags needed for Base,2.0.27
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-20 # (needs patching)
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-20 # (needs patching. see below)
 
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
 
@@ -18,13 +18,8 @@ svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/Partic
 #
 # Apply needed patches:
 #
-#patch -p0 -i SusyAnalysis/patches/patch_SUSYObjDef_xAOD.cxx.diff  # add photon stuff
-#patch -p0 -i SusyAnalysis/patches/patch_SUSYObjDef_xAOD.h.diff
-#patch -p0 -i SusyAnalysis/patches/patch_SUSYToolsInit.cxx.diff    # lower msg output of some tools!
-#patch -p0 -i SusyAnalysis/patches/patch_DecisionObjectHandleStandalone.cxx.diff  # fix trigger dec access
-#patch -p0 -i SusyAnalysis/patches/patch_DecisionUnpackerStandalone.cxx.diff
-#patch -p0 -i SusyAnalysis/patches/patch_prepareTriggerMenu.cxx.diff  #not working for some reason
-#cp SusyAnalysis/patches/prepareTriggerMenu.cxx TrigConfxAOD/Root/
+cd $ANALYSISCODE/SUSYTools
+patch -p0 -i $ANALYSISCODE/SusyAnalysis/patches/patch_SUSYObjDef_xAOD.cxx.diff  # fix decorations (bool-->char)
 
 
 # Boost libraries

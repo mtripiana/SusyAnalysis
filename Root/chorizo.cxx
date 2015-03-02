@@ -64,14 +64,14 @@ ClassImp(chorizo)
 
 
 //decorators and accessors
-static SG::AuxElement::Decorator<bool> dec_baseline("baseline");
-static SG::AuxElement::Decorator<bool> dec_signal("signal");
-static SG::AuxElement::Decorator<bool> dec_passOR("passOR");
-static SG::AuxElement::Decorator<bool> dec_failOR("overlaps");
-static SG::AuxElement::Decorator<bool> dec_badjet("bad");
-static SG::AuxElement::Decorator<bool> dec_bjet("bjet");
-static SG::AuxElement::Decorator<bool> dec_cosmic("cosmic");
-static SG::AuxElement::Decorator<bool> dec_final("final");
+static SG::AuxElement::Decorator<char> dec_baseline("baseline");
+static SG::AuxElement::Decorator<char> dec_signal("signal");
+static SG::AuxElement::Decorator<char> dec_passOR("passOR");
+static SG::AuxElement::Decorator<char> dec_failOR("overlaps");
+static SG::AuxElement::Decorator<char> dec_badjet("bad");
+static SG::AuxElement::Decorator<char> dec_bjet("bjet");
+static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
+static SG::AuxElement::Decorator<char> dec_final("final");
 
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
@@ -598,10 +598,11 @@ float chorizo :: getNWeightedEvents(){
   }
 
   TTreeFormula treeform("treeform","EventBookkeepers.m_nWeightedAcceptedEvents",m_MetaData);
+  m_MetaData->LoadTree(0);
   treeform.UpdateFormulaLeaves();
   treeform.GetNdata();
 
-  return (float)treeform.EvalInstance(1);
+  return (float)treeform.EvalInstance(1); //initialSumOfWeightsInThisFile
 
 }
 
@@ -1015,6 +1016,8 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
+  meta_nwsim += getNWeightedEvents(); //load weighted number of events
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -1456,14 +1459,24 @@ EL::StatusCode chorizo :: initialize ()
   tool_jetlabel->initialize();
 
   //--- Jet smearing tool
+  SUSY::SmearingType gsmtype = SUSY::SmearingType::optimal;
+  if(QCD_SmearType=="high") gsmtype = SUSY::SmearingType::high;
+  else if(QCD_SmearType=="low") gsmtype = SUSY::SmearingType::low;
+  else if(QCD_SmearType=="none" || QCD_SmearType=="") gsmtype = SUSY::SmearingType::none;
+
+  SUSY::SmearingType mstype = SUSY::SmearingType::optimal;
+  if(QCD_SmearMeanShift=="high") mstype = SUSY::SmearingType::high;
+  else if(QCD_SmearMeanShift=="low") mstype = SUSY::SmearingType::low;
+  else if(QCD_SmearMeanShift=="none" || QCD_SmearMeanShift=="") mstype = SUSY::SmearingType::none;
+
   tool_jsmear = new SUSY::JetMCSmearingTool("JStool");
   tool_jsmear->setProperty("NumberOfSmearedEvents",QCD_SmearedEvents);
   tool_jsmear->setProperty("DoBJetSmearing",QCD_SmearUseBweight);
   tool_jsmear->setProperty("BtagWeight",QCD_SmearBtagWeight);
   tool_jsmear->setProperty("UseTailWeights",true);
   tool_jsmear->setProperty("DoGaussianCoreSmearing",QCD_SmearExtraSmr);
-  tool_jsmear->setProperty("GaussianCoreSmearingType", QCD_SmearType);
-  tool_jsmear->setProperty("ShiftMeanType",QCD_SmearMeanShift);
+  tool_jsmear->setProperty("GaussianCoreSmearingType", gsmtype);
+  tool_jsmear->setProperty("ShiftMeanType",mstype);
   tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing);
   tool_jsmear->initialize();
 
@@ -1665,10 +1678,10 @@ EL::StatusCode chorizo :: loop ()
 
   loadMetaData();
    
-  if(m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName)){ //name of current file
-    meta_nwsim += getNWeightedEvents(); //load weighted number of events
-    m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName);
-  }
+  // if(m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName)){ //name of current file
+  //   meta_nwsim += getNWeightedEvents(); //load weighted number of events
+  //   m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName);
+  // }
 
   //-- Retrieve objects Containers
   m_truthE= 0;

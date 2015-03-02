@@ -1,5 +1,10 @@
+2014-03-01 Martin <tripiana@cern.ch>
+	* Update to Base,2.0.27
+	* Update to SUSYTools-00-05-00-20
+	* Tagging SusyAnalysis-00-00-07     (stable r19 code)
+
 2014-02-28 Martin <tripiana@cern.ch>
-	* Tagging SusyAnalysis-00-00-06     (stable r19 code)
+	* Tagging SusyAnalysis-00-00-06     (stable r19 code. superseeded by 07 above.)
 
 2014-02-26 Martin <tripiana@cern.ch>
 	* Add jet smearing tool config
