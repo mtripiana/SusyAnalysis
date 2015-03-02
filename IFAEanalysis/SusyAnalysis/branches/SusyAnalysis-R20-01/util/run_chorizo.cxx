@@ -514,7 +514,6 @@ int main( int argc, char* argv[] ) {
     alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
     alg->isQCD      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$Enable");
-false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
     alg->isNCBG     = false;   //get it from the XML!!

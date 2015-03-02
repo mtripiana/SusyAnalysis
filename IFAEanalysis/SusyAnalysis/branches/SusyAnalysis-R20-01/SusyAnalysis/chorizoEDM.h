@@ -49,6 +49,7 @@ xAOD::TStore* m_store;
 // Jet container made in initialize() as view container. Holds selected
 // jets but does not own them.
 xAOD::JetContainer* m_goodJets;
+xAOD::JetContainer* m_smdJets;
 
 
 const xAOD::JetContainer* m_jets;

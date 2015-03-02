@@ -12,9 +12,10 @@
 #endif
 
 #ifdef __CINT__
+#pragma link C++ namespace Particles;
 #pragma link C++ class chorizo+;
-#pragma link C++ class Particle+;
-#pragma link C++ class Jet+;
-#pragma link C++ class MET+;
+#pragma link C++ class Particles::Particle+;
+#pragma link C++ class Particles::Jet+;
+#pragma link C++ class Particles::MET+;
 #endif
 

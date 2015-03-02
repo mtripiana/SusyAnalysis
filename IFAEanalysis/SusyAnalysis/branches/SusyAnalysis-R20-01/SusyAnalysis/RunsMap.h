@@ -989,7 +989,8 @@ void RunsMap::LoadMap(){
   m_map["CF_Zmumu"] =  rlist( Rpair(167754, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zmumu/"));
 
   //Test truth
-  m_map["TestTruth"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/"));
+  m_map["TestTruth19"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/rel19/"));
+  m_map["TestTruth20"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/rel20/"));
   m_map["TestTruth2"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/stop/"));
   m_map["TestTruth3"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/Gtt/"));
   
@@ -999,6 +1000,8 @@ void RunsMap::LoadMap(){
   m_map["TestTrig3"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/xAOD/test/"),
 			      Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/test/"));
   m_map["TestTrig4"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/METmon/datasets/"));
+
+  m_map["TestTrigMC15"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/ttbar"));
 
   //Data 
   m_map["TestDataB"] = rlist( Rpair(203432, "/nfs/at3/scratch/tripiana/xAOD/data12/JetTauEtmiss/"));

@@ -236,8 +236,8 @@ private:
   //--- Tools
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
-  ST::SUSYObjDef_xAOD* tool_st; 
-  ST::SUSYObjDef_xAOD* tool_st_1;  
+  ST::SUSYObjDef_xAOD* tool_st; //!
+  ST::SUSYObjDef_xAOD* tool_st_1; //! 
 
   //MET map
   std::map<MetDef, TVector2> metmap; //!
@@ -254,13 +254,11 @@ private:
   TrigConf::xAODConfigTool* tool_trigconfig; //!
    
 #ifndef __CINT__
-  //  TrigDecisionTool *tool_trigdec; //! 
-  //  TrigConf::xAODConfigTool* tool_trigconfig; //!
   
-  OverlapRemovalTool* tool_or; 
-  CP::PileupReweightingTool *tool_purw; 
-  GoodRunsListSelectionTool *tool_grl;
-  LHAPDF::PDF* m_PDF;
+  OverlapRemovalTool* tool_or; //!
+  CP::PileupReweightingTool *tool_purw; //! 
+  GoodRunsListSelectionTool *tool_grl; //!
+  LHAPDF::PDF* m_PDF; //!
   BTaggingEfficiencyTool* tool_btag;  //70%op
   BTaggingEfficiencyTool* tool_btag2; //80%op
 #endif // not __CINT__
@@ -471,8 +469,8 @@ private:
   bool Ph_triggerSF; //!  
 
 #ifndef __CINT__
-  ST::IsSignalElectronExpCutArgs* elIsoArgs; //
-  ST::IsSignalMuonExpCutArgs* muIsoArgs; //
+  ST::IsSignalElectronExpCutArgs* elIsoArgs; //!
+  ST::IsSignalMuonExpCutArgs* muIsoArgs; //!
 #endif // not __CINT__
 
   //jets
@@ -524,14 +522,8 @@ private:
   /* VFloat btag_weight_L_up; //! */
   /* VFloat btag_weight_L_up_80eff; //! */
 
-  //smeared jets kin (for QCD estimation)
-  VFloat smr_met_jets_pt; //!
-  VFloat smr_met_jets_eta; //!
-  VFloat smr_met_jets_phi; //!
-  VFloat smr_met_jets_E; //!
-
   //muons (before overlap removal)
-  float         muon_N;  //!
+  float  muon_N;  //!
   VFloat muon_pt; //!
   VFloat muon_eta; //!
   VFloat muon_phi; //!

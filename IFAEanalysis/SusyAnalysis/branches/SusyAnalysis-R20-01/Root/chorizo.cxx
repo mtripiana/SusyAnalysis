@@ -26,7 +26,7 @@
 
 //Jet Truth Labeling
 #include "ParticleJetTools/JetQuarkLabel.h"
-//#include "ParticleJetTools/JetFlavourInfo.h"
+#include "ParticleJetTools/JetFlavourInfo.h"
 
 //TeV unit (w.r.t MeV)
 #ifndef TEV
@@ -64,14 +64,14 @@ ClassImp(chorizo)
 
 
 //decorators and accessors
-static SG::AuxElement::Decorator<bool> dec_baseline("baseline");
-static SG::AuxElement::Decorator<bool> dec_signal("signal");
-static SG::AuxElement::Decorator<bool> dec_passOR("passOR");
-static SG::AuxElement::Decorator<bool> dec_failOR("overlaps");
-static SG::AuxElement::Decorator<bool> dec_badjet("bad");
-static SG::AuxElement::Decorator<bool> dec_bjet("bjet");
-static SG::AuxElement::Decorator<bool> dec_cosmic("cosmic");
-static SG::AuxElement::Decorator<bool> dec_final("final");
+static SG::AuxElement::Decorator<char> dec_baseline("baseline");
+static SG::AuxElement::Decorator<char> dec_signal("signal");
+static SG::AuxElement::Decorator<char> dec_passOR("passOR");
+static SG::AuxElement::Decorator<char> dec_failOR("overlaps");
+static SG::AuxElement::Decorator<char> dec_badjet("bad");
+static SG::AuxElement::Decorator<char> dec_bjet("bjet");
+static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
+static SG::AuxElement::Decorator<char> dec_final("final");
 
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
@@ -90,8 +90,9 @@ static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
 
 chorizo :: chorizo ()
-  : tool_trigdec(0), tool_trigconfig(0)
+  : tool_trigdec(0), tool_trigconfig(0), tool_jetlabel(0), tool_jvf(0), tool_jClean(0), tool_tileTrip(0), tool_or(0), tool_purw(0), tool_grl(0), tool_btag(0), tool_btag2(0), tool_jsmear(0)
 {
+  Info("chorizo()","Creating new algo");
 
   outputName="";
   Region="";
@@ -589,7 +590,6 @@ EL::StatusCode chorizo :: histInitialize ()
 float chorizo :: getNWeightedEvents(){
 
   //Try to get the original number of events (relevant in case of derivations)
-  //  const TTree* const MetaData = dynamic_cast<TTree* > (wk()->inputFile()->Get("MetaData"));
   m_MetaData = dynamic_cast<TTree* > (wk()->inputFile()->Get("MetaData"));
 
   if (!m_MetaData) {
@@ -598,6 +598,7 @@ float chorizo :: getNWeightedEvents(){
   }
 
   TTreeFormula treeform("treeform","EventBookkeepers.m_nWeightedAcceptedEvents",m_MetaData);
+  m_MetaData->LoadTree(0);
   treeform.UpdateFormulaLeaves();
   treeform.GetNdata();
 
@@ -1452,18 +1453,29 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- truth jet labeling
   tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
-  tool_jetlabel->setProperty("McEventCollection","TruthEvent");
+  //  tool_jetlabel->setProperty("McEventCollection","TruthEvents");
+  tool_jetlabel->setProperty("McEventCollection","TruthEvents");
   tool_jetlabel->initialize();
 
   //--- Jet smearing tool
+  SUSY::SmearingType gsmtype = SUSY::SmearingType::optimal;
+  if(QCD_SmearType=="high") gsmtype = SUSY::SmearingType::high;
+  else if(QCD_SmearType=="low") gsmtype = SUSY::SmearingType::low;
+  else if(QCD_SmearType=="none" || QCD_SmearType=="") gsmtype = SUSY::SmearingType::none;
+
+  SUSY::SmearingType mstype = SUSY::SmearingType::optimal;
+  if(QCD_SmearMeanShift=="high") mstype = SUSY::SmearingType::high;
+  else if(QCD_SmearMeanShift=="low") mstype = SUSY::SmearingType::low;
+  else if(QCD_SmearMeanShift=="none" || QCD_SmearMeanShift=="") mstype = SUSY::SmearingType::none;
+
   tool_jsmear = new SUSY::JetMCSmearingTool("JStool");
-  tool_jsmear->setProperty("NumberOfSmearedEvents",QCD_SmearedEvents);
+  tool_jsmear->setProperty("NumberOfSmearedEvents",(unsigned int)QCD_SmearedEvents);
   tool_jsmear->setProperty("DoBJetSmearing",QCD_SmearUseBweight);
   tool_jsmear->setProperty("BtagWeight",QCD_SmearBtagWeight);
   tool_jsmear->setProperty("UseTailWeights",true);
   tool_jsmear->setProperty("DoGaussianCoreSmearing",QCD_SmearExtraSmr);
-  tool_jsmear->setProperty("GaussianCoreSmearingType", QCD_SmearType);
-  tool_jsmear->setProperty("ShiftMeanType",QCD_SmearMeanShift);
+  tool_jsmear->setProperty("GaussianCoreSmearingType", gsmtype);
+  tool_jsmear->setProperty("ShiftMeanType",mstype);
   tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing);
   tool_jsmear->initialize();
 
@@ -1615,6 +1627,9 @@ EL::StatusCode chorizo :: nextEvent(){
   if(m_goodJets)
     m_goodJets->clear();
 
+  if(m_smdJets)
+    m_smdJets->clear();
+
   // Clear transient store
   m_store->clear();
 
@@ -1641,7 +1656,9 @@ EL::StatusCode chorizo :: loop ()
 #endif  
 
   ofstream myfile; //produces a text file with event information
-  if (doCutFlow) myfile.open (gSystem->Getenv("ANALYSISCODE")+'/cutflow.txt', ios::app);
+  string ocfile=string(gSystem->Getenv("ANALYSISCODE"))+"/cutflow.txt";
+  //  if (doCutFlow) myfile.open (gSystem->Getenv("ANALYSISCODE")+ocfile.c_str(), ios::app);
+  if (doCutFlow) myfile.open (ocfile.c_str(), ios::app);
 
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
@@ -1683,21 +1700,25 @@ EL::StatusCode chorizo :: loop ()
   CHECK( m_event->retrieve( m_jets, "AntiKt4LCTopoJets" ) );
 
   //  -- Electrons
-  CHECK( m_event->retrieve( m_electrons, "ElectronCollection" ) );
+  //CHECK( m_event->retrieve( m_electrons, "ElectronCollection" ) );
+  CHECK( m_event->retrieve( m_electrons, "Electrons" ) );
 
   //  -- Muons
   CHECK( m_event->retrieve( m_muons, "Muons" ) );
 
   //  -- Muons
-  CHECK( m_event->retrieve( m_photons, "PhotonCollection" ) );
+  //  CHECK( m_event->retrieve( m_photons, "PhotonCollection" ) );
+  CHECK( m_event->retrieve( m_photons, "Photons" ) );
 
   //  -- Truth Particles
   //if(isMC){
     
     const xAOD::MissingETContainer* cmet_truth;    
     
-    CHECK( m_event->retrieve( m_truthE, "TruthEvent" ) );
-    CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
+    //    CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
+    //    CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
+    CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
+    CHECK( m_event->retrieve( m_truthP, "TruthParticles" ) );
     CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
     CHECK( m_event->retrieve( cmet_truth, "MET_Truth") );
 
@@ -1711,6 +1732,10 @@ EL::StatusCode chorizo :: loop ()
   // View container provides access to selected jets   (for MET recalculation)
   m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
   CHECK( m_store->record( m_goodJets, "MySelJets" ) );
+
+  m_smdJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
+  CHECK( m_store->record( m_smdJets, "SmearedJets" ) );
+
 
   // MET (cluster soft term) -- invisible muons
   xAOD::MissingETContainer* metRFC = new xAOD::MissingETContainer;
@@ -1999,12 +2024,11 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //--- Get Electrons
-  std::pair< xAOD::ElectronContainer*, xAOD::ShallowAuxContainer* > electrons_sc = xAOD::shallowCopyContainer( *m_electrons );
-  bool setLinks = xAOD::setOriginalObjectLink(*m_electrons, *electrons_sc.first);
+  xAOD::ElectronContainer* electrons_sc(0);
+  xAOD::ShallowAuxContainer* electrons_scaux(0);
+  CHECK( tool_st->GetElectrons(electrons_sc, electrons_scaux, false, El_PreselPtCut, El_PreselEtaCut ) ); //'baseline' decoration
 
-  for(const auto& el_itr : *electrons_sc.first){
-
-    CHECK( tool_st->FillElectron( (*el_itr), El_PreselPtCut, El_PreselEtaCut ) );
+  for(const auto& el_itr : *electrons_sc){
 
     //decorate electron with final pt requirements ('final')
     elIsoArgs->_etcut = El_RecoPtCut;
@@ -2020,13 +2044,12 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //--- Get Muons
-  std::pair< xAOD::MuonContainer*, xAOD::ShallowAuxContainer* > muons_sc = xAOD::shallowCopyContainer( *m_muons );
-  setLinks = xAOD::setOriginalObjectLink(*m_muons, *muons_sc.first);
+  xAOD::MuonContainer* muons_sc(0);
+  xAOD::ShallowAuxContainer* muons_scaux(0);
+  CHECK( tool_st->GetMuons(muons_sc, muons_scaux, false, Mu_PreselPtCut, Mu_PreselEtaCut ) ); //'baseline' decoration
 
-  for(const auto& mu_itr : *muons_sc.first){
+  for(const auto& mu_itr : *muons_sc){
     
-    CHECK( tool_st->FillMuon( *mu_itr, Mu_PreselPtCut, Mu_PreselEtaCut) );      //'baseline' decoration
-
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_RecoPtCut;
     muIsoArgs->_calo_isocut = 0.;    
@@ -2042,12 +2065,11 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //--- Get Photons
-  std::pair< xAOD::PhotonContainer*, xAOD::ShallowAuxContainer* > photons_sc = xAOD::shallowCopyContainer( *m_photons );
-  setLinks = xAOD::setOriginalObjectLink(*m_photons, *photons_sc.first);
+  xAOD::PhotonContainer* photons_sc(0);
+  xAOD::ShallowAuxContainer* photons_scaux(0);
+  CHECK( tool_st->GetPhotons(photons_sc, photons_scaux, false, Ph_PreselPtCut, Ph_PreselEtaCut ) ); //'baseline' decoration
 
-
-  for(const auto& ph_itr : *photons_sc.first){ 
-    CHECK( tool_st->FillPhoton( (*ph_itr), Ph_PreselPtCut, Ph_PreselEtaCut ) );
+  for(const auto& ph_itr : *photons_sc){ 
 
     //decorate photon with final pt requirements ('final')
     //    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut, phIsoType);
@@ -2061,48 +2083,35 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Get Jets
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
-  
-  std::pair< xAOD::JetContainer*, xAOD::ShallowAuxContainer* > jets_sc = xAOD::shallowCopyContainer( *m_jets );
-  setLinks = xAOD::setOriginalObjectLink(*m_jets, *jets_sc.first);
 
-  xAOD::JetContainer::iterator jet_itr = (jets_sc.first)->begin();
-  xAOD::JetContainer::iterator jet_end = (jets_sc.first)->end();
-  
+  xAOD::JetContainer* jets_sc(0);
+  xAOD::ShallowAuxContainer* jets_scaux(0);
+  CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut ) ); //'baseline' and 'bad' decoration
 
-  //jets for met recalculation in qcd events //CHECK_ME couldn't I just read the 'CalibratedAntiKt4LCTopoJets' now?
-  smr_met_jets_pt.clear();
-  smr_met_jets_eta.clear();
-  smr_met_jets_phi.clear();
-  smr_met_jets_E.clear();
   
   xAOD::Jet jet;
-  for( ; jet_itr != jet_end; ++jet_itr ) {
+  for( const auto& jet_itr : *jets_sc){
     
-    CHECK( tool_st->FillJet( **jet_itr ) );
-    tool_st->IsGoodJet( **jet_itr, Jet_PreselPtCut, Jet_PreselEtaCut );
     //** Bjet decoration 
     //tool_st->IsBJet( **jet_itr );   //SUSYTools
     float bw=0.; //our own
-    if(Jet_Tagger=="MV1") bw = (*jet_itr)->btagging()->MV1_discriminant();
-    if(Jet_Tagger=="MV1") bw = 0.;
-    else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
-    dec_bjet(**jet_itr) = (bw > Jet_TaggerOp);
+    if(Jet_Tagger=="MV1") bw = (jet_itr)->btagging()->MV1_discriminant();
+    else if(Jet_Tagger=="IP3DSV1") bw = (jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
+    dec_bjet(*jet_itr) = (bw > Jet_TaggerOp);
 
-    dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
+    dec_baseline(*jet_itr) &= (char)(fabs(jet_itr->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
 
-    //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
-    smr_met_jets_pt.push_back( 0. ); //recoJet.Pt() ); //in GeV!
-    smr_met_jets_eta.push_back( 0. ); //recoJet.Eta() );
-    smr_met_jets_phi.push_back( 0. ); //recoJet.Phi() );
-    smr_met_jets_E.push_back( 0. ); //recoJet.E() );  //in GeV!
+    //book jets for smearing method
+    if(dec_baseline(*jet_itr))
+      m_smdJets->push_back(jet_itr);
 
   }
 
   //--- Get (recalculated) MissingEt  
   if(doORphotons)
-    CHECK( tool_st->GetMET(*metRFC, jets_sc.first, electrons_sc.first, muons_sc.first, photons_sc.first, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
+    CHECK( tool_st->GetMET(*metRFC, jets_sc, electrons_sc, muons_sc, photons_sc, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
   else
-    CHECK( tool_st->GetMET(*metRFC, jets_sc.first, electrons_sc.first, muons_sc.first, 0, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
+    CHECK( tool_st->GetMET(*metRFC, jets_sc, electrons_sc, muons_sc, 0, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
   
   
   TVector2 metRF = getMET(metRFC, "Final"); 
@@ -2110,20 +2119,21 @@ EL::StatusCode chorizo :: loop ()
   //--- Do overlap removal   
   if(doOR){
     if(doORphotons)
-      CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, photons_sc.first, doORharmo) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, doORharmo) );
     else
-      CHECK( tool_st->OverlapRemoval(electrons_sc.first, muons_sc.first, jets_sc.first, doORharmo) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, doORharmo) );
   }
 
   // Apply the overlap removal to all objects (dumb example)
-  CHECK( tool_or->removeOverlaps(electrons_sc.first, muons_sc.first, jets_sc.first, 0, photons_sc.first) );
+  CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
   
   //-- Pre-book baseline electrons (after OR)
   std::vector<Particle> electronCandidates; //intermediate selection electrons
   bool IsElectron = false; // any good not-overlapping electron in the event?
   int iEl = 0;
   e_N=0; //signal electrons
-  for(const auto& el_itr : *electrons_sc.first ){
+  //  for(const auto& el_itr : *electrons_sc.first ){
+  for(const auto& el_itr : *electrons_sc ){
     
     if(! dec_baseline(*el_itr)) continue;
       
@@ -2227,7 +2237,7 @@ EL::StatusCode chorizo :: loop ()
   std::vector<Particle> muonCandidates; //intermediate selection muons
   bool IsMuon = false; // any good not-overlapping muon in the event?
   int iMu=0;
-  for(const auto& mu_itr : *muons_sc.first){
+  for(const auto& mu_itr : *muons_sc){
     
     this->isCosmic |= dec_cosmic(*mu_itr); //check if at least one cosmic in the event
     
@@ -2321,7 +2331,7 @@ EL::StatusCode chorizo :: loop ()
   std::vector<Particle> photonCandidates; //intermediate selection photons
   int iPh = 0;
   ph_N=0; //signal photons
-  for(const auto& ph_itr : *photons_sc.first ){
+  for(const auto& ph_itr : *photons_sc ){
     if( dec_baseline(*ph_itr) &&
 	((!doOR) || (!doORphotons) || dec_passOR(*ph_itr))){
       
@@ -2385,8 +2395,8 @@ EL::StatusCode chorizo :: loop ()
   if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
 
   //-- pre-book good jets now (after OR)
-  jet_itr = (jets_sc.first)->begin();
-  jet_end = (jets_sc.first)->end();
+  auto jet_itr = jets_sc->begin();
+  auto jet_end = jets_sc->end();
   Particles::Jet recoJet;
   int iJet = 0;
   int n_fakemet_jets=0;
@@ -2423,7 +2433,8 @@ EL::StatusCode chorizo :: loop ()
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
       //      local_truth_flavor = (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
-      local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID");
+      //      local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID");
+      local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
     }    
     
     //--- Get some other jet attributes
@@ -2784,7 +2795,8 @@ EL::StatusCode chorizo :: loop ()
   const xAOD::MissingETContainer* cmet_lhtopo;
   const xAOD::MissingETContainer* cmet_track;
 
-  CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") );
+  CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") ); 
+  //CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); //??
   CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );
   CHECK( m_event->retrieve( cmet_track, "MET_Track") );
 
@@ -2809,16 +2821,16 @@ EL::StatusCode chorizo :: loop ()
   //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
   
   CHECK( tool_st_1->GetMET(*metRFC_vmu,
-			 jets_sc.first,
-			 electrons_sc.first,
-			 muons_sc.first,
-			 0,
-			 0));
+			   jets_sc,
+			   electrons_sc,
+			   muons_sc,
+			   0,
+			   0));
   
   
   CHECK( tool_st->GetMET(*metRFC,
-			 jets_sc.first,
-			 electrons_sc.first,
+			 jets_sc,
+			 electrons_sc,
 			 0,
 			 0,
 			 0));
@@ -2836,21 +2848,21 @@ EL::StatusCode chorizo :: loop ()
   //- Recomputed MET via SUSYTools (Track Soft Term (TST))
   if(nVertex>1){   //protect against crash in Data from METRebuilder  ///FIX_ME
     CHECK( tool_st->GetMET(*metRFC_TST,
-			   jets_sc.first,
-			   electrons_sc.first,
+			   jets_sc,
+			   electrons_sc,
 			   0,
 			   0,
 			   0,
 			   true));
     
     CHECK( tool_st_1->GetMET(*metRFC_TST_vmu,
-			   jets_sc.first,
-			   electrons_sc.first,
-			   muons_sc.first,
-			   0,
-			   0,
-			   true));
-
+			     jets_sc,
+			     electrons_sc,
+			     muons_sc,
+			     0,
+			     0,
+			     true));
+    
 
     met_obj.SetVector( getMET( metRFC_TST, "Final"), "met_tst_imu");  //- Copy met vector to the met data member
     met_obj.SetVector( getMET( metRFC_TST_vmu, "Final"), "met_tst_vmu");  //- Copy met vector to the met data member
@@ -3476,14 +3488,14 @@ EL::StatusCode chorizo :: loop ()
   if(isMC) RunNumber = mc_channel_number;
   
   // The containers created by the shallow copy are owned by you. Remember to delete them
-  delete jets_sc.first;
-  delete jets_sc.second;
-  delete muons_sc.first;
-  delete muons_sc.second;
-  delete electrons_sc.first;
-  delete electrons_sc.second;
-  delete photons_sc.first;
-  delete photons_sc.second;
+  delete jets_sc;
+  delete jets_scaux;
+  delete muons_sc;
+  delete muons_scaux;
+  delete electrons_sc;
+  delete electrons_scaux;
+  delete photons_sc;
+  delete photons_scaux;
   delete metRFC;
   delete metRFC_TST;
   delete metRFC_vmu;
@@ -3532,8 +3544,10 @@ EL::StatusCode chorizo :: loop_truth()
   
  
   //  -- Truth Particles
-  CHECK( m_event->retrieve( m_truthE, "TruthEvent" ) );
-  CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
+  // CHECK( m_event->retrieve( m_truthE, "TruthEvent" ) );
+  // CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
+  CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
+  CHECK( m_event->retrieve( m_truthP, "TruthParticles" ) );
   CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
 
   // -- Find Signal Subprocess
@@ -3706,6 +3720,7 @@ EL::StatusCode chorizo :: loop_truth()
 
     try{
       recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("TruthLabelID"); 
+      //recoJet.FlavorTruth = xAOD::jetFlavourLabel(*jet_itr);
     }
     catch(...){
       bool matched = tool_jetlabel->matchJet(**tjet_itr);
@@ -4767,6 +4782,7 @@ bool chorizo :: passMCor(){
     TVector2 met(0.,0.);
     xAOD::MissingETContainer* metRFcutvar = 0; // = new xAOD::MissingETContainer;
     CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
+    //CHECK( m_event->retrieve( metRFcutvar, "MET_Reference_AntiKt4LCTopo")); //??
 
     met = getMET( metRFcutvar, "Final"); //METRefFinal for now... //FIX_ME !! Reco MET??
 
