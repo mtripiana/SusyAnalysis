@@ -237,8 +237,8 @@ private:
   //--- Tools
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
-  ST::SUSYObjDef_xAOD* tool_st; 
-  ST::SUSYObjDef_xAOD* tool_st_1;  
+  ST::SUSYObjDef_xAOD* tool_st; //!
+  ST::SUSYObjDef_xAOD* tool_st_1;  //! 
 
   //MET map
   std::map<MetDef, TVector2> metmap; //!
@@ -258,12 +258,12 @@ private:
   //  TrigDecisionTool *tool_trigdec; //! 
   //  TrigConf::xAODConfigTool* tool_trigconfig; //!
   
-  OverlapRemovalTool* tool_or; 
-  CP::PileupReweightingTool *tool_purw; 
-  GoodRunsListSelectionTool *tool_grl;
-  LHAPDF::PDF* m_PDF;
-  BTaggingEfficiencyTool* tool_btag;  //70%op
-  BTaggingEfficiencyTool* tool_btag2; //80%op
+  OverlapRemovalTool* tool_or; //!
+  CP::PileupReweightingTool *tool_purw; //! 
+  GoodRunsListSelectionTool *tool_grl; //!
+  LHAPDF::PDF* m_PDF; //!
+  BTaggingEfficiencyTool* tool_btag;  //! //70%op
+  BTaggingEfficiencyTool* tool_btag2; //! //80%op
 #endif // not __CINT__
 
   SUSY::JetMCSmearingTool* tool_jsmear; //!
