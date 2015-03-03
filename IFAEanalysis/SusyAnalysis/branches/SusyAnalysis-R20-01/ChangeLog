@@ -1,4 +1,7 @@
 2014-03-01 Martin <tripiana@cern.ch>
+	* Add reg exp for trigger chains in jOptions
+
+2014-03-01 Martin <tripiana@cern.ch>
 	* Update to Base,2.3.5  (rel20, ROOT6)
 
 

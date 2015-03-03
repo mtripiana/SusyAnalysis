@@ -146,7 +146,7 @@
     <QCD>
       <Enable>false</Enable> <!-- Enable jet smearing  -->
       <region name="SR">
-	<TrigChains> EF_j460,EF_j55</TrigChains>
+	<TrigChains> HLT_xe.* </TrigChains>
 	<JetsPtPreselection>20000.0</JetsPtPreselection>
 	<METSigCut>1.0</METSigCut>
 	<LeadJetPreSel>Stop</LeadJetPreSel>

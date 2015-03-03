@@ -135,6 +135,7 @@ enum ZDecayMode{
 };
 
 //MET flavours
+const string sMetDef[] = {"InvMu", "VisMu", "InvMuECorr", "VisMuECorr", "VisMuMuCorr", "InvMuPh", "VisMuPh", "Track", "InvMuRef", "VisMuRef", "InvMuTST", "VisMuTST", "InvMuTruth", "VisMuTruth", "locHadTopo"};
 enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPh, VisMuPh, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTruth, VisMuTruth, locHadTopo, N};
 
 
@@ -242,6 +243,7 @@ private:
   //MET map
   std::map<MetDef, TVector2> metmap; //!
 #endif // not __CINT__
+  std::string smetmap="";
 
   Analysis::JetQuarkLabel* tool_jetlabel; //!
 
@@ -373,6 +375,7 @@ private:
 
   TNamed *meta_jOption; //!
   TNamed *meta_triggers; //!
+  TNamed *meta_metmap; //!
 
   //----- Jet smearing config (QCD)
   float   QCD_JetsPtPreselection; //!

@@ -49,6 +49,7 @@ void MergeFiles(std::vector<TString> files, TString outfile){
   m.AddObjectNames("AnalysisTree");
   m.AddObjectNames("Triggers");
   m.AddObjectNames("jOption");
+  m.AddObjectNames("METmap");
 
   m.OutputFile(outfile);
   m.Merge();
@@ -389,12 +390,14 @@ void addMetaData(TString rootName, TString histName, TString outName){
   //MetaData (aka all TNamed objects)
   TNamed* Triggers = (TNamed*) TFile::Open(histName)->Get("Triggers")->Clone("Triggers");
   TNamed* jOption = (TNamed*) TFile::Open(histName)->Get("jOption")->Clone("jOption");
+  TNamed* METmap = (TNamed*) TFile::Open(histName)->Get("METmap")->Clone("METmap");
 
   //analysis tree  
   TFile* newfile = new TFile(rootName, "update");
 
   Triggers->Write();
   jOption->Write();
+  METmap->Write();
   
   newfile->Close();
 }

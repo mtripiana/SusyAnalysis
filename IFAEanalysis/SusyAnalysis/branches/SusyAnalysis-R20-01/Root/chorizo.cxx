@@ -92,8 +92,6 @@ static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 chorizo :: chorizo ()
   : tool_trigdec(0), tool_trigconfig(0), tool_jetlabel(0), tool_jvf(0), tool_jClean(0), tool_tileTrip(0), tool_or(0), tool_purw(0), tool_grl(0), tool_btag(0), tool_btag2(0), tool_jsmear(0)
 {
-  Info("chorizo()","Creating new algo");
-
   outputName="";
   Region="";
   defaultRegion="SR";
@@ -1310,11 +1308,6 @@ EL::StatusCode chorizo :: initialize ()
   //Read XML options
   ReadXML();
 
-  //save Trigger metadata
-  std::string trigchains="";
-  for(const auto& s : TriggerNames)  trigchains += (s+",");
-  meta_triggers = new TNamed("Triggers", trigchains.c_str());
-  wk()->addOutput(meta_triggers);     
 
   //initialize lepton isolation 
   elIsoArgs = new ST::IsSignalElectronExpCutArgs();
@@ -1366,6 +1359,19 @@ EL::StatusCode chorizo :: initialize ()
     //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
     tool_trigdec->initialize();
   }
+
+
+  //save Trigger metadata
+  std::string trigchains="";
+  for(const auto& s : TriggerNames){
+    auto chainGroup = tool_trigdec->getChainGroup(s);
+    for(auto &trig : chainGroup->getListOfTriggers()) {
+      trigchains += (s+",");
+    }
+  }
+  meta_triggers = new TNamed("Triggers", trigchains.c_str());
+  wk()->addOutput(meta_triggers);     
+
 #endif
 
 
@@ -1731,10 +1737,10 @@ EL::StatusCode chorizo :: loop ()
 
   // View container provides access to selected jets   (for MET recalculation)
   m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-  CHECK( m_store->record( m_goodJets, "MySelJets" ) );
+  //  CHECK( m_store->record( m_goodJets, "MySelJets" ) );
 
   m_smdJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-  CHECK( m_store->record( m_smdJets, "SmearedJets" ) );
+  //  CHECK( m_store->record( m_smdJets, "SmearedJets" ) );
 
 
   // MET (cluster soft term) -- invisible muons
@@ -1927,6 +1933,7 @@ EL::StatusCode chorizo :: loop ()
 
   this->isVertexOk = (nVertex>1) && n_tracks>=nTracks; 
 
+
   //trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
   if(m_eventCounter<2){
@@ -2047,7 +2054,6 @@ EL::StatusCode chorizo :: loop ()
   xAOD::MuonContainer* muons_sc(0);
   xAOD::ShallowAuxContainer* muons_scaux(0);
   CHECK( tool_st->GetMuons(muons_sc, muons_scaux, false, Mu_PreselPtCut, Mu_PreselEtaCut ) ); //'baseline' decoration
-
   for(const auto& mu_itr : *muons_sc){
     
     //decorate muon with final pt requirements ('final')
@@ -2087,7 +2093,6 @@ EL::StatusCode chorizo :: loop ()
   xAOD::JetContainer* jets_sc(0);
   xAOD::ShallowAuxContainer* jets_scaux(0);
   CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut ) ); //'baseline' and 'bad' decoration
-
   
   xAOD::Jet jet;
   for( const auto& jet_itr : *jets_sc){
@@ -2106,14 +2111,13 @@ EL::StatusCode chorizo :: loop ()
       m_smdJets->push_back(jet_itr);
 
   }
-
   //--- Get (recalculated) MissingEt  
   if(doORphotons)
     CHECK( tool_st->GetMET(*metRFC, jets_sc, electrons_sc, muons_sc, photons_sc, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
   else
     CHECK( tool_st->GetMET(*metRFC, jets_sc, electrons_sc, muons_sc, 0, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
   
-  
+
   TVector2 metRF = getMET(metRFC, "Final"); 
     
   //--- Do overlap removal   
@@ -2177,7 +2181,6 @@ EL::StatusCode chorizo :: loop ()
 	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
 	  Error("loop()", "Cannot configure SUSYTools for default systematics");
 	}
-	
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
 	}
@@ -2791,19 +2794,21 @@ EL::StatusCode chorizo :: loop ()
   // For the moment only the official flavors are available.
   // Re-computing MET will be possible in the future though, once the METUtility interface is updated!!
 
-  const xAOD::MissingETContainer* cmet_reffinal;
+  //  const xAOD::MissingETContainer* cmet_reffinal;
   const xAOD::MissingETContainer* cmet_lhtopo;
   const xAOD::MissingETContainer* cmet_track;
 
-  CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") ); 
-  //CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); //??
+  //  CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") ); 
+  //  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); //??
+  //  CHECK( m_event->retrieve( cmet_reffinal, "MET_LocHadTopo") ); //??
   CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );
   CHECK( m_event->retrieve( cmet_track, "MET_Track") );
 
-  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
+  //  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
+  const xAOD::MissingET* mrf    = (*cmet_lhtopo)["LocHadTopo"];
   const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
-  //const xAOD::MissingET* mtrack = (*cmet_track)["Track"];
+  //  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
+  const xAOD::MissingET* mtrack = (*cmet_track)["Track"];
 
   //** Met components
   //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
@@ -2971,14 +2976,23 @@ EL::StatusCode chorizo :: loop ()
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");  
   metmap[::MetDef::locHadTopo] = met_obj.GetVector("met_locHadTopo");    
   
+  //meta data (fill it once)
+  if(smetmap==""){ 
+    for (auto& mk : metmap){ 
+      smetmap += sMetDef[(unsigned int)mk.first];
+      smetmap += ",";
+    }
+    meta_metmap = new TNamed("METmap", smetmap.c_str());
+    wk()->addOutput(meta_metmap);     
+  }
 
   //***
 
   //- Met Cleaning
   if (Met_doMetCleaning){
-    const xAOD::MissingET* mrf_refmuon = (*cmet_reffinal)["Muons"];
-    TVector2 myMetMuon( mrf_refmuon->mpx(), mrf_refmuon->mpy() ); //MET_MuonBoy in run1
-    isMetCleaned = ( ( (myMetMuon.Mod() / v_met_rfinal_mu.Mod()) * cos(v_met_rfinal_mu.Phi() - myMetMuon.Phi()) ) < 0.8);
+    // const xAOD::MissingET* mrf_refmuon = (*cmet_reffinal)["Muons"];
+    // TVector2 myMetMuon( mrf_refmuon->mpx(), mrf_refmuon->mpy() ); //MET_MuonBoy in run1
+    // isMetCleaned = ( ( (myMetMuon.Mod() / v_met_rfinal_mu.Mod()) * cos(v_met_rfinal_mu.Phi() - myMetMuon.Phi()) ) < 0.8);
   }
 
   if (printMet){
@@ -3571,6 +3585,17 @@ EL::StatusCode chorizo :: loop_truth()
 
       // FS selection
       if( !isStable( *truthEl_itr ) ) continue; 
+
+      // unsigned int type = ( *truthEl_itr )->auxdata< unsigned int >( "type" );
+      // unsigned int origin = ( *truthEl_itr )->auxdata< unsigned int >( "origin" );
+
+      // cout << "------" << endl;
+      // cout << "E type = " << type << endl;
+      // cout << "E origin = " << origin << endl;
+
+      unsigned int origin = xAOD::EgammaHelpers::getParticleTruthOrigin( *truthEl_itr );
+      cout << "E origin2 = " << origin << endl;
+
       
       //define preselected electron                
       Particle recoElectron;
@@ -4781,9 +4806,9 @@ bool chorizo :: passMCor(){
   if( count(check_ids, check_ids+84, this->mc_channel_number) ){
     TVector2 met(0.,0.);
     xAOD::MissingETContainer* metRFcutvar = 0; // = new xAOD::MissingETContainer;
-    CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
-    //CHECK( m_event->retrieve( metRFcutvar, "MET_Reference_AntiKt4LCTopo")); //??
-
+    //    CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
+    //    CHECK( m_event->retrieve( metRFcutvar, "MET_Reference_AntiKt4LCTopo")); //??
+    CHECK( m_event->retrieve( metRFcutvar, "LocHadTopo") );
     met = getMET( metRFcutvar, "Final"); //METRefFinal for now... //FIX_ME !! Reco MET??
 
     bos_pt = met.Mod();
