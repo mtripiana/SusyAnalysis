@@ -1358,20 +1358,8 @@ EL::StatusCode chorizo :: initialize ()
     tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
     //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
     tool_trigdec->initialize();
+
   }
-
-
-  //save Trigger metadata
-  std::string trigchains="";
-  for(const auto& s : TriggerNames){
-    auto chainGroup = tool_trigdec->getChainGroup(s);
-    for(auto &trig : chainGroup->getListOfTriggers()) {
-      trigchains += (s+",");
-    }
-  }
-  meta_triggers = new TNamed("Triggers", trigchains.c_str());
-  wk()->addOutput(meta_triggers);     
-
 #endif
 
 
@@ -1937,6 +1925,20 @@ EL::StatusCode chorizo :: loop ()
   //trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
   if(m_eventCounter<2){
+    //save Trigger metadata
+    std::string trigchains="";
+    for(const auto& s : TriggerNames){
+      cout << "CHAINS FOR '" <<  s <<  "'" << endl;
+      auto chainGroup = tool_trigdec->getChainGroup(s);
+      for(auto &trig : chainGroup->getListOfTriggers()) {
+	cout << "ADDING " <<  trig.c_str() << endl;
+	trigchains += (trig+",");
+      }
+    }
+    meta_triggers = new TNamed("Triggers", trigchains.c_str());
+    wk()->addOutput(meta_triggers);     
+    
+
     Info("loop()", "  MET TRIGGERS IN MENU ");
     Info("loop()", "--------------------------------");
     auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
