@@ -10,6 +10,8 @@ cd $ANALYSISCODE
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-20 # (needs patching. see below)
 
+
+rc checkout_pkg $SVNOFF/Reconstruction/EventShapes/EventShapeTools/tags/EventShapeTools-00-01-07  #(needs patching)
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
 
 # Offline truth jet tagging for MCGN1 derivations
@@ -20,6 +22,8 @@ svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/Partic
 #
 cd $ANALYSISCODE/SUSYTools
 patch -p0 -i $ANALYSISCODE/SusyAnalysis/patches/patch_SUSYObjDef_xAOD.cxx.diff  # fix decorations (bool-->char)
+cd $ANALYSISCODE
+patch -p0 -i $ANALYSISCODE/SusyAnalysis/patches/patch_EventShapeTools_Makefile.diff # add dependencies
 
 
 # Boost libraries
