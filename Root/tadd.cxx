@@ -16,15 +16,15 @@ void JoinSplittedFiles(TString fileName){
   }
 
   //--- Add splitted files into a file with the preffix joined.
-  cout<<Form("Adding file %s", fileName.Data())<<endl;
+  std::cout<<Form("Adding file %s", fileName.Data())<<std::endl;
   chainJoin->Add(fileName);
-  cout << chainJoin->GetEntries() << endl;
+  std::cout << chainJoin->GetEntries() << std::endl;
   for(int count=1; count<fileCounter; count++){
-    cout<<Form("Adding file %s_%d.root", preffix.Data(), count)<<endl;
+    std::cout<<Form("Adding file %s_%d.root", preffix.Data(), count)<<std::endl;
     chainJoin->Add(Form("%s_%d.root", preffix.Data(), count));
   }
   if (chainJoin->GetEntries()>0){
-    cout<<"\nAdded all splitted files into "<<Form("%s_joined.root", preffix.Data())<<endl;
+    std::cout<<"\nAdded all splitted files into "<<Form("%s_joined.root", preffix.Data())<<std::endl;
     chainJoin->Merge(Form("%s_joined.root", preffix.Data()));
 
     //--- Delete the files that have been already merged to the joined root file
@@ -71,16 +71,16 @@ void MergeSplittedFiles(TString fileName){
   
   //--- Add splitted files into a file with the preffix joined.                                                                                                                                                                                                                
   std::vector<TString> files; files.clear();
-  cout<<Form("Adding file %s", fileName.Data())<<endl;
+  std::cout<<Form("Adding file %s", fileName.Data())<<std::endl;
   files.push_back(fileName);
   for(int count=1; count<fileCounter; count++){
-    cout<<Form("Adding file %s_%d.root", preffix.Data(), count)<<endl;    
+    std::cout<<Form("Adding file %s_%d.root", preffix.Data(), count)<<std::endl;    
     files.push_back(Form("%s_%d.root", preffix.Data(), count));
   }		  
   
   MergeFiles(files, Form("%s_joined.root", preffix.Data()) );
   
-  cout<<"\nAdded all splitted files into " << Form("%s_joined.root", preffix.Data())<<endl;
+  std::cout<<"\nAdded all splitted files into " << Form("%s_joined.root", preffix.Data())<<std::endl;
   
   
   //--- Delete the files that have been already merged to the joined root file                                                                                                                                                                                                
@@ -141,7 +141,7 @@ void addAverageWeight(TString fileName){
 
   }
 
-  cout<<"Total events: "<<TotalEvents<<endl;
+  std::cout<<"Total events: "<<TotalEvents<<std::endl;
   
   average_w = TotalEvents/nentries;
   w = fabs(average_w) > 0.0 ? 1./average_w : 1.;
@@ -157,7 +157,7 @@ void addAverageWeight(TString fileName){
 //---for grid jobs: FileWeight has to be computed
 void ComputeNewBranch(TString fileName){
   TFile *f4= new TFile(fileName.Data(),"update");
-  cout << fileName.Data() << endl;
+  std::cout << fileName.Data() << std::endl;
   TTree *t3 = (TTree*)f4->Get("AnalysisTree");
   
 
@@ -257,9 +257,9 @@ void addAntiWeightToTree(TString fileName, bool isData){
     }
   }
 
-  cout<<"Total events with electrons: "<<EventsWithElec<<endl;
-  cout<<"Total events with Muons: "<<EventsWithMuon<<endl;
-  cout<<"Total events: "<<TotalEvents<<endl;
+  std::cout<<"Total events with electrons: "<<EventsWithElec<<std::endl;
+  std::cout<<"Total events with Muons: "<<EventsWithMuon<<std::endl;
+  std::cout<<"Total events: "<<TotalEvents<<std::endl;
 
   Float_t e_SF_mean=0.;
   Float_t m_SF_mean=0.;
@@ -287,8 +287,8 @@ void addAntiWeightToTree(TString fileName, bool isData){
   if(e_SF_mean==0.) { e_SF_mean=1.;} //--- Just in case
   if(m_SF_mean==0.) { m_SF_mean=1.;}
 
-  cout<<"Mean electron SF: "<<e_SF_mean<<endl;
-  cout<<"Mean muon SF: "<<m_SF_mean<<endl;
+  std::cout<<"Mean electron SF: "<<e_SF_mean<<std::endl;
+  std::cout<<"Mean muon SF: "<<m_SF_mean<<std::endl;
 
   if (!isData){
     e_antiSF = 1 + (1-e_SF_mean)*((Float_t)EventsWithElec/((Float_t)TotalEvents-(Float_t)EventsWithElec));
@@ -296,11 +296,11 @@ void addAntiWeightToTree(TString fileName, bool isData){
 
     if((e_antiSF < -1000 || e_antiSF > 1000) || (TotalEvents-EventsWithElec==0)) {
       e_antiSF=1; //--- To avoid nan or inf
-      cout<<"nan or inf found. I'll correct it."<<endl;
+      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
     if((m_antiSF < -1000 || m_antiSF > 1000) || (TotalEvents-EventsWithMuon==0)) {
       m_antiSF=1;
-      cout<<"nan or inf found. I'll correct it."<<endl;
+      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
   }
   else{
@@ -308,8 +308,8 @@ void addAntiWeightToTree(TString fileName, bool isData){
     m_antiSF = 1;
   }
 
-  cout<<"Electron anti-SF: "<<e_antiSF<<endl;
-  cout<<"Muon anti-SF: "<<m_antiSF<<endl;
+  std::cout<<"Electron anti-SF: "<<e_antiSF<<std::endl;
+  std::cout<<"Muon anti-SF: "<<m_antiSF<<std::endl;
 
   for (Int_t i = 0; i < nentries; i++){
     b_e_antiSF->Fill();
@@ -320,18 +320,18 @@ void addAntiWeightToTree(TString fileName, bool isData){
   f5->Close();
 }
 
-void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString outfile, bool isData ){
+void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TString outfile, bool isData ){
 
   //--- Join all splitted files
   for(unsigned int i=0; i<filelist.size(); i++){
-    cout<<"Joining splitted files..."<<endl;
+    std::cout<<"Joining splitted files..."<<std::endl;
     //JoinSplittedFiles(filelist.at(i));
     MergeSplittedFiles(filelist.at(i));
   }
 
   //--- Add some new branches
   for(unsigned int i=0; i<filelist.size(); i++){
-    cout<<"Adding new branches..."<<endl;
+    std::cout<<"Adding new branches..."<<std::endl;
     AddNewBranch(filelist.at(i), weights.at(i));
     addAverageWeight(filelist.at(i));
   }
@@ -345,12 +345,12 @@ void tadd(std::vector< TString> filelist, vector< Double_t> weights, TString out
     gROOT->ProcessLine(Form(".! rm %s", filelist.at(i).Data()));
   }
 
-  cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
+  std::cout<<"\nAdding anti_e_SF and anti_m_SF"<<std::endl;
   addAntiWeightToTree(outfile.Data(), isData);  
 
-  cout << endl;
-  cout << bold("Target file : ") << outfile  << endl;
-  cout << endl;
+  std::cout << std::endl;
+  std::cout << bold("Target file : ") << outfile  << std::endl;
+  std::cout << std::endl;
 }
 
 void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
@@ -358,7 +358,7 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   //--- Join the "joined" files in a single root file. Add also FileWeight branch
   TChain *chain = new TChain("AnalysisTree");
   for(unsigned int i=0; i<filelist.size(); i++){
-    cout<<"Adding file: "<<filelist.at(i)<<endl;
+    std::cout<<"Adding file: "<<filelist.at(i)<<std::endl;
     chain->Add(filelist.at(i));
   }
 
@@ -370,16 +370,16 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   //  gROOT->ProcessLine(Form(".! rm %s", filelist.at(i).Data()));
   //}
 
-  cout<<"\nAdding FileWeight"<<endl;  
-  cout<<"\nAdding average weight w"<<endl;  
-  cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
+  std::cout<<"\nAdding FileWeight"<<std::endl;  
+  std::cout<<"\nAdding average weight w"<<std::endl;  
+  std::cout<<"\nAdding anti_e_SF and anti_m_SF"<<std::endl;
   ComputeNewBranch(outfile.Data());
   addAverageWeight(outfile.Data());
   addAntiWeightToTree(outfile.Data(), isData);  
 
-  cout << endl;
-  cout << bold("Target file : ") << outfile  << endl;
-  cout << endl;
+  std::cout << std::endl;
+  std::cout << bold("Target file : ") << outfile  << std::endl;
+  std::cout << std::endl;
 }
 
 
