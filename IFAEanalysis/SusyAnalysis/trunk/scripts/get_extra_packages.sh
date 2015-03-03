@@ -33,7 +33,8 @@ svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_Boost/trunk Asg
 
 # FastJet
 #
-svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet
+#svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet
+rc checkout_pkg $SVNOFF/AsgExternal/Asg_FastJet/tags/Asg_FastJet-03-06-14
 
 # PdfReweighting package
 svn co svn+ssh://$USER@svn.cern.ch/reps/atlasoff/AsgExternal/Asg_Lhapdf/trunk Asg_Lhapdf
