@@ -136,7 +136,7 @@ enum ZDecayMode{
 };
 
 //MET flavours
-enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPh, VisMuPh, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTruth, VisMuTruth, locHadTopo, N};
+enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPh, VisMuPh, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTSTECorr, VisMuTSTECorr, VisMuTSTMuCorr, InvMuTruth, VisMuTruth, locHadTopo, N};
 
 
 class chorizo : public EL::Algorithm
@@ -748,6 +748,8 @@ private:
   float e_M;
   float e_MT;
   float e_MT_vmu;  
+  float e_MT_tst;
+  float e_MT_tst_vmu;
   float e_Zpt;
   float m_M;
   float m_MT;
@@ -766,6 +768,9 @@ private:
   std::vector<int> n_taujets;
 
   int truth_n_jets;
+  int truth_n_jets40;
+  int truth_n_jets50;
+
   float truth_pt1;
   float truth_eta1;
 
@@ -889,6 +894,13 @@ private:
   
   float Melb_min;
   float Mmub_min; 
+
+  float sumET_cst;
+  float sumET_cst_vmu;
+  float sumET_tst;
+  float sumET_tst_vmu;
+  float sumET_truth;
+  float sumET_truth_vmu;
   
   float j1_E;
   float j2_E;  
