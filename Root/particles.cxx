@@ -166,6 +166,9 @@ MET::MET(){
   met_vmu.Set(0., 0.);  
   met_tst_imu.Set(0., 0.);
   met_tst_vmu.Set(0., 0.);  
+  met_tst_imu_ecorr.Set(0., 0.);
+  met_tst_vmu_ecorr.Set(0., 0.);
+  met_tst_vmu_mucorr.Set(0., 0.);
   met_trk.Set(0., 0.);
   met_vmu_mucorr.Set(0., 0.);
   met_vmu_ecorr.Set(0., 0.);
@@ -201,6 +204,15 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   else if(which=="met_tst_vmu"){
     this->met_tst_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }  
+  else if(which=="met_tst_vmu_mucorr"){
+    this->met_tst_vmu_mucorr.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_tst_vmu_ecorr"){
+    this->met_tst_vmu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_tst_imu_ecorr"){
+    this->met_tst_imu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
+  }
   else if(which=="met_trk"){
     this->met_trk.Set(vec.X() * sf, vec.Y() * sf);
   }
@@ -250,6 +262,15 @@ TVector2 MET::GetVector(TString which){
   if(which=="met_tst_vmu"){
     return TVector2(this->met_tst_vmu);
   }  
+  if(which=="met_tst_vmu_mucorr"){
+    return TVector2(this->met_tst_vmu_mucorr);
+  }
+  if(which=="met_tst_vmu_ecorr"){
+    return TVector2(this->met_tst_vmu_ecorr);
+  }
+  if(which=="met_tst_imu_ecorr"){
+    return TVector2(this->met_tst_imu_ecorr);
+  }
   if(which=="met_trk"){
     return TVector2(this->met_trk);
   }
@@ -322,6 +343,9 @@ void MET::Reset(){
   met_vmu.Set(0., 0.);  
   met_tst_imu.Set(0., 0.);
   met_tst_vmu.Set(0., 0.);  
+  met_tst_imu_ecorr.Set(0., 0.);
+  met_tst_vmu_mucorr.Set(0., 0.);
+  met_tst_vmu_ecorr.Set(0., 0.);
   met_trk.Set(0., 0.);
   met_imu_ecorr.Set(0., 0.);
   met_vmu_mucorr.Set(0., 0.);  
