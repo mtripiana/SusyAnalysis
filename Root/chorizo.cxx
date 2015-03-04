@@ -2075,7 +2075,7 @@ EL::StatusCode chorizo :: loop ()
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
     //    dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
    
-    tool_st->IsCosmicMuon( *mu_itr );  //'cosmic'   decoration
+    //tool_st->IsCosmicMuon( *mu_itr );  //'cosmic' decoration, moved after OR
   }
 
   //--- Get Photons
@@ -2265,6 +2265,8 @@ EL::StatusCode chorizo :: loop ()
   bool IsMuon = false; // any good not-overlapping muon in the event?
   int iMu=0;
   for(const auto& mu_itr : *muons_sc.first){
+    
+    tool_st->IsCosmicMuon( *mu_itr );  //'cosmic' decoration
     
     this->isCosmic |= dec_cosmic(*mu_itr); //check if at least one cosmic in the event
     
