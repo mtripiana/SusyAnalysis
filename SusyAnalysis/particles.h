@@ -104,7 +104,10 @@ class MET : public TVector2{
     TVector2  met_imu;   
     TVector2  met_vmu;
     TVector2  met_tst_imu;
-    TVector2  met_tst_vmu;    
+    TVector2  met_tst_vmu;  
+    TVector2  met_tst_imu_ecorr;
+    TVector2  met_tst_vmu_ecorr;
+    TVector2  met_tst_vmu_mucorr;  
     TVector2  met_trk;
     TVector2  met_imu_ecorr;
     TVector2  met_vmu_ecorr;
@@ -115,7 +118,7 @@ class MET : public TVector2{
     TVector2  met_phcorr_imu;
     TVector2  met_phcorr_vmu;
     TVector2  met_truth_imu;
-    TVector2  met_truth_vmu;        
+    TVector2  met_truth_vmu;
     bool      m_hasMuons;
 
     void SetVector(TVector2 vec, TString which="", bool inGeV=false); 
