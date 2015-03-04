@@ -327,6 +327,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("n_jets80",&n_jets80,"n_jets80/I", 10000);
       output->tree()->Branch("n_taujets",&n_taujets);
       output->tree()->Branch("truth_n_jets",&truth_n_jets,"truth_n_jets/I", 10000);
+      output->tree()->Branch("truth_n_jets40",&truth_n_jets40,"truth_n_jets40/I", 10000);
+      output->tree()->Branch("truth_n_jets50",&truth_n_jets50,"truth_n_jets50/I", 10000);
       output->tree()->Branch("truth_pt1",&truth_pt1,"truth_pt1/F", 10000);
       output->tree()->Branch("truth_eta1",&truth_eta1,"truth_eta1/F", 10000);
       output->tree()->Branch("pt1",&pt1,"pt1/F", 10000);
@@ -472,6 +474,14 @@ void chorizo :: bookTree(){
       //Mbl_min  (for single top CR)
       output->tree()->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
       output->tree()->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
+
+      //sumet  (provisional silvia)                                                                                                                                                                                                         
+      output->tree()->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
+      output->tree()->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
+      output->tree()->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
+      output->tree()->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
+      output->tree()->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
+      output->tree()->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
       
       //MTs
       output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met);
@@ -791,6 +801,8 @@ void chorizo :: InitVars()
   n_jets=0;
   n_tjets=0;
   truth_n_jets=0;
+  truth_n_jets40=0;
+  truth_n_jets50=0;
   truth_pt1=DUMMYDN;
   truth_eta1=DUMMYDN;
   n_jets40=0;
@@ -952,6 +964,13 @@ void chorizo :: InitVars()
   
   Melb_min = DUMMYDN; 
   Mmub_min = DUMMYDN;   
+
+  sumET_cst = DUMMYDN;
+  sumET_cst_vmu = DUMMYDN;
+  sumET_tst = DUMMYDN;
+  sumET_tst_vmu = DUMMYDN;
+  sumET_truth = DUMMYDN;
+  sumET_truth_vmu = DUMMYDN;
   
   MT_min_jet_met.clear();  
   MT_bcl_met.clear();  
@@ -1637,9 +1656,10 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
-  if(this->isTruth) //truth derivations
+  if(this->isTruth){ //truth derivations
     return loop_truth();
-  
+    cout << "is truth" << endl;
+  }
   return loop();
 }
 
@@ -1716,6 +1736,9 @@ EL::StatusCode chorizo :: loop ()
 
     const xAOD::MissingET* mtruth_inv = (*cmet_truth)["Int"];
     const xAOD::MissingET* mtruth_vis = (*cmet_truth)["NonInt"];
+
+    sumET_truth = (*cmet_truth)["Int"]->sumet()*0.001;
+    sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
   //}
 
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
@@ -1744,6 +1767,7 @@ EL::StatusCode chorizo :: loop ()
   xAOD::MissingETContainer* metRFC_TST_vmu = new xAOD::MissingETContainer;
   xAOD::MissingETAuxContainer* metRFCAux_TST_vmu = new xAOD::MissingETAuxContainer;
   metRFC_TST_vmu->setStore(metRFCAux_TST_vmu);  
+
 
   // CHECK( m_store->record( metRFC, "MET_MyRefFinal" ) );
   // CHECK( m_store->record( metRFCAux, "MET_MyRefFinalAux." ) );
@@ -1920,7 +1944,7 @@ EL::StatusCode chorizo :: loop ()
   if(m_eventCounter<2){
     Info("loop()", "  MET TRIGGERS IN MENU ");
     Info("loop()", "--------------------------------");
-    auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
+    auto chainGroup = tool_trigdec->getChainGroup("HLT_xe*");
     for(auto &trig : chainGroup->getListOfTriggers()) {
       Info("loop()", trig.c_str()); 
     }
@@ -2028,7 +2052,7 @@ EL::StatusCode chorizo :: loop ()
     //decorate electron with baseline pt requirements ('signal')
     elIsoArgs->_etcut = El_PreselPtCut;
     tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
-    dec_baseline(*el_itr) = dec_signal(*el_itr);    
+    //    dec_baseline(*el_itr) = dec_signal(*el_itr);    
   
   }
 
@@ -2049,7 +2073,7 @@ EL::StatusCode chorizo :: loop ()
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_PreselPtCut;
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
-    dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
+    //    dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
    
     tool_st->IsCosmicMuon( *mu_itr );  //'cosmic'   decoration
   }
@@ -2669,7 +2693,9 @@ EL::StatusCode chorizo :: loop ()
       
       if ( (*tjet_itr)->pt() > 20000. )
 	n_tjets++;
-      if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
+      if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets50++;
+      if ((*tjet_itr)->pt() > 40000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets40++;
+      if ((*tjet_itr)->pt() > 30000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
 
       TLorentzVector truthJet;
       truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 
@@ -2777,10 +2803,10 @@ EL::StatusCode chorizo :: loop ()
   if (doCutFlow) myfile << "n of signal b-jets: " << n_bjets << " \n"; 
 
   //** btagging weights
-  if(isMC){
-    btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
-    btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
-  }
+  // if(isMC){
+  //  btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
+  //  btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
+  //}
   
   //the list of jets to smear for qcd are not the jet-candidates!
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
@@ -2838,7 +2864,9 @@ EL::StatusCode chorizo :: loop ()
 
   TVector2 v_met_ST = getMET( metRFC, "Final");
   TVector2 v_met_ST_vmu = getMET( metRFC_vmu, "Final");
-  
+
+  sumET_cst = (*metRFC)["Final"]->sumet()*0.001;
+  sumET_cst_vmu = (*metRFC_vmu)["Final"]->sumet()*0.001;  
 
   met_obj.SetVector(v_met_ST,"met_imu");  //- Copy met vector to the met data member
   //met_obj.SetHasMuons( false );  //-- Set if muons enter into the MET computation
@@ -2865,8 +2893,13 @@ EL::StatusCode chorizo :: loop ()
 			   true));
 
 
+
     met_obj.SetVector( getMET( metRFC_TST, "Final"), "met_tst_imu");  //- Copy met vector to the met data member
     met_obj.SetVector( getMET( metRFC_TST_vmu, "Final"), "met_tst_vmu");  //- Copy met vector to the met data member
+
+    sumET_tst = (*metRFC_TST)["Final"]->sumet()*0.001;
+    sumET_tst_vmu = (*metRFC_TST_vmu)["Final"]->sumet()*0.001;
+
 
   }
   else{
@@ -2907,6 +2940,9 @@ EL::StatusCode chorizo :: loop ()
   TVector2 v_met_elinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
   TVector2 v_met_elinv_ST_vmu = met_obj.GetVector("met_vmu"); //== met_ST (GeV)   
 
+  TVector2 v_met_elinv_TST = met_obj.GetVector("met_tst_imu"); //== met_ST (GeV)                                                                                                                                                            
+  TVector2 v_met_elinv_TST_vmu = met_obj.GetVector("met_tst_vmu"); //== met_ST (GeV) 
+
   TLorentzVector vels(0.,0.,0.,0.);
   for (unsigned int iEl=0; iEl < recoElectrons.size(); iEl++){ 
     vels += recoElectrons.at(iEl).GetVector();
@@ -2914,18 +2950,28 @@ EL::StatusCode chorizo :: loop ()
   v_met_elinv_ST.Set( v_met_elinv_ST.Px() + vels.Px(), v_met_elinv_ST.Py() + vels.Py() );
   v_met_elinv_ST_vmu.Set( v_met_elinv_ST_vmu.Px() + vels.Px(), v_met_elinv_ST_vmu.Py() + vels.Py() );
 
+  v_met_elinv_TST.Set( v_met_elinv_TST.Px() + vels.Px(), v_met_elinv_TST.Py() + vels.Py() );
+  v_met_elinv_TST_vmu.Set( v_met_elinv_TST_vmu.Px() + vels.Px(), v_met_elinv_TST_vmu.Py() + vels.Py() );
+
   met_obj.SetVector(v_met_elinv_ST, "met_imu_ecorr", true); //already in GeV    
   met_obj.SetVector(v_met_elinv_ST_vmu, "met_vmu_ecorr", true); //already in GeV     
   
+  met_obj.SetVector(v_met_elinv_TST, "met_tst_imu_ecorr", true); //already in GeV
+  met_obj.SetVector(v_met_elinv_TST_vmu, "met_tst_vmu_ecorr", true); //already in GeV 
+
   //--- Met (with muon term) with muons as invisible (signal muons)
-  TVector2 v_met_muinv_ST_vmu = met_obj.GetVector("met_vmu"); //== met_ST (GeV)   
+  TVector2 v_met_muinv_ST_vmu = met_obj.GetVector("met_vmu"); //== met_ST (GeV)  
+  TVector2 v_met_muinv_TST_vmu = met_obj.GetVector("met_tst_vmu"); //== met_ST (GeV)
+ 
   TLorentzVector vmus(0.,0.,0.,0.);
   for (unsigned int iMu=0; iMu < recoMuons.size(); iMu++){ 
     vmus += recoMuons.at(iMu).GetVector();
   }
   v_met_muinv_ST_vmu.Set( v_met_muinv_ST_vmu.Px() + vmus.Px(), v_met_muinv_ST_vmu.Py() + vmus.Py() );
+  v_met_muinv_TST_vmu.Set( v_met_muinv_TST_vmu.Px() + vmus.Px(), v_met_muinv_TST_vmu.Py() + vmus.Py() );
  
   met_obj.SetVector(v_met_muinv_ST_vmu, "met_vmu_mucorr", true); //already in GeV       
+  met_obj.SetVector(v_met_muinv_TST_vmu, "met_tst_vmu_mucorr", true); //already in GeV
   
   //--- Met with photons as invisible 
   TVector2 v_met_phinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
@@ -2968,9 +3014,15 @@ EL::StatusCode chorizo :: loop ()
   metmap[::MetDef::VisMuRef] = met_obj.GetVector("met_refFinal_vmu");  
   metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst_imu");
   metmap[::MetDef::VisMuTST] = met_obj.GetVector("met_tst_vmu");
+
+  metmap[::MetDef::InvMuTSTECorr] = met_obj.GetVector("met_tst_imu_ecorr");
+  metmap[::MetDef::VisMuTSTECorr] = met_obj.GetVector("met_tst_vmu_ecorr");
+  metmap[::MetDef::VisMuTSTMuCorr] = met_obj.GetVector("met_tst_vmu_mucorr");
+
   metmap[::MetDef::InvMuTruth] = met_obj.GetVector("met_truth_imu");
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");  
   metmap[::MetDef::locHadTopo] = met_obj.GetVector("met_locHadTopo");    
+
   
 
   //***
@@ -3423,8 +3475,13 @@ EL::StatusCode chorizo :: loop ()
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
     TVector2 met_electron = met_obj.GetVector("met_imu"); //arely
     TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu"); //arely 
+    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); //arely 
+
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
+    e_MT_tst = Calc_MT( recoElectrons.at(0), met_tst_electron);
+    e_MT_tst_vmu = Calc_MT( recoElectrons.at(0), met_tst_electron_vmu);
   }
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
@@ -3500,11 +3557,12 @@ EL::StatusCode chorizo :: loop ()
   delete metRFC;
   delete metRFC_TST;
   delete metRFC_vmu;
-  delete metRFC_TST_vmu;  
+  delete metRFC_TST_vmu;
   delete metRFCAux;
   delete metRFCAux_TST;
   delete metRFCAux_vmu;
   delete metRFCAux_TST_vmu;    
+
 
   output->setFilterPassed ();
   
@@ -3883,6 +3941,12 @@ EL::StatusCode chorizo :: loop_truth()
   metmap={};
   metmap[::MetDef::InvMuTruth] = met_obj.GetVector("met_truth_imu");
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");
+  metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_ecorr_imu");
+  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_phcorr_imu");
+  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
+  metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst_imu");
+
 
   //Recoiling system against MET (prebooking)
   TLorentzVector sjet(0.,0.,0.,0.);
@@ -4188,6 +4252,7 @@ EL::StatusCode chorizo :: loop_truth()
     TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
+
   }
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
