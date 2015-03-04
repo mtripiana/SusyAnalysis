@@ -7,13 +7,16 @@
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
     <Mode name="DoCutFlow">false</Mode>
-    <Path name="RootFilesFolder">/nfs/at3/scratch/arelycg/RunningCode/MonojetAnalysis_11april14_noXsmr/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/arelycg/RunningCode_col/</Path>
-    <Path name="GRLxmlFile">SUSYTools/GRL/Summer2013/data12_8TeV.periodAllYear_DetStatus-v61-pro14-02_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path>
+    <Path name="RootFilesFolder">/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/Running/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/Collateral/</Path>
+    <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
+    <!--   <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path> updated periodB GRL. Due to some job failures, not all lumiblocks are complete. -->
     <Pileup>
-      <Mode name="ApplyPileupReweighting">true</Mode>
-      <Path name="PileupReweightingConfigFolder">/nfs/at3users/users/vgiangio/MonoJet_8TeV_00-03-14/code/data/PileupReweighting/</Path>
-      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
+      <Mode name="ApplyPileupReweighting">false</Mode>
+      <Path name="PileupReweightingConfigFolder"> </Path> <!-- leave it empty to use default location -->
+      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>		
+      <!-- <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path> -->
+      <!-- <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path> -->		
     </Pileup>
 
     <LeptonEfficiency>
@@ -30,7 +33,7 @@
       <Mu>60</Mu> <!-- needed for Jet smearing (hard coded) -->
       <MetWP>mu60</MetWP> <!--  implemented options: 60,80,140 -->
       <ElectronWP>0</ElectronWP> <!-- Electron working point . 0=loose 1=tight-->
-      <RecJetFlav>false</RecJetFlav>
+      <RecJetFlav>false</RecJetFlav> <!-- Recalculate jet flavor? Mostly needed for old truth (buggy) ntuples.-->
     </SmearTruth>
 
   </GeneralSettings>
@@ -39,16 +42,16 @@
 
     <OverlapRemoval>
       <Enable>true</Enable>
-      <Harmonisation>true</Harmonisation>
+      <Harmonisation>false</Harmonisation>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
-    
+
     <Trigger>
       <chains>HLT_xe100,HLT_xe50</chains>
     </Trigger>
 
     <Truth>
-      <dressLeptons>true</dressLeptons>
+      <dressLeptons>true</dressLeptons> <!--  to use dressed/bare lepton's 4mom -->
     </Truth>
 
     <Vertex>
@@ -71,9 +74,9 @@
     </TrackVeto>
     <Electron>
       <region name="SR">
-        <PreselPtCut>7000.</PreselPtCut>
+        <PreselPtCut>20000.</PreselPtCut>
         <PreselEtaCut>2.47</PreselEtaCut>
-        <RecoPtCut>7000.</RecoPtCut>
+        <RecoPtCut>20000.</RecoPtCut>
         <RecoEtaCut>2.47</RecoEtaCut>
 
         <recoSF>true</recoSF>
@@ -84,46 +87,53 @@
     </Electron>
     <Muon>
       <region name="SR">
-        <PreselPtCut>7000.</PreselPtCut>
+        <PreselPtCut>10000.</PreselPtCut>
         <PreselEtaCut>2.4</PreselEtaCut>
-        <RecoPtCut>7000.</RecoPtCut>
+        <RecoPtCut>10000.</RecoPtCut>
         <RecoEtaCut>2.4</RecoEtaCut>
         <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
-	<!-- The monojet group uses mu_staco_ptcone20/pt, is this better? -->
-        <!-- <isolationVar>mu_staco_ptcone20</isolationVar> -->
-        <!-- <isolationThres>1.8</isolationThres> -->          
-	<!-- relative isolation would be 0.1 -->
       </region>
     </Muon>
+    <Photon>
+      <region name="SR">
+        <PreselPtCut>20000.</PreselPtCut>
+        <PreselEtaCut>2.37</PreselEtaCut>
+        <RecoPtCut>20000.</RecoPtCut>
+        <RecoEtaCut>2.37</RecoEtaCut>
+
+        <recoSF>true</recoSF>
+        <idSF>true</idSF>
+        <triggerSF>false</triggerSF>
+        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      </region>
+    </Photon>
     <Jet>
       <region name="SR">
-        <Path name="BtagEnv">SUSYTools/data/BTagCalibration.env</Path>
-        <Path name="BtagCalib">SUSYTools/data/</Path>
-        <dPhiMin>0.5</dPhiMin>
-        <JVFMin>0.0</JVFMin>
+        <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
+        <Path name="BtagCalib">SUSYTools/</Path>
+        <dPhiMin>0.4</dPhiMin>
+        <JVFMin>0.5</JVFMin>
         <Collection>AntiKt4LCTopo</Collection>
 
         <PreselPtCut>20000.</PreselPtCut>
         <PreselEtaCut>10</PreselEtaCut>
         <RecoPtCut>30000.</RecoPtCut>
-        <RecoEtaCut>4.5</RecoEtaCut>
-
-        <OverlapRemovalElPt>5000000.</OverlapRemovalElPt> <!-- Jet pT for el. overlap removal. The el. is removed. -->
-        <OverlapRemovalMuPt>5000000.</OverlapRemovalMuPt> <!-- Jet pT for mu. overlap removal. The muon is removed. -->
+        <RecoEtaCut>2.8</RecoEtaCut> 
         
         <!--- For the c/b-tagger -->
-        <Tagger>JetFitterCOMBCharm</Tagger>
-        <TaggerOpPoint>-1_0_-0_82</TaggerOpPoint>
-        <TaggerOpPoint2>-1_0_-0_82</TaggerOpPoint2>
+        <!---<Tagger>MV1</Tagger> -->
+	<Tagger>IP3DSV1</Tagger>
+        <TaggerOpPoint>1_85</TaggerOpPoint>	
+        <TaggerOpPoint2>m0_70</TaggerOpPoint2>				
         <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
       </region>
     </Jet>
     <Etmiss>
       <region name="SR">
-        <Path name="FakeMetEstimator">RootCore/../SUSYTools/data/fest_periodF_v1.root</Path>
+        <Path name="FakeMetEstimator">fest_periodF_v1.root</Path>
         <Collection>Egamma10NoTau</Collection>
         <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
-        <doFakeEtmiss>false</doFakeEtmiss>
+        <doFakeEtmiss>true</doFakeEtmiss>
         <Term name="doRefEle">true</Term>
         <Term name="doRefGamma">true</Term>
         <Term name="doRefTau">false</Term>
@@ -134,19 +144,19 @@
     </Etmiss>
     <QCD>
       <Enable>false</Enable> <!-- Enable jet smearing  -->
-      <r_egion name="SR">
+      <region name="SR">
 	<TrigChains> EF_j460,EF_j55</TrigChains>
 	<JetsPtPreselection>20000.0</JetsPtPreselection>
 	<METSigCut>1.0</METSigCut>
-	<LeadJetPreSel>Monojet</LeadJetPreSel>
-	<RandomSeedOffset>654321</RandomSeedOffset>
+	<LeadJetPreSel>Stop</LeadJetPreSel>
+	<RandomSeedOffset>123456</RandomSeedOffset>
 	<SmearType>optimal</SmearType>
 	<SmearUseBweight>true</SmearUseBweight>
 	<SmearBtagWeight>0.772</SmearBtagWeight>
 	<SmearMeanShift>low</SmearMeanShift>
 	<SmearExtraSmr>true</SmearExtraSmr>
 	<DoPhiSmearing>true</DoPhiSmearing>
-	<SmearedEvents>500</SmearedEvents>
+	<SmearedEvents>250</SmearedEvents>
       </region>
     </QCD>
   </ObjectDefinition>
