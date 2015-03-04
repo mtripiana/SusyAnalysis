@@ -55,7 +55,7 @@
     </Truth>
 
     <Vertex>
-      <region name="SR">4</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
+      <region name="SR">2</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
     </Vertex>
 
     <TrackVeto>
