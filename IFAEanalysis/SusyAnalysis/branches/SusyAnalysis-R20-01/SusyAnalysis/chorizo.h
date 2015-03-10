@@ -175,6 +175,7 @@ public:
   bool doPUTree; 
   bool doFlowTree; 
   bool genPUfile;
+  bool doTrigExt;
 
   CP::SystematicSet syst_CP; //!
   TString syst_CPstr;
@@ -717,6 +718,8 @@ private:
   float electronSF;
   float electronSFu;
   float electronSFd;
+  int   e_type; 
+  int   e_origin; 
 
   //- Muon Info
   int   m_N;
@@ -737,7 +740,9 @@ private:
   float muonSF;
   float muonSFu;
   float muonSFd;
-  
+  int   m_type; 
+  int   m_origin; 
+
   //- 'boson' properties
   float e_M;
   float e_MT;
@@ -933,6 +938,75 @@ private:
   float pt1_antikt08;
   float mtasym12; //build these offline ?
   float mtasym08;
+
+  //Extended trigger info
+  float trig_l1_ex; 
+  float trig_l1_ey; 
+  float trig_l1_et; 
+  float trig_l1_sumet; 
+  float trig_l1_phi;
+
+  float trig_hlt_EFJetEtSum_ex; 
+  float trig_hlt_EFJetEtSum_ey; 
+  float trig_hlt_EFJetEtSum_et; 
+  float trig_hlt_EFJetEtSum_sumet; 
+  float trig_hlt_EFJetEtSum_phi;
+ 
+  float trig_hlt_T2MissingET_ex; 
+  float trig_hlt_T2MissingET_ey; 
+  float trig_hlt_T2MissingET_et; 
+  float trig_hlt_T2MissingET_sumet; 
+  float trig_hlt_T2MissingET_phi;
+
+  float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex; 
+  float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey; 
+  float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et; 
+  float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet; 
+  float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi;
+
+ 
+  float trig_hlt_TrigL2MissingET_FEB_ex; 
+  float trig_hlt_TrigL2MissingET_FEB_ey; 
+  float trig_hlt_TrigL2MissingET_FEB_et; 
+  float trig_hlt_TrigL2MissingET_FEB_sumet; 
+  float trig_hlt_TrigL2MissingET_FEB_phi;
+ 
+  float trig_hlt_TrigEFMissingET_FEB_ex; 
+  float trig_hlt_TrigEFMissingET_FEB_ey; 
+  float trig_hlt_TrigEFMissingET_FEB_et; 
+  float trig_hlt_TrigEFMissingET_FEB_sumet; 
+  float trig_hlt_TrigEFMissingET_FEB_phi;
+
+  float trig_hlt_TrigEFMissingET_ex; 
+  float trig_hlt_TrigEFMissingET_ey; 
+  float trig_hlt_TrigEFMissingET_et; 
+  float trig_hlt_TrigEFMissingET_sumet; 
+  float trig_hlt_TrigEFMissingET_phi;
+ 
+  float trig_hlt_TrigEFMissingET_mht_ex; 
+  float trig_hlt_TrigEFMissingET_mht_ey; 
+  float trig_hlt_TrigEFMissingET_mht_et; 
+  float trig_hlt_TrigEFMissingET_mht_sumet; 
+  float trig_hlt_TrigEFMissingET_mht_phi;
+ 
+  float trig_hlt_TrigEFMissingET_topocl_ex; 
+  float trig_hlt_TrigEFMissingET_topocl_ey; 
+  float trig_hlt_TrigEFMissingET_topocl_et; 
+  float trig_hlt_TrigEFMissingET_topocl_sumet; 
+  float trig_hlt_TrigEFMissingET_topocl_phi;
+
+  float trig_hlt_TrigEFMissingET_topocl_PS_ex; 
+  float trig_hlt_TrigEFMissingET_topocl_PS_ey; 
+  float trig_hlt_TrigEFMissingET_topocl_PS_et; 
+  float trig_hlt_TrigEFMissingET_topocl_PS_sumet; 
+  float trig_hlt_TrigEFMissingET_topocl_PS_phi;
+
+  float trig_hlt_TrigEFMissingET_topocl_PUC_ex; 
+  float trig_hlt_TrigEFMissingET_topocl_PUC_ey; 
+  float trig_hlt_TrigEFMissingET_topocl_PUC_et; 
+  float trig_hlt_TrigEFMissingET_topocl_PUC_sumet; 
+  float trig_hlt_TrigEFMissingET_topocl_PUC_phi;           
+  
 };
 
 #endif

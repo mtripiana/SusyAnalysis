@@ -1,3 +1,8 @@
+
+2014-03-10 Martin <tripiana@cern.ch>
+	* Move cosmic veto after overlap removal (from Arely).
+	* Add jOption config for extended trigger info dumping.
+
 2014-03-01 Martin <tripiana@cern.ch>
 	* Add reg exp for trigger chains in jOptions
 	* Add metmap to output metadata (METmap)

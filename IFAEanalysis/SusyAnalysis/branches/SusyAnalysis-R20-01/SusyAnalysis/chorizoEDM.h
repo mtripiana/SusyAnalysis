@@ -37,6 +37,9 @@
 //#include "xAODTracking/TrackingPrimitives.h"
 #include "xAODEgamma/EgammaxAODHelpers.h"
 
+#include "xAODTrigger/EnergySumRoI.h"
+#include "xAODTrigMissingET/TrigMissingET.h"
+#include "xAODTrigMissingET/TrigMissingETContainer.h"
 
 #include "SUSYTools/SUSYObjDef_xAOD.h"
 ST::SignalIsoExp::IsoExp elIsoType;

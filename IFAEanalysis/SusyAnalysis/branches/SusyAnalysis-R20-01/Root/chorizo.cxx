@@ -111,6 +111,7 @@ chorizo :: chorizo ()
   doAnaTree=false;
   doPUTree=false;
   doFlowTree=false;
+  doTrigExt=false;
 
   printMet=false; 
   printJet=false;
@@ -289,6 +290,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
       output->tree()->Branch("e_M",&e_M,"e_M/F", 10000);
       output->tree()->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
+      output->tree()->Branch("e_type",&e_type,"e_type/I", 10000);
+      output->tree()->Branch("e_origin",&e_origin,"e_origin/I", 10000);
       
       output->tree()->Branch("e_SF",&electronSF,"e_SF/F", 10000);
       output->tree()->Branch("e_SFu",&electronSF,"e_SFu/F", 10000);
@@ -315,6 +318,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
       output->tree()->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
       output->tree()->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
+      output->tree()->Branch("m_type",&m_type,"m_type/I", 10000);
+      output->tree()->Branch("m_origin",&m_origin,"m_origin/I", 10000);
 
       //jets
       output->tree()->Branch("JVF_min",&JVF_min,"JVF_min/O", 10000);                           
@@ -514,7 +519,75 @@ void chorizo :: bookTree(){
       output->tree()->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
       output->tree()->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
       
+      //Extended trigger info
+      if(doTrigExt){
 
+	output->tree()->Branch("trig_l1_ex",               &trig_l1_ex 		              ,"trig_l1_ex/F"); 		            
+	output->tree()->Branch("trig_l1_ey", 		   &trig_l1_ey 		    	      ,"trig_l1_ey/F"); 		    
+	output->tree()->Branch("trig_l1_et", 		   &trig_l1_et 		    	      ,"trig_l1_et/F"); 		    
+	output->tree()->Branch("trig_l1_sumet", 	   &trig_l1_sumet 	   	      ,"trig_l1_sumet/F"); 		    
+	output->tree()->Branch("trig_l1_phi",		   &trig_l1_phi		    	      ,"trig_l1_phi/F");		    
+
+	output->tree()->Branch("trig_hlt_EFJetEtSum_ex",                   &trig_hlt_EFJetEtSum_ex 		              ,"trig_hlt_EFJetEtSum_ex/F"); 		            
+	output->tree()->Branch("trig_hlt_EFJetEtSum_ey", 		   &trig_hlt_EFJetEtSum_ey 		    	      ,"trig_hlt_EFJetEtSum_ey/F"); 		    
+	output->tree()->Branch("trig_hlt_EFJetEtSum_et", 		   &trig_hlt_EFJetEtSum_et 		    	      ,"trig_hlt_EFJetEtSum_et/F"); 		    
+	output->tree()->Branch("trig_hlt_EFJetEtSum_sumet", 		   &trig_hlt_EFJetEtSum_sumet 		    	      ,"trig_hlt_EFJetEtSum_sumet/F"); 		    
+	output->tree()->Branch("trig_hlt_EFJetEtSum_phi",		   &trig_hlt_EFJetEtSum_phi		    	      ,"trig_hlt_EFJetEtSum_phi/F");		    
+									   					    	      					    
+	output->tree()->Branch("trig_hlt_T2MissingET_ex", 		   &trig_hlt_T2MissingET_ex 		    	      ,"trig_hlt_T2MissingET_ex/F"); 		    
+	output->tree()->Branch("trig_hlt_T2MissingET_ey", 		   &trig_hlt_T2MissingET_ey 		    	      ,"trig_hlt_T2MissingET_ey/F"); 		    
+	output->tree()->Branch("trig_hlt_T2MissingET_et", 		   &trig_hlt_T2MissingET_et 		    	      ,"trig_hlt_T2MissingET_et/F"); 		    
+	output->tree()->Branch("trig_hlt_T2MissingET_sumet", 		   &trig_hlt_T2MissingET_sumet 		    	      ,"trig_hlt_T2MissingET_sumet/F"); 		    
+	output->tree()->Branch("trig_hlt_T2MissingET_phi",		   &trig_hlt_T2MissingET_phi		      ,"trig_hlt_T2MissingET_phi/F");		    
+
+	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex", 		   &trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex 		    	      ,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex/F"); 		    
+	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey", 		   &trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey 		    	      ,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey/F"); 		    
+	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et", 		   &trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et 		    	      ,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et/F"); 		    
+	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet", 		   &trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet 		    	      ,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet/F"); 		    
+	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi",		   &trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi		    	      ,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi/F");		    
+									   					    	      					    
+	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_ex", 	   &trig_hlt_TrigL2MissingET_FEB_ex 		      ,"trig_hlt_TrigL2MissingET_FEB_ex/F"); 		    
+	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_ey", 	   &trig_hlt_TrigL2MissingET_FEB_ey 		      ,"trig_hlt_TrigL2MissingET_FEB_ey/F"); 		    
+	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_et", 	   &trig_hlt_TrigL2MissingET_FEB_et 		      ,"trig_hlt_TrigL2MissingET_FEB_et/F"); 		    
+	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_sumet", 	   &trig_hlt_TrigL2MissingET_FEB_sumet 	    	      ,"trig_hlt_TrigL2MissingET_FEB_sumet/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_phi",	   &trig_hlt_TrigL2MissingET_FEB_phi	    	      ,"trig_hlt_TrigL2MissingET_FEB_phi/F");	    
+									   					    	      					    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_ex", 		   &trig_hlt_TrigEFMissingET_ex 		      ,"trig_hlt_TrigEFMissingET_ex/F"); 		    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_ey", 		   &trig_hlt_TrigEFMissingET_ey 		      ,"trig_hlt_TrigEFMissingET_ey/F"); 		    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_et", 		   &trig_hlt_TrigEFMissingET_et 		      ,"trig_hlt_TrigEFMissingET_et/F"); 		    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_sumet", 	   &trig_hlt_TrigEFMissingET_sumet 	    	      ,"trig_hlt_TrigEFMissingET_sumet/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_phi",   	   &trig_hlt_TrigEFMissingET_phi	    	      ,"trig_hlt_TrigEFMissingET_phi/F");	    
+									   					    	      					    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_ex", 	   &trig_hlt_TrigEFMissingET_FEB_ex 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ex/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_ey", 	   &trig_hlt_TrigEFMissingET_FEB_ey 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ey/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_et", 	   &trig_hlt_TrigEFMissingET_FEB_et 	    	      ,"trig_hlt_TrigEFMissingET_FEB_et/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_sumet", 	   &trig_hlt_TrigEFMissingET_FEB_sumet 	    	      ,"trig_hlt_TrigEFMissingET_FEB_sumet/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_phi",	   &trig_hlt_TrigEFMissingET_FEB_phi	              ,"trig_hlt_TrigEFMissingET_FEB_phi/F");	    
+
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_ex", 	   &trig_hlt_TrigEFMissingET_mht_ex 	    	      ,"trig_hlt_TrigEFMissingET_mht_ex/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_ey", 	   &trig_hlt_TrigEFMissingET_mht_ey 	    	      ,"trig_hlt_TrigEFMissingET_mht_ey/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_et", 	   &trig_hlt_TrigEFMissingET_mht_et 	    	      ,"trig_hlt_TrigEFMissingET_mht_et/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_sumet", 	   &trig_hlt_TrigEFMissingET_mht_sumet 	    	      ,"trig_hlt_TrigEFMissingET_mht_sumet/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_phi",	   &trig_hlt_TrigEFMissingET_mht_phi	              ,"trig_hlt_TrigEFMissingET_mht_phi/F");	    
+									   					    	      					    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_ex", 	   &trig_hlt_TrigEFMissingET_topocl_ex 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ex/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_ey", 	   &trig_hlt_TrigEFMissingET_topocl_ey 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ey/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_et", 	   &trig_hlt_TrigEFMissingET_topocl_et 	    	      ,"trig_hlt_TrigEFMissingET_topocl_et/F"); 	    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_sumet",    &trig_hlt_TrigEFMissingET_topocl_sumet     	      ,"trig_hlt_TrigEFMissingET_topocl_sumet/F");     
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_phi",      &trig_hlt_TrigEFMissingET_topocl_phi   	      ,"trig_hlt_TrigEFMissingET_topocl_phi/F");   
+									   					    	      					    
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ex",    &trig_hlt_TrigEFMissingET_topocl_PS_ex     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ex/F");     
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ey",	   &trig_hlt_TrigEFMissingET_topocl_PS_ey     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ey/F");     
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_et",    &trig_hlt_TrigEFMissingET_topocl_PS_et     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_et/F");     
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_sumet", &trig_hlt_TrigEFMissingET_topocl_PS_sumet  	      ,"trig_hlt_TrigEFMissingET_topocl_PS_sumet/F");  
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_phi",   &trig_hlt_TrigEFMissingET_topocl_PS_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PS_phi/F");
+
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ex" ,    &trig_hlt_TrigEFMissingET_topocl_PUC_ex          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ex/F");     
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ey",     &trig_hlt_TrigEFMissingET_topocl_PUC_ey          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ey/F");     
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_et",     &trig_hlt_TrigEFMissingET_topocl_PUC_et          ,"trig_hlt_TrigEFMissingET_topocl_PUC_et/F");     
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_sumet",  &trig_hlt_TrigEFMissingET_topocl_PUC_sumet       ,"trig_hlt_TrigEFMissingET_topocl_PUC_sumet/F");  
+	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_phi",    &trig_hlt_TrigEFMissingET_topocl_PUC_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PUC_phi/F");
+      }
     }
     else if(doPUTree){
     
@@ -719,6 +792,8 @@ void chorizo :: InitVars()
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
   e_MT_vmu = DUMMYDN;     
+  e_type = 0; //Unknown
+  e_origin = 0; //NonDefined
   e_Zpt = DUMMYDN;             
   electronSF = DUMMYDN;        
   electronSFu = 1.;
@@ -762,6 +837,8 @@ void chorizo :: InitVars()
   m_MT_vmu = DUMMYDN;                
   m_Zpt = DUMMYDN;              
   m_EM = DUMMYDN;               
+  m_type = 0; //Unknown
+  m_origin = 0; //NonDefined
 
   //muons (before overlap removal)      
   muon_N = DUMMYDN;                 
@@ -1001,6 +1078,77 @@ void chorizo :: InitVars()
   recoMuons.clear();
   recoJets.clear();
   seedJets.clear();
+
+  //Extended trigger
+  if(doTrigExt){
+
+    trig_l1_ex=0.; 			   
+    trig_l1_ey=0.; 			   
+    trig_l1_et=0.; 			   
+    trig_l1_sumet=0.; 			   
+    trig_l1_phi=0.;			   
+
+    trig_hlt_EFJetEtSum_ex=0.; 			   
+    trig_hlt_EFJetEtSum_ey=0.; 			   
+    trig_hlt_EFJetEtSum_et=0.; 			   
+    trig_hlt_EFJetEtSum_sumet=0.; 			   
+    trig_hlt_EFJetEtSum_phi=0.;			   
+                                                   
+    trig_hlt_T2MissingET_ex=0.; 			   
+    trig_hlt_T2MissingET_ey=0.; 			   
+    trig_hlt_T2MissingET_et=0.; 			   
+    trig_hlt_T2MissingET_sumet=0.; 			   
+    trig_hlt_T2MissingET_phi=0.;			   
+                                                   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex=0.;   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey=0.;   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et=0.;   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet=0.;
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi=0.;  
+                                                   
+                                                   
+    trig_hlt_TrigL2MissingET_FEB_ex=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_ey=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_et=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_sumet=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_FEB_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_et=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_ex=0.; 			   
+    trig_hlt_TrigEFMissingET_ey=0.; 			   
+    trig_hlt_TrigEFMissingET_et=0.; 			   
+    trig_hlt_TrigEFMissingET_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_phi=0.;			   
+                                                   
+    trig_hlt_TrigEFMissingET_mht_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_et=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_topocl_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_et=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_topocl_PS_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_PS_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_PS_et=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_PS_sumet=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PS_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_topocl_PUC_ex=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_ey=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_et=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_sumet=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_phi=0.;           
+  }
 
 }
 
@@ -1706,23 +1854,23 @@ EL::StatusCode chorizo :: loop ()
 
   //  -- Truth Particles
   //if(isMC){
-    
-    const xAOD::MissingETContainer* cmet_truth;    
-    
-    //    CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
-    //    CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
-    CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
-    CHECK( m_event->retrieve( m_truthP, "TruthParticles" ) );
-    CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
-    CHECK( m_event->retrieve( cmet_truth, "MET_Truth") );
-
-    const xAOD::MissingET* mtruth_inv = (*cmet_truth)["Int"];
-    const xAOD::MissingET* mtruth_vis = (*cmet_truth)["NonInt"];
+  
+  const xAOD::MissingETContainer* cmet_truth;    
+  
+  //    CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
+  //    CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
+  CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
+  CHECK( m_event->retrieve( m_truthP, "TruthParticles" ) );
+  CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+  CHECK( m_event->retrieve( cmet_truth, "MET_Truth") );
+  
+  const xAOD::MissingET* mtruth_inv = (*cmet_truth)["Int"];
+  const xAOD::MissingET* mtruth_vis = (*cmet_truth)["NonInt"];
   //}
-
+  
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;
-
+  
   // View container provides access to selected jets   (for MET recalculation)
   m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
   //  CHECK( m_store->record( m_goodJets, "MySelJets" ) );
@@ -1927,25 +2075,27 @@ EL::StatusCode chorizo :: loop ()
   if(m_eventCounter<2){
     //save Trigger metadata
     std::string trigchains="";
+    std::vector<string> trigtmp; trigtmp.clear();
     for(const auto& s : TriggerNames){
-      cout << "CHAINS FOR '" <<  s <<  "'" << endl;
       auto chainGroup = tool_trigdec->getChainGroup(s);
       for(auto &trig : chainGroup->getListOfTriggers()) {
-	cout << "ADDING " <<  trig.c_str() << endl;
+	trigtmp.push_back(trig);
 	trigchains += (trig+",");
       }
     }
+    TriggerNames = trigtmp; //overwrite it with fully expanded list
     meta_triggers = new TNamed("Triggers", trigchains.c_str());
     wk()->addOutput(meta_triggers);     
     
 
-    Info("loop()", "  MET TRIGGERS IN MENU ");
-    Info("loop()", "--------------------------------");
-    auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
-    for(auto &trig : chainGroup->getListOfTriggers()) {
-      Info("loop()", trig.c_str()); 
-    }
-    Info("loop()", "--------------------------------");
+    // Info("loop()", "  ");
+    // Info("loop()", "  MET TRIGGERS IN MENU ");
+    // Info("loop()", "--------------------------------");
+    // auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
+    // for(auto &trig : chainGroup->getListOfTriggers()) {
+    //   Info("loop()", trig.c_str()); 
+    // }
+    // Info("loop()", "--------------------------------");
   }
 
   //--- Trigger 
@@ -2068,9 +2218,7 @@ EL::StatusCode chorizo :: loop ()
     muIsoArgs->_ptcut = Mu_PreselPtCut;
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
     dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
-   
-    tool_st->IsCosmicMuon( *mu_itr );  //'cosmic'   decoration
-  }
+     }
 
   //--- Get Photons
   xAOD::PhotonContainer* photons_sc(0);
@@ -2243,7 +2391,9 @@ EL::StatusCode chorizo :: loop ()
   bool IsMuon = false; // any good not-overlapping muon in the event?
   int iMu=0;
   for(const auto& mu_itr : *muons_sc){
-    
+
+    tool_st->IsCosmicMuon( *mu_itr );  //'cosmic'   decoration  //now after overlap removal!
+
     this->isCosmic |= dec_cosmic(*mu_itr); //check if at least one cosmic in the event
     
     if(! dec_baseline(*mu_itr) ) continue; //keep baseline object only
@@ -3491,6 +3641,121 @@ EL::StatusCode chorizo :: loop ()
   }
   
 
+  //Extended trigger info (if requested)
+  if(doTrigExt){
+    const xAOD::EnergySumRoI*           cmet_l1_roi;
+    const xAOD::TrigMissingETContainer* cmet_hlt_EFJetEtSum;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_T2MissingET;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigL2MissingET_FEB;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_mht;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_FEB;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_topocl;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_topocl_PS;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_topocl_PUC;    
+
+    CHECK( m_event->retrieve( cmet_l1_roi, "LVL1EnergySumRoI"));
+    if(cmet_l1_roi){
+      trig_l1_sumet    =  (cmet_l1_roi->energyT())*0.001;
+      trig_l1_ex    =  - (cmet_l1_roi->energyX())*0.001;
+      trig_l1_ey    =  - (cmet_l1_roi->energyY())*0.001;
+      trig_l1_et =	 sqrt(trig_l1_ex*trig_l1_ex + trig_l1_ey*trig_l1_ey);
+      trig_l1_phi   =	 atan2(trig_l1_ey, trig_l1_ex);
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_EFJetEtSum, "HLT_xAOD__TrigMissingETContainer_EFJetEtSum") );
+    if(cmet_hlt_EFJetEtSum->size()){
+      trig_hlt_EFJetEtSum_ex = cmet_hlt_EFJetEtSum->at(0)->ex()*0.001;
+      trig_hlt_EFJetEtSum_ey = cmet_hlt_EFJetEtSum->at(0)->ey()*0.001;
+      trig_hlt_EFJetEtSum_et = TMath::Hypot(cmet_hlt_EFJetEtSum->at(0)->ex(), cmet_hlt_EFJetEtSum->at(0)->ey())*0.001;
+      trig_hlt_EFJetEtSum_sumet = cmet_hlt_EFJetEtSum->at(0)->sumEt()*0.001;
+      trig_hlt_EFJetEtSum_phi = atan2(cmet_hlt_EFJetEtSum->at(0)->ey(), cmet_hlt_EFJetEtSum->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_T2MissingET, "HLT_xAOD__TrigMissingETContainer_T2MissingET") );
+    if(cmet_hlt_T2MissingET->size()){
+      trig_hlt_T2MissingET_ex = cmet_hlt_T2MissingET->at(0)->ex()*0.001;
+      trig_hlt_T2MissingET_ey = cmet_hlt_T2MissingET->at(0)->ey()*0.001;
+      trig_hlt_T2MissingET_et = TMath::Hypot(cmet_hlt_T2MissingET->at(0)->ex(), cmet_hlt_T2MissingET->at(0)->ey())*0.001;
+      trig_hlt_T2MissingET_sumet = cmet_hlt_T2MissingET->at(0)->sumEt()*0.001;
+      trig_hlt_T2MissingET_phi = atan2(cmet_hlt_T2MissingET->at(0)->ey(), cmet_hlt_T2MissingET->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC, "HLT_xAOD__TrigMissingETContainer_EFMissingET_Fex_2sidednoiseSupp_PUC") );
+    if(cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->size()){
+      trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex = cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ex()*0.001;
+      trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey = cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ey()*0.001;
+      trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et = TMath::Hypot(cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ex(), cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ey())*0.001;
+      trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet = cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->sumEt()*0.001;
+      trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi = atan2(cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ey(), cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_TrigL2MissingET_FEB, "HLT_xAOD__TrigMissingETContainer_TrigL2MissingET_FEB") );
+    if(cmet_hlt_TrigL2MissingET_FEB->size()){
+      trig_hlt_TrigL2MissingET_FEB_ex = cmet_hlt_TrigL2MissingET_FEB->at(0)->ex()*0.001;
+      trig_hlt_TrigL2MissingET_FEB_ey = cmet_hlt_TrigL2MissingET_FEB->at(0)->ey()*0.001;
+      trig_hlt_TrigL2MissingET_FEB_et = TMath::Hypot(cmet_hlt_TrigL2MissingET_FEB->at(0)->ex(), cmet_hlt_TrigL2MissingET_FEB->at(0)->ey())*0.001;
+      trig_hlt_TrigL2MissingET_FEB_sumet = cmet_hlt_TrigL2MissingET_FEB->at(0)->sumEt()*0.001;
+      trig_hlt_TrigL2MissingET_FEB_phi = atan2(cmet_hlt_TrigL2MissingET_FEB->at(0)->ey(), cmet_hlt_TrigL2MissingET_FEB->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_FEB, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_FEB") );
+    if(cmet_hlt_TrigEFMissingET_FEB->size()){
+      trig_hlt_TrigEFMissingET_FEB_ex = cmet_hlt_TrigEFMissingET_FEB->at(0)->ex()*0.001;
+      trig_hlt_TrigEFMissingET_FEB_ey = cmet_hlt_TrigEFMissingET_FEB->at(0)->ey()*0.001;
+      trig_hlt_TrigEFMissingET_FEB_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_FEB->at(0)->ex(), cmet_hlt_TrigEFMissingET_FEB->at(0)->ey())*0.001;
+      trig_hlt_TrigEFMissingET_FEB_sumet = cmet_hlt_TrigEFMissingET_FEB->at(0)->sumEt()*0.001;
+      trig_hlt_TrigEFMissingET_FEB_phi = atan2(cmet_hlt_TrigEFMissingET_FEB->at(0)->ey(), cmet_hlt_TrigEFMissingET_FEB->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET") );
+    if(cmet_hlt_TrigEFMissingET->size()){
+      trig_hlt_TrigEFMissingET_ex = cmet_hlt_TrigEFMissingET->at(0)->ex()*0.001;
+      trig_hlt_TrigEFMissingET_ey = cmet_hlt_TrigEFMissingET->at(0)->ey()*0.001;
+      trig_hlt_TrigEFMissingET_et = TMath::Hypot(cmet_hlt_TrigEFMissingET->at(0)->ex(), cmet_hlt_TrigEFMissingET->at(0)->ey())*0.001;
+      trig_hlt_TrigEFMissingET_sumet = cmet_hlt_TrigEFMissingET->at(0)->sumEt()*0.001;
+      trig_hlt_TrigEFMissingET_phi = atan2(cmet_hlt_TrigEFMissingET->at(0)->ey(), cmet_hlt_TrigEFMissingET->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_mht, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_mht") );
+    if(cmet_hlt_TrigEFMissingET_mht->size()){
+      trig_hlt_TrigEFMissingET_mht_ex = cmet_hlt_TrigEFMissingET_mht->at(0)->ex()*0.001;
+      trig_hlt_TrigEFMissingET_mht_ey = cmet_hlt_TrigEFMissingET_mht->at(0)->ey()*0.001;
+      trig_hlt_TrigEFMissingET_mht_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_mht->at(0)->ex(), cmet_hlt_TrigEFMissingET_mht->at(0)->ey())*0.001;
+      trig_hlt_TrigEFMissingET_mht_sumet = cmet_hlt_TrigEFMissingET_mht->at(0)->sumEt()*0.001;
+      trig_hlt_TrigEFMissingET_mht_phi = atan2(cmet_hlt_TrigEFMissingET_mht->at(0)->ey(), cmet_hlt_TrigEFMissingET_mht->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_topocl, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_topocl") );
+    if(cmet_hlt_TrigEFMissingET_topocl->size()){
+      trig_hlt_TrigEFMissingET_topocl_ex = cmet_hlt_TrigEFMissingET_topocl->at(0)->ex()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_ey = cmet_hlt_TrigEFMissingET_topocl->at(0)->ey()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl->at(0)->ex(), cmet_hlt_TrigEFMissingET_topocl->at(0)->ey())*0.001;
+      trig_hlt_TrigEFMissingET_topocl_sumet = cmet_hlt_TrigEFMissingET_topocl->at(0)->sumEt()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_phi = atan2(cmet_hlt_TrigEFMissingET_topocl->at(0)->ey(), cmet_hlt_TrigEFMissingET_topocl->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_topocl_PS, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_topocl_PS") );
+    if(cmet_hlt_TrigEFMissingET_topocl_PS->size()){
+      trig_hlt_TrigEFMissingET_topocl_PS_ex = cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ex()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PS_ey = cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ey()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PS_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ex(), cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ey())*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PS_sumet = cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->sumEt()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PS_phi = atan2(cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ey(), cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ex());
+    }
+
+    CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_topocl_PUC, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_topocl_PUC") );
+    if(cmet_hlt_TrigEFMissingET_topocl_PUC->size()){
+      trig_hlt_TrigEFMissingET_topocl_PUC_ex = cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ex()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PUC_ey = cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ey()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PUC_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ex(), cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ey())*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PUC_sumet = cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->sumEt()*0.001;
+      trig_hlt_TrigEFMissingET_topocl_PUC_phi = atan2(cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ey(), cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ex());
+    }
+
+  }
+
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
   //...
   
@@ -3538,9 +3803,20 @@ EL::StatusCode chorizo :: loop_truth()
     printf("\r %6d/%lld\t[%3.0f]",m_eventCounter,m_event->getEntries(),100*m_eventCounter/float(m_event->getEntries()));
     fflush(stdout);
   }
-  
 
   m_eventCounter++;
+  
+  //save dummy meta_data
+  if(m_eventCounter<2){
+    //save Trigger metadata
+    std::string trigchains="";
+    for(const auto& s : TriggerNames){
+      trigchains += (s+",");
+    }
+    meta_triggers = new TNamed("Triggers", trigchains.c_str());
+    wk()->addOutput(meta_triggers);     
+  }
+
 
   //----------------------------
   // Event information
@@ -3587,17 +3863,6 @@ EL::StatusCode chorizo :: loop_truth()
 
       // FS selection
       if( !isStable( *truthEl_itr ) ) continue; 
-
-      // unsigned int type = ( *truthEl_itr )->auxdata< unsigned int >( "type" );
-      // unsigned int origin = ( *truthEl_itr )->auxdata< unsigned int >( "origin" );
-
-      // cout << "------" << endl;
-      // cout << "E type = " << type << endl;
-      // cout << "E origin = " << origin << endl;
-
-      unsigned int origin = xAOD::EgammaHelpers::getParticleTruthOrigin( *truthEl_itr );
-      cout << "E origin2 = " << origin << endl;
-
       
       //define preselected electron                
       Particle recoElectron;
@@ -3638,7 +3903,9 @@ EL::StatusCode chorizo :: loop_truth()
       
       // recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( *truthEl_itr );
       // recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( *truthEl_itr );
-      
+      recoElectron.type   = ( *truthEl_itr )->auxdata< unsigned int >( "particleType" );
+      recoElectron.origin = ( *truthEl_itr )->auxdata< unsigned int >( "particleOrigin" );
+            
       electronCandidates.push_back(recoElectron);
       
   }//electron loop
@@ -3689,6 +3956,8 @@ EL::StatusCode chorizo :: loop_truth()
     
     // recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
     // recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+    recoMuon.type   = ( *truthMu_itr )->auxdata< unsigned int >( "particleType" );
+    recoMuon.origin = ( *truthMu_itr )->auxdata< unsigned int >( "particleOrigin" );
     
     muonCandidates.push_back(recoMuon);
         
@@ -3724,7 +3993,9 @@ EL::StatusCode chorizo :: loop_truth()
       
       // recoPhoton.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
       // recoPhoton.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
-      
+      recoPhoton.type   = ( *truthPh_itr )->auxdata< unsigned int >( "particleType" );
+      recoPhoton.origin = ( *truthPh_itr )->auxdata< unsigned int >( "particleOrigin" );
+            
       photonCandidates.push_back(recoPhoton);
             
   }//photon loop
@@ -3746,15 +4017,21 @@ EL::StatusCode chorizo :: loop_truth()
     if (fabs(recoJet.Eta()) > Jet_PreselEtaCut) continue;
 
     try{
-      recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("TruthLabelID"); 
+      //      recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("TruthLabelID"); 
+      recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("PartonTruthLabelID"); 
+      cout << "using truthLabelID" << endl;
       //recoJet.FlavorTruth = xAOD::jetFlavourLabel(*jet_itr);
     }
     catch(...){
-      bool matched = tool_jetlabel->matchJet(**tjet_itr);
-      if(matched)
-	recoJet.FlavorTruth = tool_jetlabel->pdgCode();
-      else
+      try{
+	bool matched = tool_jetlabel->matchJet(**tjet_itr);
+	cout << "using jetLabel" << endl;
+	if(matched)
+	  recoJet.FlavorTruth = tool_jetlabel->pdgCode();
+      }
+      catch(...){//else
 	recoJet.FlavorTruth = 0;
+      }
     }
 
     //CHECK
@@ -3912,6 +4189,16 @@ EL::StatusCode chorizo :: loop_truth()
   metmap={};
   metmap[::MetDef::InvMuTruth] = met_obj.GetVector("met_truth_imu");
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");
+
+  //meta data (fill it once)
+  if(smetmap==""){ 
+    for (auto& mk : metmap){ 
+      smetmap += sMetDef[(unsigned int)mk.first];
+      smetmap += ",";
+    }
+    meta_metmap = new TNamed("METmap", smetmap.c_str());
+    wk()->addOutput(meta_metmap);     
+  }
 
   //Recoiling system against MET (prebooking)
   TLorentzVector sjet(0.,0.,0.,0.);
@@ -4292,6 +4579,8 @@ void chorizo :: dumpLeptons(){
     e_etiso30 = recoElectrons.at(0).etcone30;
     e_ptiso30 = recoElectrons.at(0).ptcone30;
     e_tight = recoElectrons.at(0).isTight;
+    e_type = recoElectrons.at(0).type;
+    e_origin = recoElectrons.at(0).origin;
   }
 
    if(recoElectrons.size()>1){
@@ -4315,6 +4604,8 @@ void chorizo :: dumpLeptons(){
     m_ptiso20 = recoMuons.at(0).ptcone20;
     m_etiso30 = recoMuons.at(0).etcone30;
     m_ptiso30 = recoMuons.at(0).ptcone30;
+    m_type = recoMuons.at(0).type;
+    m_origin = recoMuons.at(0).origin;
   }
 
   if(recoMuons.size()>1){

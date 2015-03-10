@@ -44,6 +44,7 @@
     </OverlapRemoval> 
     
     <Trigger>
+      <SaveExtended>false</SaveExtended>
       <chains>HLT_xe100,HLT_xe50</chains>
     </Trigger>
 

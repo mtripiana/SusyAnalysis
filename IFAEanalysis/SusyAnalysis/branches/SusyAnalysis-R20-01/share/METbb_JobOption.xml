@@ -49,6 +49,7 @@
     </Truth>
     
     <Trigger>
+      <SaveExtended>false</SaveExtended>
       <chains>HLT_xe.*</chains>
     </Trigger>
 

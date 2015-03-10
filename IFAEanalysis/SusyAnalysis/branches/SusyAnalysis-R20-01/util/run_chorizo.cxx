@@ -524,7 +524,8 @@ int main( int argc, char* argv[] ) {
     alg->doFlowTree = doFlowTree;
     alg->doPUTree   = false;         //get it from the XML!!
     alg->genPUfile  = generatePUfile;
-    
+    alg->doTrigExt  = xmlReader->retrieveBool("AnalysisOptions$Trigger$SaveExtended"); //save extended trigger information
+
     alg->syst_CP    = syst_CP;      // Systematics
     alg->syst_CPstr = syst_CP.name();
     alg->syst_ST    = syst_ST;      
@@ -586,11 +587,11 @@ int main( int argc, char* argv[] ) {
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
       Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
-      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
+      //      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
-      Pdriver.options()->setString("nc_rootVer", "5.34.22");
-      Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
+      // Pdriver.options()->setString("nc_rootVer", "5.34.22");
+      // Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
 
       Pdriver.submitOnly( job, tmpdir );
       break;
