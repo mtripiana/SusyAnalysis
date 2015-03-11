@@ -1689,10 +1689,6 @@ EL::StatusCode chorizo :: loop ()
   }
 
   m_eventCounter++;
-
-  if (m_eventCounter > 98000) {
-      printf("\nArely!!!!!! %6d",m_eventCounter);
-  } 
   
 
   //----------------------------
@@ -2462,7 +2458,7 @@ EL::StatusCode chorizo :: loop ()
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
-    iJet++;
+    //iJet++;
     
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
