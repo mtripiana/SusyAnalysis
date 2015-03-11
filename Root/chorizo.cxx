@@ -2370,7 +2370,7 @@ EL::StatusCode chorizo :: loop ()
       if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
       if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
 
-      recoPhoton.id = iEl;
+      recoPhoton.id = iPh;
       recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
       recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
       recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
@@ -2457,7 +2457,7 @@ EL::StatusCode chorizo :: loop ()
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
-    iJet++;
+    //iJet++;
     
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
