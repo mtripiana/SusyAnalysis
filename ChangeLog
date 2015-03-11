@@ -1,3 +1,7 @@
+2014-03-11 Arely <arelycg@cern.ch>
+	* Added reference folder with Root/chorizo.cxx, to make public.
+	* Corrected error in iPh and iJet counters. 
+
 2014-03-04 Cora <cfischer@ifae.es>
 	* Added MET (invisible muons) electrons-corrected.
 	* Arely: changed the muon-cosmic check after the overlap removal.
