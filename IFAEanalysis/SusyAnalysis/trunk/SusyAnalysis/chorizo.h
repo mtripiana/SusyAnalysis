@@ -327,7 +327,7 @@ private:
   
   virtual double epsilon(double x);
   virtual double thrustService(TVector2 &n, std::vector<TVector2> &obj);
-  virtual double Calc_Thrust(std::vector<TLorentzVector> pvectors);
+  virtual float Calc_Thrust(std::vector<TLorentzVector> pvectors);
 
   virtual float TopTransvMass();
   virtual void  RecoHadTops(int ibtop1, int ibtop2);
@@ -882,7 +882,7 @@ private:
 
   //(transverse) sphericity
   std::vector<float>  tr_spher;
-  std::vector<double> tr_thrust; 
+  std::vector<float> tr_thrust; 
 
   //- Topologic variables
   VFloat dPhi_met_j1;
