@@ -1943,10 +1943,11 @@ EL::StatusCode chorizo :: loop ()
 
   //------------------------ ttbar reweighting ---------------------------
   if (isMC) {
-    //if (mc_channel_number==117050 || mc_channel_number==110401) {
+    if (mc_channel_number==117050 || mc_channel_number==110401) {
       ttbar_weight = this->GetTTbarReweight(Top_truth_pt, Topbar_truth_pt, avTop_truth_pt);
+      } 
       truth_n_leptons = this->GetNTruthLeptons();
-    //}     
+        
     
     truth_met_noEle = this->GetTruthEtmiss_noEleTau();	
     truth_n_bjets   = this->GetNTruthB();	
