@@ -509,6 +509,14 @@ void chorizo :: bookTree(){
       output->tree()->Branch("mdeltaR",&mdeltaR);
       output->tree()->Branch("cosptR",&cosptR);
       
+      //Z candidate
+      output->tree()->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      output->tree()->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);      
+      output->tree()->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);     
+      output->tree()->Branch("Z_m",&Z_m,"Z_m/F", 10000); 
+      output->tree()->Branch("lep3_MT",&lep3_MT,"lep3_MT/F", 10000);   
+      output->tree()->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);       
+      
       //top reconstruction
       output->tree()->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
       output->tree()->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
@@ -735,7 +743,15 @@ void chorizo :: InitVars()
   electronSF = DUMMYDN;        
   electronSFu = 1.;
   electronSFd = 1.;
-
+  
+  //Z candidate
+  Z_flav = -99;
+  Z_lep1 = -99;  
+  Z_lep2 = -99;  
+  Z_m = DUMMYDN; 
+  lep3_MT = DUMMYDN;    
+  lep_mct = DUMMYDN;  
+  
   //- Photon Info
   ph_N = 0; //DUMMYDN;               
   ph_pt = 0; //DUMMYDN;              
@@ -1903,10 +1919,10 @@ EL::StatusCode chorizo :: loop ()
 
   //------------------------ ttbar reweighting ---------------------------
   if (isMC) {
-    if (mc_channel_number==117050 || mc_channel_number==110401) {
+    //if (mc_channel_number==117050 || mc_channel_number==110401) {
       ttbar_weight = this->GetTTbarReweight(Top_truth_pt, Topbar_truth_pt, avTop_truth_pt);
       truth_n_leptons = this->GetNTruthLeptons();
-    }     
+    //}     
     
     truth_met_noEle = this->GetTruthEtmiss_noEleTau();	
     truth_n_bjets   = this->GetNTruthB();	
@@ -2752,9 +2768,9 @@ EL::StatusCode chorizo :: loop ()
       // }
     }
 
-    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) ) 
+    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5) 
       bjet_counter++;
-    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) ) 
+    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter_80eff++;	
     
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
@@ -3199,6 +3215,9 @@ EL::StatusCode chorizo :: loop ()
 
     //==== Razor ====
     fillRazor( makeV3( mk.second ) );
+    
+    //Zcandidate
+    Zcandidate(recoElectrons, recoMuons, mk.second);
 
   }//end of met flavor loop
 
@@ -6184,6 +6203,106 @@ void chorizo :: findBparton(){
   */
 }
 
+void chorizo :: Zcandidate(std::vector<Particle> recoElectrons, std::vector<Particle> recoMuons, TVector2 met) {
+ 
+   float m_ll_tmp = 0.;  
+   std::vector<TLorentzVector> extra_lep;  
+      
+   if (recoElectrons.size()>1){
+
+     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+     
+       for (unsigned int jEl=iEl+1; jEl<recoElectrons.size(); jEl++){   
+        
+	 if ((recoElectrons.at(iEl).charge*recoElectrons.at(jEl).charge)<0){
+         
+	   TLorentzVector ee = recoElectrons.at(iEl).GetVector() + recoElectrons.at(jEl).GetVector();	 
+	   m_ll_tmp = ee.M();	 
+
+	   if (fabs(m_ll_tmp -  91.1876) < fabs(Z_m -  91.1876)){
+	 
+	     Z_m = m_ll_tmp;
+	     Z_lep1 = iEl;
+	     Z_lep2 = jEl;	   
+	     Z_flav = 0;
+	   
+       
+         }
+       }
+       }
+     }
+    } 
+
+   if (recoMuons.size()>1){
+
+     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+     
+       for (unsigned int jMu=iMu+1; jMu<recoMuons.size(); jMu++){   
+	 
+	 if ((recoMuons.at(iMu).charge*recoMuons.at(jMu).charge)<0){     
+           TLorentzVector mumu = recoMuons.at(iMu).GetVector() + recoMuons.at(jMu).GetVector();	 
+	   m_ll_tmp = mumu.M();	 
+
+	   if (fabs(m_ll_tmp -  91.1876) < fabs(Z_m -  91.1876)){
+	 
+	     Z_m = m_ll_tmp;
+	     Z_lep1 = iMu;
+	     Z_lep2 = jMu;
+	     Z_flav = 1;		
+	              
+	 }
+     
+       }
+     }  
+     }
+
+   }
+   
+   
+   if (recoElectrons.size()+recoMuons.size()==3){
+	      
+	for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+	
+	      if((Z_flav==0 && Z_lep1==iEl) || (Z_flav==0 && Z_lep2==iEl)) continue; 
+	      lep3_MT = sqrt(2 * recoElectrons.at(iEl).Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), recoElectrons.at(iEl).Phi()))));;
+	  
+	} 	
+	
+	
+	for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+	
+	      if((Z_flav==1 && Z_lep1==iMu) || (Z_flav==1 && Z_lep2==iMu)) continue;	      
+	      lep3_MT = sqrt(2 * recoMuons.at(iMu).Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), recoMuons.at(iMu).Phi()))));;
+	  
+	}  
+   
+   }
+
+   if (recoElectrons.size()+recoMuons.size()==4){
+	      
+	for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+	
+	      if((Z_flav==0 && Z_lep1==iEl) || (Z_flav==0 && Z_lep2==iEl)) continue; 
+	      extra_lep.push_back(recoElectrons.at(iEl).GetVector());
+	  
+	} 	
+	
+	
+	for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+	
+	      if((Z_flav==1 && Z_lep1==iMu) || (Z_flav==1 && Z_lep2==iMu)) continue;	      
+	      extra_lep.push_back(recoMuons.at(iMu).GetVector());	      
+	  
+	}  
+   
+   
+        lep_mct =  (extra_lep.at(0).Mt() + extra_lep.at(1).Mt())*(extra_lep.at(0).Mt() + extra_lep.at(1).Mt()) - (extra_lep.at(0)-extra_lep.at(1)).Perp2();
+        lep_mct = (lep_mct >= 0.) ? sqrt(lep_mct) : sqrt(-lep_mct);   
+   
+   
+   }   
+
+} 
 
 
 TVector2 chorizo :: getMET( const xAOD::MissingETContainer* METcon, TString name ) {
