@@ -1,3 +1,14 @@
+2014-03-12 Arely <arelycg@cern.ch>
+	* Added protection for "R", so it keeps the same size.
+        * Change type of tr_thrust from double to float.
+        * Took "isTrigger" out of passPreselectionCuts (in case different triggers are used in the regions selection).
+          Now it is saved (even if DoCutFlow==false).
+        * truth_n_jets has the same pT cut as n_jets: Jet_RecoPtCut (instead of hardcoded 30GeV).
+
+2014-03-12 Silvia <silvia.fracchia@cern.ch>
+	* Added information on 3rd and 4th leptons.
+        * Added functions to find the Z-candidate in events with 2 and 3 leptons.
+
 2014-03-11 Arely <arelycg@cern.ch>
 	* Added reference folder with Root/chorizo.cxx, to make public.
 	* Corrected error in iPh and iJet counters. 

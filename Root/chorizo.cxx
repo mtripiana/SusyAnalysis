@@ -177,11 +177,12 @@ void chorizo :: bookTree(){
 
     //presel
     output->tree()->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
-    
+    output->tree()->Branch("isTrigger",&isTrigger);
+      
     //FlowTree
     if (doFlowTree){
       output->tree()->Branch("isGRL",&isGRL,"isGRL/O", 10000);
-      output->tree()->Branch("isTrigger",&isTrigger);
+      //output->tree()->Branch("isTrigger",&isTrigger);
       output->tree()->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
       output->tree()->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
       output->tree()->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
@@ -1387,7 +1388,9 @@ EL::StatusCode chorizo :: initialize ()
   else if(El_isoType.EqualTo("tight"))  elIsoType = ST::SignalIsoExp::TightIso;
   else{
     elIsoType = ST::SignalIsoExp::LooseIso;
+    elIsoArgs->_etcut = El_PreselPtCut;
     elIsoArgs->_id_isocut = -1; //do not apply it 
+    elIsoArgs->_calo_isocut = 0.;
   }
 
   Mu_isoType.ToLower();
@@ -1396,7 +1399,9 @@ EL::StatusCode chorizo :: initialize ()
   else if(Mu_isoType.EqualTo("tight"))  muIsoType = ST::SignalIsoExp::TightIso;
   else{
     muIsoType = ST::SignalIsoExp::LooseIso;
+    muIsoArgs->_ptcut = Mu_PreselPtCut;
     muIsoArgs->_id_isocut = -1; //do not apply it 
+    muIsoArgs->_calo_isocut = 0.;
   }
   
   
@@ -2058,10 +2063,8 @@ EL::StatusCode chorizo :: loop ()
   //   }
   // }
   
-  if(this->isTrigger.size())
-    this->passPreselectionCuts = this->isGRL && this->isTrigger[0] && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
-  else
-    this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+  this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+
 
   //skip event no-preselected events for smearing                                       
   if ( this->isQCD  && (!this->passPreselectionCuts) ) 
@@ -2166,7 +2169,7 @@ EL::StatusCode chorizo :: loop ()
     else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
     dec_bjet(**jet_itr) = (bw > Jet_TaggerOp);
 
-    dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
+    //arelycg dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
 
     //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
     smr_met_jets_pt.push_back( 0. ); //recoJet.Pt() ); //in GeV!
@@ -2738,7 +2741,7 @@ EL::StatusCode chorizo :: loop ()
 	n_tjets++;
       if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets50++;
       if ((*tjet_itr)->pt() > 40000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets40++;
-      if ((*tjet_itr)->pt() > 30000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
+      if ((*tjet_itr)->pt() > Jet_RecoPtCut && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
 
       TLorentzVector truthJet;
       truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 
@@ -5860,16 +5863,16 @@ double chorizo::thrustService(TVector2 &n, std::vector<TVector2> &obj){
 }
 
 //Main function where the thrust axis which maximize the transverse thrust value is computed
-double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
+float chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
   
-  if(pvectors.size()==1) return 0;
+  if(pvectors.size()==1) return 0.;
 
   //transform to TVector2
   std::vector<TVector2> obj;
   for(const auto& tlv : pvectors)
     obj.push_back( tlv.Vect().XYvector() );
 
-  if(obj.size()==0) return -99; //?
+  if(obj.size()==0) return -99.; //?
 
   TVector2 n;
   TVector2 np1(obj[0]);
@@ -5950,7 +5953,7 @@ double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 	  std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
 	}
       }
-      return -99;
+      return -99.;
     }
     //to accept the thrust value we require:
     //1- it has to be into [2/pi,1] which is the range for the transverse thrust
@@ -5968,10 +5971,10 @@ double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 	std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
       }
     }
-    return -99;
+    return -99.;
   }
 
-  return T;
+  return (float)T;
  
 }
 
@@ -5997,6 +6000,7 @@ void chorizo :: fillRazor(TVector3 mymet){
 
   if(MR > 0.) 
     R.push_back( tmp_MTR / MR );
+  else R.push_back(0.0); //arelycg: to keep same size
   
   //new super-razor variables
   float sr1=0.;
