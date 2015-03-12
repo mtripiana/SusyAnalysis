@@ -282,7 +282,13 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_phi",&e_phi,"e_phi/F", 10000);
       output->tree()->Branch("e2_pt",&e2_pt,"e2_pt/F", 10000);
       output->tree()->Branch("e2_eta",&e2_eta,"e2_eta/F", 10000);
-      output->tree()->Branch("e2_phi",&e2_phi,"e2_phi/F", 10000);      
+      output->tree()->Branch("e2_phi",&e2_phi,"e2_phi/F", 10000); 
+      output->tree()->Branch("e3_pt",&e3_pt,"e3_pt/F", 10000);
+      output->tree()->Branch("e3_eta",&e3_eta,"e3_eta/F", 10000);
+      output->tree()->Branch("e3_phi",&e3_phi,"e3_phi/F", 10000);      
+      output->tree()->Branch("e4_pt",&e4_pt,"e4_pt/F", 10000);
+      output->tree()->Branch("e4_eta",&e4_eta,"e4_eta/F", 10000);
+      output->tree()->Branch("e4_phi",&e4_phi,"e4_phi/F", 10000);           
       output->tree()->Branch("e_etiso30",&e_etiso30,"e_etiso30/F", 10000);
       output->tree()->Branch("e_ptiso30",&e_ptiso30,"e_ptiso30/F", 10000);
       output->tree()->Branch("e_tight",&e_tight,"e_tight/O", 10000);
@@ -302,7 +308,13 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_phi",&m_phi,"m_phi/F", 10000);                      
       output->tree()->Branch("m2_pt",&m2_pt,"m2_pt/F", 10000);                      
       output->tree()->Branch("m2_eta",&m2_eta,"m2_eta/F", 10000);                   
-      output->tree()->Branch("m2_phi",&m2_phi,"m2_phi/F", 10000);                   
+      output->tree()->Branch("m2_phi",&m2_phi,"m2_phi/F", 10000); 
+      output->tree()->Branch("m3_pt",&m3_pt,"m3_pt/F", 10000);                      
+      output->tree()->Branch("m3_eta",&m3_eta,"m3_eta/F", 10000);                   
+      output->tree()->Branch("m3_phi",&m3_phi,"m3_phi/F", 10000);       
+      output->tree()->Branch("m4_pt",&m4_pt,"m4_pt/F", 10000);                      
+      output->tree()->Branch("m4_eta",&m4_eta,"m4_eta/F", 10000);                   
+      output->tree()->Branch("m4_phi",&m4_phi,"m4_phi/F", 10000);       
       output->tree()->Branch("m_iso",&m_iso,"m_iso/F", 10000);                      
       output->tree()->Branch("m_etiso20",&m_etiso20,"m_etiso20/F", 10000);          
       output->tree()->Branch("m_ptiso20",&m_ptiso20,"m_ptiso20/F", 10000);          
@@ -732,7 +744,13 @@ void chorizo :: InitVars()
   e_eta = 0.; //DUMMYDN;             
   e_phi = 0.; //DUMMYDN;  
   e2_eta = 0.; //DUMMYDN;             
-  e2_phi = 0.; //DUMMYDN;               
+  e2_phi = 0.; //DUMMYDN;     
+  e3_pt = 0; //DUMMYDN;  
+  e3_eta = 0.; //DUMMYDN;             
+  e3_phi = 0.; //DUMMYDN;      
+  e4_pt = 0; //DUMMYDN;  
+  e4_eta = 0.; //DUMMYDN;             
+  e4_phi = 0.; //DUMMYDN;            
   e_ptiso30 = 0.; //DUMMYDN;         
   e_etiso30 = 0.; //DUMMYDN;         
   e_tight = false;           
@@ -773,7 +791,13 @@ void chorizo :: InitVars()
   m_phi = 0.; //DUMMYDN;              
   m2_pt = 0.; //DUMMYDN;              
   m2_eta = 0.; //DUMMYDN;             
-  m2_phi = 0.; //DUMMYDN;             
+  m2_phi = 0.; //DUMMYDN;
+  m3_pt = 0.; //DUMMYDN;              
+  m3_eta = 0.; //DUMMYDN;             
+  m3_phi = 0.; //DUMMYDN;  
+  m4_pt = 0.; //DUMMYDN;              
+  m4_eta = 0.; //DUMMYDN;             
+  m4_phi = 0.; //DUMMYDN;               
   m_iso = DUMMYDN;              
   m_ptiso30 = 0.; //DUMMYDN;          
   m_etiso30 = 0.; //DUMMYDN;          
@@ -4356,6 +4380,18 @@ void chorizo :: dumpLeptons(){
      e2_eta = recoElectrons.at(1).Eta();
      e2_phi = recoElectrons.at(1).Phi();
    }
+   
+   if(recoElectrons.size()>2){
+     e3_pt = recoElectrons.at(2).Pt();
+     e3_eta = recoElectrons.at(2).Eta();
+     e3_phi = recoElectrons.at(2).Phi();
+   }
+
+   if(recoElectrons.size()>3){
+     e4_pt = recoElectrons.at(3).Pt();
+     e4_eta = recoElectrons.at(3).Eta();
+     e4_phi = recoElectrons.at(3).Phi();
+   }
   
   
   if (truthElectrons.size()>0){
@@ -4381,6 +4417,20 @@ void chorizo :: dumpLeptons(){
     m2_etiso30 = recoMuons.at(1).etcone30;
     m2_ptiso30 = recoMuons.at(1).ptcone30;
   }
+  
+  if(recoMuons.size()>2){
+    m3_pt = recoMuons.at(2).Pt();
+    m3_eta = recoMuons.at(2).Eta();
+    m3_phi = recoMuons.at(2).Phi();
+
+  }  
+  
+  if(recoMuons.size()>3){
+    m4_pt = recoMuons.at(3).Pt();
+    m4_eta = recoMuons.at(3).Eta();
+    m4_phi = recoMuons.at(3).Phi();
+
+  }  
 
 }
 

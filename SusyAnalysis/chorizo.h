@@ -711,7 +711,9 @@ private:
   //- Electron Info
   int   e_N;
   float e_pt;
-  float e2_pt;  
+  float e2_pt; 
+  float e3_pt;   
+  float e4_pt;    
   float e_truth_pt;
   float e_truth_eta;
   float e_truth_phi;
@@ -719,6 +721,10 @@ private:
   float e_phi;
   float e2_eta;
   float e2_phi;  
+  float e3_eta;
+  float e3_phi;      
+  float e4_eta;
+  float e4_phi;  
   float e_ptiso30;
   float e_etiso30;
   bool  e_tight; 
@@ -734,6 +740,12 @@ private:
   float m2_pt;
   float m2_eta;
   float m2_phi;
+  float m3_pt;
+  float m3_eta;
+  float m3_phi;  
+  float m4_pt;
+  float m4_eta;
+  float m4_phi;  
   float m_iso;
   float m_ptiso20;
   float m_etiso20;
