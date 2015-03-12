@@ -334,6 +334,8 @@ private:
   virtual std::vector<TLorentzVector> getFatJets(double R, double fcut=-1);
 
   virtual void  findBparton(); 
+  virtual void  Zcandidate(std::vector<Particle> recoElectrons, std::vector<Particle> recoMuons, TVector2 met);
+
 
   virtual void  findSusyHP(int& pdgid1, int& pdgid2);
   virtual void  findSusyHP(const xAOD::TruthParticleContainer* truthP, int& pdgid1, int& pdgid2);
@@ -756,7 +758,15 @@ private:
   float m_MT_vmu;  
   float m_Zpt;
   float m_EM;
-
+  
+  //- Z candidate
+  int Z_flav;
+  int Z_lep1;  
+  int Z_lep2;
+  float Z_m;
+  float lep3_MT;
+  float lep_mct;  
+  
   //- Jet info
   bool  JVF_min;
   int   n_jets;
