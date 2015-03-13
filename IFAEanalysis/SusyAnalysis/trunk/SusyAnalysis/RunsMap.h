@@ -925,7 +925,7 @@ void RunsMap::LoadMap(){
   //  m_map["Znunu167830_13TeVgrid"] = rlist( Rpair(167830, "mc14_13TeV.167830.Sherpa_CT10_ZnunuMassiveCBPt280_500_BFilter.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
   m_map["Znunu167830_13TeVgrid"] = rlist( Rpair(167830, "mc14_13TeV.167830.Sherpa_CT10_ZnunuMassiveCBPt280_500_BFilter.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
   //  m_map["Znunu167831_13TeVgrid"] = rlist( Rpair(167831, "mc14_13TeV.167831.Sherpa_CT10_ZnunuMassiveCBPt280_500_CFilterBVeto.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
-  m_map["Znunu167831_13TeVgrid"] = rlist( Rpair(167831, "mc14_13TeV.167831.Sherpa_CT10_ZnunuMassiveCBPt280_500_CFilterBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816"));
+  m_map["Znunu167831_13TeVgrid"] = rlist( Rpair(167831, "mc14_13TeV.167831.Sherpa_CT10_ZnunuMassiveCBPt280_500_CFilterBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
   //  m_map["Znunu167832_13TeVgrid"] = rlist( Rpair(167832, "mc14_13TeV.167832.Sherpa_CT10_ZnunuMassiveCBPt280_500_CVetoBVeto.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
   m_map["Znunu167832_13TeVgrid"] = rlist( Rpair(167832, "mc14_13TeV.167832.Sherpa_CT10_ZnunuMassiveCBPt280_500_CVetoBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
   //  m_map["Znunu167842_13TeVgrid"] = rlist( Rpair(167842, "mc14_13TeV.167842.Sherpa_CT10_ZnunuMassiveCBPt500_BFilter.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
@@ -933,7 +933,7 @@ void RunsMap::LoadMap(){
   //  m_map["Znunu167843_13TeVgrid"] = rlist( Rpair(167843, "mc14_13TeV.167843.Sherpa_CT10_ZnunuMassiveCBPt500_CFilterBVeto.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
   m_map["Znunu167843_13TeVgrid"] = rlist( Rpair(167843, "mc14_13TeV.167843.Sherpa_CT10_ZnunuMassiveCBPt500_CFilterBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
   //  m_map["Znunu167844_13TeVgrid"] = rlist( Rpair(167844, "mc14_13TeV.167844.Sherpa_CT10_ZnunuMassiveCBPt500_CVetoBVeto.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
-  m_map["Znunu167844_13TeVgrid"] = rlist( Rpair(167844, "mc14_13TeV:mc14_13TeV.167844.Sherpa_CT10_ZnunuMassiveCBPt500_CVetoBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
+  m_map["Znunu167844_13TeVgrid"] = rlist( Rpair(167844, "mc14_13TeV.167844.Sherpa_CT10_ZnunuMassiveCBPt500_CVetoBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
   //  m_map["Znunu167806_13TeVgrid"] = rlist( Rpair(167806, "mc14_13TeV.167806.Sherpa_CT10_ZnunuMassiveCBPt70_140_BFilter.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
   m_map["Znunu167806_13TeVgrid"] = rlist( Rpair(167806, "mc14_13TeV.167806.Sherpa_CT10_ZnunuMassiveCBPt70_140_BFilter.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
   //  m_map["Znunu167807_13TeVgrid"] = rlist( Rpair(167807, "mc14_13TeV.167807.Sherpa_CT10_ZnunuMassiveCBPt70_140_CFilterBVeto.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
@@ -1018,17 +1018,17 @@ void RunsMap::LoadMap(){
   m_map["TestTTbarV"] = rlist( Rpair(177998,"/tmp/tripiana/ttbarV/"));
 
   //New test on 8TeV Znunu xAODs
-  m_map["TestZnunu167818"] = rlist( Rpair(167818, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167818/"));
-  m_map["TestZnunu167819"] = rlist( Rpair(167819, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"));
-  m_map["TestZnunu167820"] = rlist( Rpair(167820, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167820/"));
+  m_map["TestZnunu167818"] = rlist( Rpair(167818, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167818/"));
+  m_map["TestZnunu167819"] = rlist( Rpair(167819, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167819/"));
+  m_map["TestZnunu167820"] = rlist( Rpair(167820, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Znunu_167820/"));
 
-  m_map["TestZmumu167812"] = rlist( Rpair(167812, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167812/"));
-  m_map["TestZmumu167813"] = rlist( Rpair(167813, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167813/"));
-  m_map["TestZmumu167814"] = rlist( Rpair(167814, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167814/"));
+  m_map["TestZmumu167812"] = rlist( Rpair(167812, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167812/"));
+  m_map["TestZmumu167813"] = rlist( Rpair(167813, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167813/"));
+  m_map["TestZmumu167814"] = rlist( Rpair(167814, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Zmumu_167814/"));
 
-  m_map["TestWenu167770"] = rlist( Rpair(167770, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167770/"));
-  m_map["TestWenu167771"] = rlist( Rpair(167771, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167771/"));
-  m_map["TestWenu167772"] = rlist( Rpair(167772, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167772/"));
+  m_map["TestWenu167770"] = rlist( Rpair(167770, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167770/"));
+  m_map["TestWenu167771"] = rlist( Rpair(167771, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167771/"));
+  m_map["TestWenu167772"] = rlist( Rpair(167772, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wenu_167772/"));
   m_map["TestWenu167781"] = rlist( Rpair(167781, "/nfs/atlas-data06/scratch/cfischer/SusyAnalysis/XAODSamples/Wenu167781/"));
   m_map["TestWmunu167784"] = rlist( Rpair(167784, "/nfs/atlas-data06/scratch/cfischer/SusyAnalysis/XAODSamples/Wmunu167784/"));
 
@@ -1036,15 +1036,15 @@ void RunsMap::LoadMap(){
   m_map["TestSMBB202249_13TeV"] = rlist( Rpair(202249, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_300_290_202249_13TeV/"));
   m_map["TestSMBB202266_13TeV"] = rlist( Rpair(202266, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_800_1_202266_13TeV/"));
 
-  m_map["TestSMBB202249_8TeV"] = rlist( Rpair(202249, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/SM_BB_direct_300_290_202249_8TeV/"));
-  m_map["TestSMBB202266_8TeV"] = rlist( Rpair(202266, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/SM_BB_direct_800_1_202266_8TeV/"));
+  m_map["TestSMBB202249_8TeV"] = rlist( Rpair(202249, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/SM_BB_direct_300_290_202249_8TeV/"));
+  m_map["TestSMBB202266_8TeV"] = rlist( Rpair(202266, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/SM_BB_direct_800_1_202266_8TeV/"));
 
   m_map["TestZnunu167758Pt0"] = rlist( Rpair(167758, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Znunu_167758/"));
   m_map["TestWmunu167743Pt0"] = rlist( Rpair(167743, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Wmunu_167743/"));
 
-  m_map["TestWmunu167773"] = rlist( Rpair(167773, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167773/"));
-  m_map["TestWmunu167774"] = rlist( Rpair(167774, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167774/"));
-  m_map["TestWmunu167775"] = rlist( Rpair(167775, "/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167775/"));
+  m_map["TestWmunu167773"] = rlist( Rpair(167773, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167773/"));
+  m_map["TestWmunu167774"] = rlist( Rpair(167774, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167774/"));
+  m_map["TestWmunu167775"] = rlist( Rpair(167775, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/xAOD_samples_Testing_oct2014/mc14/Wmunu_167775/"));
 
   m_map["Wmunu167775_13TeV"] = rlist( Rpair(167775, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Wmunu167775_13TeV/"));
   m_map["Wmunu167784_13TeV"] = rlist( Rpair(167784, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Wmunu167784_13TeV/"));
