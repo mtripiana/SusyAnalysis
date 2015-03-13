@@ -283,6 +283,9 @@ private:
   virtual void fillRazor();
   virtual void fillRazor(TVector3 mymet);
 
+  virtual void Zll_candidate();
+  virtual void Zll_extra(TVector2 met);
+
   virtual bool vetoMCevent();
   virtual bool passMCor();
 
@@ -311,8 +314,9 @@ private:
 
   //Calculation functions
   virtual float Calc_MT(Particle p, TVector2 met);
-  virtual float Calc_MT(Particles::Jet j, TVector2 met);
+  //  virtual float Calc_MT(Particles::Jet j, TVector2 met);
   virtual float Calc_mct();
+  virtual float Calc_mct(Particle p1, Particle p2);
   virtual float Calc_dijetMass();
   virtual float Calc_dijetMass(TLorentzVector ja, TLorentzVector jb);
   virtual std::vector<TLorentzVector> CombineJets();
@@ -334,9 +338,6 @@ private:
   virtual std::vector<TLorentzVector> getFatJets(double R, double fcut=-1);
 
   virtual void  findBparton(); 
-  virtual void  Zcandidate(std::vector<Particle> recoElectrons, std::vector<Particle> recoMuons, TVector2 met);
-
-
   virtual void  findSusyHP(int& pdgid1, int& pdgid2);
   virtual void  findSusyHP(const xAOD::TruthParticleContainer* truthP, int& pdgid1, int& pdgid2);
 
@@ -392,7 +393,7 @@ private:
   TString QCD_SmearMeanShift; //!
   bool    QCD_SmearExtraSmr; //!
   bool    QCD_DoPhiSmearing; //!
-  int     QCD_SmearedEvents; //!
+  unsigned int QCD_SmearedEvents; //!
 
   //----- PDF Reweighting
   //  LHAPDF::PDF*     m_PDF; //!
@@ -776,7 +777,7 @@ private:
   int Z_lep1;  
   int Z_lep2;
   float Z_m;
-  float lep3_MT;
+  std::vector<float> lep3_MT;
   float lep_mct;  
   
   //- Jet info
