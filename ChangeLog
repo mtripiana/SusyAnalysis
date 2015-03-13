@@ -1,5 +1,12 @@
+2014-03-13 Martin <tripiana@cern.ch>
+	* Update qsub-generator to ROOT6
+	* Fix qsub template file
+	* Fix Zll variables filling
+
+
 2014-03-13 Arely <arelycg@cern.ch>
 	* Chnage location of test xAOD files from scratch to scratch2
+
 
 2014-03-12 Arely <arelycg@cern.ch>
 	* Added protection for "R", so it keeps the same size.
@@ -14,7 +21,7 @@
 
 2014-03-11 Arely <arelycg@cern.ch>
 	* Added reference folder with Root/chorizo.cxx, to make public.
-	* Corrected error in iPh and iJet counters. 
+	* Corrected error in iPh and iJet counters.
 
 2014-03-04 Cora <cfischer@ifae.es>
 	* Added MET (invisible muons) electrons-corrected.

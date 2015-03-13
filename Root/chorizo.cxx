@@ -231,11 +231,6 @@ void chorizo :: bookTree(){
       output->tree()->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
       output->tree()->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
 
-      output->tree()->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
-      output->tree()->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
-      output->tree()->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
-      output->tree()->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
-
       //truth
       output->tree()->Branch("truth_M",&truth_M,"truth_M/F", 10000);
       output->tree()->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
@@ -523,11 +518,16 @@ void chorizo :: bookTree(){
       output->tree()->Branch("cosptR",&cosptR);
       
       //Z candidate
+      output->tree()->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
+      output->tree()->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
+      output->tree()->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
+      output->tree()->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
+
       output->tree()->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
       output->tree()->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);      
       output->tree()->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);     
       output->tree()->Branch("Z_m",&Z_m,"Z_m/F", 10000); 
-      output->tree()->Branch("lep3_MT",&lep3_MT,"lep3_MT/F", 10000);   
+      output->tree()->Branch("lep3_MT",&lep3_MT);
       output->tree()->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);       
       
       //top reconstruction
@@ -768,7 +768,7 @@ void chorizo :: InitVars()
   Z_lep1 = -99;  
   Z_lep2 = -99;  
   Z_m = DUMMYDN; 
-  lep3_MT = DUMMYDN;    
+  lep3_MT.clear();
   lep_mct = DUMMYDN;  
   
   //- Photon Info
@@ -1310,7 +1310,7 @@ void chorizo :: ReadXML(){
     QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", cRegion)).c_str());
     QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", cRegion));
     QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", cRegion));
-    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", cRegion));
+    QCD_SmearedEvents      = (unsigned int)xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion)); 
@@ -1327,7 +1327,7 @@ void chorizo :: ReadXML(){
     QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", defRegion)).c_str());
     QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", defRegion));
     QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", defRegion));
-    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
+    QCD_SmearedEvents      = (unsigned int)xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
   }
   std::istringstream QCD_triggerNameIStr(QCD_triggerNameStr);
   std::string stqcd;
@@ -1988,6 +1988,7 @@ EL::StatusCode chorizo :: loop ()
   //trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
   if(m_eventCounter<2){
+    Info("loop()", " ");
     Info("loop()", "  MET TRIGGERS IN MENU ");
     Info("loop()", "--------------------------------");
     auto chainGroup = tool_trigdec->getChainGroup("HLT_xe*");
@@ -2501,7 +2502,6 @@ EL::StatusCode chorizo :: loop ()
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
-    //iJet++;
     
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
@@ -3103,6 +3103,8 @@ EL::StatusCode chorizo :: loop ()
 
   TVector2 sjet2(sjet.Px(), sjet.Py());
   
+  //Z(ll) candidate                                                                                                                                                                                                                                                      
+  Zll_candidate();
 
   //--- Fill MET related variables  -  vectorized now!
   for (auto& mk : metmap) {
@@ -3161,8 +3163,7 @@ EL::StatusCode chorizo :: loop ()
       if(mt_jm < min_mt_jm){
 	min_mt_jm = mt_jm;
       }
-      
-      
+
       //--- look for closest/faraway bjet and closer light jet to MET
       if( jet.isBTagged(Jet_Tagger) ){
 	
@@ -3244,9 +3245,9 @@ EL::StatusCode chorizo :: loop ()
     //==== Razor ====
     fillRazor( makeV3( mk.second ) );
     
-    //Zcandidate
-    Zcandidate(recoElectrons, recoMuons, mk.second);
-
+    //==== Z-related vars                                                                                                                                                                                                                            
+    Zll_extra(mk.second); //be sure to call Zll_candidate() before!                                                                                                                                                                                                      
+        
   }//end of met flavor loop
 
   met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
@@ -5524,11 +5525,11 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 // };
 
 //Calculation of extra variables
-float chorizo :: Calc_MT(Particles::Jet jet, TVector2 met){
+// float chorizo :: Calc_MT(Particles::Jet jet, TVector2 met){
 
-  return sqrt(2 * jet.Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), jet.Phi()))));
+//   return Calc_MT(jet, met);
 
-}
+// }
 
 float chorizo :: Calc_MT(Particles::Particle p, TVector2 met){
 
@@ -5540,7 +5541,12 @@ float chorizo :: Calc_mct(){
 
   if(n_jets<2) return -1;
 
-  float mct =  (recoJets.at(0).Mt() + recoJets.at(1).Mt())*(recoJets.at(0).Mt() + recoJets.at(1).Mt()) - (recoJets.at(0)-recoJets.at(1)).Perp2();
+  return Calc_mct(recoJets.at(0), recoJets.at(1));
+};
+
+float chorizo :: Calc_mct(Particle p1, Particle p2){
+
+  float mct =  (p1.Mt() + p2.Mt())*(p1.Mt() + p2.Mt()) - (p1-p2).Perp2();
   mct = (mct >= 0.) ? sqrt(mct) : sqrt(-mct);   
 
   return mct;
@@ -6258,107 +6264,96 @@ void chorizo :: findBparton(){
   */
 }
 
-void chorizo :: Zcandidate(std::vector<Particle> recoElectrons, std::vector<Particle> recoMuons, TVector2 met) {
- 
-   float m_ll_tmp = 0.;  
-   std::vector<TLorentzVector> extra_lep;  
-      
-   if (recoElectrons.size()>1){
+void chorizo :: Zll_candidate(){
+  
+  float m_ll_tmp = 0.;  
+  float ZMASS=91.1876;
 
+   if (recoElectrons.size()>1){
      for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
-     
        for (unsigned int jEl=iEl+1; jEl<recoElectrons.size(); jEl++){   
-        
-	 if ((recoElectrons.at(iEl).charge*recoElectrons.at(jEl).charge)<0){
+
+	 if ((recoElectrons.at(iEl).charge * recoElectrons.at(jEl).charge) < 0){
          
 	   TLorentzVector ee = recoElectrons.at(iEl).GetVector() + recoElectrons.at(jEl).GetVector();	 
 	   m_ll_tmp = ee.M();	 
 
-	   if (fabs(m_ll_tmp -  91.1876) < fabs(Z_m -  91.1876)){
-	 
+	   if (fabs(m_ll_tmp - ZMASS) < fabs(Z_m -  ZMASS)){
 	     Z_m = m_ll_tmp;
 	     Z_lep1 = iEl;
 	     Z_lep2 = jEl;	   
 	     Z_flav = 0;
-	   
-       
-         }
-       }
+	   }
+	 }
        }
      }
-    } 
-
+   } 
+   
    if (recoMuons.size()>1){
-
      for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
-     
        for (unsigned int jMu=iMu+1; jMu<recoMuons.size(); jMu++){   
 	 
-	 if ((recoMuons.at(iMu).charge*recoMuons.at(jMu).charge)<0){     
+	 if ((recoMuons.at(iMu).charge * recoMuons.at(jMu).charge) < 0){     
            TLorentzVector mumu = recoMuons.at(iMu).GetVector() + recoMuons.at(jMu).GetVector();	 
 	   m_ll_tmp = mumu.M();	 
 
-	   if (fabs(m_ll_tmp -  91.1876) < fabs(Z_m -  91.1876)){
-	 
+	   if (fabs(m_ll_tmp - ZMASS) < fabs(Z_m - ZMASS)){
 	     Z_m = m_ll_tmp;
 	     Z_lep1 = iMu;
 	     Z_lep2 = jMu;
 	     Z_flav = 1;		
-	              
+	   }
 	 }
-     
-       }
-     }  
+       }  
      }
-
-   }
-   
-   
-   if (recoElectrons.size()+recoMuons.size()==3){
-	      
-	for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
-	
-	      if((Z_flav==0 && Z_lep1==iEl) || (Z_flav==0 && Z_lep2==iEl)) continue; 
-	      lep3_MT = sqrt(2 * recoElectrons.at(iEl).Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), recoElectrons.at(iEl).Phi()))));;
-	  
-	} 	
-	
-	
-	for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
-	
-	      if((Z_flav==1 && Z_lep1==iMu) || (Z_flav==1 && Z_lep2==iMu)) continue;	      
-	      lep3_MT = sqrt(2 * recoMuons.at(iMu).Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), recoMuons.at(iMu).Phi()))));;
-	  
-	}  
-   
    }
 
    if (recoElectrons.size()+recoMuons.size()==4){
-	      
-	for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
-	
-	      if((Z_flav==0 && Z_lep1==iEl) || (Z_flav==0 && Z_lep2==iEl)) continue; 
-	      extra_lep.push_back(recoElectrons.at(iEl).GetVector());
-	  
-	} 	
-	
-	
-	for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
-	
-	      if((Z_flav==1 && Z_lep1==iMu) || (Z_flav==1 && Z_lep2==iMu)) continue;	      
-	      extra_lep.push_back(recoMuons.at(iMu).GetVector());	      
-	  
-	}  
-   
-   
-        lep_mct =  (extra_lep.at(0).Mt() + extra_lep.at(1).Mt())*(extra_lep.at(0).Mt() + extra_lep.at(1).Mt()) - (extra_lep.at(0)-extra_lep.at(1)).Perp2();
-        lep_mct = (lep_mct >= 0.) ? sqrt(lep_mct) : sqrt(-lep_mct);   
-   
-   
-   }   
 
+     std::vector<Particle> extra_lep;  
+     
+     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+       
+       if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+       extra_lep.push_back(recoElectrons.at(iEl));
+       
+     } 	
+     
+     
+     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+       
+       if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+       extra_lep.push_back(recoMuons.at(iMu));
+       
+     }  
+     
+     if(extra_lep.size()>1)  //redundant I think!
+       lep_mct = Calc_mct(extra_lep.at(0), extra_lep.at(1));
+     
+   }  
+   
+}
+
+void chorizo :: Zll_extra(TVector2 met){
+
+  
+  if (recoElectrons.size()+recoMuons.size()==3){
+    
+    for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+      
+      if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+      lep3_MT.push_back( Calc_MT(recoElectrons.at(iEl), met) );
+      
+    } 	
+    
+    for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+      
+      if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+      lep3_MT.push_back( Calc_MT(recoMuons.at(iMu), met) );
+      
+    }  
+  }
 } 
-
 
 TVector2 chorizo :: getMET( const xAOD::MissingETContainer* METcon, TString name ) {
   
