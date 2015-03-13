@@ -1,3 +1,6 @@
+2014-03-13 Arely <arelycg@cern.ch>
+	* Chnage location of test xAOD files from scratch to scratch2
+
 2014-03-12 Arely <arelycg@cern.ch>
 	* Added protection for "R", so it keeps the same size.
         * Change type of tr_thrust from double to float.
