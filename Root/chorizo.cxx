@@ -4594,6 +4594,22 @@ EL::StatusCode chorizo :: finalize ()
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
 
+  //OverlapRemoval                                                                                                                                                                                                                                                          
+  if(tool_or){
+    delete tool_or;
+    tool_or=0;
+  }
+
+  //B-tagging                                                                                                                                                                                                                                                              
+  if(tool_btag){
+    delete tool_btag;
+    tool_btag=0;
+  }
+  if(tool_btag2){
+    delete tool_btag2;
+    tool_btag2=0;
+  }
+
   //PURW
   if(tool_purw){
     if(genPUfile)
@@ -4635,6 +4651,18 @@ EL::StatusCode chorizo :: finalize ()
   if( tool_jsmear ) {
     delete tool_jsmear;
     tool_jsmear = 0;
+  }
+
+  //jet jvf                                                                                                                                                                                                                                                                 
+  if( tool_jvf ) {
+    delete tool_jvf;
+    tool_jvf = 0;
+  }
+
+  //jet label                                                                                                                                                                                                                                                              
+  if( tool_jetlabel ) {
+    delete tool_jetlabel;
+    tool_jetlabel = 0;
   }
 
   //Stop clock
@@ -5525,12 +5553,6 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 // };
 
 //Calculation of extra variables
-// float chorizo :: Calc_MT(Particles::Jet jet, TVector2 met){
-
-//   return Calc_MT(jet, met);
-
-// }
-
 float chorizo :: Calc_MT(Particles::Particle p, TVector2 met){
 
   return sqrt(2 * p.Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), p.Phi()))));

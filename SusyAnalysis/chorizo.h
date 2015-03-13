@@ -314,7 +314,6 @@ private:
 
   //Calculation functions
   virtual float Calc_MT(Particle p, TVector2 met);
-  //  virtual float Calc_MT(Particles::Jet j, TVector2 met);
   virtual float Calc_mct();
   virtual float Calc_mct(Particle p1, Particle p2);
   virtual float Calc_dijetMass();
