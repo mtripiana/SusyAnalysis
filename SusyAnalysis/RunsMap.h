@@ -972,6 +972,21 @@ void RunsMap::LoadMap(){
   m_map["Ztautau167805_13TeVgrid"] = rlist( Rpair(167805, "mc14_13TeV.167805.Sherpa_CT10_ZtautauMassiveCBPt70_140_CVetoBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
 
   //======================================================================================================================
+  //                                                 Local afs tests --> 50ns samples
+  //======================================================================================================================
+  
+  m_map["Znunu167818_13TeV_50ns"] = rlist( Rpair(167818, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167818/"));
+  m_map["Znunu167819_13TeV_50ns"] = rlist( Rpair(167819, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167819/"));
+  m_map["Znunu167820_13TeV_50ns"] = rlist( Rpair(167820, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167820/"));
+  m_map["Znunu167830_13TeV_50ns"] = rlist( Rpair(167830, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167830/"));
+  m_map["Znunu167831_13TeV_50ns"] = rlist( Rpair(167831, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167831/"));
+  m_map["Znunu167832_13TeV_50ns"] = rlist( Rpair(167832, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167832/"));
+  m_map["Znunu167842_13TeV_50ns"] = rlist( Rpair(167842, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167842/")); 
+  m_map["Znunu167843_13TeV_50ns"] = rlist( Rpair(167843, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167843/"));
+  m_map["Znunu167844_13TeV_50ns"] = rlist( Rpair(167844, "/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/50ns_Znunu_xAOD/Znunu167844/"));
+
+
+  //======================================================================================================================
   //                                                 Local afs/nfs tests
   //======================================================================================================================
 

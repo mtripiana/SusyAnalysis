@@ -167,7 +167,7 @@ void printSampleMeta(Sample* sample){
   cout << " filterEff       = " << sample->getMetaDouble( MetaFields::filterEfficiency ) << endl;
   cout << " N               = " << sample->getMetaDouble( MetaFields::numEvents ) << endl;
   cout << " Lumi            = " << sample->getMetaDouble( MetaFields::lumi ) << endl;
-  cout << "FileWeight       = " << sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor )  * sample->getMetaDouble( MetaFields::filterEfficiency ) / (sample->getMetaDouble( MetaFields::numEvents ))<< endl;
+  cout << " FileWeight      = " << sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor )  * sample->getMetaDouble( MetaFields::filterEfficiency ) / (sample->getMetaDouble( MetaFields::numEvents ))<< endl;
   cout << bold("--------------------------------------------------------------------------------------------------------------") << endl;
   cout << endl;  
 }
@@ -396,7 +396,8 @@ int main( int argc, char* argv[] ) {
     sh.setMetaDouble( "DSID", (double)run_ids[p] );
   }
   if(mgd)
-    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
+    makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
+  //  makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
   //    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
    
 
@@ -419,7 +420,7 @@ int main( int argc, char* argv[] ) {
   }
 
   //set EBeam field
-  TString s_ecm  = "8"; //default is 8TeV 
+  TString s_ecm  = "13"; //default is 13TeV 
   TString s_ecm_tmp = "";
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
     (*iter)->setMetaDouble ("ebeam", (double)getEBeam(*iter));
@@ -438,7 +439,7 @@ int main( int argc, char* argv[] ) {
   
   bool amiFound=true;
   if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
-    s_ecm="8";
+    s_ecm="13";
     amiFound=false;
   }
 
@@ -575,7 +576,7 @@ int main( int argc, char* argv[] ) {
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
-      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.22 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.1.27 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }

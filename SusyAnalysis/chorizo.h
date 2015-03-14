@@ -767,7 +767,9 @@ private:
   float e_Zpt;
   float m_M;
   float m_MT;
-  float m_MT_vmu;  
+  float m_MT_vmu; 
+  float m_MT_tst;
+  float m_MT_tst_vmu;   
   float m_Zpt;
   float m_EM;
   
