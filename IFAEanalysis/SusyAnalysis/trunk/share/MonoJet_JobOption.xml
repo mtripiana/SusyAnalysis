@@ -6,9 +6,9 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">false</Mode>
-    <Path name="RootFilesFolder">/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/Running/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/arelycg/SUSYANALYSIS_13TeV/Collateral/</Path>
+    <Mode name="DoCutFlow">true</Mode>
+    <Path name="RootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/SusyAnalysis_14march15/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/COLLATERAL/</Path>
     <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
     <!--   <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path> updated periodB GRL. Due to some job failures, not all lumiblocks are complete. -->
     <Pileup>
@@ -47,7 +47,7 @@
     </OverlapRemoval> 
 
     <Trigger>
-      <chains>HLT_xe100,HLT_xe50</chains>
+      <chains>HLT_xe100,HLT_xe50,HLT_e28_tight_iloose,HLT_e60_medium,HLT_mu26_imedium,HLT_mu50</chains>
     </Trigger>
 
     <Truth>
@@ -116,7 +116,7 @@
         <Collection>AntiKt4LCTopo</Collection>
 
         <PreselPtCut>20000.</PreselPtCut>
-        <PreselEtaCut>10</PreselEtaCut>
+        <PreselEtaCut>2.8</PreselEtaCut>
         <RecoPtCut>30000.</RecoPtCut>
         <RecoEtaCut>2.8</RecoEtaCut> 
         

@@ -1,12 +1,16 @@
+2014-03-13 Arely <arelycg@cern.ch>
+	* Added the e_MT and m_MT for Met with TST.
+        * Found the issue when running on long samples :) (un-initialized e_SFu,e_SFd).
+        * Changed the default location of the samples to IFAE_SCRATCHDISK instead of IFAE_LOCALGROUPDISK
+        * Changed the default CM energy to 13TeV.
+
 2014-03-13 Martin <tripiana@cern.ch>
 	* Update qsub-generator to ROOT6
 	* Fix qsub template file
 	* Fix Zll variables filling
 
-
 2014-03-13 Arely <arelycg@cern.ch>
-	* Chnage location of test xAOD files from scratch to scratch2
-
+	* Change location of test xAOD files from scratch to scratch2
 
 2014-03-12 Arely <arelycg@cern.ch>
 	* Added protection for "R", so it keeps the same size.

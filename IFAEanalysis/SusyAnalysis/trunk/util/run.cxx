@@ -396,7 +396,8 @@ int main( int argc, char* argv[] ) {
       }    
       
       if(mgd)
-	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
+	makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
+      //	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
       //	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
       
       
@@ -420,13 +421,13 @@ int main( int argc, char* argv[] ) {
       }
 
       //set EBeam field
-      TString s_ecm  = "8"; //default is 8TeV 
+      TString s_ecm  = "13"; //default is 13TeV 
       sh.at(0)->setMetaDouble ("ebeam", (double)getEBeam(sh.at(0)));
       s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
 
       bool amiFound=true;
       if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
-	s_ecm="8";
+	s_ecm="13";
 	amiFound=false;
       }
 

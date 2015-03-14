@@ -263,9 +263,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("ph_tight",&ph_tight,"ph_tight/O", 10000);
       output->tree()->Branch("ph_type",&ph_type,"ph_type/I", 10000);
       output->tree()->Branch("ph_origin",&ph_origin,"ph_origin/I", 10000);
-      output->tree()->Branch("ph_SF",&photonSF,"ph_SF/F", 10000);
-      output->tree()->Branch("ph_SFu",&photonSF,"ph_SFu/F", 10000);
-      output->tree()->Branch("ph_SFd",&photonSF,"ph_SFd/F", 10000);
+      //output->tree()->Branch("ph_SF",&photonSF,"ph_SF/F", 10000);
+      //output->tree()->Branch("ph_SFu",&photonSF,"ph_SFu/F", 10000);
+      //output->tree()->Branch("ph_SFd",&photonSF,"ph_SFd/F", 10000);
 
       //electrons
       output->tree()->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -289,13 +289,15 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_ptiso30",&e_ptiso30,"e_ptiso30/F", 10000);
       output->tree()->Branch("e_tight",&e_tight,"e_tight/O", 10000);
       output->tree()->Branch("e_MT",&e_MT,"e_MT/F", 10000);
-      output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
+      output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);    
+      output->tree()->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
+      output->tree()->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
       output->tree()->Branch("e_M",&e_M,"e_M/F", 10000);
       output->tree()->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
       
-      output->tree()->Branch("e_SF",&electronSF,"e_SF/F", 10000);
-      output->tree()->Branch("e_SFu",&electronSF,"e_SFu/F", 10000);
-      output->tree()->Branch("e_SFd",&electronSF,"e_SFd/F", 10000);
+      //output->tree()->Branch("e_SF",&electronSF,"e_SF/F", 10000);
+      //output->tree()->Branch("e_SFu",&electronSF,"e_SFu/F", 10000);
+      //output->tree()->Branch("e_SFd",&electronSF,"e_SFd/F", 10000);
 
       //muons
       output->tree()->Branch("m_N",&m_N,"m_N/I", 10000);                            
@@ -321,7 +323,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m2_ptiso30",&m2_ptiso30,"m2_ptiso30/F", 10000);       
       output->tree()->Branch("m_M",&m_M,"m_M/F", 10000);                            
       output->tree()->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
-      output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
+      output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);             
+      output->tree()->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
+      output->tree()->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                           
       output->tree()->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
       output->tree()->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
 
@@ -758,6 +762,8 @@ void chorizo :: InitVars()
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
   e_MT_vmu = DUMMYDN;     
+  e_MT_tst = DUMMYDN;   
+  e_MT_tst_vmu = DUMMYDN;   
   e_Zpt = DUMMYDN;             
   electronSF = DUMMYDN;        
   electronSFu = 1.;
@@ -812,7 +818,9 @@ void chorizo :: InitVars()
   muonSFd = 1.;
   m_M = DUMMYDN;                
   m_MT = DUMMYDN;  
-  m_MT_vmu = DUMMYDN;                
+  m_MT_vmu = DUMMYDN;                  
+  m_MT_tst = DUMMYDN;  
+  m_MT_tst_vmu = DUMMYDN;               
   m_Zpt = DUMMYDN;              
   m_EM = DUMMYDN;               
 
@@ -2488,7 +2496,7 @@ EL::StatusCode chorizo :: loop ()
 	n_fakemet_jets++;
       }
     }
-	
+    
 	
     if( doOR && !dec_passOR(**jet_itr) ) continue;
 
@@ -3523,10 +3531,10 @@ EL::StatusCode chorizo :: loop ()
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
-    TVector2 met_electron = met_obj.GetVector("met_imu"); //arely
-    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
-    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu"); //arely 
-    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); //arely 
+    TVector2 met_electron = met_obj.GetVector("met_imu"); 
+    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");    
+    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu");  
+    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); 
 
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
@@ -3538,11 +3546,14 @@ EL::StatusCode chorizo :: loop ()
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
     //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
-    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; //arely
-    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1;
+    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); 
+    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1; 
+    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu"); 
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
     m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);  
-  
+    m_MT_tst = Calc_MT( recoMuons.at(0), met_tst_muon);
+    m_MT_tst_vmu = Calc_MT( recoMuons.at(0), met_tst_muon_vmu);  
   }
  
 
@@ -4298,21 +4309,29 @@ EL::StatusCode chorizo :: loop_truth()
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
-    TVector2 met_electron = met_obj.GetVector("met_imu"); //arely
-    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_electron = met_obj.GetVector("met_imu"); 
+    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");    
+    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu");  
+    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); 
+
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
-
-  }
+    e_MT_tst = Calc_MT( recoElectrons.at(0), met_tst_electron);
+    e_MT_tst_vmu = Calc_MT( recoElectrons.at(0), met_tst_electron_vmu);
+  }  
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
     //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
-    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; //arely
-    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1;
+    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); 
+    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1; 
+    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu"); 
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
-    m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);    
+    m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);  
+    m_MT_tst = Calc_MT( recoMuons.at(0), met_tst_muon);
+    m_MT_tst_vmu = Calc_MT( recoMuons.at(0), met_tst_muon_vmu);  
   }
   
   

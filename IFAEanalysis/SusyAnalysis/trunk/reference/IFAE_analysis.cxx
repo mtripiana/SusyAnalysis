@@ -177,11 +177,12 @@ void chorizo :: bookTree(){
 
     //presel
     output->tree()->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
-    
+    output->tree()->Branch("isTrigger",&isTrigger);
+      
     //FlowTree
     if (doFlowTree){
       output->tree()->Branch("isGRL",&isGRL,"isGRL/O", 10000);
-      output->tree()->Branch("isTrigger",&isTrigger);
+      //output->tree()->Branch("isTrigger",&isTrigger);
       output->tree()->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
       output->tree()->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
       output->tree()->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
@@ -230,11 +231,6 @@ void chorizo :: bookTree(){
       output->tree()->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
       output->tree()->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
 
-      output->tree()->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
-      output->tree()->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
-      output->tree()->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
-      output->tree()->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
-
       //truth
       output->tree()->Branch("truth_M",&truth_M,"truth_M/F", 10000);
       output->tree()->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
@@ -267,9 +263,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("ph_tight",&ph_tight,"ph_tight/O", 10000);
       output->tree()->Branch("ph_type",&ph_type,"ph_type/I", 10000);
       output->tree()->Branch("ph_origin",&ph_origin,"ph_origin/I", 10000);
-      output->tree()->Branch("ph_SF",&photonSF,"ph_SF/F", 10000);
-      output->tree()->Branch("ph_SFu",&photonSF,"ph_SFu/F", 10000);
-      output->tree()->Branch("ph_SFd",&photonSF,"ph_SFd/F", 10000);
+      //output->tree()->Branch("ph_SF",&photonSF,"ph_SF/F", 10000);
+      //output->tree()->Branch("ph_SFu",&photonSF,"ph_SFu/F", 10000);
+      //output->tree()->Branch("ph_SFd",&photonSF,"ph_SFd/F", 10000);
 
       //electrons
       output->tree()->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -282,18 +278,26 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_phi",&e_phi,"e_phi/F", 10000);
       output->tree()->Branch("e2_pt",&e2_pt,"e2_pt/F", 10000);
       output->tree()->Branch("e2_eta",&e2_eta,"e2_eta/F", 10000);
-      output->tree()->Branch("e2_phi",&e2_phi,"e2_phi/F", 10000);      
+      output->tree()->Branch("e2_phi",&e2_phi,"e2_phi/F", 10000); 
+      output->tree()->Branch("e3_pt",&e3_pt,"e3_pt/F", 10000);
+      output->tree()->Branch("e3_eta",&e3_eta,"e3_eta/F", 10000);
+      output->tree()->Branch("e3_phi",&e3_phi,"e3_phi/F", 10000);      
+      output->tree()->Branch("e4_pt",&e4_pt,"e4_pt/F", 10000);
+      output->tree()->Branch("e4_eta",&e4_eta,"e4_eta/F", 10000);
+      output->tree()->Branch("e4_phi",&e4_phi,"e4_phi/F", 10000);           
       output->tree()->Branch("e_etiso30",&e_etiso30,"e_etiso30/F", 10000);
       output->tree()->Branch("e_ptiso30",&e_ptiso30,"e_ptiso30/F", 10000);
       output->tree()->Branch("e_tight",&e_tight,"e_tight/O", 10000);
       output->tree()->Branch("e_MT",&e_MT,"e_MT/F", 10000);
-      output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
+      output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);    
+      output->tree()->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
+      output->tree()->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
       output->tree()->Branch("e_M",&e_M,"e_M/F", 10000);
       output->tree()->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
       
-      output->tree()->Branch("e_SF",&electronSF,"e_SF/F", 10000);
-      output->tree()->Branch("e_SFu",&electronSF,"e_SFu/F", 10000);
-      output->tree()->Branch("e_SFd",&electronSF,"e_SFd/F", 10000);
+      //output->tree()->Branch("e_SF",&electronSF,"e_SF/F", 10000);
+      //output->tree()->Branch("e_SFu",&electronSF,"e_SFu/F", 10000);
+      //output->tree()->Branch("e_SFd",&electronSF,"e_SFd/F", 10000);
 
       //muons
       output->tree()->Branch("m_N",&m_N,"m_N/I", 10000);                            
@@ -302,7 +306,13 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_phi",&m_phi,"m_phi/F", 10000);                      
       output->tree()->Branch("m2_pt",&m2_pt,"m2_pt/F", 10000);                      
       output->tree()->Branch("m2_eta",&m2_eta,"m2_eta/F", 10000);                   
-      output->tree()->Branch("m2_phi",&m2_phi,"m2_phi/F", 10000);                   
+      output->tree()->Branch("m2_phi",&m2_phi,"m2_phi/F", 10000); 
+      output->tree()->Branch("m3_pt",&m3_pt,"m3_pt/F", 10000);                      
+      output->tree()->Branch("m3_eta",&m3_eta,"m3_eta/F", 10000);                   
+      output->tree()->Branch("m3_phi",&m3_phi,"m3_phi/F", 10000);       
+      output->tree()->Branch("m4_pt",&m4_pt,"m4_pt/F", 10000);                      
+      output->tree()->Branch("m4_eta",&m4_eta,"m4_eta/F", 10000);                   
+      output->tree()->Branch("m4_phi",&m4_phi,"m4_phi/F", 10000);       
       output->tree()->Branch("m_iso",&m_iso,"m_iso/F", 10000);                      
       output->tree()->Branch("m_etiso20",&m_etiso20,"m_etiso20/F", 10000);          
       output->tree()->Branch("m_ptiso20",&m_ptiso20,"m_ptiso20/F", 10000);          
@@ -313,7 +323,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m2_ptiso30",&m2_ptiso30,"m2_ptiso30/F", 10000);       
       output->tree()->Branch("m_M",&m_M,"m_M/F", 10000);                            
       output->tree()->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
-      output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
+      output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);             
+      output->tree()->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
+      output->tree()->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                           
       output->tree()->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
       output->tree()->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
 
@@ -508,6 +520,19 @@ void chorizo :: bookTree(){
       output->tree()->Branch("gaminvR",&gaminvR);
       output->tree()->Branch("mdeltaR",&mdeltaR);
       output->tree()->Branch("cosptR",&cosptR);
+      
+      //Z candidate
+      output->tree()->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
+      output->tree()->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
+      output->tree()->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
+      output->tree()->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
+
+      output->tree()->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      output->tree()->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);      
+      output->tree()->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);     
+      output->tree()->Branch("Z_m",&Z_m,"Z_m/F", 10000); 
+      output->tree()->Branch("lep3_MT",&lep3_MT);
+      output->tree()->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);       
       
       //top reconstruction
       output->tree()->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
@@ -724,18 +749,34 @@ void chorizo :: InitVars()
   e_eta = 0.; //DUMMYDN;             
   e_phi = 0.; //DUMMYDN;  
   e2_eta = 0.; //DUMMYDN;             
-  e2_phi = 0.; //DUMMYDN;               
+  e2_phi = 0.; //DUMMYDN;     
+  e3_pt = 0; //DUMMYDN;  
+  e3_eta = 0.; //DUMMYDN;             
+  e3_phi = 0.; //DUMMYDN;      
+  e4_pt = 0; //DUMMYDN;  
+  e4_eta = 0.; //DUMMYDN;             
+  e4_phi = 0.; //DUMMYDN;            
   e_ptiso30 = 0.; //DUMMYDN;         
   e_etiso30 = 0.; //DUMMYDN;         
   e_tight = false;           
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
   e_MT_vmu = DUMMYDN;     
+  e_MT_tst = DUMMYDN;   
+  e_MT_tst_vmu = DUMMYDN;   
   e_Zpt = DUMMYDN;             
   electronSF = DUMMYDN;        
   electronSFu = 1.;
   electronSFd = 1.;
-
+  
+  //Z candidate
+  Z_flav = -99;
+  Z_lep1 = -99;  
+  Z_lep2 = -99;  
+  Z_m = DUMMYDN; 
+  lep3_MT.clear();
+  lep_mct = DUMMYDN;  
+  
   //- Photon Info
   ph_N = 0; //DUMMYDN;               
   ph_pt = 0; //DUMMYDN;              
@@ -757,7 +798,13 @@ void chorizo :: InitVars()
   m_phi = 0.; //DUMMYDN;              
   m2_pt = 0.; //DUMMYDN;              
   m2_eta = 0.; //DUMMYDN;             
-  m2_phi = 0.; //DUMMYDN;             
+  m2_phi = 0.; //DUMMYDN;
+  m3_pt = 0.; //DUMMYDN;              
+  m3_eta = 0.; //DUMMYDN;             
+  m3_phi = 0.; //DUMMYDN;  
+  m4_pt = 0.; //DUMMYDN;              
+  m4_eta = 0.; //DUMMYDN;             
+  m4_phi = 0.; //DUMMYDN;               
   m_iso = DUMMYDN;              
   m_ptiso30 = 0.; //DUMMYDN;          
   m_etiso30 = 0.; //DUMMYDN;          
@@ -771,7 +818,9 @@ void chorizo :: InitVars()
   muonSFd = 1.;
   m_M = DUMMYDN;                
   m_MT = DUMMYDN;  
-  m_MT_vmu = DUMMYDN;                
+  m_MT_vmu = DUMMYDN;                  
+  m_MT_tst = DUMMYDN;  
+  m_MT_tst_vmu = DUMMYDN;               
   m_Zpt = DUMMYDN;              
   m_EM = DUMMYDN;               
 
@@ -1269,7 +1318,7 @@ void chorizo :: ReadXML(){
     QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", cRegion)).c_str());
     QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", cRegion));
     QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", cRegion));
-    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", cRegion));
+    QCD_SmearedEvents      = (unsigned int)xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", cRegion));
   }
   catch(...){
     Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion)); 
@@ -1286,7 +1335,7 @@ void chorizo :: ReadXML(){
     QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", defRegion)).c_str());
     QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", defRegion));
     QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", defRegion));
-    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
+    QCD_SmearedEvents      = (unsigned int)xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
   }
   std::istringstream QCD_triggerNameIStr(QCD_triggerNameStr);
   std::string stqcd;
@@ -1347,7 +1396,9 @@ EL::StatusCode chorizo :: initialize ()
   else if(El_isoType.EqualTo("tight"))  elIsoType = ST::SignalIsoExp::TightIso;
   else{
     elIsoType = ST::SignalIsoExp::LooseIso;
+    elIsoArgs->_etcut = El_PreselPtCut;
     elIsoArgs->_id_isocut = -1; //do not apply it 
+    elIsoArgs->_calo_isocut = 0.;
   }
 
   Mu_isoType.ToLower();
@@ -1356,7 +1407,9 @@ EL::StatusCode chorizo :: initialize ()
   else if(Mu_isoType.EqualTo("tight"))  muIsoType = ST::SignalIsoExp::TightIso;
   else{
     muIsoType = ST::SignalIsoExp::LooseIso;
+    muIsoArgs->_ptcut = Mu_PreselPtCut;
     muIsoArgs->_id_isocut = -1; //do not apply it 
+    muIsoArgs->_calo_isocut = 0.;
   }
   
   
@@ -1689,7 +1742,6 @@ EL::StatusCode chorizo :: loop ()
   }
 
   m_eventCounter++;
-  
 
   //----------------------------
   // Event information
@@ -1906,8 +1958,9 @@ EL::StatusCode chorizo :: loop ()
   if (isMC) {
     if (mc_channel_number==117050 || mc_channel_number==110401) {
       ttbar_weight = this->GetTTbarReweight(Top_truth_pt, Topbar_truth_pt, avTop_truth_pt);
+      } 
       truth_n_leptons = this->GetNTruthLeptons();
-    }     
+        
     
     truth_met_noEle = this->GetTruthEtmiss_noEleTau();	
     truth_n_bjets   = this->GetNTruthB();	
@@ -1943,6 +1996,7 @@ EL::StatusCode chorizo :: loop ()
   //trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
   if(m_eventCounter<2){
+    Info("loop()", " ");
     Info("loop()", "  MET TRIGGERS IN MENU ");
     Info("loop()", "--------------------------------");
     auto chainGroup = tool_trigdec->getChainGroup("HLT_xe*");
@@ -2018,10 +2072,8 @@ EL::StatusCode chorizo :: loop ()
   //   }
   // }
   
-  if(this->isTrigger.size())
-    this->passPreselectionCuts = this->isGRL && this->isTrigger[0] && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
-  else
-    this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+  this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+
 
   //skip event no-preselected events for smearing                                       
   if ( this->isQCD  && (!this->passPreselectionCuts) ) 
@@ -2126,7 +2178,7 @@ EL::StatusCode chorizo :: loop ()
     else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
     dec_bjet(**jet_itr) = (bw > Jet_TaggerOp);
 
-    dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
+    //arelycg dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
 
     //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
     smr_met_jets_pt.push_back( 0. ); //recoJet.Pt() ); //in GeV!
@@ -2371,7 +2423,7 @@ EL::StatusCode chorizo :: loop ()
       if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
       if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
 
-      recoPhoton.id = iEl;
+      recoPhoton.id = iPh;
       recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
       recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
       recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
@@ -2444,7 +2496,7 @@ EL::StatusCode chorizo :: loop ()
 	n_fakemet_jets++;
       }
     }
-	
+    
 	
     if( doOR && !dec_passOR(**jet_itr) ) continue;
 
@@ -2458,7 +2510,6 @@ EL::StatusCode chorizo :: loop ()
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
-    //iJet++;
     
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
@@ -2698,7 +2749,7 @@ EL::StatusCode chorizo :: loop ()
 	n_tjets++;
       if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets50++;
       if ((*tjet_itr)->pt() > 40000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets40++;
-      if ((*tjet_itr)->pt() > 30000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
+      if ((*tjet_itr)->pt() > Jet_RecoPtCut && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
 
       TLorentzVector truthJet;
       truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 
@@ -2753,9 +2804,9 @@ EL::StatusCode chorizo :: loop ()
       // }
     }
 
-    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) ) 
+    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5) 
       bjet_counter++;
-    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) ) 
+    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter_80eff++;	
     
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
@@ -3060,6 +3111,8 @@ EL::StatusCode chorizo :: loop ()
 
   TVector2 sjet2(sjet.Px(), sjet.Py());
   
+  //Z(ll) candidate                                                                                                                                                                                                                                                      
+  Zll_candidate();
 
   //--- Fill MET related variables  -  vectorized now!
   for (auto& mk : metmap) {
@@ -3118,8 +3171,7 @@ EL::StatusCode chorizo :: loop ()
       if(mt_jm < min_mt_jm){
 	min_mt_jm = mt_jm;
       }
-      
-      
+
       //--- look for closest/faraway bjet and closer light jet to MET
       if( jet.isBTagged(Jet_Tagger) ){
 	
@@ -3200,7 +3252,10 @@ EL::StatusCode chorizo :: loop ()
 
     //==== Razor ====
     fillRazor( makeV3( mk.second ) );
-
+    
+    //==== Z-related vars                                                                                                                                                                                                                            
+    Zll_extra(mk.second); //be sure to call Zll_candidate() before!                                                                                                                                                                                                      
+        
   }//end of met flavor loop
 
   met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
@@ -3476,10 +3531,10 @@ EL::StatusCode chorizo :: loop ()
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
-    TVector2 met_electron = met_obj.GetVector("met_imu"); //arely
-    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
-    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu"); //arely 
-    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); //arely 
+    TVector2 met_electron = met_obj.GetVector("met_imu"); 
+    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");    
+    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu");  
+    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); 
 
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
@@ -3491,11 +3546,14 @@ EL::StatusCode chorizo :: loop ()
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
     //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
-    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; //arely
-    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1;
+    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); 
+    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1; 
+    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu"); 
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
     m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);  
-  
+    m_MT_tst = Calc_MT( recoMuons.at(0), met_tst_muon);
+    m_MT_tst_vmu = Calc_MT( recoMuons.at(0), met_tst_muon_vmu);  
   }
  
 
@@ -4251,21 +4309,29 @@ EL::StatusCode chorizo :: loop_truth()
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
-    TVector2 met_electron = met_obj.GetVector("met_imu"); //arely
-    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_electron = met_obj.GetVector("met_imu"); 
+    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");    
+    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu");  
+    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); 
+
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
-
-  }
+    e_MT_tst = Calc_MT( recoElectrons.at(0), met_tst_electron);
+    e_MT_tst_vmu = Calc_MT( recoElectrons.at(0), met_tst_electron_vmu);
+  }  
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
     //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
-    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; //arely
-    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1;
+    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); 
+    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1; 
+    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu"); 
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
-    m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);    
+    m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);  
+    m_MT_tst = Calc_MT( recoMuons.at(0), met_tst_muon);
+    m_MT_tst_vmu = Calc_MT( recoMuons.at(0), met_tst_muon_vmu);  
   }
   
   
@@ -4338,6 +4404,18 @@ void chorizo :: dumpLeptons(){
      e2_eta = recoElectrons.at(1).Eta();
      e2_phi = recoElectrons.at(1).Phi();
    }
+   
+   if(recoElectrons.size()>2){
+     e3_pt = recoElectrons.at(2).Pt();
+     e3_eta = recoElectrons.at(2).Eta();
+     e3_phi = recoElectrons.at(2).Phi();
+   }
+
+   if(recoElectrons.size()>3){
+     e4_pt = recoElectrons.at(3).Pt();
+     e4_eta = recoElectrons.at(3).Eta();
+     e4_phi = recoElectrons.at(3).Phi();
+   }
   
   
   if (truthElectrons.size()>0){
@@ -4363,6 +4441,20 @@ void chorizo :: dumpLeptons(){
     m2_etiso30 = recoMuons.at(1).etcone30;
     m2_ptiso30 = recoMuons.at(1).ptcone30;
   }
+  
+  if(recoMuons.size()>2){
+    m3_pt = recoMuons.at(2).Pt();
+    m3_eta = recoMuons.at(2).Eta();
+    m3_phi = recoMuons.at(2).Phi();
+
+  }  
+  
+  if(recoMuons.size()>3){
+    m4_pt = recoMuons.at(3).Pt();
+    m4_eta = recoMuons.at(3).Eta();
+    m4_phi = recoMuons.at(3).Phi();
+
+  }  
 
 }
 
@@ -4521,6 +4613,22 @@ EL::StatusCode chorizo :: finalize ()
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
 
+  //OverlapRemoval                                                                                                                                                                                                                                                          
+  if(tool_or){
+    delete tool_or;
+    tool_or=0;
+  }
+
+  //B-tagging                                                                                                                                                                                                                                                              
+  if(tool_btag){
+    delete tool_btag;
+    tool_btag=0;
+  }
+  if(tool_btag2){
+    delete tool_btag2;
+    tool_btag2=0;
+  }
+
   //PURW
   if(tool_purw){
     if(genPUfile)
@@ -4562,6 +4670,18 @@ EL::StatusCode chorizo :: finalize ()
   if( tool_jsmear ) {
     delete tool_jsmear;
     tool_jsmear = 0;
+  }
+
+  //jet jvf                                                                                                                                                                                                                                                                 
+  if( tool_jvf ) {
+    delete tool_jvf;
+    tool_jvf = 0;
+  }
+
+  //jet label                                                                                                                                                                                                                                                              
+  if( tool_jetlabel ) {
+    delete tool_jetlabel;
+    tool_jetlabel = 0;
   }
 
   //Stop clock
@@ -5452,12 +5572,6 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 // };
 
 //Calculation of extra variables
-float chorizo :: Calc_MT(Particles::Jet jet, TVector2 met){
-
-  return sqrt(2 * jet.Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), jet.Phi()))));
-
-}
-
 float chorizo :: Calc_MT(Particles::Particle p, TVector2 met){
 
   return sqrt(2 * p.Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), p.Phi()))));
@@ -5468,7 +5582,12 @@ float chorizo :: Calc_mct(){
 
   if(n_jets<2) return -1;
 
-  float mct =  (recoJets.at(0).Mt() + recoJets.at(1).Mt())*(recoJets.at(0).Mt() + recoJets.at(1).Mt()) - (recoJets.at(0)-recoJets.at(1)).Perp2();
+  return Calc_mct(recoJets.at(0), recoJets.at(1));
+};
+
+float chorizo :: Calc_mct(Particle p1, Particle p2){
+
+  float mct =  (p1.Mt() + p2.Mt())*(p1.Mt() + p2.Mt()) - (p1-p2).Perp2();
   mct = (mct >= 0.) ? sqrt(mct) : sqrt(-mct);   
 
   return mct;
@@ -5791,16 +5910,16 @@ double chorizo::thrustService(TVector2 &n, std::vector<TVector2> &obj){
 }
 
 //Main function where the thrust axis which maximize the transverse thrust value is computed
-double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
+float chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
   
-  if(pvectors.size()==1) return 0;
+  if(pvectors.size()==1) return 0.;
 
   //transform to TVector2
   std::vector<TVector2> obj;
   for(const auto& tlv : pvectors)
     obj.push_back( tlv.Vect().XYvector() );
 
-  if(obj.size()==0) return -99; //?
+  if(obj.size()==0) return -99.; //?
 
   TVector2 n;
   TVector2 np1(obj[0]);
@@ -5881,7 +6000,7 @@ double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 	  std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
 	}
       }
-      return -99;
+      return -99.;
     }
     //to accept the thrust value we require:
     //1- it has to be into [2/pi,1] which is the range for the transverse thrust
@@ -5899,10 +6018,10 @@ double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 	std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
       }
     }
-    return -99;
+    return -99.;
   }
 
-  return T;
+  return (float)T;
  
 }
 
@@ -5928,6 +6047,7 @@ void chorizo :: fillRazor(TVector3 mymet){
 
   if(MR > 0.) 
     R.push_back( tmp_MTR / MR );
+  else R.push_back(0.0); //arelycg: to keep same size
   
   //new super-razor variables
   float sr1=0.;
@@ -6185,7 +6305,96 @@ void chorizo :: findBparton(){
   */
 }
 
+void chorizo :: Zll_candidate(){
+  
+  float m_ll_tmp = 0.;  
+  float ZMASS=91.1876;
 
+   if (recoElectrons.size()>1){
+     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+       for (unsigned int jEl=iEl+1; jEl<recoElectrons.size(); jEl++){   
+
+	 if ((recoElectrons.at(iEl).charge * recoElectrons.at(jEl).charge) < 0){
+         
+	   TLorentzVector ee = recoElectrons.at(iEl).GetVector() + recoElectrons.at(jEl).GetVector();	 
+	   m_ll_tmp = ee.M();	 
+
+	   if (fabs(m_ll_tmp - ZMASS) < fabs(Z_m -  ZMASS)){
+	     Z_m = m_ll_tmp;
+	     Z_lep1 = iEl;
+	     Z_lep2 = jEl;	   
+	     Z_flav = 0;
+	   }
+	 }
+       }
+     }
+   } 
+   
+   if (recoMuons.size()>1){
+     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+       for (unsigned int jMu=iMu+1; jMu<recoMuons.size(); jMu++){   
+	 
+	 if ((recoMuons.at(iMu).charge * recoMuons.at(jMu).charge) < 0){     
+           TLorentzVector mumu = recoMuons.at(iMu).GetVector() + recoMuons.at(jMu).GetVector();	 
+	   m_ll_tmp = mumu.M();	 
+
+	   if (fabs(m_ll_tmp - ZMASS) < fabs(Z_m - ZMASS)){
+	     Z_m = m_ll_tmp;
+	     Z_lep1 = iMu;
+	     Z_lep2 = jMu;
+	     Z_flav = 1;		
+	   }
+	 }
+       }  
+     }
+   }
+
+   if (recoElectrons.size()+recoMuons.size()==4){
+
+     std::vector<Particle> extra_lep;  
+     
+     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+       
+       if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+       extra_lep.push_back(recoElectrons.at(iEl));
+       
+     } 	
+     
+     
+     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+       
+       if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+       extra_lep.push_back(recoMuons.at(iMu));
+       
+     }  
+     
+     if(extra_lep.size()>1)  //redundant I think!
+       lep_mct = Calc_mct(extra_lep.at(0), extra_lep.at(1));
+     
+   }  
+   
+}
+
+void chorizo :: Zll_extra(TVector2 met){
+
+  
+  if (recoElectrons.size()+recoMuons.size()==3){
+    
+    for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+      
+      if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+      lep3_MT.push_back( Calc_MT(recoElectrons.at(iEl), met) );
+      
+    } 	
+    
+    for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+      
+      if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+      lep3_MT.push_back( Calc_MT(recoMuons.at(iMu), met) );
+      
+    }  
+  }
+} 
 
 TVector2 chorizo :: getMET( const xAOD::MissingETContainer* METcon, TString name ) {
   
