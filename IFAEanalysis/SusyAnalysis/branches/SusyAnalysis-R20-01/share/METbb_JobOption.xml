@@ -81,6 +81,7 @@
         <recoSF>true</recoSF>
         <idSF>true</idSF>
         <triggerSF>false</triggerSF>
+	<triggers></triggers>
         <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
       </region>
     </Electron>
@@ -91,6 +92,7 @@
         <RecoPtCut>6000.</RecoPtCut>
         <RecoEtaCut>2.4</RecoEtaCut>
         <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+	<triggers></triggers>
       </region>
     </Muon>
     <Photon>
@@ -104,6 +106,7 @@
         <idSF>true</idSF>
         <triggerSF>false</triggerSF>
         <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+	<triggers></triggers>
       </region>
     </Photon>
     <Jet>

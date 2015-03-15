@@ -1,3 +1,17 @@
+2014-03-15 Martin <tripiana@cern.ch>
+	* Add e/m/ph triggers
+	* Fix e/n/ph SF
+	* Add photon antiSF
+	* Clean XML reading
+	* Add e/m_MT for TST (from Arely)
+
+2014-03-10 Martin <tripiana@cern.ch>
+	* Propagate changes from rel19 code:
+	* Add Zll candidate variables (modified from Silvia's)
+        * Update qsub-generator to ROOT6
+	* Fix qsub template file
+	* Fix iPh and iJet  (Arely)
+
 
 2014-03-10 Martin <tripiana@cern.ch>
 	* Move cosmic veto after overlap removal (from Arely).

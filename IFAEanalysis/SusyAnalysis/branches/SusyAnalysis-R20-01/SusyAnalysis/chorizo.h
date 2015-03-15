@@ -48,6 +48,13 @@
 #include "fastjet/ClusterSequence.hh"
 #include "TileTripReader/TTileTripReader.h"
 
+
+//For trigger test
+#define TILETEST
+#ifdef TILETEST
+#include "JetTileCorrection/JetTileCorrectionTool.h"
+#endif 
+
 // Systematics includes
 #include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicSet.h"
@@ -256,8 +263,7 @@ private:
   Trig::TrigDecisionTool* tool_trigdec; //! 
   TrigConf::xAODConfigTool* tool_trigconfig; //!
    
-#ifndef __CINT__
-  
+#ifndef __CINT__  
   OverlapRemovalTool* tool_or; //!
   CP::PileupReweightingTool *tool_purw; //! 
   GoodRunsListSelectionTool *tool_grl; //!
@@ -267,6 +273,11 @@ private:
 #endif // not __CINT__
 
   SUSY::JetMCSmearingTool* tool_jsmear; //!
+
+  //Testing new TileCal correction tool!
+#ifdef TILETEST
+  CP::JetTileCorrectionTool* tool_jettile; //!
+#endif 
 
 
   //Member Functions
@@ -283,6 +294,9 @@ private:
   virtual void fillRazor();
   virtual void fillRazor(TVector3 mymet);
 
+  virtual void Zll_candidate();
+  virtual void Zll_extra(TVector2 met);
+  
   virtual bool vetoMCevent();
   virtual bool passMCor();
 
@@ -308,11 +322,13 @@ private:
   double  getPdfRW( LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
   double  getPdfRW( double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
 
+  //trigger matching
+  virtual bool hasTrigMatch(const xAOD::Electron& el); 
 
   //Calculation functions
   virtual float Calc_MT(Particle p, TVector2 met);
-  virtual float Calc_MT(Particles::Jet j, TVector2 met);
   virtual float Calc_mct();
+  virtual float Calc_mct(Particle p1, Particle p2);
   virtual float Calc_dijetMass();
   virtual float Calc_dijetMass(TLorentzVector ja, TLorentzVector jb);
   virtual std::vector<TLorentzVector> CombineJets();
@@ -376,6 +392,9 @@ private:
 
   TNamed *meta_jOption; //!
   TNamed *meta_triggers; //!
+  TNamed *meta_el_triggers; //!
+  TNamed *meta_mu_triggers; //!
+  TNamed *meta_ph_triggers; //!
   TNamed *meta_metmap; //!
 
   //----- Jet smearing config (QCD)
@@ -391,7 +410,7 @@ private:
   TString QCD_SmearMeanShift; //!
   bool    QCD_SmearExtraSmr; //!
   bool    QCD_DoPhiSmearing; //!
-  int     QCD_SmearedEvents; //!
+  unsigned int QCD_SmearedEvents; //!
 
   //----- PDF Reweighting
   //  LHAPDF::PDF*     m_PDF; //!
@@ -424,6 +443,9 @@ private:
   bool    leptonEfficiencyUnitarity; //!
 
   std::vector<std::string> TriggerNames; //!
+  std::vector<std::string> ElTriggers; //!
+  std::vector<std::string> MuTriggers; //!
+  std::vector<std::string> PhTriggers; //!
   // for QCD jet smearing 
   std::vector<std::string> JS_triggers; //!
 
@@ -632,6 +654,13 @@ private:
   float   Trigger_w_avg;
   float   e_SF;
   float   m_SF;
+  float   ph_SF;
+  float   e_SFu;
+  float   m_SFu;
+  float   ph_SFu;
+  float   e_SFd;
+  float   m_SFd;
+  float   ph_SFd;
 
   //- ttbar reweighting
   float ttbar_weight;
@@ -651,11 +680,6 @@ private:
   float   bosonVec_truth_pt;
   float   bosonVec_truth_eta;
   float   bosonVec_truth_phi;
-
-  int     Z_decay; //0=unknown, 1=ee, 2=mumu, 3=qq, 4=nunu, -99=no-Z-found
-  float   Z_pt; 
-  float   Z_eta;
-  float   Z_phi;
 
   //- truth kin info
   float truth_MT;
@@ -697,27 +721,27 @@ private:
   bool  ph_tight; 
   int   ph_type; 
   int   ph_origin; 
-  float photonSF;
-  float photonSFu;
-  float photonSFd;
 
   //- Electron Info
   int   e_N;
   float e_pt;
   float e2_pt;  
+  float e2_eta;
+  float e2_phi;  
+  float e3_pt;  
+  float e3_eta;
+  float e3_phi;  
+  float e4_pt;  
+  float e4_eta;
+  float e4_phi;  
   float e_truth_pt;
   float e_truth_eta;
   float e_truth_phi;
   float e_eta;
   float e_phi;
-  float e2_eta;
-  float e2_phi;  
   float e_ptiso30;
   float e_etiso30;
   bool  e_tight; 
-  float electronSF;
-  float electronSFu;
-  float electronSFd;
   int   e_type; 
   int   e_origin; 
 
@@ -729,6 +753,12 @@ private:
   float m2_pt;
   float m2_eta;
   float m2_phi;
+  float m3_pt;
+  float m3_eta;
+  float m3_phi;
+  float m4_pt;
+  float m4_eta;
+  float m4_phi;
   float m_iso;
   float m_ptiso20;
   float m_etiso20;
@@ -737,9 +767,6 @@ private:
   float m2_iso;
   float m2_ptiso30;
   float m2_etiso30;
-  float muonSF;
-  float muonSFu;
-  float muonSFd;
   int   m_type; 
   int   m_origin; 
 
@@ -747,12 +774,30 @@ private:
   float e_M;
   float e_MT;
   float e_MT_vmu;  
+  float e_MT_tst;
+  float e_MT_tst_vmu;  
   float e_Zpt;
   float m_M;
   float m_MT;
   float m_MT_vmu;  
+  float m_MT_tst;
+  float m_MT_tst_vmu;  
   float m_Zpt;
   float m_EM;
+
+  //- Z candidate                                                                                                                                                                                                                                                             
+  //truth
+  int     Z_decay; //0=unknown, 1=ee, 2=mumu, 3=qq, 4=nunu, -99=no-Z-found
+  float   Z_pt; 
+  float   Z_eta;
+  float   Z_phi;
+  //leplep
+  int Z_flav;                                                                                                                                                                                                                                                             
+  int Z_lep1;
+  int Z_lep2;
+  float Z_m;
+  std::vector<float> lep3_MT;
+  float lep_mct;
 
   //- Jet info
   bool  JVF_min;

@@ -14,6 +14,7 @@ Particle::Particle(){
   isGood = true;
   isIsolated = false;
   isTight = false;
+  isTrigMatch = false;
   ptcone20 = 0;
   etcone20 = 0;
   ptcone30 = 0;

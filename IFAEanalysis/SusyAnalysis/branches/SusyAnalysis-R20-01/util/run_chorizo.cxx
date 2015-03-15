@@ -524,7 +524,7 @@ int main( int argc, char* argv[] ) {
     alg->doFlowTree = doFlowTree;
     alg->doPUTree   = false;         //get it from the XML!!
     alg->genPUfile  = generatePUfile;
-    alg->doTrigExt  = xmlReader->retrieveBool("AnalysisOptions$Trigger$SaveExtended"); //save extended trigger information
+    alg->doTrigExt  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Trigger$SaveExtended"); //save extended trigger information
 
     alg->syst_CP    = syst_CP;      // Systematics
     alg->syst_CPstr = syst_CP.name();
@@ -542,7 +542,7 @@ int main( int argc, char* argv[] ) {
     alg->errIgnoreLevel = (systListOnly ? kFatal : kInfo);
     
     alg->systListOnly  = systListOnly;
-    
+
     //Load alg to job
     job.algsAdd( alg );
     

@@ -48,7 +48,7 @@ fi
 
 
 
-MYTMPDIR=`mktemp -d`
+MYTMPDIR=\`mktemp -d\`
 cd \$MYTMPDIR
 
 \$ANALYSISCODE/SusyAnalysis/scripts/RunCode.sh ${name} \$syst \$joption

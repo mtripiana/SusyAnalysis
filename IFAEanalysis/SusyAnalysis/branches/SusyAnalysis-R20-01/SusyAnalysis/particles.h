@@ -23,6 +23,7 @@ class Particle : public TLorentzVector {
     bool   isGood;
     bool   isIsolated;
     bool   isTight;
+    bool   isTrigMatch;
     float  ptcone20;
     float  etcone20;
     float  ptcone30;

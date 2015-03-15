@@ -113,8 +113,6 @@ void AddNewBranch(TString fileName, Float_t FileWeight){
 
 void addAverageWeight(TString fileName){
 
-//  Info("run_chorizo::addAntiWeightToTree", Form("Adding anti weights for the lepton efficiency into the AnalysisTree."));
-
   TFile *f3 = new TFile(fileName.Data(),"update");
   TTree *t3 = (TTree*)f3->Get("AnalysisTree");
 
@@ -200,127 +198,164 @@ void ComputeNewBranch(TString fileName){
 }
 
 
-
 void addAntiWeightToTree(TString fileName, bool isData){
 
-//  Info("run_chorizo::addAntiWeightToTree", Form("Adding anti weights for the lepton efficiency into the AnalysisTree."));
+  //  Info("run_chorizo::addAntiWeightToTree", Form("Adding anti weights for the lepton efficiency into the AnalysisTree."));                                                          
 
   TFile *f5 = new TFile(fileName.Data(),"update");
   TTree *t3 = (TTree*)f5->Get("AnalysisTree");
 
   float e_antiSF=1.;
   float m_antiSF=1.;
+  float ph_antiSF=1.;
 
   TBranch *b_e_antiSF = t3-> Branch("e_antiSF",&e_antiSF,"e_antiSF/F");
   TBranch *b_m_antiSF = t3-> Branch("m_antiSF",&m_antiSF,"m_antiSF/F");
+  TBranch *b_ph_antiSF = t3-> Branch("ph_antiSF",&ph_antiSF,"ph_antiSF/F");
 
   TBranch *b_e_SF;
   TBranch *b_m_SF;
+  TBranch *b_ph_SF;
   TBranch *b_e_N;
   TBranch *b_m_N;
+  TBranch *b_ph_N;
   TBranch *b_w;
   TBranch *b_MC_w;
   TBranch *b_pileup_w;
 
   float e_SF_loc=1.;
-  float m_SF_loc=1.; 
+  float m_SF_loc=1.;
+  float ph_SF_loc=1.;
   int   e_N_loc=0;
   int   m_N_loc=0;
+  int   ph_N_loc=0;
   float w_loc=1.;
   float MC_w_loc=1.;
   float pileup_w_loc=1.;
 
   t3->SetBranchAddress("e_SF", &e_SF_loc, &b_e_SF);
   t3->SetBranchAddress("m_SF", &m_SF_loc, &b_m_SF);
+  t3->SetBranchAddress("ph_SF", &ph_SF_loc, &b_ph_SF);
   t3->SetBranchAddress("e_N", &e_N_loc, &b_e_N);
   t3->SetBranchAddress("m_N", &m_N_loc, &b_m_N);
+  t3->SetBranchAddress("ph_N", &ph_N_loc, &b_ph_N);
   t3->SetBranchAddress("w", &w_loc, &b_w);
   t3->SetBranchAddress("MC_w", &MC_w_loc, &b_MC_w);
   t3->SetBranchAddress("pileup_w", &pileup_w_loc, &b_pileup_w);
 
   Float_t EventsWithElec = 0.;
   Float_t EventsWithMuon = 0.;
+  Float_t EventsWithPhoton = 0.;
   Float_t TotalEvents = 0.;
   Int_t nentries = (Int_t)t3->GetEntries();
 
   for (Int_t i = 0; i < nentries; i++){
     b_e_N->GetEntry(i);
     b_m_N->GetEntry(i);
+    b_ph_N->GetEntry(i);
     b_w->GetEntry(i);
     b_MC_w->GetEntry(i);
     b_pileup_w->GetEntry(i);
 
-    TotalEvents += w_loc*MC_w_loc*pileup_w_loc; //--- It's done independently for each NPx (so same FileWeight), and the luminosity is global. 
+    TotalEvents += w_loc*MC_w_loc*pileup_w_loc; //--- It's done independently for each NPx (so same FileWeight), and the luminosity is global.                                       
     if(e_N_loc>0){
       EventsWithElec += w_loc*MC_w_loc*pileup_w_loc;
     }
     if(m_N_loc>0){
       EventsWithMuon += w_loc*MC_w_loc*pileup_w_loc;
     }
+    if(ph_N_loc>0){
+      EventsWithPhoton += w_loc*MC_w_loc*pileup_w_loc;
+    }
+
   }
 
-  cout<<"Total events with electrons: "<<EventsWithElec<<endl;
-  cout<<"Total events with Muons: "<<EventsWithMuon<<endl;
-  cout<<"Total events: "<<TotalEvents<<endl;
+  std::cout<<"Total events with electrons : "<<EventsWithElec<<std::endl;
+  std::cout<<"Total events with muons     : "<<EventsWithMuon<<std::endl;
+  std::cout<<"Total events with photons   : "<<EventsWithPhoton<<std::endl;
+  std::cout<<"Total events: "<<TotalEvents<<std::endl;
 
   Float_t e_SF_mean=0.;
   Float_t m_SF_mean=0.;
+  Float_t ph_SF_mean=0.;
   TH1F *h_e_SF_loc = new TH1F("h_e_SF_loc", "h_e_SF_loc", 400,0.0,2.0);
   TH1F *h_m_SF_loc = new TH1F("h_m_SF_loc", "h_m_SF_loc", 400,0.0,2.0);
+  TH1F *h_ph_SF_loc = new TH1F("h_ph_SF_loc", "h_ph_SF_loc", 400,0.0,2.0);
 
   for (Int_t i = 0; i < nentries; i++){
     b_e_SF->GetEntry(i);
     b_m_SF->GetEntry(i);
+    b_ph_SF->GetEntry(i);
     b_e_N->GetEntry(i);
     b_m_N->GetEntry(i);
+    b_ph_N->GetEntry(i);
     b_w->GetEntry(i);
     b_MC_w->GetEntry(i);
     b_pileup_w->GetEntry(i);
 
     if(e_N_loc>0) {h_e_SF_loc->Fill(e_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
     if(m_N_loc>0) {h_m_SF_loc->Fill(m_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
+    if(ph_N_loc>0) {h_ph_SF_loc->Fill(ph_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
   }
-  e_SF_mean = h_e_SF_loc->GetMean(); //--- Both have w, so it cancels.
+  e_SF_mean = h_e_SF_loc->GetMean(); //--- Both have w, so it cancels.                                                                                                               
   m_SF_mean = h_m_SF_loc->GetMean();
+  ph_SF_mean = h_ph_SF_loc->GetMean();
 
   h_e_SF_loc->Delete();
   h_m_SF_loc->Delete();
+  h_ph_SF_loc->Delete();
 
-  if(e_SF_mean==0.) { e_SF_mean=1.;} //--- Just in case
+  if(e_SF_mean==0.) { e_SF_mean=1.;} //--- Just in case                                                                                                                              
   if(m_SF_mean==0.) { m_SF_mean=1.;}
+  if(ph_SF_mean==0.) { ph_SF_mean=1.;}
 
-  cout<<"Mean electron SF: "<<e_SF_mean<<endl;
-  cout<<"Mean muon SF: "<<m_SF_mean<<endl;
+  std::cout<<"Mean electron SF : "<<e_SF_mean<<std::endl;
+  std::cout<<"Mean muon SF     : "<<m_SF_mean<<std::endl;
+  std::cout<<"Mean photon SF   : "<<ph_SF_mean<<std::endl;
+
+  std::cout<<"Mean electron SF : "<<e_SF_mean<<std::endl;
+  std::cout<<"Mean muon SF     : "<<m_SF_mean<<std::endl;
+  std::cout<<"Mean photon SF   : "<<ph_SF_mean<<std::endl;
 
   if (!isData){
     e_antiSF = 1 + (1-e_SF_mean)*((Float_t)EventsWithElec/((Float_t)TotalEvents-(Float_t)EventsWithElec));
     m_antiSF = 1 + (1-m_SF_mean)*((Float_t)EventsWithMuon/((Float_t)TotalEvents-(Float_t)EventsWithMuon));
+    ph_antiSF = 1 + (1-ph_SF_mean)*((Float_t)EventsWithPhoton/((Float_t)TotalEvents-(Float_t)EventsWithPhoton));
 
     if((e_antiSF < -1000 || e_antiSF > 1000) || (TotalEvents-EventsWithElec==0)) {
-      e_antiSF=1; //--- To avoid nan or inf
-      cout<<"nan or inf found. I'll correct it."<<endl;
+      e_antiSF=1; //--- To avoid nan or inf                                                                                                                                          
+      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
     if((m_antiSF < -1000 || m_antiSF > 1000) || (TotalEvents-EventsWithMuon==0)) {
       m_antiSF=1;
-      cout<<"nan or inf found. I'll correct it."<<endl;
+      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
+    }
+    if((ph_antiSF < -1000 || ph_antiSF > 1000) || (TotalEvents-EventsWithPhoton==0)) {
+      ph_antiSF=1;
+      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
   }
   else{
     e_antiSF = 1;
     m_antiSF = 1;
+    ph_antiSF = 1;
   }
 
-  cout<<"Electron anti-SF: "<<e_antiSF<<endl;
-  cout<<"Muon anti-SF: "<<m_antiSF<<endl;
+  std::cout<<"Electron anti-SF : "<<e_antiSF<<std::endl;
+  std::cout<<"Muon anti-SF     : "<<m_antiSF<<std::endl;
+  std::cout<<"Photon anti-SF   : "<<ph_antiSF<<std::endl;
 
   for (Int_t i = 0; i < nentries; i++){
     b_e_antiSF->Fill();
     b_m_antiSF->Fill();
+    b_ph_antiSF->Fill();
   }
 
   t3->Write("",TObject::kOverwrite);
   f5->Close();
 }
+
+
 
 void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TString outfile, bool isData ){
 
@@ -351,7 +386,7 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
   addAntiWeightToTree(outfile.Data(), isData);  
 
   cout << endl;
-  cout << bold("Target file : ") << outfile  << endl;
+  cout << bold("Target file : \n                    ") << outfile  << endl;
   cout << endl;
 }
 

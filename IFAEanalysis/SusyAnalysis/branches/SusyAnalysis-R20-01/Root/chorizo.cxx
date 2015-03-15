@@ -56,6 +56,7 @@
 #include "TrigDecisionTool/TrigDecisionTool.h"
 #include "TrigConfxAOD/xAODConfigTool.h"
 
+
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
 
@@ -90,7 +91,23 @@ static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
 
 chorizo :: chorizo ()
-  : tool_trigdec(0), tool_trigconfig(0), tool_jetlabel(0), tool_jvf(0), tool_jClean(0), tool_tileTrip(0), tool_or(0), tool_purw(0), tool_grl(0), tool_btag(0), tool_btag2(0), tool_jsmear(0)
+  : tool_trigdec(0), 
+    tool_trigconfig(0), 
+    tool_jetlabel(0), 
+    tool_jvf(0), 
+    tool_jClean(0), 
+    tool_tileTrip(0), 
+    tool_or(0), 
+    tool_purw(0), 
+    tool_grl(0),
+    tool_btag(0), 
+    tool_btag2(0),
+#ifdef TILETEST
+    tool_jsmear(0),
+    tool_jettile(0)
+#else
+    tool_jsmear(0)
+#endif
 {
   outputName="";
   Region="";
@@ -161,8 +178,6 @@ void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, flo
 
 void chorizo :: bookTree(){
 
-  
-
   //add the branches to be saved
   if (output){
     output->tree()->Branch ("RunNumber", &RunNumber, "RunNumber/I");
@@ -212,8 +227,15 @@ void chorizo :: bookTree(){
       output->tree()->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
       output->tree()->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
       output->tree()->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
-      output->tree()->Branch ("e_SF", &e_SF, "e_SF/F");                       
-      output->tree()->Branch ("m_SF", &m_SF, "m_SF/F");                       
+      output->tree()->Branch ("e_SF", &e_SF,"e_SF/F");
+      output->tree()->Branch ("m_SF", &m_SF,"m_SF/F");
+      output->tree()->Branch ("ph_SF", &ph_SF,"ph_SF/F");
+      output->tree()->Branch ("e_SFu", &e_SFu,"e_SFu/F");
+      output->tree()->Branch ("m_SFu", &m_SFu,"m_SFu/F");
+      output->tree()->Branch ("ph_SFu", &ph_SFu,"ph_SFu/F");
+      output->tree()->Branch ("e_SFd", &e_SFd,"e_SFd/F");
+      output->tree()->Branch ("m_SFd", &m_SFd,"m_SFd/F");
+      output->tree()->Branch ("ph_SFd", &ph_SFd,"ph_SFd/F");
 
       //boson 
       output->tree()->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
@@ -267,9 +289,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("ph_tight",&ph_tight,"ph_tight/O", 10000);
       output->tree()->Branch("ph_type",&ph_type,"ph_type/I", 10000);
       output->tree()->Branch("ph_origin",&ph_origin,"ph_origin/I", 10000);
-      output->tree()->Branch("ph_SF",&photonSF,"ph_SF/F", 10000);
-      output->tree()->Branch("ph_SFu",&photonSF,"ph_SFu/F", 10000);
-      output->tree()->Branch("ph_SFd",&photonSF,"ph_SFd/F", 10000);
+      output->tree()->Branch("ph_SF",&ph_SF,"ph_SF/F");
+      output->tree()->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
+      output->tree()->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
 
       //electrons
       output->tree()->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -283,20 +305,24 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e2_pt",&e2_pt,"e2_pt/F", 10000);
       output->tree()->Branch("e2_eta",&e2_eta,"e2_eta/F", 10000);
       output->tree()->Branch("e2_phi",&e2_phi,"e2_phi/F", 10000);      
+      output->tree()->Branch("e3_pt",&e3_pt,"e3_pt/F", 10000);
+      output->tree()->Branch("e3_eta",&e3_eta,"e3_eta/F", 10000);
+      output->tree()->Branch("e3_phi",&e3_phi,"e3_phi/F", 10000);
+      output->tree()->Branch("e4_pt",&e4_pt,"e4_pt/F", 10000);
+      output->tree()->Branch("e4_eta",&e4_eta,"e4_eta/F", 10000);
+      output->tree()->Branch("e4_phi",&e4_phi,"e4_phi/F", 10000);
       output->tree()->Branch("e_etiso30",&e_etiso30,"e_etiso30/F", 10000);
       output->tree()->Branch("e_ptiso30",&e_ptiso30,"e_ptiso30/F", 10000);
       output->tree()->Branch("e_tight",&e_tight,"e_tight/O", 10000);
       output->tree()->Branch("e_MT",&e_MT,"e_MT/F", 10000);
       output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
+      output->tree()->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
+      output->tree()->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
       output->tree()->Branch("e_M",&e_M,"e_M/F", 10000);
       output->tree()->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
       output->tree()->Branch("e_type",&e_type,"e_type/I", 10000);
       output->tree()->Branch("e_origin",&e_origin,"e_origin/I", 10000);
       
-      output->tree()->Branch("e_SF",&electronSF,"e_SF/F", 10000);
-      output->tree()->Branch("e_SFu",&electronSF,"e_SFu/F", 10000);
-      output->tree()->Branch("e_SFd",&electronSF,"e_SFd/F", 10000);
-
       //muons
       output->tree()->Branch("m_N",&m_N,"m_N/I", 10000);                            
       output->tree()->Branch("m_pt",&m_pt,"m_pt/F", 10000);                         
@@ -305,6 +331,12 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m2_pt",&m2_pt,"m2_pt/F", 10000);                      
       output->tree()->Branch("m2_eta",&m2_eta,"m2_eta/F", 10000);                   
       output->tree()->Branch("m2_phi",&m2_phi,"m2_phi/F", 10000);                   
+      output->tree()->Branch("m3_pt",&m3_pt,"m3_pt/F", 10000);
+      output->tree()->Branch("m3_eta",&m3_eta,"m3_eta/F", 10000);
+      output->tree()->Branch("m3_phi",&m3_phi,"m3_phi/F", 10000);
+      output->tree()->Branch("m4_pt",&m4_pt,"m4_pt/F", 10000);
+      output->tree()->Branch("m4_eta",&m4_eta,"m4_eta/F", 10000);
+      output->tree()->Branch("m4_phi",&m4_phi,"m4_phi/F", 10000);
       output->tree()->Branch("m_iso",&m_iso,"m_iso/F", 10000);                      
       output->tree()->Branch("m_etiso20",&m_etiso20,"m_etiso20/F", 10000);          
       output->tree()->Branch("m_ptiso20",&m_ptiso20,"m_ptiso20/F", 10000);          
@@ -316,6 +348,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_M",&m_M,"m_M/F", 10000);                            
       output->tree()->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
       output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
+      output->tree()->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
+      output->tree()->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                           
       output->tree()->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
       output->tree()->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
       output->tree()->Branch("m_type",&m_type,"m_type/I", 10000);
@@ -503,6 +537,15 @@ void chorizo :: bookTree(){
       output->tree()->Branch("mdeltaR",&mdeltaR);
       output->tree()->Branch("cosptR",&cosptR);
       
+      //Z candidate 
+      output->tree()->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      output->tree()->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+      output->tree()->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+      output->tree()->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+      output->tree()->Branch("lep3_MT",&lep3_MT);
+      output->tree()->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+
+
       //top reconstruction
       output->tree()->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
       output->tree()->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
@@ -720,8 +763,17 @@ void chorizo :: InitVars()
   bosonVect_w = 1.;  
   Trigger_w = 1.;    
   Trigger_w_avg = 1.;
-  e_SF = 1.;         
-  m_SF = 1.;         
+  e_SF = 1.;
+  m_SF = 1.;
+  ph_SF = 1.;
+  e_SFu = 1.;
+  m_SFu = 1.;
+  ph_SFu = 1.;
+  e_SFd = 1.;
+  m_SFd = 1.;
+  ph_SFd = 1.;
+
+
 
   //- Top    
   ttbar_weight = 1.;                  
@@ -778,26 +830,31 @@ void chorizo :: InitVars()
   //- Electron Info
   e_N = 0; //DUMMYDN;               
   e_pt = 0; //DUMMYDN;    
-  e2_pt = 0; //DUMMYDN;                
+  e_eta = 0.; //DUMMYDN;             
+  e_phi = 0.; //DUMMYDN;  
   e_truth_pt = DUMMYDN;        
   e_truth_eta = DUMMYDN;       
   e_truth_phi = DUMMYDN;       
-  e_eta = 0.; //DUMMYDN;             
-  e_phi = 0.; //DUMMYDN;  
+  e2_pt = 0; //DUMMYDN;                
   e2_eta = 0.; //DUMMYDN;             
   e2_phi = 0.; //DUMMYDN;               
+  e3_pt = 0; //DUMMYDN;                
+  e3_eta = 0.; //DUMMYDN;             
+  e3_phi = 0.; //DUMMYDN;               
+  e4_pt = 0; //DUMMYDN;                
+  e4_eta = 0.; //DUMMYDN;             
+  e4_phi = 0.; //DUMMYDN;               
   e_ptiso30 = 0.; //DUMMYDN;         
   e_etiso30 = 0.; //DUMMYDN;         
   e_tight = false;           
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
   e_MT_vmu = DUMMYDN;     
+  e_MT_tst = DUMMYDN;   
+  e_MT_tst_vmu = DUMMYDN;     
   e_type = 0; //Unknown
   e_origin = 0; //NonDefined
   e_Zpt = DUMMYDN;             
-  electronSF = DUMMYDN;        
-  electronSFu = 1.;
-  electronSFd = 1.;
 
   //- Photon Info
   ph_N = 0; //DUMMYDN;               
@@ -809,9 +866,6 @@ void chorizo :: InitVars()
   ph_tight = false;           
   ph_type = 0; //Unknown
   ph_origin = 0; //NonDefined
-  photonSF = DUMMYDN;        
-  photonSFu = 1.;
-  photonSFd = 1.;
 
   //- Muon info
   m_N = 0.; //DUMMYDN;                  
@@ -821,6 +875,12 @@ void chorizo :: InitVars()
   m2_pt = 0.; //DUMMYDN;              
   m2_eta = 0.; //DUMMYDN;             
   m2_phi = 0.; //DUMMYDN;             
+  m3_pt = 0.; //DUMMYDN;              
+  m3_eta = 0.; //DUMMYDN;             
+  m3_phi = 0.; //DUMMYDN;             
+  m4_pt = 0.; //DUMMYDN;              
+  m4_eta = 0.; //DUMMYDN;             
+  m4_phi = 0.; //DUMMYDN;             
   m_iso = DUMMYDN;              
   m_ptiso30 = 0.; //DUMMYDN;          
   m_etiso30 = 0.; //DUMMYDN;          
@@ -829,12 +889,11 @@ void chorizo :: InitVars()
   m2_iso = DUMMYDN;             
   m2_ptiso30 = 0.; //DUMMYDN;         
   m2_etiso30 = 0.; //DUMMYDN;         
-  muonSF = DUMMYDN;             
-  muonSFu = 1.;
-  muonSFd = 1.;
   m_M = DUMMYDN;                
   m_MT = DUMMYDN;  
   m_MT_vmu = DUMMYDN;                
+  m_MT_tst = DUMMYDN;  
+  m_MT_tst_vmu = DUMMYDN;                
   m_Zpt = DUMMYDN;              
   m_EM = DUMMYDN;               
   m_type = 0; //Unknown
@@ -1051,6 +1110,14 @@ void chorizo :: InitVars()
   gaminvR.clear();
   mdeltaR.clear();
   cosptR.clear();
+
+  //Z reco
+  Z_flav = -99;
+  Z_lep1 = -99;
+  Z_lep2 = -99;
+  Z_m = DUMMYDN;
+  lep3_MT.clear();
+  lep_mct = DUMMYDN;
     
   //top reconstruction
   MtTop = DUMMYDN;
@@ -1208,6 +1275,31 @@ void chorizo :: ReadXML(){
     Info(whereAmI, Form("adding trigger chain = %s",s.c_str()));
     TriggerNames.push_back(s);
   }
+
+  //electron triggers for matching
+  triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$triggers");
+  std::istringstream EltriggerNameIStr(triggerNameStr);
+  while (std::getline(EltriggerNameIStr, s, ',')) {
+    Info(whereAmI, Form("adding electron trigger chain = %s",s.c_str()));
+    ElTriggers.push_back(s);
+  }
+
+  //muon triggers for matching
+  triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$triggers");
+  std::istringstream MutriggerNameIStr(triggerNameStr);
+  while (std::getline(MutriggerNameIStr, s, ',')) {
+    Info(whereAmI, Form("adding muon trigger chain = %s",s.c_str()));
+    MuTriggers.push_back(s);
+  }
+
+  //photon triggers for matching
+  triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$triggers");
+  std::istringstream PhtriggerNameIStr(triggerNameStr);
+  while (std::getline(PhtriggerNameIStr, s, ',')) {
+    Info(whereAmI, Form("adding photon trigger chain = %s",s.c_str()));
+    PhTriggers.push_back(s);
+  }
+
 #endif
 
   Info(whereAmI, Form(" - Truth") );
@@ -1220,199 +1312,91 @@ void chorizo :: ReadXML(){
   
   Info(whereAmI, Form(" - TrackVeto" ));
   tVeto_Enable = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$TrackVeto$Enable");
-  try{
-    tVeto_Pt               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Pt", cRegion));
-    tVeto_Eta              = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Eta", cRegion));
-    tVeto_d0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$d0", cRegion));
-    tVeto_z0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$z0", cRegion));
-    tVeto_ndof             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$ndof", cRegion));
-    tVeto_chi2OverNdof_min = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_min", cRegion));
-    tVeto_chi2OverNdof_max = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_max", cRegion));
-    PixHitsAndSCTHits      = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$PixHitsAndSCTHits", cRegion));
-    tVeto_TrackIso         = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$TrackIso", cRegion));
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    tVeto_Pt               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Pt", defRegion));
-    tVeto_Eta              = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$Eta", defRegion));
-    tVeto_d0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$d0", defRegion));
-    tVeto_z0               = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$z0", defRegion));
-    tVeto_ndof             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$ndof", defRegion));
-    tVeto_chi2OverNdof_min = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_min", defRegion));
-    tVeto_chi2OverNdof_max = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$chi2OverNdof_max", defRegion));
-    PixHitsAndSCTHits      = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$PixHitsAndSCTHits", defRegion));
-    tVeto_TrackIso         = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$TrackVeto$region/name/%s$TrackIso", defRegion));
-  }
-
+  tVeto_Pt               = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$Pt");
+  tVeto_Eta              = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$Eta");
+  tVeto_d0               = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$d0");
+  tVeto_z0               = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$z0");
+  tVeto_ndof             = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$ndof");
+  tVeto_chi2OverNdof_min = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$chi2OverNdof_min");
+  tVeto_chi2OverNdof_max = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$chi2OverNdof_max");
+  PixHitsAndSCTHits      = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$PixHitsAndSCTHits");
+  tVeto_TrackIso         = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$TrackIso");
 
   Info(whereAmI, Form(" - Vertex") );
-  try{
-    nTracks = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Vertex$region/name/%s", cRegion));
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    nTracks = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Vertex$region/name/%s", defRegion));
-  }
+  nTracks = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Vertex$nTracks");
 
   Info(whereAmI, Form(" - Electrons") );
-  try{
-    El_PreselPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselPtCut", cRegion));
-    El_PreselEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselEtaCut", cRegion));
-    El_RecoPtCut     = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoPtCut", cRegion));
-    El_RecoEtaCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoEtaCut", cRegion));
-    
-    El_recoSF         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$recoSF", cRegion));
-    El_idSF           = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$idSF", cRegion));
-    El_triggerSF      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$triggerSF", cRegion));
-    El_isoType = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isoType", cRegion)).c_str());
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    El_PreselPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselPtCut", defRegion));
-    El_PreselEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$PreselEtaCut", defRegion));
-    El_RecoPtCut     = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoPtCut", defRegion));
-    El_RecoEtaCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$RecoEtaCut", defRegion));
-    
-    El_recoSF         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$recoSF", defRegion));
-    El_idSF           = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$idSF", defRegion));
-    El_triggerSF      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$triggerSF", defRegion));
-    El_isoType = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Electron$region/name/%s$isoType", defRegion)).c_str());
-  }
+  El_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$PreselPtCut");
+  El_PreselEtaCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$PreselEtaCut");
+  El_RecoPtCut     = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$RecoPtCut");
+  El_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$RecoEtaCut");
+  
+  El_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$recoSF");
+  El_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$idSF");
+  El_triggerSF     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$triggerSF");
+  El_isoType       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoType").c_str());
 
   Info(whereAmI, Form(" - Muons") );
-  try{
-    Mu_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselPtCut", cRegion));
-    Mu_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselEtaCut", cRegion));
-    Mu_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoPtCut", cRegion));
-    Mu_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoEtaCut", cRegion));
-    Mu_isoType = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isoType", cRegion)).c_str());    
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    Mu_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselPtCut", defRegion));
-    Mu_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$PreselEtaCut", defRegion));
-    Mu_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoPtCut", defRegion));
-    Mu_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$RecoEtaCut", defRegion));
-    Mu_isoType = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Muon$region/name/%s$isoType", defRegion)).c_str());        
-  }
+  Mu_PreselPtCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$PreselPtCut");
+  Mu_PreselEtaCut = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$PreselEtaCut");
+  Mu_RecoPtCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoPtCut");
+  Mu_RecoEtaCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoEtaCut");
+  Mu_isoType      = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoType").c_str());    
 
   Info(whereAmI, Form(" - Photons") );
-  try{
-    Ph_PreselPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$PreselPtCut", cRegion));
-    Ph_PreselEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$PreselEtaCut", cRegion));
-    Ph_RecoPtCut     = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$RecoPtCut", cRegion));
-    Ph_RecoEtaCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$RecoEtaCut", cRegion));
-    
-    Ph_recoSF         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$recoSF", cRegion));
-    Ph_idSF           = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$idSF", cRegion));
-    Ph_triggerSF      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$triggerSF", cRegion));
-    Ph_isoType = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$isoType", cRegion)).c_str());
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    Ph_PreselPtCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$PreselPtCut", defRegion));
-    Ph_PreselEtaCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$PreselEtaCut", defRegion));
-    Ph_RecoPtCut     = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$RecoPtCut", defRegion));
-    Ph_RecoEtaCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$RecoEtaCut", defRegion));
-    
-    Ph_recoSF         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$recoSF", defRegion));
-    Ph_idSF           = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$idSF", defRegion));
-    Ph_triggerSF      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$triggerSF", defRegion));
-    Ph_isoType = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Photon$region/name/%s$isoType", defRegion)).c_str());
-  }
+  Ph_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselPtCut");
+  Ph_PreselEtaCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselEtaCut");
+  Ph_RecoPtCut     = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$RecoPtCut");
+  Ph_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$RecoEtaCut");
+  
+  Ph_recoSF         = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$recoSF");
+  Ph_idSF           = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$idSF");
+  Ph_triggerSF      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$triggerSF");
+  Ph_isoType = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoType").c_str());
   
   Info(whereAmI, Form(" - Jets") );
-  try{
-    JetCollection=TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Collection", cRegion)).c_str());
-    Jet_BtagEnv    = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagEnv", cRegion)).c_str());
-    Jet_BtagCalib  = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagCalib", cRegion)).c_str());
-    Jet_Tagger     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Tagger", cRegion)).c_str());
-    Jet_TaggerOp   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint", cRegion)).c_str());
-    Jet_TaggerOp2   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint2", cRegion)).c_str());      
-    Jet_Tagger_Collection = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerCollection", cRegion)).c_str());
-    
-    Jet_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselPtCut", cRegion));
-    Jet_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", cRegion));
-    Jet_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
-    Jet_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    JetCollection=TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Collection", defRegion)).c_str());
-    Jet_BtagEnv    = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagEnv", defRegion)).c_str());
-    Jet_BtagCalib  = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Path/name/BtagCalib", defRegion)).c_str());
-    Jet_Tagger     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$Tagger", defRegion)).c_str());
-    Jet_TaggerOp   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint", defRegion)).c_str());
-    Jet_TaggerOp2   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerOpPoint2", defRegion)).c_str());      
-    Jet_Tagger_Collection   = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$TaggerCollection", defRegion)).c_str());
-    Jet_PreselPtCut  = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselPtCut", defRegion));
-    Jet_PreselEtaCut = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$PreselEtaCut", defRegion));
-    Jet_RecoPtCut    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
-    Jet_RecoEtaCut   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
-  }
+  JetCollection=TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
+  Jet_BtagEnv    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagEnv").c_str());
+  Jet_BtagCalib  = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagCalib").c_str());
+  Jet_Tagger     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
+  Jet_TaggerOp   = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint").c_str());
+  Jet_TaggerOp2   = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint2").c_str());      
+  Jet_Tagger_Collection = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerCollection").c_str());
+  
+  Jet_PreselPtCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselPtCut");
+  Jet_PreselEtaCut = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselEtaCut");
+  Jet_RecoPtCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoPtCut");
+  Jet_RecoEtaCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoEtaCut");
   
   Info(whereAmI, Form(" - Etmiss") );
-  try{
-    METCollection        = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Collection",cRegion)).c_str());
-    Met_FakeMetEstimator = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Path/name/FakeMetEstimator", cRegion)).c_str());
-    Met_doFakeEtmiss     = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doFakeEtmiss", cRegion));
-    Met_doMetCleaning    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doMetCleaning", cRegion));
-    Met_doRefEle         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefEle", cRegion));
-    Met_doRefGamma       = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", cRegion));
-    Met_doRefTau         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", cRegion));
-    Met_doRefJet         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", cRegion));
-    Met_doMuons          = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", cRegion));
-    Met_doSoftTerms      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", cRegion));
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion));
-    METCollection        = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Collection",defRegion)).c_str());
-    Met_FakeMetEstimator = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Path/name/FakeMetEstimator", defRegion)).c_str());
-    Met_doFakeEtmiss     = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doFakeEtmiss", defRegion));
-    Met_doMetCleaning    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$doMetCleaning", defRegion));
-    Met_doRefEle         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefEle", defRegion));
-    Met_doRefGamma       = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefGamma", defRegion));
-    Met_doRefTau         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefTau", defRegion));
-    Met_doRefJet         = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doRefJet", defRegion));
-    Met_doMuons          = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doMuons", defRegion));
-    Met_doSoftTerms      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$Etmiss$region/name/%s$Term/name/doSoftTerms", defRegion));
-  }
+  METCollection        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Etmiss$Collection").c_str());
+  Met_FakeMetEstimator = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Etmiss$Path/name/FakeMetEstimator").c_str());
+  Met_doFakeEtmiss     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$doFakeEtmiss");
+  Met_doMetCleaning    = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$doMetCleaning");
+  Met_doRefEle         = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$Term/name/doRefEle");
+  Met_doRefGamma       = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$Term/name/doRefGamma");
+  Met_doRefTau         = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$Term/name/doRefTau");
+  Met_doRefJet         = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$Term/name/doRefJet");
+  Met_doMuons          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$Term/name/doMuons");
+  Met_doSoftTerms      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Etmiss$Term/name/doSoftTerms");
 
   Info(whereAmI, Form("- QCD") );
   std::string QCD_triggerNameStr="";
-  try{
-    QCD_triggerNameStr = xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$TrigChains", cRegion));
-    QCD_JetsPtPreselection = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", cRegion));
-    QCD_JetsPtSelection    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", cRegion));
-    QCD_JetsEtaSelection   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", cRegion));
-    QCD_METSig             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$METSigCut", cRegion));
-    QCD_LeadJetPreSel      = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$LeadJetPreSel", cRegion)).c_str());
-    QCD_RandomSeedOffset   = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$RandomSeedOffset", cRegion));
-    QCD_SmearType          = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearType", cRegion)).c_str());
-    QCD_SmearUseBweight    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearUseBweight", cRegion));
-    QCD_SmearBtagWeight    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearBtagWeight", cRegion));
-    QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", cRegion)).c_str());
-    QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", cRegion));
-    QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", cRegion));
-    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", cRegion));
-  }
-  catch(...){
-    Warning(whereAmI, Form("%s region not found. Getting the default region %s.", cRegion, defRegion)); 
-    QCD_triggerNameStr = xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$TrigChains", defRegion));
-    QCD_JetsPtPreselection = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$JetsPtPreselection", defRegion));
-    QCD_JetsPtSelection    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoPtCut", defRegion));
-    QCD_JetsEtaSelection   = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$Jet$region/name/%s$RecoEtaCut", defRegion));
-    QCD_METSig             = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$METSigCut", defRegion));
-    QCD_LeadJetPreSel      = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$LeadJetPreSel", defRegion)).c_str());
-    QCD_RandomSeedOffset   = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$RandomSeedOffset", defRegion));
-    QCD_SmearType          = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearType", defRegion)).c_str());
-    QCD_SmearUseBweight    = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearUseBweight", defRegion));
-    QCD_SmearBtagWeight    = xmlReader->retrieveFloat(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearBtagWeight", defRegion));
-    QCD_SmearMeanShift     = TString(xmlReader->retrieveChar(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearMeanShift", defRegion)).c_str());
-    QCD_SmearExtraSmr      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearExtraSmr", defRegion));
-    QCD_DoPhiSmearing      = xmlReader->retrieveBool(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$DoPhiSmearing", defRegion));
-    QCD_SmearedEvents      = xmlReader->retrieveInt(Form("AnalysisOptions$ObjectDefinition$QCD$region/name/%s$SmearedEvents", defRegion));
-  }
+  QCD_triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$TrigChains");
+  QCD_JetsPtPreselection = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$QCD$JetsPtPreselection");
+  QCD_JetsPtSelection    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoPtCut");
+  QCD_JetsEtaSelection   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoEtaCut");
+  QCD_METSig             = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$QCD$METSigCut");
+  QCD_LeadJetPreSel      = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$LeadJetPreSel").c_str());
+  QCD_RandomSeedOffset   = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$QCD$RandomSeedOffset");
+  QCD_SmearType          = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$SmearType").c_str());
+  QCD_SmearUseBweight    = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$SmearUseBweight");
+  QCD_SmearBtagWeight    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$QCD$SmearBtagWeight");
+  QCD_SmearMeanShift     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$SmearMeanShift").c_str());
+  QCD_SmearExtraSmr      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$SmearExtraSmr");
+  QCD_DoPhiSmearing      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$DoPhiSmearing");
+  QCD_SmearedEvents      = (unsigned int)xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$QCD$SmearedEvents");
+
   std::istringstream QCD_triggerNameIStr(QCD_triggerNameStr);
   std::string stqcd;
   while (std::getline(QCD_triggerNameIStr, stqcd, ',')) {
@@ -1449,8 +1433,6 @@ EL::StatusCode chorizo :: initialize ()
   m_event = wk()->xaodEvent();
   //  TEvent::kBranchAccess
 
-  // Create a transient object store. Needed for the tools.
-  // Like m_event but does not assume new objects are written to file
   m_store = new xAOD::TStore(); 
 
   //Read XML options
@@ -1682,6 +1664,16 @@ EL::StatusCode chorizo :: initialize ()
   std::string TileTripReader_file = "CompleteTripList_2011-2012.root";
   tool_tileTrip->setTripFile((maindir + "TileTripReader/" + TileTripReader_file).data());
       
+  //--- JetTileCorrectionTool
+#ifdef TILETEST
+  tool_jettile = new CP::JetTileCorrectionTool("JetTileCorrectionTool");
+  std::string parfile="param_test.root";
+  std::vector<std::string> dead_modules = {"0 1","0 10"};
+  tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile);
+  tool_jettile->setProperty("DeadModules",dead_modules);
+  tool_jettile->initializeTool(tool_tileTrip);
+#endif 
+
   //--- JVF uncertainty
   tool_jvf = new JVFUncertaintyTool();
   tool_jvf->UseGeV(true);
@@ -1790,7 +1782,7 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  //Info("loop()", "Inside loop");
+  //  Info("loop()", "Inside loop");
   
 #ifdef PROFCODE
   if(m_eventCounter!=0)
@@ -1898,9 +1890,6 @@ EL::StatusCode chorizo :: loop ()
   xAOD::MissingETContainer* metRFC_TST_vmu = new xAOD::MissingETContainer;
   xAOD::MissingETAuxContainer* metRFCAux_TST_vmu = new xAOD::MissingETAuxContainer;
   metRFC_TST_vmu->setStore(metRFCAux_TST_vmu);  
-
-  // CHECK( m_store->record( metRFC, "MET_MyRefFinal" ) );
-  // CHECK( m_store->record( metRFCAux, "MET_MyRefFinalAux." ) );
 
   //--- Analysis Code 
   //--- 
@@ -2035,8 +2024,8 @@ EL::StatusCode chorizo :: loop ()
   if (isMC) {
     if (mc_channel_number==117050 || mc_channel_number==110401) {
       ttbar_weight = this->GetTTbarReweight(Top_truth_pt, Topbar_truth_pt, avTop_truth_pt);
-      truth_n_leptons = this->GetNTruthLeptons();
     }     
+    truth_n_leptons = this->GetNTruthLeptons();
     
     truth_met_noEle = this->GetTruthEtmiss_noEleTau();	
     truth_n_bjets   = this->GetNTruthB();	
@@ -2053,21 +2042,23 @@ EL::StatusCode chorizo :: loop ()
   //----------------------------------------------------------
 
   //--- Vertex selection   (Note: It might not be needed at all in Run2!)
-  const xAOD::VertexContainer* vertices = 0;
+  const xAOD::VertexContainer* vertices(0);
   CHECK( m_event->retrieve( vertices, "PrimaryVertices") );
 
-  nVertex = static_cast< int >( vertices->size() );
+  for( const auto& vx : *vertices ) {
+    if(vx->vertexType() == xAOD::VxType::PriVtx){
+      nVertex++;
+    }
+  }
+  this->isVertexOk = (nVertex > 0);
 
-  xAOD::VertexContainer::const_iterator pv_itr = vertices->begin();
+  // const xAOD::Vertex* pv = tool_st->GetPrimVtx();
+  // this->isVertexOk = (pv!=NULL);
 
-  auto n_tracks = (*pv_itr)-> nTrackParticles();
-
-  //    cout << "######### number of tracks " << nTracks << endl;
-
+  // cout << "######### number of tracks " << nTracks << endl;
   // if (!doFlowTree && nVertex==0)
-  //   return EL::StatusCode::SUCCESS; //skip event
+  //    return EL::StatusCode::SUCCESS; //skip event
 
-  this->isVertexOk = (nVertex>1) && n_tracks>=nTracks; 
 
 
   //trigger debugging (check all MET triggers in menu)
@@ -2247,6 +2238,13 @@ EL::StatusCode chorizo :: loop ()
   xAOD::Jet jet;
   for( const auto& jet_itr : *jets_sc){
     
+#ifdef TILETEST
+    cout << "*** BEFORE TILE CORRECTION = " << (jet_itr)->pt() << endl;
+    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
+      Error("loop()", "Failed to apply JetTileCorrection!");
+    cout << "*** AFTER TILE CORRECTION = " << (jet_itr)->pt() << endl;
+#endif
+
     //** Bjet decoration 
     //tool_st->IsBJet( **jet_itr );   //SUSYTools
     float bw=0.; //our own
@@ -2320,7 +2318,14 @@ EL::StatusCode chorizo :: loop ()
       
       recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
       recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
-      
+
+      //trigger matching
+      std::vector<bool> el_trig_pass;
+      for(const auto& t : ElTriggers){
+	el_trig_pass.push_back( hasTrigMatch( *el_itr, t ) );
+	recoElectron.isTrigMatch |= el_trig_pass.back();
+      }
+
       //get electron scale factors
       if(this->isMC){
 	//nominal
@@ -2372,9 +2377,9 @@ EL::StatusCode chorizo :: loop ()
 	e_N++;
 	IsElectron=true;
 	if(this->isMC){
-	  electronSF  *= recoElectron.SF;
-	  electronSFu *= recoElectron.SFu;
-	  electronSFd *= recoElectron.SFd;
+	  e_SF *= recoElectron.SF;
+	  e_SFu *= recoElectron.SFu;
+	  e_SFd *= recoElectron.SFd;
 	}
       }
       
@@ -2467,9 +2472,9 @@ EL::StatusCode chorizo :: loop ()
 	m_N++;
 	IsMuon = true;
 	if(this->isMC){
-	  muonSF  *= recoMuon.SF;
-	  muonSFu *= recoMuon.SFu;
-	  muonSFd *= recoMuon.SFd;
+	  m_SF *= recoMuon.SF;
+	  m_SFu *= recoMuon.SFu;
+	  m_SFd *= recoMuon.SFd;
 	}
       }
       
@@ -2496,7 +2501,7 @@ EL::StatusCode chorizo :: loop ()
       if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
       if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
 
-      recoPhoton.id = iEl;
+      recoPhoton.id = iPh;
       recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
       recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
       recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
@@ -2535,9 +2540,9 @@ EL::StatusCode chorizo :: loop ()
 	recoPhotons.push_back(recoPhoton);
 	ph_N++;
 	if(this->isMC){
-	  photonSF  *= recoPhoton.SF;
-	  photonSFu *= recoPhoton.SFu;
-	  photonSFd *= recoPhoton.SFd;
+	  ph_SF *= recoPhoton.SF;
+	  ph_SFu *= recoPhoton.SFu;
+	  ph_SFd *= recoPhoton.SFd;
 	}
       }
 
@@ -2583,7 +2588,6 @@ EL::StatusCode chorizo :: loop ()
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
-    iJet++;
     
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
@@ -2877,9 +2881,9 @@ EL::StatusCode chorizo :: loop ()
       // }
     }
 
-    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) ) 
+    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter++;
-    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) ) 
+    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter_80eff++;	
     
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
@@ -3003,7 +3007,7 @@ EL::StatusCode chorizo :: loop ()
   //met_obj.SetHasMuons( true );  //-- Set if muons enter into the MET computation  
   
   //- Recomputed MET via SUSYTools (Track Soft Term (TST))
-  if(nVertex>1){   //protect against crash in Data from METRebuilder  ///FIX_ME
+  if(nVertex>0){   //protect against crash in Data from METRebuilder  ///FIX_ME
     CHECK( tool_st->GetMET(*metRFC_TST,
 			   jets_sc,
 			   electrons_sc,
@@ -3169,7 +3173,10 @@ EL::StatusCode chorizo :: loop ()
   }
 
   TVector2 sjet2(sjet.Px(), sjet.Py());
-  
+
+
+  //Z(ll) candidate
+  Zll_candidate();
 
   //--- Fill MET related variables  -  vectorized now!
   for (auto& mk : metmap) {
@@ -3310,6 +3317,9 @@ EL::StatusCode chorizo :: loop ()
 
     //==== Razor ====
     fillRazor( makeV3( mk.second ) );
+
+    //==== Z-related vars
+    Zll_extra(mk.second); //be sure to call Zll_candidate() before!
 
   }//end of met flavor loop
 
@@ -3586,20 +3596,28 @@ EL::StatusCode chorizo :: loop ()
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
-    TVector2 met_electron = met_obj.GetVector("met_imu"); //arely
-    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_electron = met_obj.GetVector("met_imu"); 
+    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");
+    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu"); 
+    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu");
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
+    e_MT_tst = Calc_MT( recoElectrons.at(0), met_tst_electron);
+    e_MT_tst_vmu = Calc_MT( recoElectrons.at(0), met_tst_electron_vmu);    
   }
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
     //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
-    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; //arely
-    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); //arely    
+    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; 
+    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); 
+    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1;
+    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu");
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
     m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);  
+    m_MT_tst = Calc_MT( recoMuons.at(0), met_tst_muon);
+    m_MT_tst_vmu = Calc_MT( recoMuons.at(0), met_tst_muon_vmu);  
   
   }
  
@@ -4587,6 +4605,18 @@ void chorizo :: dumpLeptons(){
      e2_pt = recoElectrons.at(1).Pt();
      e2_eta = recoElectrons.at(1).Eta();
      e2_phi = recoElectrons.at(1).Phi();
+
+     if(recoElectrons.size()>2){
+       e3_pt = recoElectrons.at(2).Pt();
+       e3_eta = recoElectrons.at(2).Eta();
+       e3_phi = recoElectrons.at(2).Phi();
+
+       if(recoElectrons.size()>3){
+	 e4_pt = recoElectrons.at(3).Pt();
+	 e4_eta = recoElectrons.at(3).Eta();
+	 e4_phi = recoElectrons.at(3).Phi();
+       }
+     }
    }
   
   
@@ -4614,6 +4644,18 @@ void chorizo :: dumpLeptons(){
     m2_phi = recoMuons.at(1).Phi();
     m2_etiso30 = recoMuons.at(1).etcone30;
     m2_ptiso30 = recoMuons.at(1).ptcone30;
+
+    if(recoMuons.size()>2){
+      m3_pt = recoMuons.at(2).Pt();
+      m3_eta = recoMuons.at(2).Eta();
+      m3_phi = recoMuons.at(2).Phi();
+      
+      if(recoMuons.size()>3){
+	m4_pt = recoMuons.at(3).Pt();
+	m4_eta = recoMuons.at(3).Eta();
+	m4_phi = recoMuons.at(3).Phi();
+      }
+    }
   }
 
 }
@@ -4754,25 +4796,28 @@ void chorizo :: dumpJets(){
 
 EL::StatusCode chorizo :: postExecute ()
 {
-  // Here you do everything that needs to be done after the main event
-  // processing.  This is typically very rare, particularly in user
-  // code.  It is mainly used in implementing the NTupleSvc.
   return EL::StatusCode::SUCCESS;
 }
 
 
 EL::StatusCode chorizo :: finalize ()
 {
-  // This method is the mirror image of initialize(), meaning it gets
-  // called after the last event has been processed on the worker node
-  // and allows you to finish up any objects you created in
-  // initialize() before they are written to disk.  This is actually
-  // fairly rare, since this happens separately for each worker node.
-  // Most of the time you want to do your post-processing on the
-  // submission node after all your histogram outputs have been
-  // merged.  This is different from histFinalize() in that it only
-  // gets called on worker nodes that processed input events.
+  //OverlapRemoval
+  if(tool_or){
+    delete tool_or;
+    tool_or=0;
+  }
 
+  //B-tagging
+  if(tool_btag){
+    delete tool_btag;
+    tool_btag=0;
+  }
+  if(tool_btag2){
+    delete tool_btag2;
+    tool_btag2=0;
+  }
+  
   //PURW
   if(tool_purw){
     if(genPUfile)
@@ -4803,11 +4848,31 @@ EL::StatusCode chorizo :: finalize ()
     delete tool_tileTrip;
     tool_tileTrip = 0;
   }
-  
+
+  //jet tile recovery
+#ifdef TILETEST
+  if( tool_jettile ) {
+    delete tool_jettile;
+    tool_jettile = 0;
+  }
+#endif 
+
   //jet cleaning
   if( tool_jClean ) {
     delete tool_jClean;
     tool_jClean = 0;
+  }
+
+  //jet jvf
+  if( tool_jvf ) {
+    delete tool_jvf;
+    tool_jvf = 0;
+  }
+
+  //jet label
+  if( tool_jetlabel ) {
+    delete tool_jetlabel;
+    tool_jetlabel = 0;
   }
 
   //jet smearing
@@ -5704,13 +5769,17 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 
 // };
 
-//Calculation of extra variables
-float chorizo :: Calc_MT(Particles::Jet jet, TVector2 met){
 
-  return sqrt(2 * jet.Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), jet.Phi()))));
+//Trigger matching
+bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item){
 
+
+  return false;
 }
 
+
+
+//Calculation of extra variables
 float chorizo :: Calc_MT(Particles::Particle p, TVector2 met){
 
   return sqrt(2 * p.Pt() * met.Mod() * (1-cos(deltaPhi(TVector2::Phi_mpi_pi( met.Phi() ), p.Phi()))));
@@ -5722,6 +5791,14 @@ float chorizo :: Calc_mct(){
   if(n_jets<2) return -1;
 
   float mct =  (recoJets.at(0).Mt() + recoJets.at(1).Mt())*(recoJets.at(0).Mt() + recoJets.at(1).Mt()) - (recoJets.at(0)-recoJets.at(1)).Perp2();
+  mct = (mct >= 0.) ? sqrt(mct) : sqrt(-mct);   
+
+  return mct;
+};
+
+float chorizo :: Calc_mct(Particle p1, Particle p2){
+
+  float mct =  (p1.Mt() + p2.Mt())*(p1.Mt() + p2.Mt()) - (p1-p2).Perp2();
   mct = (mct >= 0.) ? sqrt(mct) : sqrt(-mct);   
 
   return mct;
@@ -6438,6 +6515,98 @@ void chorizo :: findBparton(){
   */
 }
 
+
+
+void chorizo :: Zll_candidate(){
+  
+  float m_ll_tmp = 0.;  
+  float ZMASS=91.1876;
+
+   if (recoElectrons.size()>1){
+     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+       for (unsigned int jEl=iEl+1; jEl<recoElectrons.size(); jEl++){   
+
+	 if ((recoElectrons.at(iEl).charge * recoElectrons.at(jEl).charge) < 0){
+         
+	   TLorentzVector ee = recoElectrons.at(iEl).GetVector() + recoElectrons.at(jEl).GetVector();	 
+	   m_ll_tmp = ee.M();	 
+
+	   if (fabs(m_ll_tmp - ZMASS) < fabs(Z_m -  ZMASS)){
+	     Z_m = m_ll_tmp;
+	     Z_lep1 = iEl;
+	     Z_lep2 = jEl;	   
+	     Z_flav = 0;
+	   }
+	 }
+       }
+     }
+   } 
+   
+   if (recoMuons.size()>1){
+     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+       for (unsigned int jMu=iMu+1; jMu<recoMuons.size(); jMu++){   
+	 
+	 if ((recoMuons.at(iMu).charge * recoMuons.at(jMu).charge) < 0){     
+           TLorentzVector mumu = recoMuons.at(iMu).GetVector() + recoMuons.at(jMu).GetVector();	 
+	   m_ll_tmp = mumu.M();	 
+
+	   if (fabs(m_ll_tmp - ZMASS) < fabs(Z_m - ZMASS)){
+	     Z_m = m_ll_tmp;
+	     Z_lep1 = iMu;
+	     Z_lep2 = jMu;
+	     Z_flav = 1;		
+	   }
+	 }
+       }  
+     }
+   }
+
+   if (recoElectrons.size()+recoMuons.size()==4){
+
+     std::vector<Particle> extra_lep;  
+     
+     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+       
+       if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+       extra_lep.push_back(recoElectrons.at(iEl));
+       
+     } 	
+     
+     
+     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+       
+       if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+       extra_lep.push_back(recoMuons.at(iMu));
+       
+     }  
+     
+     if(extra_lep.size()>1)  //redundant I think!
+       lep_mct = Calc_mct(extra_lep.at(0), extra_lep.at(1));
+     
+   }  
+   
+}
+
+void chorizo :: Zll_extra(TVector2 met){
+
+  
+  if (recoElectrons.size()+recoMuons.size()==3){
+    
+    for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
+      
+      if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+      lep3_MT.push_back( Calc_MT(recoElectrons.at(iEl), met) );
+      
+    } 	
+    
+    for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
+      
+      if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+      lep3_MT.push_back( Calc_MT(recoMuons.at(iMu), met) );
+      
+    }  
+  }
+} 
 
 
 TVector2 chorizo :: getMET( const xAOD::MissingETContainer* METcon, TString name ) {
