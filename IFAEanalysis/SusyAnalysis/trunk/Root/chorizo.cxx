@@ -213,8 +213,15 @@ void chorizo :: bookTree(){
       output->tree()->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
       output->tree()->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
       output->tree()->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
-      output->tree()->Branch ("e_SF", &e_SF, "e_SF/F");                       
-      output->tree()->Branch ("m_SF", &m_SF, "m_SF/F");                       
+      output->tree()->Branch ("e_SF", &e_SF, "e_SF/F");
+      output->tree()->Branch ("m_SF", &m_SF, "m_SF/F");
+      output->tree()->Branch ("ph_SF", &ph_SF, "ph_SF/F");
+      output->tree()->Branch ("e_SFu", &e_SFu, "e_SFu/F");
+      output->tree()->Branch ("m_SFu", &m_SFu, "m_SFu/F");
+      output->tree()->Branch ("ph_SFu", &ph_SFu, "ph_SFu/F");
+      output->tree()->Branch ("e_SFd", &e_SFd, "e_SFd/F");
+      output->tree()->Branch ("m_SFd", &m_SFd, "m_SFd/F");
+      output->tree()->Branch ("ph_SFd", &ph_SFd, "ph_SFd/F");
 
       //boson 
       output->tree()->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
@@ -263,9 +270,6 @@ void chorizo :: bookTree(){
       output->tree()->Branch("ph_tight",&ph_tight,"ph_tight/O", 10000);
       output->tree()->Branch("ph_type",&ph_type,"ph_type/I", 10000);
       output->tree()->Branch("ph_origin",&ph_origin,"ph_origin/I", 10000);
-      //output->tree()->Branch("ph_SF",&photonSF,"ph_SF/F", 10000);
-      //output->tree()->Branch("ph_SFu",&photonSF,"ph_SFu/F", 10000);
-      //output->tree()->Branch("ph_SFd",&photonSF,"ph_SFd/F", 10000);
 
       //electrons
       output->tree()->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -294,10 +298,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
       output->tree()->Branch("e_M",&e_M,"e_M/F", 10000);
       output->tree()->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
-      
-      //output->tree()->Branch("e_SF",&electronSF,"e_SF/F", 10000);
-      //output->tree()->Branch("e_SFu",&electronSF,"e_SFu/F", 10000);
-      //output->tree()->Branch("e_SFd",&electronSF,"e_SFd/F", 10000);
+     
 
       //muons
       output->tree()->Branch("m_N",&m_N,"m_N/I", 10000);                            
@@ -684,8 +685,16 @@ void chorizo :: InitVars()
   bosonVect_w = 1.;  
   Trigger_w = 1.;    
   Trigger_w_avg = 1.;
-  e_SF = 1.;         
-  m_SF = 1.;         
+  e_SF = 1.;
+  e_SFu = 1.;
+  e_SFd = 1.;
+  m_SF = 1.;
+  m_SFu = 1.;
+  m_SFd = 1.;
+  ph_SF = 1.;
+  ph_SFu = 1.;
+  ph_SFd = 1.;
+
 
   //- Top    
   ttbar_weight = 1.;                  
@@ -765,10 +774,7 @@ void chorizo :: InitVars()
   e_MT_tst = DUMMYDN;   
   e_MT_tst_vmu = DUMMYDN;   
   e_Zpt = DUMMYDN;             
-  electronSF = DUMMYDN;        
-  electronSFu = 1.;
-  electronSFd = 1.;
-  
+    
   //Z candidate
   Z_flav = -99;
   Z_lep1 = -99;  
@@ -787,10 +793,7 @@ void chorizo :: InitVars()
   ph_tight = false;           
   ph_type = 0; //Unknown
   ph_origin = 0; //NonDefined
-  photonSF = DUMMYDN;        
-  photonSFu = 1.;
-  photonSFd = 1.;
-
+  
   //- Muon info
   m_N = 0.; //DUMMYDN;                  
   m_pt = 0.; //DUMMYDN;               
@@ -813,9 +816,6 @@ void chorizo :: InitVars()
   m2_iso = DUMMYDN;             
   m2_ptiso30 = 0.; //DUMMYDN;         
   m2_etiso30 = 0.; //DUMMYDN;         
-  muonSF = DUMMYDN;             
-  muonSFu = 1.;
-  muonSFd = 1.;
   m_M = DUMMYDN;                
   m_MT = DUMMYDN;  
   m_MT_vmu = DUMMYDN;                  
@@ -2299,9 +2299,9 @@ EL::StatusCode chorizo :: loop ()
 	e_N++;
 	IsElectron=true;
 	if(this->isMC){
-	  electronSF  *= recoElectron.SF;
-	  electronSFu *= recoElectron.SFu;
-	  electronSFd *= recoElectron.SFd;
+	  e_SF *= recoElectron.SF;
+	  e_SFu *= recoElectron.SFu;
+	  e_SFd *= recoElectron.SFd;
 	}
       }
       
@@ -2394,9 +2394,9 @@ EL::StatusCode chorizo :: loop ()
 	m_N++;
 	IsMuon = true;
 	if(this->isMC){
-	  muonSF  *= recoMuon.SF;
-	  muonSFu *= recoMuon.SFu;
-	  muonSFd *= recoMuon.SFd;
+	  m_SF *= recoMuon.SF;
+	  m_SFu *= recoMuon.SFu;
+	  m_SFd *= recoMuon.SFd;
 	}
       }
       
@@ -2462,9 +2462,9 @@ EL::StatusCode chorizo :: loop ()
 	recoPhotons.push_back(recoPhoton);
 	ph_N++;
 	if(this->isMC){
-	  photonSF  *= recoPhoton.SF;
-	  photonSFu *= recoPhoton.SFu;
-	  photonSFd *= recoPhoton.SFd;
+	  ph_SF  *= recoPhoton.SF;
+	  ph_SFu *= recoPhoton.SFu;
+	  ph_SFd *= recoPhoton.SFd;
 	}
       }
 

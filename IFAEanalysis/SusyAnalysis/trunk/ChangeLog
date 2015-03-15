@@ -1,3 +1,7 @@
+2014-03-15 Martin <tripiana@cern.ch>
+	* Fix SFs.
+	* Add photon antiSF
+
 2014-03-13 Arely <arelycg@cern.ch>
 	* Added the e_MT and m_MT for Met with TST.
         * Found the issue when running on long samples :) (un-initialized e_SFu,e_SFd).

@@ -637,8 +637,10 @@ private:
   float   bosonVect_w;
   float   Trigger_w;
   float   Trigger_w_avg;
-  float   e_SF;
-  float   m_SF;
+  float   e_SF, e_SFu, e_SFd;
+  float   m_SF, m_SFu, m_SFd;
+  float   ph_SF, ph_SFu, ph_SFd;
+
 
   //- ttbar reweighting
   float ttbar_weight;
@@ -704,10 +706,7 @@ private:
   bool  ph_tight; 
   int   ph_type; 
   int   ph_origin; 
-  float photonSF;
-  float photonSFu;
-  float photonSFd;
-
+ 
   //- Electron Info
   int   e_N;
   float e_pt;
@@ -728,10 +727,7 @@ private:
   float e_ptiso30;
   float e_etiso30;
   bool  e_tight; 
-  float electronSF;
-  float electronSFu;
-  float electronSFd;
-
+ 
   //- Muon Info
   int   m_N;
   float m_pt;
@@ -754,9 +750,7 @@ private:
   float m2_iso;
   float m2_ptiso30;
   float m2_etiso30;
-  float muonSF;
-  float muonSFu;
-  float muonSFd;
+ 
   
   //- 'boson' properties
   float e_M;
