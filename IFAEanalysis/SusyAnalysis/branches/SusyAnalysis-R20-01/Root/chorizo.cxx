@@ -314,6 +314,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_etiso30",&e_etiso30,"e_etiso30/F", 10000);
       output->tree()->Branch("e_ptiso30",&e_ptiso30,"e_ptiso30/F", 10000);
       output->tree()->Branch("e_tight",&e_tight,"e_tight/O", 10000);
+      output->tree()->Branch("e_trigger",&e_trigger,"e_trigger/O", 10000);
       output->tree()->Branch("e_MT",&e_MT,"e_MT/F", 10000);
       output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
       output->tree()->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
@@ -354,6 +355,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
       output->tree()->Branch("m_type",&m_type,"m_type/I", 10000);
       output->tree()->Branch("m_origin",&m_origin,"m_origin/I", 10000);
+      output->tree()->Branch("m_trigger",&m_trigger,"m_trigger/O", 10000);
 
       //jets
       output->tree()->Branch("JVF_min",&JVF_min,"JVF_min/O", 10000);                           
@@ -847,6 +849,7 @@ void chorizo :: InitVars()
   e_ptiso30 = 0.; //DUMMYDN;         
   e_etiso30 = 0.; //DUMMYDN;         
   e_tight = false;           
+  e_trigger = false;           
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
   e_MT_vmu = DUMMYDN;     
@@ -898,6 +901,7 @@ void chorizo :: InitVars()
   m_EM = DUMMYDN;               
   m_type = 0; //Unknown
   m_origin = 0; //NonDefined
+  m_trigger = false;
 
   //muons (before overlap removal)      
   muon_N = DUMMYDN;                 
@@ -1668,7 +1672,16 @@ EL::StatusCode chorizo :: initialize ()
 #ifdef TILETEST
   tool_jettile = new CP::JetTileCorrectionTool("JetTileCorrectionTool");
   std::string parfile="param_test.root";
-  std::vector<std::string> dead_modules = {"0 1","0 10"};
+  // @param part tile partition: LBA=0, LBC=1, EBA=2, EBC=3
+  //  std::vector<std::string> dead_modules = {"0 1","0 10"};
+  std::vector<std::string> dead_modules = {"0 0" , "0 1" , "0 2" , "0 3" , "0 4" , "0 5" , "0 6" , "0 7" , "0 8" , "0 9" ,   
+					   "0 10", "0 11", "0 12", "0 13", "0 14", "0 15", "0 16", "0 17", "0 18", "0 19", 
+					   "0 20", "0 21", "0 22", "0 23", "0 24", "0 25", "0 26", "0 27", "0 28", "0 29", 
+					   "0 30", "0 31", "0 32", "0 33", "0 34", "0 35", "0 36", "0 37", "0 38", "0 39", 
+					   "0 40", "0 41", "0 42", "0 43", "0 44", "0 45", "0 46", "0 47", "0 48", "0 49", 
+					   "0 50", "0 51", "0 52", "0 53", "0 54", "0 55", "0 56", "0 57", "0 58", "0 59", 
+					   "0 60", "0 61", "0 62", "0 63"};
+
   tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile);
   tool_jettile->setProperty("DeadModules",dead_modules);
   tool_jettile->initializeTool(tool_tileTrip);
@@ -2239,10 +2252,10 @@ EL::StatusCode chorizo :: loop ()
   for( const auto& jet_itr : *jets_sc){
     
 #ifdef TILETEST
-    cout << "*** BEFORE TILE CORRECTION = " << (jet_itr)->pt() << endl;
+    //  cout << "*** BEFORE TILE CORRECTION = " << (jet_itr)->pt() << endl;
     if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
       Error("loop()", "Failed to apply JetTileCorrection!");
-    cout << "*** AFTER TILE CORRECTION = " << (jet_itr)->pt() << endl;
+    //  cout << "*** AFTER TILE CORRECTION = " << (jet_itr)->pt() << endl;
 #endif
 
     //** Bjet decoration 
@@ -2442,6 +2455,13 @@ EL::StatusCode chorizo :: loop ()
       recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( mu_itr );
       recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( mu_itr );
       
+      //trigger matching
+      std::vector<bool> mu_trig_pass;
+      for(const auto& t : MuTriggers){
+	mu_trig_pass.push_back( hasTrigMatch( *mu_itr, t ) );
+	recoMuon.isTrigMatch |= mu_trig_pass.back();
+      }
+
       //get muon scale factors
       if(this->isMC){
 	//nominal 
@@ -2950,18 +2970,17 @@ EL::StatusCode chorizo :: loop ()
   // For the moment only the official flavors are available.
   // Re-computing MET will be possible in the future though, once the METUtility interface is updated!!
 
-  //  const xAOD::MissingETContainer* cmet_reffinal;
+  const xAOD::MissingETContainer* cmet_reffinal;
   const xAOD::MissingETContainer* cmet_lhtopo;
   const xAOD::MissingETContainer* cmet_track;
 
-  //  CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") ); 
+  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); 
   //  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); //??
   //  CHECK( m_event->retrieve( cmet_reffinal, "MET_LocHadTopo") ); //??
   CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );
   CHECK( m_event->retrieve( cmet_track, "MET_Track") );
 
-  //  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
-  const xAOD::MissingET* mrf    = (*cmet_lhtopo)["LocHadTopo"];
+  const xAOD::MissingET* mrf    = (*cmet_reffinal)["FinalClus"];
   const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];
   //  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
   const xAOD::MissingET* mtrack = (*cmet_track)["Track"];
@@ -3146,9 +3165,9 @@ EL::StatusCode chorizo :: loop ()
 
   //- Met Cleaning
   if (Met_doMetCleaning){
-    // const xAOD::MissingET* mrf_refmuon = (*cmet_reffinal)["Muons"];
-    // TVector2 myMetMuon( mrf_refmuon->mpx(), mrf_refmuon->mpy() ); //MET_MuonBoy in run1
-    // isMetCleaned = ( ( (myMetMuon.Mod() / v_met_rfinal_mu.Mod()) * cos(v_met_rfinal_mu.Phi() - myMetMuon.Phi()) ) < 0.8);
+    const xAOD::MissingET* mrf_refmuon = (*cmet_reffinal)["Muons"];
+    TVector2 myMetMuon( mrf_refmuon->mpx(), mrf_refmuon->mpy() ); //MET_MuonBoy in run1
+    isMetCleaned = ( ( (myMetMuon.Mod() / v_met_rfinal_mu.Mod()) * cos(v_met_rfinal_mu.Phi() - myMetMuon.Phi()) ) < 0.8);
   }
 
   if (printMet){
@@ -4597,6 +4616,7 @@ void chorizo :: dumpLeptons(){
     e_etiso30 = recoElectrons.at(0).etcone30;
     e_ptiso30 = recoElectrons.at(0).ptcone30;
     e_tight = recoElectrons.at(0).isTight;
+    e_trigger = recoElectrons.at(0).isTrigMatch;
     e_type = recoElectrons.at(0).type;
     e_origin = recoElectrons.at(0).origin;
   }
@@ -4636,6 +4656,7 @@ void chorizo :: dumpLeptons(){
     m_ptiso30 = recoMuons.at(0).ptcone30;
     m_type = recoMuons.at(0).type;
     m_origin = recoMuons.at(0).origin;
+    m_trigger = recoMuons.at(0).isTrigMatch;
   }
 
   if(recoMuons.size()>1){
@@ -5771,8 +5792,91 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 
 
 //Trigger matching
-bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item){
+bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double dR){
 
+  //check if at least the event passed this trigger
+  if(!tool_trigdec->isPassed(item))  return false;
+
+  TLorentzVector eloff;
+  eloff.SetPtEtaPhiE(el.pt(), el.trackParticle()->eta(), el.trackParticle()->phi(), el.e());
+
+  // Get the container of online electrons associated to passed item
+
+  // auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
+  // auto eleFeatureContainers = fc.containerFeature<TrigElectronContainer>(); 
+  // bool matched=false;
+  // for(auto elfeat : eleFeatureContainers){
+  //   cout << "taking new online electron..." << endl;
+  //   //const xAOD::ElectronContainer *elCont = elfeat.cptr();
+  //   for(const auto& eg : *elfeat.cptr()){
+  //     cout << "trying to match..." << endl;
+  //     TLorentzVector elLV;
+  //     elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
+  //     cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+  //     cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+  //     if(elLV.DeltaR(eloff) < dR) 
+  // 	return true;
+  //   }
+  // }
+
+  // auto cg = tool_trigdec->getChainGroup(item);
+  // auto fc = cg->features();
+  // auto elFeatureContainers = fc.containerFeature<ElectronContainer>();
+  // for(auto elcont : elFeatureContainers) {
+  //   TLorentzVector elLV;
+  //   for (auto el : *elcont.cptr()) {
+  //     elLV.SetPtEtaPhiE(el->pt(), el->trackParticle()->eta(), el->trackParticle()->phi(), el->e());
+  //     if(elLV.DeltaR(muoff) < dR) 
+  // 	return true;
+  //   }
+  // }
+
+
+  //ElectronContainer
+  //TrigElectronContainer
+  //TrigEMCluster
+
+  auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
+  auto vec_el = fc.get<xAOD::ElectronContainer>("",TrigDefs::alsoDeactivateTEs);
+  bool matched=false;
+  //cout << "Electron containers : " << vec_el.size() << endl;
+  for(auto elfeat : vec_el){
+    //    cout << "taking new online electron..." << endl;
+    for(const auto& eg : *elfeat.cptr()){
+      cout << "trying to match..." << endl;
+      TLorentzVector elLV;
+      elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
+      //elLV.SetPtEtaPhiE(eg->pt(), eg->eta(), eg->phi(), eg->e());
+      // cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+      // cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+      if(elLV.DeltaR(eloff) < dR) 
+	return true;
+    }
+  }
+
+  return false;
+}
+
+
+bool chorizo :: hasTrigMatch(const xAOD::Muon& mu, std::string item, double dR){
+
+  //check if at least the event passed this trigger
+  if(!tool_trigdec->isPassed(item))   return false;
+  
+  TLorentzVector muoff;
+  muoff.SetPtEtaPhiE(mu.pt(), mu.eta(), mu.phi(), mu.e());
+
+  auto cg = tool_trigdec->getChainGroup(item);
+  auto fc = cg->features();
+  auto muFeatureContainers = fc.containerFeature<MuonContainer>();
+  for(auto mucont : muFeatureContainers){
+    TLorentzVector muLV;
+    for (auto mu : *mucont.cptr()){
+      muLV.SetPtEtaPhiE(mu->pt(), mu->eta(), mu->phi(), mu->e());
+      if(muLV.DeltaR(muoff) < dR) 
+	return true;
+    }
+  }
 
   return false;
 }

@@ -1003,6 +1003,7 @@ void RunsMap::LoadMap(){
 
   m_map["TrigA_ttbar"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleA/ttbar"));
   m_map["TrigT_ttbar"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleT/ttbar"));
+  m_map["TrigT_zmumu"] = rlist( Rpair(147407,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleT/zmumu"));
   m_map["TestTrigMC15grid"] = rlist( Rpair(110401,"valid1:valid1.110401.PowhegPythia_P2012_ttbar_nonallhad.recon.AOD.e3099_s2081_r6070/"));
 
   //Data 
@@ -1091,7 +1092,7 @@ void RunsMap::LoadMap(){
   m_map["TestMCpic"] = rlist( Rpair(167752, "user.tripiana.mc14_8TeV.167752.Sherpa_CT10_ZmumuMassiveCBPt0_BFilter.merge.AOD.e1585_s1933_s1911_r5591_r5625_tid01512435*"));
 
   //Baseline_ttbar
-  m_map["PowhegPythia_P2011C_ttbar"] = rlist( Rpair(117050, "mc14_8TeV.117050.PowhegPythia_P2011C_ttbar*") );
+  m_map["PowhegPythia_P2011C_ttbar"] = rlist( Rpair(117050, "mc14_8TeV.117050.PowhegPythia_P2011C_ttbar*/") );
 
   m_map["D5_mDM50_Mstar1000_MET300"] = rlist( Rpair(191044, "user.vippolit.TestxAOD.191044..AOD.s1982_r5787.test_04_EXT0.13565184"));
   m_map["D5_mDM50_Mstar1000_MET100"] = rlist( Rpair(191043, "user.vippolit.TestxAOD.191043..AOD.s1982_r5787.test_04_EXT0.13565187"));

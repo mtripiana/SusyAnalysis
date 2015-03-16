@@ -323,7 +323,8 @@ private:
   double  getPdfRW( double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
 
   //trigger matching
-  virtual bool hasTrigMatch(const xAOD::Electron& el); 
+  virtual bool hasTrigMatch(const xAOD::Electron& el, std::string item, double dR=0.07); 
+  virtual bool hasTrigMatch(const xAOD::Muon& mu, std::string item, double dR=0.07); 
 
   //Calculation functions
   virtual float Calc_MT(Particle p, TVector2 met);
@@ -742,6 +743,7 @@ private:
   float e_ptiso30;
   float e_etiso30;
   bool  e_tight; 
+  bool  e_trigger; 
   int   e_type; 
   int   e_origin; 
 
@@ -769,6 +771,7 @@ private:
   float m2_etiso30;
   int   m_type; 
   int   m_origin; 
+  bool  m_trigger; 
 
   //- 'boson' properties
   float e_M;
