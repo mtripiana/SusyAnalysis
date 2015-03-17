@@ -2335,7 +2335,6 @@ EL::StatusCode chorizo :: loop ()
       //trigger matching
       std::vector<bool> el_trig_pass;
       for(const auto& t : ElTriggers){
-	continue; // TAKE OUT!!!
 	el_trig_pass.push_back( hasTrigMatch( *el_itr, t ) );
 	recoElectron.isTrigMatch |= el_trig_pass.back();
       }
