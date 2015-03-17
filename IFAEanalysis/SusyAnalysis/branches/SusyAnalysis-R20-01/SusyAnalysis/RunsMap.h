@@ -1006,6 +1006,10 @@ void RunsMap::LoadMap(){
   m_map["TrigT_zmumu"] = rlist( Rpair(147407,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleT/zmumu"));
   m_map["TestTrigMC15grid"] = rlist( Rpair(110401,"valid1:valid1.110401.PowhegPythia_P2012_ttbar_nonallhad.recon.AOD.e3099_s2081_r6070/"));
 
+
+  m_map["TrigA_ttbar_val2"] = rlist( Rpair(110401, "valid2.110401.PowhegPythia_P2012_ttbar_nonallhad.recon.AOD.e3099_s2579_r6172/"));
+  m_map["TrigA_ttbar2"] = rlist( Rpair(110401, "/nfs/at3/scratch2/tripiana/xAOD/trigger/MC15/sampleA/ttbar"));
+
   //Data 
   m_map["TestDataB"] = rlist( Rpair(203432, "/nfs/at3/scratch/tripiana/xAOD/data12/JetTauEtmiss/"));
   

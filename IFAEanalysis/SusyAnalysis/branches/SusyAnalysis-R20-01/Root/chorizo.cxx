@@ -2335,6 +2335,7 @@ EL::StatusCode chorizo :: loop ()
       //trigger matching
       std::vector<bool> el_trig_pass;
       for(const auto& t : ElTriggers){
+	continue; // TAKE OUT!!!
 	el_trig_pass.push_back( hasTrigMatch( *el_itr, t ) );
 	recoElectron.isTrigMatch |= el_trig_pass.back();
       }
@@ -2458,7 +2459,7 @@ EL::StatusCode chorizo :: loop ()
       //trigger matching
       std::vector<bool> mu_trig_pass;
       for(const auto& t : MuTriggers){
-	mu_trig_pass.push_back( hasTrigMatch( *mu_itr, t ) );
+	mu_trig_pass.push_back( hasTrigMatch( *mu_itr, t, 0.15 ) );
 	recoMuon.isTrigMatch |= mu_trig_pass.back();
       }
 
@@ -5797,6 +5798,8 @@ bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double 
   //check if at least the event passed this trigger
   if(!tool_trigdec->isPassed(item))  return false;
 
+  cout << "EVENT PASSED " << item << endl;
+
   TLorentzVector eloff;
   eloff.SetPtEtaPhiE(el.pt(), el.trackParticle()->eta(), el.trackParticle()->phi(), el.e());
 
@@ -5836,21 +5839,37 @@ bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double 
   //TrigElectronContainer
   //TrigEMCluster
 
-  auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
-  auto vec_el = fc.get<xAOD::ElectronContainer>("",TrigDefs::alsoDeactivateTEs);
-  bool matched=false;
-  //cout << "Electron containers : " << vec_el.size() << endl;
+  // auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
+  // auto vec_el = fc.get<xAOD::ElectronContainer>("",TrigDefs::alsoDeactivateTEs);
+  // bool matched=false;
+  // //cout << "Electron containers : " << vec_el.size() << endl;
+  // for(auto elfeat : vec_el){
+  //   //    cout << "taking new online electron..." << endl;
+  //   for(const auto& eg : *elfeat.cptr()){
+  //     cout << "trying to match..." << endl;
+  //     TLorentzVector elLV;
+  //     elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
+  //     //elLV.SetPtEtaPhiE(eg->pt(), eg->eta(), eg->phi(), eg->e());
+  //     // cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+  //     // cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+  //     if(elLV.DeltaR(eloff) < dR) 
+  // 	return true;
+  //   }
+  // }
+
+
+  Trig::FeatureContainer fc = tool_trigdec->features(item);
+  const std::vector< Trig::Feature<xAOD::ElectronContainer> > vec_el = fc.get<xAOD::ElectronContainer>();
+  cout << "CONT size = " << vec_el.size() << endl;
   for(auto elfeat : vec_el){
-    //    cout << "taking new online electron..." << endl;
-    for(const auto& eg : *elfeat.cptr()){
-      cout << "trying to match..." << endl;
-      TLorentzVector elLV;
-      elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
-      //elLV.SetPtEtaPhiE(eg->pt(), eg->eta(), eg->phi(), eg->e());
-      // cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
-      // cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+    const xAOD::ElectronContainer *elCont = elfeat.cptr();
+    TLorentzVector elLV;
+    for(const auto& eg : *elCont){
+      elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());                                                                                                                                                                          
+      cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+      cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
       if(elLV.DeltaR(eloff) < dR) 
-	return true;
+  	return true;
     }
   }
 
