@@ -598,6 +598,9 @@ void RunsMap::LoadMap(){
    m_map["TestZnunu167758Pt0"] = rlist( Rpair(167758, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/Znunu_167758/"));
 
 
+
+   m_map["13TEV_GJet_test"] = rlist( Rpair(177576, "mc14_13TeV.177576.Sherpa_CT10_SinglePhotonMassiveCBPt280_500_CVetoBVeto.merge.AOD.e3083_s1982_s2008_r5787_r5853/"));
+
   //======================================================================================================================
   //                                                 Grid Data
   //======================================================================================================================
