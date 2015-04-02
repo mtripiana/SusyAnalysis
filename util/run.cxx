@@ -315,6 +315,8 @@ int main( int argc, char* argv[] ) {
   bool doFlowTree = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
   bool doPUTree = false; //No option in the xml yet!!
   bool generatePUfile = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
+  bool isStopTL = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
+
 
   TString FinalPath      = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
   if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
@@ -435,7 +437,7 @@ int main( int argc, char* argv[] ) {
       sh.at(0)->setMetaDouble( "DSID", (double)run_ids[i_id] );
 
       //  fetch meta-data from AMI
-      if(amiFound){
+      if(amiFound && 0){
 	try{
 	  fetchMetaData (sh, false); 
 	  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)

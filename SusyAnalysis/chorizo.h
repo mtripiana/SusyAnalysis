@@ -373,6 +373,10 @@ private:
   bool isTileTrip; //!
   bool isCoreFlag; //!
   bool isCosmic; //!
+  bool isBadMuon; //! 
+  
+  int nCosmicMuons;
+  int nBadMuons;
   
   bool passPreselectionCuts; //!
 
@@ -417,6 +421,7 @@ private:
   std::string DirectoryPath; //! 
 
   bool doCutFlow;
+  bool isStopTL;
   
   TString GRLxmlFile; //!
   bool    applyPURW;
