@@ -111,7 +111,7 @@ chorizo :: chorizo ()
   isNCBG=false; 
   doAnaTree=false;
   doPUTree=false;
-  doFlowTree=false;
+  doFlowTree=true;
 
   printMet=false; 
   printJet=false;
@@ -192,6 +192,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
       output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 10000);
       output->tree()->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
+      output->tree()->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
+      output->tree()->Branch("nCosmicMuons",&nCosmicMuons,"nCosmicMuons/I");
+      output->tree()->Branch("nBadMuons",&nBadMuons,"nBadMuons/I");            
     }
 
     
@@ -672,7 +675,11 @@ void chorizo :: InitVars()
   isTileGood = true;                
   isTileTrip = false;                
   isCoreFlag = true;          
-  isCosmic = false;          
+  isCosmic = false;       
+  isBadMuon = false; 
+  
+  nCosmicMuons = 0;
+  nBadMuons = 0;  
       
   passPreselectionCuts = false;
 
@@ -1105,6 +1112,9 @@ void chorizo :: ReadXML(){
   //------ Define and read global variables from the XML
   Info(whereAmI, Form(" - Cut Flow") );
   doCutFlow = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");  
+
+  isStopTL = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");  
+
   
   Info(whereAmI, Form(" - PDF reweighting") );
   doPDFrw = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
@@ -1457,7 +1467,10 @@ EL::StatusCode chorizo :: initialize ()
   tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
   tool_st->SUSYToolsInit().ignore();
   tool_st->setProperty("IsData",    (int)!this->isMC);
-  tool_st->setProperty("IsAtlfast", (int)this->isAtlfast);   
+  tool_st->setProperty("IsAtlfast", (int)this->isAtlfast);  
+  if (isStopTL) tool_st->setProperty("EleIdBaseline","LooseLLH"); 
+  if (isStopTL) tool_st->setProperty("MuId","Loose");
+  if (isStopTL) tool_st->setProperty("METGammaTerm","");
   //if(!Met_doMuons)
   tool_st->setProperty("METMuonTerm", ""); //No MuonTerm default
   if(!Met_doRefTau)  
@@ -1993,6 +2006,8 @@ EL::StatusCode chorizo :: loop ()
 
   this->isVertexOk = (nVertex>1) && n_tracks>=nTracks; 
 
+
+
   //trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
   if(m_eventCounter<2){
@@ -2094,8 +2109,9 @@ EL::StatusCode chorizo :: loop ()
 
   for(const auto& el_itr : *electrons_sc.first){
 
-    CHECK( tool_st->FillElectron( (*el_itr), El_PreselPtCut, El_PreselEtaCut ) );
-
+    if(isStopTL) CHECK( tool_st->FillElectron( (*el_itr), 10000, El_PreselEtaCut ) );
+    else CHECK( tool_st->FillElectron( (*el_itr), El_PreselPtCut, El_PreselEtaCut ) );
+    
     //decorate electron with final pt requirements ('final')
     elIsoArgs->_etcut = El_RecoPtCut;
     elIsoArgs->_calo_isocut = 0.;    
@@ -2105,7 +2121,7 @@ EL::StatusCode chorizo :: loop ()
     //decorate electron with baseline pt requirements ('signal')
     elIsoArgs->_etcut = El_PreselPtCut;
     tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
-    //    dec_baseline(*el_itr) = dec_signal(*el_itr);    
+    if(!isStopTL) dec_baseline(*el_itr) = dec_signal(*el_itr);    
   
   }
 
@@ -2126,7 +2142,7 @@ EL::StatusCode chorizo :: loop ()
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_PreselPtCut;
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
-    //    dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
+    if(!isStopTL) dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
    
     //tool_st->IsCosmicMuon( *mu_itr );  //'cosmic' decoration, moved after OR
   }
@@ -2169,7 +2185,8 @@ EL::StatusCode chorizo :: loop ()
   for( ; jet_itr != jet_end; ++jet_itr ) {
     
     CHECK( tool_st->FillJet( **jet_itr ) );
-    tool_st->IsGoodJet( **jet_itr, Jet_PreselPtCut, Jet_PreselEtaCut );
+    if (!isStopTL) tool_st->IsGoodJet( **jet_itr, Jet_PreselPtCut, Jet_PreselEtaCut );
+    else tool_st->IsGoodJet( **jet_itr, Jet_PreselPtCut, 10. );
     //** Bjet decoration 
     //tool_st->IsBJet( **jet_itr );   //SUSYTools
     float bw=0.; //our own
@@ -2178,8 +2195,8 @@ EL::StatusCode chorizo :: loop ()
     else if(Jet_Tagger=="IP3DSV1") bw = (*jet_itr)->btagging()->SV1plusIP3D_discriminant(); 
     dec_bjet(**jet_itr) = (bw > Jet_TaggerOp);
 
-    //arelycg dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
-
+    if (!isStopTL) dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR. //SILVIA //CHECK_ME
+    //else dec_baseline(**jet_itr) &= (fabs((*jet_itr)->eta()) < 4.5);
     //book it for smearing (before overlap removal) //CHECK (DOING NOTHING FOR NOW!!
     smr_met_jets_pt.push_back( 0. ); //recoJet.Pt() ); //in GeV!
     smr_met_jets_eta.push_back( 0. ); //recoJet.Eta() );
@@ -2286,6 +2303,8 @@ EL::StatusCode chorizo :: loop ()
       }
       
       //save signal electrons
+      if(!isStopTL){
+      
       if( dec_final(*el_itr) ){
 	recoElectrons.push_back(recoElectron);
 	
@@ -2305,6 +2324,32 @@ EL::StatusCode chorizo :: loop ()
 	}
       }
       
+      }
+
+      else{
+      
+      //if( dec_final(*el_itr) ){
+	recoElectrons.push_back(recoElectron);
+	
+	if (doCutFlow){	
+	  myfile << "signal electron: \n";      
+	  myfile << "pt: " << recoElectron.Pt() << " \n"; 
+	  myfile << "eta: " << recoElectron.Eta() << " \n";          
+	  myfile << "phi: " << recoElectron.Phi() << " \n";                
+	}	
+	
+	e_N++;
+	IsElectron=true;
+	if(this->isMC){
+	  e_SF *= recoElectron.SF;
+	  e_SFu *= recoElectron.SFu;
+	  e_SFd *= recoElectron.SFd;
+	}
+      //}
+      
+      }      
+      
+      
       iEl++;
     }//overlap removal
   }//electron loop
@@ -2320,11 +2365,22 @@ EL::StatusCode chorizo :: loop ()
   for(const auto& mu_itr : *muons_sc.first){
     
     tool_st->IsCosmicMuon( *mu_itr );  //'cosmic' decoration
-    
     this->isCosmic |= dec_cosmic(*mu_itr); //check if at least one cosmic in the event
     
     if(! dec_baseline(*mu_itr) ) continue; //keep baseline object only
+    if (tool_st->IsBadMuon( *mu_itr )) nBadMuons+=1;     
+    
+    if(isStopTL){
+  
+      if (doOR && !dec_passOR(*mu_itr)) continue;    
+      if (tool_st->IsCosmicMuon( *mu_itr )) {
+        nCosmicMuons+=1;  
+        continue;
+      }
 
+    }
+    
+    
     Particle recoMuon;
     recoMuon.SetVector( getTLV( &(*mu_itr) ));	
     
@@ -2342,6 +2398,9 @@ EL::StatusCode chorizo :: loop ()
       }
     }
     
+
+   if(!isStopTL){
+
     if( dec_signal(*mu_itr) && 
 	((!doOR) || dec_passOR(*mu_itr)) &&
 	!dec_cosmic(*mu_itr) ){
@@ -2401,6 +2460,68 @@ EL::StatusCode chorizo :: loop ()
       }
       
     }//if pass OR
+   }//sbottom 
+
+   else{
+
+    //if(	!dec_cosmic(*mu_itr) && !dec_bad(*mu_itr)){
+      
+      if (doCutFlow){
+	myfile << "signal muon: \n";      
+	myfile << "pt: " << recoMuon.Pt() << " \n"; 
+	myfile << "eta: " << recoMuon.Eta() << " \n";          
+	myfile << "phi: " << recoMuon.Phi() << " \n"; 
+      }
+      
+      recoMuon.id = iMu;
+      recoMuon.ptcone20 = acc_ptcone20(*mu_itr) * 0.001;
+      recoMuon.etcone20 = acc_etcone20(*mu_itr) * 0.001;
+      recoMuon.ptcone30 = acc_ptcone30(*mu_itr) * 0.001;
+      recoMuon.etcone30 = acc_etcone30(*mu_itr) * 0.001;
+      recoMuon.charge   = (float) (*mu_itr).charge();
+      //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
+      
+      recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( mu_itr );
+      recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( mu_itr );
+      
+      //get muon scale factors
+      if(this->isMC){
+	//nominal 
+	recoMuon.SF = tool_st->GetSignalMuonSF(*mu_itr);
+	
+	//+1 sys up
+	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
+	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
+	}
+	recoMuon.SFu = tool_st->GetSignalMuonSF(*mu_itr);
+
+	//+1 sys down
+	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
+	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
+	}
+	recoMuon.SFd = tool_st->GetSignalMuonSF(*mu_itr);
+
+	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+      }
+
+      muonCandidates.push_back(recoMuon);
+      
+      //save signal muons
+      //if( dec_final(*mu_itr) ){
+	recoMuons.push_back(recoMuon);
+	m_N++;
+	IsMuon = true;
+	if(this->isMC){
+	  m_SF *= recoMuon.SF;
+	  m_SFu *= recoMuon.SFu;
+	  m_SFd *= recoMuon.SFd;
+	//}
+      }
+      
+    //}//if pass OR
+   }//stop    
     
     iMu++;
   }//muon loop
@@ -2457,7 +2578,7 @@ EL::StatusCode chorizo :: loop ()
 
       photonCandidates.push_back(recoPhoton);
 
-      //save signal electrons
+      //save signal photons
       if( dec_final(*ph_itr) ){
 	recoPhotons.push_back(recoPhoton);
 	ph_N++;
@@ -2768,8 +2889,15 @@ EL::StatusCode chorizo :: loop ()
   int bjet_counter_80eff=0;
 
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
-    if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue;
-    if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue;
+    if (isStopTL){
+      if ( jetCandidates.at(iJet).Pt() < 35. ) continue;
+      if ( fabs(jetCandidates.at(iJet).Eta()) > 2.8 ) continue;
+    }
+    
+    else{
+      if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue;
+      if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue;
+    } 
     
     //--- jvf cut   //CHECK_ME
     if (jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta()) < 2.4) {
@@ -3061,8 +3189,8 @@ EL::StatusCode chorizo :: loop ()
   metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_imu_ecorr");
   metmap[::MetDef::VisMuECorr] = met_obj.GetVector("met_vmu_ecorr");  
   metmap[::MetDef::VisMuMuCorr] = met_obj.GetVector("met_vmu_mucorr");  
-  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_imu_phcorr");
-  metmap[::MetDef::VisMuPh] = met_obj.GetVector("met_vmu_phcorr");
+  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_phcorr_imu");
+  metmap[::MetDef::VisMuPh] = met_obj.GetVector("met_phcorr_vmu");
   metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
   metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
   metmap[::MetDef::VisMuRef] = met_obj.GetVector("met_refFinal_vmu");  
@@ -3717,8 +3845,15 @@ EL::StatusCode chorizo :: loop_truth()
 
       recoElectron.SetVector( tlv_d, true );
 
-      if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
-      if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
+      if(!isStopTL){
+        if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
+        if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
+      }	
+      
+      else{
+        if (recoElectron.Pt() < 10.)   continue;
+        if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
+      }		
             
       // recoElectron.id = 0;
       // recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
@@ -6081,8 +6216,10 @@ vector<TLorentzVector> chorizo :: CombineJets(vector<TLorentzVector> myjets){
   unsigned int size =0;
 
   //at most loop over 5 jets (otherwise problem for data events)
-  if (myjets.size() < 5) size = myjets.size();
-  else size = 5;
+  //if (myjets.size() < 5) size = myjets.size();
+  //else size = 5;
+ 
+  size = myjets.size();
  
   for(unsigned int i = 0; i < size; i++){
     N_comb *= 2;
@@ -6169,62 +6306,106 @@ void chorizo :: Calc_SuperRazor(TLorentzVector J1, TLorentzVector J2, TVector3 m
   // Matthew R. Buckley, Joseph D. Lykken, Christopher Rogan, Maria Spiropulu
   ////////////////////////////////
 
-  /////////////
-  // LAB frame
-  /////////////
-  //Reconstructed mega-jets and missing transverse energy (from somewhere else...)
 
-  J1.SetVectM(J1.Vect(),0.0);
-  J2.SetVectM(J2.Vect(),0.0);
+////////////////////////////////
+//
+// DI-MEGAJET BASIS of VARIABLES CALCULATION 
+//
+// Code written by Christopher Rogan <crogan@cern.ch>, 23-09-14
+//
+////////////////////////////////
+//
+// NOTE: observables that may be useful are denoted with:
+// //********************************
+// above them
+//
+// The list of observables calculated in this code:
+// 
+/////////////
+//
+// LAB frame
+//
+/////////////
 
-  TVector3 vBETA_z = (1./(J1.E()+J2.E()))*(J1+J2).Vect();
-  vBETA_z.SetX(0.0);
-  vBETA_z.SetY(0.0);
+//
+// from these inputs the relevant variables will be calculated - the proposed
+// triggers will be based on shatR, gaminvR and cosptR (defined below)
+//
 
-  //transformation from lab frame to approximate rest frame along beam-axis
-  J1.Boost(-vBETA_z);
-  J2.Boost(-vBETA_z);
+TVector3 vBETA_z = (1./(J1.E()+J2.E()))*(J1+J2).Vect();
+vBETA_z.SetX(0.0);
+vBETA_z.SetY(0.0);
 
-  TVector3 pT_CM = (J1+J2).Vect() + met;
-  pT_CM.SetZ(0.0); //should be redundant...
+//transformation from lab frame to approximate rest frame along beam-axis
+J1.Boost(-vBETA_z);
+J2.Boost(-vBETA_z);
 
-  float Minv2 = (J1+J2).M2();
-  float Einv = sqrt(met.Mag2()+Minv2);
+TVector3 pT_CM = (J1+J2).Vect() + met;
+pT_CM.SetZ(0.0); //should be redundant...
 
-  //////////////////////
-  // definition of shatR
-  //////////////////////
-  shatR = sqrt( ((J1+J2).E()+Einv)*((J1+J2).E()+Einv) - pT_CM.Mag2() );
+double Minv2 = (J1+J2).M2() - 4.*J1.M()*J2.M();
+double Einv = sqrt(met.Mag2()+Minv2);
 
-  TVector3 vBETA_R = (1./sqrt(pT_CM.Mag2() + shatR*shatR))*pT_CM;
+//****************************************
+shatR = sqrt( ((J1+J2).E()+Einv)*((J1+J2).E()+Einv) - pT_CM.Mag2() );
 
-  //transformation from lab frame to R frame
-  J1.Boost(-vBETA_R);
-  J2.Boost(-vBETA_R);
+TVector3 vBETA_R = (1./sqrt(pT_CM.Mag2() + shatR*shatR))*pT_CM;
 
-  /////////////
-  // R-frame
-  /////////////
-  TVector3 vBETA_Rp1 = (1./(J1.E()+J2.E()))*(J1.Vect() - J2.Vect());
+//transformation from lab frame to R frame
+J1.Boost(-vBETA_R);
+J2.Boost(-vBETA_R);
 
-  ////////////////////////
-  // definition of gaminvR
-  gaminvR = sqrt(1.-vBETA_Rp1.Mag2());
+/////////////
+//
+// R-frame
+//
+/////////////
 
-  //transformation from R frame to R+1 frames
-  J1.Boost(-vBETA_Rp1);
-  J2.Boost(vBETA_Rp1);
+//****************************************
+gaminvR = sqrt(1.-vBETA_R.Mag2());
 
-  //////////////
-  // R+1-frames
-  //////////////
-  ///////////////////////
-  // definition of mdeltaR
-  mdeltaR = J1.E()+J2.E();
+//****************************************
+mdeltaR = shatR*gaminvR;
+
 
   ///////////////////////
   // definition of cosptR
-  cosptR = pT_CM.Mag()/sqrt(pT_CM.Mag2()+mdeltaR*mdeltaR);
+cosptR = pT_CM.Mag()/sqrt(pT_CM.Mag2()+mdeltaR*mdeltaR);
+//****************************************
+//double dphi_BETA_R = fabs(((J1+J2).Vect()).DeltaPhi(vBETA_R));
+
+//****************************************
+//double dphi_J1_J2_R = fabs(J1.Vect().DeltaPhi(J2.Vect()));
+
+//TVector3 vBETA_Rp1 = (1./(J1.E()+J2.E()))*(J1.Vect() - J2.Vect());
+
+//****************************************
+// double gamma_Rp1 = 1./sqrt(1.-vBETA_Rp1.Mag2());
+
+//****************************************
+//double gaminvRp1 = sqrt(pow(J1.P()+J2.P(),2.)-(J1.Vect()-J2.Vect()).Mag2())/(J1.P()+J2.P());
+
+//****************************************
+//double costhetaR = vBETA_Rp1.Unit().Dot(vBETA_R.Unit());
+
+//****************************************
+//double dphi_R_Rp1 = fabs(vBETA_R.DeltaPhi(vBETA_Rp1));
+
+//****************************************
+//double Rpt = pT_CM.Mag()/(pT_CM.Mag()+ shatR/4.);
+
+//transformation from R frame to R+1 frames
+//J1.Boost(-vBETA_Rp1);
+//J2.Boost(vBETA_Rp1);
+
+//////////////
+//
+// R+1-frames
+//
+//////////////
+//****************************************
+//double costhetaRp1 = vBETA_Rp1.Unit().Dot(J1.Vect().Unit());
+
 
 }
 
