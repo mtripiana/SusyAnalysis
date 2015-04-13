@@ -1,7 +1,7 @@
 2014-04-08 Martin <tripiana@cern.ch>
 	* Move to Base,2.3.9
 	* Update run*cxx to new ami metadata (at least for valid* samples)
-	* Add Status and Systematic Code checks 
+	* Add Status and Systematic Code checks
 
 2014-03-17 Martin <tripiana@cern.ch>
 	* Move to Base,2.3.6 and ST-06-00-03

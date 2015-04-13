@@ -6,7 +6,7 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.3.6
+# Extra tags needed for Base,2.3.9
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-20 # (needs patching)
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/trunk    # (needs patching)
