@@ -1001,7 +1001,10 @@ void RunsMap::LoadMap(){
 			      Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/test/"));
   m_map["TestTrig4"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/METmon/datasets/"));
 
-  m_map["TrigA_ttbar"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleA/ttbar"));
+  m_map["TrigA_ttbar_r6531_grid"] = rlist( Rpair(110401,"valid3.110401.PowhegPythia_P2012_ttbar_nonallhad.recon.AOD.e3099_s2578_r6531/"));
+  m_map["TrigA_ttbar_r6531"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleA/r6531/ttbar/"));
+  m_map["TrigA_ttbar_r6532"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleA/r6532/ttbar/"));
+  m_map["TrigA_ttbar_r6538"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleA/r6538/ttbar/"));
   m_map["TrigT_ttbar"] = rlist( Rpair(110401,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleT/ttbar"));
   m_map["TrigT_zmumu"] = rlist( Rpair(147407,"/nfs/at3/scratch/tripiana/xAOD/trigger/MC15/sampleT/zmumu"));
   m_map["TestTrigMC15grid"] = rlist( Rpair(110401,"valid1:valid1.110401.PowhegPythia_P2012_ttbar_nonallhad.recon.AOD.e3099_s2081_r6070/"));

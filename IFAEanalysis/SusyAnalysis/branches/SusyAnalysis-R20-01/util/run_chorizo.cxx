@@ -97,7 +97,7 @@ std::string tmpdirname(){
 
 float getLumiWeight(Sample* sample){
 
-  if( sample->getMetaDouble( MetaFields::isData ) ) //don't weight data!
+  if( sample->getMetaString( MetaFields::isData )=="Y" ) //don't weight data!
     return 1.;
 
   return sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor ) * sample->getMetaDouble( MetaFields::filterEfficiency ) / sample->getMetaDouble( MetaFields::numEvents ); 
@@ -109,6 +109,13 @@ float getECM(Sample* sample){ //in TeV
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECMEnergy | awk '{print $2}'");
+  if(s_ecm.empty()){
+    cout << "no ECMEnergy field. Try new convention next... " << endl;
+    s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep beam_energy | awk '{print $2}'");
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), ']'), s_ecm.end());
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), '['), s_ecm.end());
+    return atof(s_ecm.c_str())*2./1000000.;
+  }
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -121,8 +128,8 @@ bool type_consistent(SampleHandler sh){
   bool isData=false;
   bool isMC=false;
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
-    isMC     |= ((*iter)->getMetaDouble( MetaFields::isData)==0);
-    isData   |= ((*iter)->getMetaDouble( MetaFields::isData)==1);
+    isMC     |= ((*iter)->getMetaString( MetaFields::isData)=="N");
+    isData   |= ((*iter)->getMetaString( MetaFields::isData)=="Y");
 
     if(isData && isMC)
       return false;
@@ -134,7 +141,13 @@ bool is_data(Sample* sample){
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
-  return (itis=="collisions");
+  std::size_t found = itis.find("collisions");
+  if (found!=std::string::npos) return true;
+  //add extra check for physics containers
+  itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
+  if(TString(itis).Contains("period")) return true;
+
+  return false;
 }
 
 
@@ -400,7 +413,7 @@ int main( int argc, char* argv[] ) {
   //    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
    
 
-  sh.print(); //print what we found
+  //  sh.print(); //print what we found
 
   //Handle Meta-Data
   sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
@@ -419,7 +432,7 @@ int main( int argc, char* argv[] ) {
   }
 
   //set EBeam field
-  TString s_ecm  = "8"; //default is 8TeV 
+  TString s_ecm  = "13"; //default is 13TeV 
   TString s_ecm_tmp = "";
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
     (*iter)->setMetaDouble ("ebeam", (double)getEBeam(*iter));
@@ -438,13 +451,13 @@ int main( int argc, char* argv[] ) {
   
   bool amiFound=true;
   if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
-    s_ecm="8";
+    s_ecm="13";
     amiFound=false;
   }
 
     
   //  fetch meta-data from AMI
-  if(amiFound){
+  if(amiFound && 0){
     fetchMetaData (sh, false); 
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
       float newxs = (*iter)->getMetaDouble( MetaFields::crossSection )*1000.;
@@ -535,7 +548,9 @@ int main( int argc, char* argv[] ) {
     //    alg->syst_BCH   = syst_BCH;
     
     
-    alg->printMet      = false;     //debug printing
+    //debug printing
+    alg->debug         = false;
+    alg->printMet      = false;     
     alg->printJet      = false;
     alg->printElectron = false;
     alg->printMuon     = false;
@@ -590,8 +605,9 @@ int main( int argc, char* argv[] ) {
       //      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
-      // Pdriver.options()->setString("nc_rootVer", "5.34.22");
-      // Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
+      // Pdriver.options()->setString("nc_rootVer", "5.34.22");'
+      Pdriver.options()->setString("nc_rootVer", "6.02.05");
+      Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
 
       Pdriver.submitOnly( job, tmpdir );
       break;

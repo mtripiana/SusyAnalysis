@@ -53,102 +53,118 @@
     </Truth>
 
     <Vertex>
-      <region name="SR">4</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
+      <nTracks>2</nTracks> <!-- The default in SUSYTools (IsVertexOk method) is 2 --> 
     </Vertex>
 
     <TrackVeto>
       <Enable>false</Enable>
-      <region name="SR">
-        <Pt>10000</Pt>
-        <Eta>2.5</Eta>
-        <d0>1</d0>
-        <z0>2</z0>
-        <ndof>0</ndof>
-        <chi2OverNdof_min>0</chi2OverNdof_min>
-        <chi2OverNdof_max>3</chi2OverNdof_max>
-        <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
-        <TrackIso>0</TrackIso>
-      </region>
+      <Pt>10000</Pt>
+      <Eta>2.5</Eta>
+      <d0>1</d0>
+      <z0>2</z0>
+      <ndof>0</ndof>
+      <chi2OverNdof_min>0</chi2OverNdof_min>
+      <chi2OverNdof_max>3</chi2OverNdof_max>
+      <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
+      <TrackIso>0</TrackIso>
     </TrackVeto>
+
     <Electron>
-      <region name="SR">
-        <PreselPtCut>7000.</PreselPtCut>
-        <PreselEtaCut>2.47</PreselEtaCut>
-        <RecoPtCut>7000.</RecoPtCut>
-        <RecoEtaCut>2.47</RecoEtaCut>
+      <PreselPtCut>7000.</PreselPtCut>
+      <PreselEtaCut>2.47</PreselEtaCut>
+      <RecoPtCut>7000.</RecoPtCut>
+      <RecoEtaCut>2.47</RecoEtaCut>
 
-        <recoSF>true</recoSF>
-        <idSF>true</idSF>
-        <triggerSF>false</triggerSF>
-        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
-      </region>
+      <baseID>LooseLLH</baseID>
+      <ID>TightLLH</ID>
+      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+
+      <recoSF>true</recoSF>
+      <idSF>true</idSF>
+      <triggerSF>false</triggerSF>
+      
+      <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
     </Electron>
+
     <Muon>
-      <region name="SR">
-        <PreselPtCut>7000.</PreselPtCut>
-        <PreselEtaCut>2.4</PreselEtaCut>
-        <RecoPtCut>7000.</RecoPtCut>
-        <RecoEtaCut>2.4</RecoEtaCut>
-        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
-	<!-- The monojet group uses mu_staco_ptcone20/pt, is this better? -->
-        <!-- <isolationVar>mu_staco_ptcone20</isolationVar> -->
-        <!-- <isolationThres>1.8</isolationThres> -->          
-	<!-- relative isolation would be 0.1 -->
-      </region>
+      <PreselPtCut>7000.</PreselPtCut>
+      <PreselEtaCut>2.4</PreselEtaCut>
+      <RecoPtCut>7000.</RecoPtCut>
+      <RecoEtaCut>2.4</RecoEtaCut>
+
+      <ID>Loose</ID>
+      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+
+      <triggers>HLT_mu26_imedium</triggers>
+      <!-- The monojet group uses mu_staco_ptcone20/pt, is this better? -->
+      <!-- <isolationVar>mu_staco_ptcone20</isolationVar> -->
+      <!-- <isolationThres>1.8</isolationThres> -->          
+      <!-- relative isolation would be 0.1 -->
     </Muon>
+
+    <Photon>
+      <PreselPtCut>20000.</PreselPtCut>
+      <PreselEtaCut>2.37</PreselEtaCut>
+      <RecoPtCut>20000.</RecoPtCut>
+      <RecoEtaCut>2.37</RecoEtaCut>
+
+      <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
+      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      
+      <recoSF>true</recoSF>
+      <idSF>true</idSF>
+      <triggerSF>false</triggerSF>
+
+      <triggers>HLT_g120_loose</triggers>
+    </Photon>
+
     <Jet>
-      <region name="SR">
-        <Path name="BtagEnv">SUSYTools/data/BTagCalibration.env</Path>
-        <Path name="BtagCalib">SUSYTools/data/</Path>
-        <dPhiMin>0.5</dPhiMin>
-        <JVFMin>0.0</JVFMin>
-        <Collection>AntiKt4LCTopo</Collection>
-
-        <PreselPtCut>20000.</PreselPtCut>
-        <PreselEtaCut>10</PreselEtaCut>
-        <RecoPtCut>30000.</RecoPtCut>
-        <RecoEtaCut>4.5</RecoEtaCut>
-
-        <OverlapRemovalElPt>5000000.</OverlapRemovalElPt> <!-- Jet pT for el. overlap removal. The el. is removed. -->
-        <OverlapRemovalMuPt>5000000.</OverlapRemovalMuPt> <!-- Jet pT for mu. overlap removal. The muon is removed. -->
-        
-        <!--- For the c/b-tagger -->
-        <Tagger>JetFitterCOMBCharm</Tagger>
-        <TaggerOpPoint>-1_0_-0_82</TaggerOpPoint>
-        <TaggerOpPoint2>-1_0_-0_82</TaggerOpPoint2>
-        <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
-      </region>
+      <Path name="BtagEnv">SUSYTools/data/BTagCalibration.env</Path>
+      <Path name="BtagCalib">SUSYTools/data/</Path>
+      <dPhiMin>0.5</dPhiMin>
+      <JVFMin>0.0</JVFMin>
+      <Collection>AntiKt4LCTopo</Collection>
+      
+      <PreselPtCut>20000.</PreselPtCut>
+      <PreselEtaCut>10</PreselEtaCut>
+      <RecoPtCut>30000.</RecoPtCut>
+      <RecoEtaCut>4.5</RecoEtaCut>
+      
+      <OverlapRemovalElPt>5000000.</OverlapRemovalElPt> <!-- Jet pT for el. overlap removal. The el. is removed. -->
+      <OverlapRemovalMuPt>5000000.</OverlapRemovalMuPt> <!-- Jet pT for mu. overlap removal. The muon is removed. -->
+      
+      <!--- For the c/b-tagger -->
+      <Tagger>JetFitterCOMBCharm</Tagger>
+      <TaggerOpPoint>-1_0_-0_82</TaggerOpPoint>
+      <TaggerOpPoint2>-1_0_-0_82</TaggerOpPoint2>
+      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
     </Jet>
     <Etmiss>
-      <region name="SR">
-        <Path name="FakeMetEstimator">RootCore/../SUSYTools/data/fest_periodF_v1.root</Path>
-        <Collection>Egamma10NoTau</Collection>
-        <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
-        <doFakeEtmiss>false</doFakeEtmiss>
-        <Term name="doRefEle">true</Term>
-        <Term name="doRefGamma">true</Term>
-        <Term name="doRefTau">false</Term>
-        <Term name="doRefJet">true</Term>
-        <Term name="doMuons">false</Term>
-        <Term name="doSoftTerms">true</Term>
-      </region>
+      <Path name="FakeMetEstimator">RootCore/../SUSYTools/data/fest_periodF_v1.root</Path>
+      <Collection>Egamma10NoTau</Collection>
+      <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
+      <doFakeEtmiss>false</doFakeEtmiss>
+      <Term name="doRefEle">true</Term>
+      <Term name="doRefGamma">true</Term>
+      <Term name="doRefTau">false</Term>
+      <Term name="doRefJet">true</Term>
+      <Term name="doMuons">false</Term>
+      <Term name="doSoftTerms">true</Term>
     </Etmiss>
     <QCD>
       <Enable>false</Enable> <!-- Enable jet smearing  -->
-      <r_egion name="SR">
-	<TrigChains> EF_j460,EF_j55</TrigChains>
-	<JetsPtPreselection>20000.0</JetsPtPreselection>
-	<METSigCut>1.0</METSigCut>
-	<LeadJetPreSel>Monojet</LeadJetPreSel>
-	<RandomSeedOffset>654321</RandomSeedOffset>
-	<SmearType>optimal</SmearType>
-	<SmearUseBweight>true</SmearUseBweight>
-	<SmearBtagWeight>0.772</SmearBtagWeight>
-	<SmearMeanShift>low</SmearMeanShift>
-	<SmearExtraSmr>true</SmearExtraSmr>
-	<DoPhiSmearing>true</DoPhiSmearing>
-	<SmearedEvents>500</SmearedEvents>
-      </region>
+      <TrigChains> EF_j460,EF_j55</TrigChains>
+      <JetsPtPreselection>20000.0</JetsPtPreselection>
+      <METSigCut>1.0</METSigCut>
+      <LeadJetPreSel>Monojet</LeadJetPreSel>
+      <RandomSeedOffset>654321</RandomSeedOffset>
+      <SmearType>optimal</SmearType>
+      <SmearUseBweight>true</SmearUseBweight>
+      <SmearBtagWeight>0.772</SmearBtagWeight>
+      <SmearMeanShift>low</SmearMeanShift>
+      <SmearExtraSmr>true</SmearExtraSmr>
+      <DoPhiSmearing>true</DoPhiSmearing>
+      <SmearedEvents>500</SmearedEvents>
     </QCD>
   </ObjectDefinition>
 

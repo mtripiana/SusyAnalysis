@@ -130,6 +130,7 @@ chorizo :: chorizo ()
   doFlowTree=false;
   doTrigExt=false;
 
+  debug=false;
   printMet=false; 
   printJet=false;
   printElectron=false;
@@ -155,6 +156,10 @@ EL::StatusCode chorizo :: setupJob (EL::Job& job)
 
   // let's initialize the algorithm to use the xAODRootAccess package
   xAOD::Init( "chorizo" ).ignore(); // call before opening first file
+
+  xAOD::TReturnCode::enableFailure();
+  StatusCode::enableFailure();
+  CP::SystematicCode::enableFailure();
 
   return EL::StatusCode::SUCCESS;
 }
@@ -1243,8 +1248,6 @@ void chorizo :: ReadXML(){
   //read XML options
   //  DirectoryPath = gSystem->Getenv("ANALYSISCODE");
   std::string maindir = getenv("ROOTCOREBIN");
-  const char* cRegion = Region.c_str();
-  const char* defRegion = defaultRegion.c_str();
 
   xmlReader = new XMLReader();
   xmlReader->readXML(maindir+"/data/SusyAnalysis/"+jOption);
@@ -1334,37 +1337,44 @@ void chorizo :: ReadXML(){
   El_PreselEtaCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$PreselEtaCut");
   El_RecoPtCut     = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$RecoPtCut");
   El_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$RecoEtaCut");
+
+  El_baseID        = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$baseID")).Data());
+  El_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$ID")).Data());
+  El_isoType       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoType"));
   
   El_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$recoSF");
   El_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$idSF");
   El_triggerSF     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$triggerSF");
-  El_isoType       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoType").c_str());
 
   Info(whereAmI, Form(" - Muons") );
-  Mu_PreselPtCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$PreselPtCut");
-  Mu_PreselEtaCut = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$PreselEtaCut");
-  Mu_RecoPtCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoPtCut");
-  Mu_RecoEtaCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoEtaCut");
-  Mu_isoType      = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoType").c_str());    
+  Mu_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$PreselPtCut");
+  Mu_PreselEtaCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$PreselEtaCut");
+  Mu_RecoPtCut     = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoPtCut");
+  Mu_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoEtaCut");
+
+  Mu_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$ID")).Data());
+  Mu_isoType       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoType").c_str());    
 
   Info(whereAmI, Form(" - Photons") );
   Ph_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselPtCut");
   Ph_PreselEtaCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselEtaCut");
   Ph_RecoPtCut     = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$RecoPtCut");
   Ph_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$RecoEtaCut");
-  
-  Ph_recoSF         = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$recoSF");
-  Ph_idSF           = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$idSF");
-  Ph_triggerSF      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$triggerSF");
+
+  Ph_ID      = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$ID")).Data());
   Ph_isoType = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoType").c_str());
+  
+  Ph_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$recoSF");
+  Ph_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$idSF");
+  Ph_triggerSF     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$triggerSF");
   
   Info(whereAmI, Form(" - Jets") );
   JetCollection=TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
-  Jet_BtagEnv    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagEnv").c_str());
-  Jet_BtagCalib  = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagCalib").c_str());
-  Jet_Tagger     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
-  Jet_TaggerOp   = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint").c_str());
-  Jet_TaggerOp2   = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint2").c_str());      
+  Jet_BtagEnv      = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagEnv").c_str());
+  Jet_BtagCalib    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagCalib").c_str());
+  Jet_Tagger       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
+  Jet_TaggerOp     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint").c_str());
+  Jet_TaggerOp2    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint2").c_str());      
   Jet_Tagger_Collection = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerCollection").c_str());
   
   Jet_PreselPtCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselPtCut");
@@ -1481,17 +1491,17 @@ EL::StatusCode chorizo :: initialize ()
     // The configuration tool.
     if(!tool_trigconfig)
       tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
-    tool_trigconfig->initialize();                                                  
+    CHECK( tool_trigconfig->initialize() );                                                  
     ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
     //    configHandle->initialize();                                                   
                                                                                      
     // The decision tool  
     if(!tool_trigdec)
       tool_trigdec = new Trig::TrigDecisionTool("TrigDecTool");
-    tool_trigdec->setProperty("ConfigTool",configHandle);
-    tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision");
+    CHECK( tool_trigdec->setProperty("ConfigTool",configHandle) );
+    CHECK( tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision") );
     //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
-    tool_trigdec->initialize();
+    CHECK( tool_trigdec->initialize() );
 
   }
 #endif
@@ -1509,21 +1519,24 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- SUSYTools
   tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
-  tool_st->SUSYToolsInit().ignore();
-  tool_st->setProperty("IsData",    (int)!this->isMC);
-  tool_st->setProperty("IsAtlfast", (int)this->isAtlfast);   
+  CHECK( tool_st->setProperty("IsData",    (int)!this->isMC) );
+  CHECK( tool_st->setProperty("IsAtlfast", (int)this->isAtlfast) );   
+  CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
+  CHECK( tool_st->setProperty("EleId",El_ID) ); 
+  CHECK( tool_st->setProperty("MuId",Mu_ID) );
+  CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
   //if(!Met_doMuons)
-  tool_st->setProperty("METMuonTerm", ""); //No MuonTerm default
+  //  CHECK( tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
   if(!Met_doRefTau)  
-    tool_st->setProperty("METTauTerm", ""); //No TauTerm default
-  tool_st->initialize();
+    CHECK( tool_st->setProperty("METTauTerm", "")); //No TauTerm default
+  //  CHECK( tool_st->SUSYToolsInit().ignore();
+  CHECK( tool_st->SUSYToolsInit() );
+  CHECK( tool_st->initialize() );
   tool_st->msg().setLevel( MSG::ERROR ); //set message level 
 
   if(syst_CP.size()){
-
     // Tell the SUSYObjDef_xAOD which variation to apply
-    CP::SystematicCode ret = tool_st->applySystematicVariation( syst_CP );
-    if (ret != CP::SystematicCode::Ok){
+    if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){
       Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
     }else{
       Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
@@ -1531,20 +1544,22 @@ EL::StatusCode chorizo :: initialize ()
   }
 
   //--- SUSYTools
-  tool_st_1 = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
-  tool_st_1->SUSYToolsInit().ignore();
-  tool_st_1->setProperty("IsData",    (int)!this->isMC);
-  tool_st_1->setProperty("IsAtlfast", (int)this->isAtlfast);   
+  tool_st_1 = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD_vismu" );
+  CHECK( tool_st_1->setProperty("IsData",    (int)!this->isMC));
+  CHECK( tool_st_1->setProperty("IsAtlfast", (int)this->isAtlfast));   
   if(!Met_doRefTau)  
-    tool_st_1->setProperty("METTauTerm", ""); //No TauTerm default
-  tool_st_1->initialize();
+    CHECK( tool_st_1->setProperty("METTauTerm", "")); //No TauTerm default
+  CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
+  CHECK( tool_st->setProperty("EleId",El_ID) ); 
+  CHECK( tool_st->setProperty("MuId",Mu_ID) );
+  //CHECK( tool_st_1->SUSYToolsInit().ignore());
+  CHECK( tool_st_1->SUSYToolsInit() );
+  CHECK( tool_st_1->initialize() );
   tool_st_1->msg().setLevel( MSG::ERROR ); //set message level 
 
   if(syst_CP.size()){
-
     // Tell the SUSYObjDef_xAOD which variation to apply
-    CP::SystematicCode ret = tool_st_1->applySystematicVariation( syst_CP );
-    if (ret != CP::SystematicCode::Ok){
+    if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){
       Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
     }else{
       Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
@@ -1565,26 +1580,26 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- B-tagging
   tool_btag  = new BTaggingEfficiencyTool("BTag70");
-  tool_btag->setProperty("TaggerName",          Jet_Tagger.Data());
-  tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data());
-  tool_btag->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()); 
-  tool_btag->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root");
-  tool_btag->initialize();
-
+  CHECK( tool_btag->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data()) );
+  CHECK( tool_btag->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) ); 
+  CHECK( tool_btag->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );
+  CHECK( tool_btag->initialize() );
+   
   tool_btag2  = new BTaggingEfficiencyTool("BTag80");
-  tool_btag2->setProperty("TaggerName",          Jet_Tagger.Data());
-  tool_btag2->setProperty("OperatingPoint",      Jet_TaggerOp2.Data());
-  tool_btag2->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()); 
-  tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root");
-  tool_btag2->initialize();
-
+  CHECK( tool_btag2->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag2->setProperty("OperatingPoint",      Jet_TaggerOp2.Data()) );
+  CHECK( tool_btag2->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) ); 
+  CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );
+  CHECK( tool_btag2->initialize() );
+   
 
   //--- truth jet labeling
   tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
   //  tool_jetlabel->setProperty("McEventCollection","TruthEvents");
-  tool_jetlabel->setProperty("McEventCollection","TruthEvents");
-  tool_jetlabel->initialize();
-
+  CHECK( tool_jetlabel->setProperty("McEventCollection","TruthEvents") );
+  CHECK( tool_jetlabel->initialize() );
+  
   //--- Jet smearing tool
   SUSY::SmearingType gsmtype = SUSY::SmearingType::optimal;
   if(QCD_SmearType=="high") gsmtype = SUSY::SmearingType::high;
@@ -1597,15 +1612,16 @@ EL::StatusCode chorizo :: initialize ()
   else if(QCD_SmearMeanShift=="none" || QCD_SmearMeanShift=="") mstype = SUSY::SmearingType::none;
 
   tool_jsmear = new SUSY::JetMCSmearingTool("JStool");
-  tool_jsmear->setProperty("NumberOfSmearedEvents",(unsigned int)QCD_SmearedEvents);
-  tool_jsmear->setProperty("DoBJetSmearing",QCD_SmearUseBweight);
-  tool_jsmear->setProperty("BtagWeight",QCD_SmearBtagWeight);
-  tool_jsmear->setProperty("UseTailWeights",true);
-  tool_jsmear->setProperty("DoGaussianCoreSmearing",QCD_SmearExtraSmr);
-  tool_jsmear->setProperty("GaussianCoreSmearingType", gsmtype);
-  tool_jsmear->setProperty("ShiftMeanType",mstype);
-  tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing);
-  tool_jsmear->initialize();
+  CHECK( tool_jsmear->setProperty("NumberOfSmearedEvents",(unsigned int)QCD_SmearedEvents) );
+  CHECK( tool_jsmear->setProperty("DoBJetSmearing",QCD_SmearUseBweight) );
+  CHECK( tool_jsmear->setProperty("BtagWeight",QCD_SmearBtagWeight) );
+  CHECK( tool_jsmear->setProperty("UseTailWeights",true) );
+  CHECK( tool_jsmear->setProperty("DoGaussianCoreSmearing",QCD_SmearExtraSmr) );
+  CHECK( tool_jsmear->setProperty("GaussianCoreSmearingType", gsmtype) );
+  CHECK( tool_jsmear->setProperty("ShiftMeanType",mstype) );
+  CHECK( tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing) );
+  CHECK( tool_jsmear->initialize() );
+
 
   //--- Pileup Reweighting
   // trick: path in the tool name so it gets saved to the desired place
@@ -1618,11 +1634,11 @@ EL::StatusCode chorizo :: initialize ()
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
   }
   tool_purw = new CP::PileupReweightingTool(purw_name.Data());
-  tool_purw->setProperty("Input","EventInfo");
+  CHECK( tool_purw->setProperty("Input","EventInfo") );
   if (this->isMC){
     if(genPUfile && !doPUTree){ //--- Generate the pileup root files
       //      tool_purw->setProperty("UsePeriodConfig","MC14");
-      tool_purw->initialize();
+      CHECK( tool_purw->initialize() );
     }
     else if(applyPURW || doPUTree){ //--- Apply the weights found after generating the pileup root files
       std::vector<std::string> prwFiles;	 
@@ -1633,21 +1649,17 @@ EL::StatusCode chorizo :: initialize ()
 
       TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
       prwFiles.push_back(prwfile.Data());
-      tool_purw->setProperty("ConfigFiles",prwFiles);
-
-      tool_purw->setProperty("DataScaleFactor", 1./1.09);
+      CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
+      CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
       if (this->syst_PU == pileupErr::PileupLow)        
-	tool_purw->setProperty("DataScaleFactor", 1./1.05);
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.05) );
       else if(this->syst_PU == pileupErr::PileupHigh) 
-	tool_purw->setProperty("DataScaleFactor", 1./1.13);
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.13) );
       
-      //      lumiFiles.push_back(PURW_IlumicalcFile.Data());      
       lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
-      tool_purw->setProperty("LumiCalcFiles", lumiFiles);
-
-      tool_purw->setProperty("UnrepresentedDataAction",2);
-
-      tool_purw->initialize();
+      CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
+      CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
+      CHECK( tool_purw->initialize() );
     }
   }
 
@@ -1656,17 +1668,15 @@ EL::StatusCode chorizo :: initialize ()
   tool_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
   std::vector<std::string> grlist;
   grlist.push_back((maindir + GRLxmlFile).Data());
-  tool_grl->setProperty( "GoodRunsListVec", grlist);
-  tool_grl->setProperty("PassThrough", false);
-  if (!tool_grl->initialize().isSuccess()) {
-    Error("initialize()", "Failed to properly initialize the GRL. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
+  CHECK( tool_grl->setProperty( "GoodRunsListVec", grlist) );
+  CHECK( tool_grl->setProperty("PassThrough", false) );
+  CHECK( tool_grl->initialize() );
+  
  
   //--- TileTripReader
   tool_tileTrip = new Root::TTileTripReader("TileTripReader");
   std::string TileTripReader_file = "CompleteTripList_2011-2012.root";
-  tool_tileTrip->setTripFile((maindir + "TileTripReader/" + TileTripReader_file).data());
+  CHECK( tool_tileTrip->setTripFile((maindir + "TileTripReader/" + TileTripReader_file).data()) );
       
   //--- JetTileCorrectionTool
 #ifdef TILETEST
@@ -1682,9 +1692,9 @@ EL::StatusCode chorizo :: initialize ()
 					   "0 50", "0 51", "0 52", "0 53", "0 54", "0 55", "0 56", "0 57", "0 58", "0 59", 
 					   "0 60", "0 61", "0 62", "0 63"};
 
-  tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile);
-  tool_jettile->setProperty("DeadModules",dead_modules);
-  tool_jettile->initializeTool(tool_tileTrip);
+  CHECK( tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile) );
+  CHECK( tool_jettile->setProperty("DeadModules",dead_modules) );
+  CHECK( tool_jettile->initializeTool(tool_tileTrip) );
 #endif 
 
   //--- JVF uncertainty
@@ -1696,7 +1706,7 @@ EL::StatusCode chorizo :: initialize ()
   // Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPATH")) );
   LHAPDF::setPaths( gSystem->Getenv("LHAPDF_DATA_PATH") );
   Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPDF_DATA_PATH")) );
-  cout << " pdf 0 " << endl;
+  
   TString input_pdfset    = "CT10"; // 10800 //CHECK_ME this was not CT10as but CT10 !!
   int input_pdfset_member = 0;     
   if (this->isSignal || this->isTop) {
@@ -1713,8 +1723,8 @@ EL::StatusCode chorizo :: initialize ()
   // initialize and configure the jet cleaning tool
   tool_jClean = new JetCleaningTool("JetCleaning");
   //  tool_jClean->msg().setLevel( MSG::DEBUG ); 
-  tool_jClean->setProperty( "CutLevel", "MediumBad");
-  tool_jClean->initialize();
+  CHECK( tool_jClean->setProperty( "CutLevel", "MediumBad") );
+  CHECK( tool_jClean->initialize() );
   
   //--- Random number generator for truth-->reco efficiency                  
   //  myRand = new TRandom1(time(0));                                                                                              
@@ -2065,16 +2075,8 @@ EL::StatusCode chorizo :: loop ()
   }
   this->isVertexOk = (nVertex > 0);
 
-  // const xAOD::Vertex* pv = tool_st->GetPrimVtx();
-  // this->isVertexOk = (pv!=NULL);
 
-  // cout << "######### number of tracks " << nTracks << endl;
-  // if (!doFlowTree && nVertex==0)
-  //    return EL::StatusCode::SUCCESS; //skip event
-
-
-
-  //trigger debugging (check all MET triggers in menu)
+  //--- trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
   if(m_eventCounter<2){
     //save Trigger metadata
@@ -2091,15 +2093,16 @@ EL::StatusCode chorizo :: loop ()
     meta_triggers = new TNamed("Triggers", trigchains.c_str());
     wk()->addOutput(meta_triggers);     
     
-
-    // Info("loop()", "  ");
-    // Info("loop()", "  MET TRIGGERS IN MENU ");
-    // Info("loop()", "--------------------------------");
-    // auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
-    // for(auto &trig : chainGroup->getListOfTriggers()) {
-    //   Info("loop()", trig.c_str()); 
-    // }
-    // Info("loop()", "--------------------------------");
+    if(debug){
+      Info("loop()", "  ");
+      Info("loop()", "  MET TRIGGERS IN MENU ");
+      Info("loop()", "--------------------------------");
+      auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
+      for(auto &trig : chainGroup->getListOfTriggers()) {
+	Info("loop()", trig.c_str()); 
+      }
+      Info("loop()", "--------------------------------");
+    }
   }
 
   //--- Trigger 
@@ -2217,12 +2220,12 @@ EL::StatusCode chorizo :: loop ()
     muIsoArgs->_calo_isocut = 0.;    
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
     dec_final(*mu_itr) = dec_signal(*mu_itr);
-
+    
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_PreselPtCut;
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
     dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
-     }
+  }
 
   //--- Get Photons
   xAOD::PhotonContainer* photons_sc(0);
@@ -2343,10 +2346,9 @@ EL::StatusCode chorizo :: loop ()
       if(this->isMC){
 	//nominal
 	recoElectron.SF = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF );
-	
-	
-	//reset back to requested systematic!
-	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
+		
+	//+1 sys up
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
 	  Error("loop()", "Cannot configure SUSYTools for default systematics");
 	}
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
@@ -2355,14 +2357,15 @@ EL::StatusCode chorizo :: loop ()
 	recoElectron.SFu = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
 	
 	//+1 sys down
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
 	if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
 	}
 	recoElectron.SFd = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
-	
-	CP::SystematicCode ret = tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
-	if( ret != CP::SystematicCode::Ok){
+
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
 	  Error("loop()", "Cannot configure SUSYTools for default systematics");
 	}
       }
@@ -2468,20 +2471,26 @@ EL::StatusCode chorizo :: loop ()
 	recoMuon.SF = tool_st->GetSignalMuonSF(*mu_itr);
 	
 	//+1 sys up
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
 	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
 	}
 	recoMuon.SFu = tool_st->GetSignalMuonSF(*mu_itr);
 
 	//+1 sys down
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
 	if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
 	}
 	recoMuon.SFd = tool_st->GetSignalMuonSF(*mu_itr);
 
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
       }
 
       muonCandidates.push_back(recoMuon);
@@ -2536,21 +2545,27 @@ EL::StatusCode chorizo :: loop ()
 	//nominal
 	recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
 
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	//+1 sys up
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
 	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
 	}
 	recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
 
 	//+1 sys down
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
 	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
 	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
 	}
 	recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
 
-	tool_st->applySystematicVariation(this->syst_CP); //reset back to requested systematic!
-
+	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+	}
       }
 
       photonCandidates.push_back(recoPhoton);
@@ -3008,6 +3023,31 @@ EL::StatusCode chorizo :: loop ()
 			   0));
   
   
+  // //DEBUGGING
+  // CHECK( tool_st_1->GetMET(*metRFC,
+  // 			   jets_sc,
+  // 			   electrons_sc,
+  // 			   0,
+  // 			   0,
+  // 			   0));
+
+
+  // cout << endl;
+  // cout << endl;
+  // TVector2 v_test_noMU  = getMET( metRFC, "Final");  
+  // TVector2 v_test = getMET( metRFC_vmu, "Final");
+  // cout << "MET CHECK !!" <<  "DEF = " << v_test_noMU.X() << "," << v_test_noMU.Y() << "    NEW " << v_test.X() << "," << v_test.Y();
+  // TVector2 v_test_MU  = getMET( metRFC_vmu, "Muons");  
+  // cout << "    MU = " << v_test_MU.X() << "," << v_test_MU.Y();
+  // v_test -= v_test_MU;
+  // cout << "    NEW_noMU = " << v_test.X() << "," << v_test.Y() << endl;
+  // cout << endl;
+  // cout << endl;
+  // if( (v_test.X() != v_test_noMU.X()) ||  (v_test.Y() != v_test_noMU.Y())){
+  //   cout << "MET CHECK FAILED!!" <<  "DEF = " << v_test_noMU.X() << "," << v_test_noMU.Y() << "    NEW " << v_test.X() << "," << v_test.Y() << endl;
+  // }
+
+
   CHECK( tool_st->GetMET(*metRFC,
 			 jets_sc,
 			 electrons_sc,
@@ -3017,7 +3057,7 @@ EL::StatusCode chorizo :: loop ()
 
   TVector2 v_met_ST = getMET( metRFC, "Final");
   TVector2 v_met_ST_vmu = getMET( metRFC_vmu, "Final");
-  
+
 
   met_obj.SetVector(v_met_ST,"met_imu");  //- Copy met vector to the met data member
   //met_obj.SetHasMuons( false );  //-- Set if muons enter into the MET computation
@@ -3093,8 +3133,8 @@ EL::StatusCode chorizo :: loop ()
   v_met_elinv_ST.Set( v_met_elinv_ST.Px() + vels.Px(), v_met_elinv_ST.Py() + vels.Py() );
   v_met_elinv_ST_vmu.Set( v_met_elinv_ST_vmu.Px() + vels.Px(), v_met_elinv_ST_vmu.Py() + vels.Py() );
 
-  met_obj.SetVector(v_met_elinv_ST, "met_imu_ecorr", true); //already in GeV    
-  met_obj.SetVector(v_met_elinv_ST_vmu, "met_vmu_ecorr", true); //already in GeV     
+  met_obj.SetVector(v_met_elinv_ST, "met_ecorr_imu", true); //already in GeV    
+  met_obj.SetVector(v_met_elinv_ST_vmu, "met_ecorr_vmu", true); //already in GeV     
   
   //--- Met (with muon term) with muons as invisible (signal muons)
   TVector2 v_met_muinv_ST_vmu = met_obj.GetVector("met_vmu"); //== met_ST (GeV)   
@@ -3104,7 +3144,7 @@ EL::StatusCode chorizo :: loop ()
   }
   v_met_muinv_ST_vmu.Set( v_met_muinv_ST_vmu.Px() + vmus.Px(), v_met_muinv_ST_vmu.Py() + vmus.Py() );
  
-  met_obj.SetVector(v_met_muinv_ST_vmu, "met_vmu_mucorr", true); //already in GeV       
+  met_obj.SetVector(v_met_muinv_ST_vmu, "met_mucorr_vmu", true); //already in GeV       
   
   //--- Met with photons as invisible 
   TVector2 v_met_phinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
@@ -3137,11 +3177,11 @@ EL::StatusCode chorizo :: loop ()
   metmap={};
   metmap[::MetDef::InvMu] = met_obj.GetVector("met_imu");
   metmap[::MetDef::VisMu] = met_obj.GetVector("met_vmu");  
-  metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_imu_ecorr");
-  metmap[::MetDef::VisMuECorr] = met_obj.GetVector("met_vmu_ecorr");  
-  metmap[::MetDef::VisMuMuCorr] = met_obj.GetVector("met_vmu_mucorr");  
-  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_imu_phcorr");
-  metmap[::MetDef::VisMuPh] = met_obj.GetVector("met_vmu_phcorr");
+  metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_ecorr_imu");
+  metmap[::MetDef::VisMuECorr] = met_obj.GetVector("met_ecorr_vmu");  
+  metmap[::MetDef::VisMuMuCorr] = met_obj.GetVector("met_mucorr_vmu");  
+  metmap[::MetDef::InvMuPh] = met_obj.GetVector("met_phcorr_imu");
+  metmap[::MetDef::VisMuPh] = met_obj.GetVector("met_phcorr_vmu");
   metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
   metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
   metmap[::MetDef::VisMuRef] = met_obj.GetVector("met_refFinal_vmu");  
@@ -3771,6 +3811,20 @@ EL::StatusCode chorizo :: loop ()
       trig_hlt_TrigEFMissingET_topocl_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl->at(0)->ex(), cmet_hlt_TrigEFMissingET_topocl->at(0)->ey())*0.001;
       trig_hlt_TrigEFMissingET_topocl_sumet = cmet_hlt_TrigEFMissingET_topocl->at(0)->sumEt()*0.001;
       trig_hlt_TrigEFMissingET_topocl_phi = atan2(cmet_hlt_TrigEFMissingET_topocl->at(0)->ey(), cmet_hlt_TrigEFMissingET_topocl->at(0)->ex());
+
+
+      //DEBUGGING
+      // cout << "- DEBUG -------------------------------------------" << endl;
+      // for(auto ii=0; ii < cmet_hlt_TrigEFMissingET_topocl->at(0)->getNumberOfComponents(); ii++){
+      // 	cout << "MET component (" << ii << "/" << cmet_hlt_TrigEFMissingET_topocl->at(0)->getNumberOfComponents() << ") = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->nameOfComponent(ii) <<  endl;
+      // 	cout << "-------------------------------------------------" << endl;
+      // 	cout << " MEtx  = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->exComponent(ii)*0.001 << endl;
+      // 	cout << " MEty  = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->eyComponent(ii)*0.001 << endl;
+      // 	cout << " MEt   = " << TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl->at(0)->exComponent(ii), cmet_hlt_TrigEFMissingET_topocl->at(0)->eyComponent(ii))*0.001 << endl;
+      // 	cout << " SumEt = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->sumEtComponent(ii)*0.001 << endl;
+      // 	cout << " phi   = " << atan2(cmet_hlt_TrigEFMissingET_topocl->at(0)->eyComponent(ii), cmet_hlt_TrigEFMissingET_topocl->at(0)->exComponent(ii)) << endl;
+      // }
+
     }
 
     CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_topocl_PS, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_topocl_PS") );
@@ -5797,8 +5851,6 @@ bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double 
   //check if at least the event passed this trigger
   if(!tool_trigdec->isPassed(item))  return false;
 
-  cout << "EVENT PASSED " << item << endl;
-
   TLorentzVector eloff;
   eloff.SetPtEtaPhiE(el.pt(), el.trackParticle()->eta(), el.trackParticle()->phi(), el.e());
 
@@ -5859,7 +5911,6 @@ bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double 
 
   Trig::FeatureContainer fc = tool_trigdec->features(item);
   const std::vector< Trig::Feature<xAOD::ElectronContainer> > vec_el = fc.get<xAOD::ElectronContainer>();
-  cout << "CONT size = " << vec_el.size() << endl;
   for(auto elfeat : vec_el){
     const xAOD::ElectronContainer *elCont = elfeat.cptr();
     TLorentzVector elLV;

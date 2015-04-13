@@ -168,12 +168,12 @@ MET::MET(){
   met_tst_imu.Set(0., 0.);
   met_tst_vmu.Set(0., 0.);  
   met_trk.Set(0., 0.);
-  met_vmu_mucorr.Set(0., 0.);
-  met_vmu_ecorr.Set(0., 0.);
+  met_mucorr_vmu.Set(0., 0.);
+  met_ecorr_imu.Set(0., 0.);
+  met_ecorr_vmu.Set(0., 0.);
   met_reffinal_imu.Set(0., 0.);
   met_reffinal_vmu.Set(0., 0.);  
   met_lochadtopo.Set(0., 0.);
-  met_imu_ecorr.Set(0., 0.);
   met_phcorr_imu.Set(0., 0.);
   met_phcorr_vmu.Set(0., 0.);  
   met_truth_imu.Set(0., 0.);
@@ -205,11 +205,14 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   else if(which=="met_trk"){
     this->met_trk.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_vmu_mucorr"){
-    this->met_vmu_mucorr.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_mucorr_vmu"){
+    this->met_mucorr_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_vmu_ecorr"){
-    this->met_vmu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_ecorr_imu"){
+    this->met_ecorr_imu.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_ecorr_vmu"){
+    this->met_ecorr_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }    
   else if(which=="met_refFinal_imu"){
     this->met_reffinal_imu.Set(vec.X() * sf, vec.Y() * sf);
@@ -219,9 +222,6 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   }
   else if(which=="met_locHadTopo"){
     this->met_lochadtopo.Set(vec.X() * sf, vec.Y() * sf);
-  }
-  else if(which=="met_imu_ecorr"){
-    this->met_imu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_phcorr_imu"){
     this->met_phcorr_imu.Set(vec.X() * sf, vec.Y() * sf);
@@ -254,11 +254,14 @@ TVector2 MET::GetVector(TString which){
   if(which=="met_trk"){
     return TVector2(this->met_trk);
   }
-  if(which=="met_vmu_mucorr"){
-    return TVector2(this->met_vmu_mucorr);
+  if(which=="met_mucorr_vmu"){
+    return TVector2(this->met_mucorr_vmu);
   }
-  if(which=="met_vmu_ecorr"){
-    return TVector2(this->met_vmu_ecorr);
+  if(which=="met_ecorr_imu"){
+    return TVector2(this->met_ecorr_imu);
+  }
+  if(which=="met_ecorr_vmu"){
+    return TVector2(this->met_ecorr_vmu);
   }  
   if(which=="met_refFinal_vmu"){
     return TVector2(this->met_reffinal_vmu);
@@ -268,9 +271,6 @@ TVector2 MET::GetVector(TString which){
   }
   if(which=="met_locHadTopo"){
     return TVector2(this->met_lochadtopo);
-  }
-  if(which=="met_imu_ecorr"){
-    return TVector2(this->met_imu_ecorr);
   }
   if(which=="met_phcorr_imu"){
     return TVector2(this->met_phcorr_imu);
@@ -324,9 +324,9 @@ void MET::Reset(){
   met_tst_imu.Set(0., 0.);
   met_tst_vmu.Set(0., 0.);  
   met_trk.Set(0., 0.);
-  met_imu_ecorr.Set(0., 0.);
-  met_vmu_mucorr.Set(0., 0.);  
-  met_vmu_ecorr.Set(0., 0.);  
+  met_mucorr_vmu.Set(0., 0.);  
+  met_ecorr_imu.Set(0., 0.);
+  met_ecorr_vmu.Set(0., 0.);  
   met_lochadtopo.Set(0., 0.);
   met_reffinal_vmu.Set(0., 0.);
   met_reffinal_imu.Set(0., 0.);

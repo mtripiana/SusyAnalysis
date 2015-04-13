@@ -73,7 +73,7 @@ void usage(){
 
 float getLumiWeight(Sample* sample){
 
-  if( sample->getMetaDouble( MetaFields::isData ) ) //don't weight data!
+  if( sample->getMetaString( MetaFields::isData )=="Y" ) //don't weight data!
     return 1.;
 
   return sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor ) * sample->getMetaDouble( MetaFields::filterEfficiency ) / sample->getMetaDouble( MetaFields::numEvents ); 
@@ -85,6 +85,13 @@ float getECM(Sample* sample){ //in TeV
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECMEnergy | awk '{print $2}'");
+  if(s_ecm.empty()){
+    cout << "no ECMEnergy field. Try new convention next... " << endl;
+    s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep beam_energy | awk '{print $2}'");
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), ']'), s_ecm.end());
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), '['), s_ecm.end());
+    return atof(s_ecm.c_str())*2./1000000.;
+  }
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -97,8 +104,8 @@ bool type_consistent(SampleHandler sh){
   bool isData=false;
   bool isMC=false;
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
-    isMC     |= ((*iter)->getMetaDouble( MetaFields::isData)==0);
-    isData   |= ((*iter)->getMetaDouble( MetaFields::isData)==1);
+    isMC     |= ((*iter)->getMetaString( MetaFields::isData)=="N");
+    isData   |= ((*iter)->getMetaString( MetaFields::isData)=="Y");
 
     if(isData && isMC)
       return false;
@@ -110,7 +117,8 @@ bool is_data(Sample* sample){
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
-  if(itis=="collisions") return true;
+  std::size_t found = itis.find("collisions");
+  if (found!=std::string::npos) return true;
   //add extra check for physics containers
   itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
   if(TString(itis).Contains("period")) return true;
@@ -400,7 +408,7 @@ int main( int argc, char* argv[] ) {
       //	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
       
       
-      sh.print();
+      //      sh.print();
       
 
       //*** Handle Meta-Data
@@ -420,13 +428,13 @@ int main( int argc, char* argv[] ) {
       }
 
       //set EBeam field
-      TString s_ecm  = "8"; //default is 8TeV 
+      TString s_ecm  = "13"; //default is 8TeV 
       sh.at(0)->setMetaDouble ("ebeam", (double)getEBeam(sh.at(0)));
       s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
 
       bool amiFound=true;
       if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
-	s_ecm="8";
+	s_ecm="13";
 	amiFound=false;
       }
 
@@ -434,7 +442,7 @@ int main( int argc, char* argv[] ) {
       sh.at(0)->setMetaDouble( "DSID", (double)run_ids[i_id] );
 
       //  fetch meta-data from AMI
-      if(amiFound){
+      if(amiFound && 0){
 	fetchMetaData (sh, false); 
 	for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
 	  float newxs = (*iter)->getMetaDouble( MetaFields::crossSection )*1000.;
@@ -446,6 +454,7 @@ int main( int argc, char* argv[] ) {
 
       isData = (sh.at(0)->getMetaString( MetaFields::isData )=="Y"); //global flag. It means we can't run MC and data at the same time. Probably ok?
       
+
       if(!isData)
 	weights.push_back( getLumiWeight(sh.at(0)) );
       else

@@ -39,6 +39,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <sstream>
 
 // Tools includes
 #include "SusyAnalysis/ScaleVariatioReweighter.hpp"
@@ -174,6 +175,8 @@ public:
   bool isAtlfast;
   bool isNCBG;
   TString leptonType;
+
+  bool debug;
 
   bool isTruth;
   bool dressLeptons;
@@ -473,6 +476,8 @@ private:
   float El_PreselEtaCut; //!
   float El_RecoPtCut; //!
   float El_RecoEtaCut; //!
+  string El_baseID; //!
+  string El_ID; //!
   TString El_isoType; //!
   bool El_recoSF; //!
   bool El_idSF; //!
@@ -483,6 +488,7 @@ private:
   float Mu_PreselEtaCut; //!
   float Mu_RecoPtCut; //!
   float Mu_RecoEtaCut; //!
+  string Mu_ID; //!
   TString Mu_isoType; //!
 
   //photons
@@ -490,6 +496,7 @@ private:
   float Ph_PreselEtaCut; //!
   float Ph_RecoPtCut; //!
   float Ph_RecoEtaCut; //!
+  string  Ph_ID; //!
   TString Ph_isoType; //!
   bool Ph_recoSF; //!
   bool Ph_idSF; //!
