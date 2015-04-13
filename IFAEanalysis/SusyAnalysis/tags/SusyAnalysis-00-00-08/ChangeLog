@@ -1,0 +1,307 @@
+2014-03-17 Martin <tripiana@cern.ch>
+	* Move to Base,2.1.28 and ST-05-00-24
+
+2014-03-15 Martin <tripiana@cern.ch>
+	* Fix SFs.
+	* Add photon antiSF
+
+2014-03-13 Arely <arelycg@cern.ch>
+	* Added the e_MT and m_MT for Met with TST.
+        * Found the issue when running on long samples :) (un-initialized e_SFu,e_SFd).
+        * Changed the default location of the samples to IFAE_SCRATCHDISK instead of IFAE_LOCALGROUPDISK
+        * Changed the default CM energy to 13TeV.
+
+2014-03-13 Martin <tripiana@cern.ch>
+	* Update qsub-generator to ROOT6
+	* Fix qsub template file
+	* Fix Zll variables filling
+
+2014-03-13 Arely <arelycg@cern.ch>
+	* Change location of test xAOD files from scratch to scratch2
+
+2014-03-12 Arely <arelycg@cern.ch>
+	* Added protection for "R", so it keeps the same size.
+        * Change type of tr_thrust from double to float.
+        * Took "isTrigger" out of passPreselectionCuts (in case different triggers are used in the regions selection).
+          Now it is saved (even if DoCutFlow==false).
+        * truth_n_jets has the same pT cut as n_jets: Jet_RecoPtCut (instead of hardcoded 30GeV).
+
+2014-03-12 Silvia <silvia.fracchia@cern.ch>
+	* Added information on 3rd and 4th leptons.
+        * Added functions to find the Z-candidate in events with 2 and 3 leptons.
+
+2014-03-11 Arely <arelycg@cern.ch>
+	* Added reference folder with Root/chorizo.cxx, to make public.
+	* Corrected error in iPh and iJet counters.
+
+2014-03-04 Cora <cfischer@ifae.es>
+	* Added MET (invisible muons) electrons-corrected.
+	* Arely: changed the muon-cosmic check after the overlap removal.
+
+2014-03-03 Martin <tripiana@cern.ch>
+	* Update to Base,2.1.27
+	* Update to SUSYTools-00-05-00-21
+
+2014-03-01 Martin <tripiana@cern.ch>
+	* Update to Base,2.0.27
+	* Update to SUSYTools-00-05-00-20
+	* Tagging SusyAnalysis-00-00-07     (stable r19 code)
+
+2014-02-28 Martin <tripiana@cern.ch>
+	* Tagging SusyAnalysis-00-00-06     (stable r19 code. superseeded by 07 above.)
+
+2014-02-26 Martin <tripiana@cern.ch>
+	* Add jet smearing tool config
+
+2014-02-26 Martin <tripiana@cern.ch>
+	* Fix initialization of metmap
+
+2014-02-25 Martin <tripiana@cern.ch>
+	* Use ParticleJetTools to label truth jets (not there for MCGN1 from EVNT yet)
+
+2014-02-19 Martin <tripiana@cern.ch>
+	* Fix triggeDec init (seems to be working now)
+	* Fix metmap dependent variables
+	* Add metadata to output file
+
+2014-02-04 Martin <tripiana@cern.ch>
+	* Move to Base,2.0.24
+
+2014-02-04 Martin <tripiana@cern.ch>
+	* Add trigger decisions (tuneable via jOption)  . Check needed packages and patches!
+	* Add trigger meta data ('Triggers' = comma separated list of saved chains)
+	* Update passPreselectionCuts does not longer include the trigger (due to diff triggers in SR/CR).
+
+2014-02-03 Martin <tripiana@cern.ch>
+	* Fix procID calculation
+	* Add new findSusyHP function
+
+2014-02-02 Martin <tripiana@cern.ch>
+	* Fix conflicts with CutFlow code
+	* Move jets Presel eta cut to 2.8 (METbb only)
+
+2014-01-30 Martin <tripiana@cern.ch>
+	* Fix memleak (!)
+	* Add isCosmic flag to tag events with at least one cosmic muon
+	* Add procID flag to indicate the signal process (prospino's Subprocess IDs)
+	* Add patches/ folder to host .diff files (in my public area before)
+
+2014-01-23 Martin <tripiana@cern.ch>
+	* Fix run script
+	* Add code+option to run on truth xAODs
+	* Add code for branch use stats
+	* Add trimming to reclustering functions (optional)
+
+
+2014-01-16 Martin <tripiana@cern.ch>
+	* Updated to SUSYTools-00-05-00-16
+	* Fix decorators.
+	* Add MET flavor with track soft term (InvMuTST).
+
+
+2014-01-15 Martin <tripiana@cern.ch>
+	* Updated to Base,2.0.22
+	* Updated to SUSYTools-00-05-00-15
+	* Remove obsolete tools (FakeMetEstimator, DataPeriod).
+	* Remove SmartVeto.h
+	* Fix number of events for derived samples.
+	* Add ScaleVariatioReweighter.cxx/hpp files (removed in last SUSYTools tag).
+	* Add patches needed for extra packages.
+	* Add some misc/ scripts.
+
+2014-01-13 Martin <tripiana@cern.ch>
+	* Change all MET-related variables --> all vectors now, to accomodate different MET flavors.
+	* Add transverse thrust and sphericity variables (Silvia).
+
+2014-12-11 Martin <tripiana@cern.ch>
+	* Add accesors for isolation variables.
+
+2014-12-10 Martin <tripiana@cern.ch>
+	* Update to Base,2.0.20
+	* Add photon variables
+	* Add met-recoiling system projections (rmet_par,_per)
+	* Add static accessors for xAOD auxdata
+	* Add doPhotons flag to jO to (not) take into account photons in the overlap removal.
+	* Fix pattern search in dq2get.sh
+	* Code cleaning
+
+
+2014-12-02 Arely <arelycg@cern.ch>
+	* corrected run_weights_grid function, in case we have root.# extensions.
+
+
+2014-11-27 Arely <arelycg@cern.ch>
+	* Add script to check list of files (and the # of events).
+
+2014-11-25 Martin <tripiana@cern.ch>
+	* Add protection against null kfactors.
+	* Fix cross section fetch from AMI.
+	* Fix btagger properly set from jOption now.
+
+2014-11-20 Martin <tripiana@cern.ch>
+	* Add -i option to specify a given id within a multisample set.
+	* Add extra check for physics containers metadata.
+
+2014-11-19 Arely <arelycg@cern.ch>
+	* Modify dq2get.sh to call run_weights_grid in case the merging of the files is requested.
+
+2014-11-19 Cora <cora.fischer@cern.ch>
+	* add tadd_grid routine to compute weights for grid files
+	* new run_weights_grid.cxx util to execute tadd_grid
+	* will be used in combination with d2-get-script
+
+2014-11-19 Martin <tripiana@cern.ch>
+	* Fix PURW_Folder check
+	* Add share/GRL/ and share/PURW/
+	* Fix FakeMET cleaning (before overlap removal now)
+	* Fix passPreselectionCuts flag
+	* Change dq2get.sh now can look for any pattern (TAG).
+
+2014-11-18 Arely <arelycg@cern.ch>
+	* Add script dq2get.sh to download files from the grid
+        * Silvia updated tadd.cxx to compute w (1/<w>) in the merging.
+        * Correct the path to the 'default location' for the pileup files.
+
+2014-11-10 Martin <tripiana@cern.ch>
+	* Add -u option to generate pile-up root files.
+	* Move pile-up files to share/ dir (to make it grid friendly).
+
+2014-11-07 Arely <arelycg@cern.ch>
+	* Added protection against no-pile-up reweigting (for 13TeV)
+        * Added 'harmonization' flag in JobOpt.
+        * Initialize the eventcounter
+
+2014-11-07 Martin <tripiana@cern.ch>
+	* Remove PeriodConfig from jO.
+	* Add Harmonisation flag to overlap removal config.
+
+2014-11-07 Martin <tripiana@cern.ch>
+	* Move to Base,2.0.16.
+	* Fix propagation of Met_doMuon jO flag to ST init.
+	* Fix electron SF (split in reco,id,trig as requested from jO).
+	* Fix systematics config (reset to nom before/after new syst).
+	* Fix run_chorizo. Remove tmp dir after moving file to CollateralPath (so to avoid filling up the disk!)
+	* Fix batch submission scripts (multiple-syst runs work now).
+
+2014-11-05 Arely <arelycg@cern.ch>
+	* Fix e_MT variable (no need to recompute MET for this one).
+        * Correct m_MT in case muons are not invisible.
+        * Set harmonization=false for the OR.
+        * Configure SUSYTools with METMuonTerm="" to allow for muons=invisble.
+
+2014-11-02 Martin <tripiana@cern.ch>
+	* Add preselection variables (configurable through jO).
+	* Add OR requirements for signal leptons.
+	* Add lepton isolation type config (j0). = Loose, Medium, Tight, None.
+	* New (simplified) logic. Some code cleaning.
+	* Remove DefinPt,DefinEta selections.
+	* Fix data tagging/merging.
+	* Fix TileTrip flag.
+	* Fix store cleaning when leaving before the end.
+	* Fix options parser.
+	* Fix warning in GetTruthBosonPt() for zero-pt composite particle.
+	* Add jOption to file metadata (TNamed jOption in hist file for now).
+
+2014-10-30 Martin <tripiana@cern.ch>
+	* Add options for systematics and output dir.
+	* Add further instructions to README to run on the grid.
+	* Add wrapper to run in batch. (overrides previous -b option).
+	* Fix doOR requirement.
+	* Fix PyAMI version in grid setup scripts.
+	* Fix batch submission for multiple samples/systemtics. (no re-compiling now)
+
+2014-10-28 Arely <arelycg@cern.ch>
+	* Fix 'passOR' requirement should be "!doOR"
+        * Fix the '-j' option in util/run.cxx
+        * Add n_jets50
+
+2014-10-28 Martin <tripiana@cern.ch>
+	* Update GetMET call to latest SUSYTools implementation.
+	* Fix jet 'passOR' requirement./
+	* Add version flag (-v) to tag output files.
+
+2014-10-27 Martin <tripiana@cern.ch>
+	* Add options for max number of events and jOption.
+	* Fix data paths for running in batch/grid mode.
+
+2014-10-26 Martin <tripiana@cern.ch>
+	* Fix passMCor (+ avoid zero-pt warnings)
+	* Fix bad_alloc crash.
+	* Tagging SusyAnalysis-00-00-05
+
+2014-10-24 Martin <tripiana@cern.ch>
+	* Add overlap removal option to jO.
+	* Fix store cleaning when running in genPU mode.
+	* Fix Stop and Monojet jOptions.
+
+2014-10-21 Martin <tripiana@cern.ch>
+	* Move to Base,2.0.14
+	* New MET re-building in ST
+	* Fix m_top
+	* Add submit_batch script.
+
+2014-10-20 Martin <tripiana@cern.ch>
+	* Move to Base-2.0.13
+	* Update to new ST decoration
+
+2014-08-29 Martin <tripiana@cern.ch>
+	* Move to Base-2.0.12
+	* Add chorizoEDM.h header to hold all EDM no-cint-friendly
+	* Update to new PileupReweightingTool
+	* Update to new electron EDM (now available in ST)
+	* Update to new TileTripReader
+	* Fix CP systematic set
+	* Remove old SUSYObjDef dependencies
+	* Fix all paths relative to $ROOTCOREBIN (grid friendly)
+	* Tagging SusyAnalysis-00-00-04
+
+2014-08-29 Martin <tripiana@cern.ch>
+	* Fix met & other variables
+	* Fix btag filling. NOTE: use IP3DSV1 tagger to get something out (MV1 weights not saved yet)
+	* Fix PDF_w   (still old pdf parameters enum, as in xAODTruth-00-00-23)
+	* Add dummy values for variables init (DUMMYUP, DUMMYDN)
+	* Tag SusyAnalysis-00-00-03
+
+2014-08-28 Martin <tripiana@cern.ch>
+	* Move to Base-2.0.7 .
+	* Move to Asg_Lhapdf package (LHAPDF6). pdfsets from cvmfs now. PDFTool deprecated, replaced by our own implementation for v6.
+	* Update meta-data magic to accomodate user-defined samples
+	* Update scripts to run in batch
+	* Tag SusyAnalysis-00-00-02
+
+2014-08-25 Martin <tripiana@cern.ch>
+	* Add scripts for job submission.
+
+2014-08-25 Martin <tripiana@cern.ch>
+	* Add run wrapper to allow for multiple-id samples & systematics.
+	* Add missing files.
+
+2014-08-23 Martin <tripiana@cern.ch>
+	* Add MET recalculation, via SUSYTools.
+
+2014-08-22 Martin <tripiana@cern.ch>
+	* Fix lepton selection and SFs.
+
+2014-08-21 Martin <tripiana@cern.ch>
+	* Move to Asg_FastJet
+	* Remove scripts/install_fastjet.sh (no longer needed)
+	* Add auto-extraction of beam/ecm Energy. Used for meta-data reading and PDFRW config
+	* Add some format to output
+
+2014-08-20 Martin <tripiana@cern.ch>
+	* Add new Systematics class
+
+2014-08-19 Martin <tripiana@cern.ch>
+	* Update to Base-2.0.6
+	* Fix  several issues
+	* Add  several improvements and running features
+	* Add  SusyAnalysis/RunsMap.h for input management
+	* Add  scripts/grid_up.sh for env setup, needed for auto-fetch of metadata from AMI
+	* Add  TODO file to record pending issues and ideas for future development
+	* Caveats : no MET-rebuilding yet
+	* Tag  SusyAnalysis-00-00-01
+
+2014-07-23 Martin <tripiana@cern.ch>
+	* Initial import
+
+
