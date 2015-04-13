@@ -136,7 +136,7 @@ enum ZDecayMode{
 };
 
 //MET flavours
-enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPh, VisMuPh, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTSTECorr, VisMuTSTECorr, VisMuTSTMuCorr, InvMuTruth, VisMuTruth, locHadTopo, N};
+enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPhCorr, VisMuPhCorr, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTSTECorr, VisMuTSTECorr, VisMuTSTMuCorr, InvMuTruth, VisMuTruth, locHadTopo, N};
 
 
 class chorizo : public EL::Algorithm
@@ -166,15 +166,19 @@ public:
   bool isTop;
   bool isAtlfast;
   bool isNCBG;
+  bool is8TeV;
   TString leptonType;
+  int  syst_JESNPset;
+
+  bool debug;
 
   bool isTruth;
   bool dressLeptons;
 
-  bool doAnaTree;
-  bool doPUTree; 
+  bool doAnaTree; 
+  bool doPUTree;  
   bool doFlowTree; 
-  bool genPUfile;
+  bool genPUfile; 
 
   CP::SystematicSet syst_CP; //!
   TString syst_CPstr;
@@ -238,7 +242,6 @@ private:
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; //!
-  ST::SUSYObjDef_xAOD* tool_st_1;  //! 
 
   //MET map
   std::map<MetDef, TVector2> metmap; //!
@@ -246,18 +249,13 @@ private:
 
   Analysis::JetQuarkLabel* tool_jetlabel; //!
 
-  //  DataPeriod     tool_DPeriod; //!
   JVFUncertaintyTool* tool_jvf; //!
-  JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
 
   Trig::TrigDecisionTool* tool_trigdec; //! 
   TrigConf::xAODConfigTool* tool_trigconfig; //!
    
-#ifndef __CINT__
-  //  TrigDecisionTool *tool_trigdec; //! 
-  //  TrigConf::xAODConfigTool* tool_trigconfig; //!
-  
+#ifndef __CINT__  
   OverlapRemovalTool* tool_or; //!
   CP::PileupReweightingTool *tool_purw; //! 
   GoodRunsListSelectionTool *tool_grl; //!
@@ -274,6 +272,7 @@ private:
   virtual void ReadXML();
 
   virtual float getNWeightedEvents();
+  virtual bool  isDerived();
 
   virtual void bookTree();
 
@@ -362,18 +361,18 @@ private:
   int  m_metwarnCounter; //!
   int  m_pdfwarnCounter; //!
 
-  bool isGRL; //! //event cleaning
-  bool isFakeMet; //!
-  bool isBadID; //!
-  bool isMetCleaned; //!
-  std::vector<int> isTrigger; //!
-  bool isVertexOk; //!
-  bool isLarGood; //!
-  bool isTileGood; //!
-  bool isTileTrip; //!
-  bool isCoreFlag; //!
-  bool isCosmic; //!
-  bool isBadMuon; //! 
+  bool isGRL;  //event cleaning
+  bool isFakeMet; 
+  bool isBadID; 
+  bool isMetCleaned; 
+  std::vector<int> isTrigger; 
+  bool isVertexOk; 
+  bool isLarGood; 
+  bool isTileGood; 
+  bool isTileTrip; 
+  bool isCoreFlag; 
+  bool isCosmic; 
+  bool isBadMuon;  
   
   int nCosmicMuons;
   int nBadMuons;
@@ -399,7 +398,6 @@ private:
   unsigned int QCD_SmearedEvents; //!
 
   //----- PDF Reweighting
-  //  LHAPDF::PDF*     m_PDF; //!
   bool    doPDFrw; //!
   float   beamE_from; //!
   float   beamE_to; //!
@@ -420,11 +418,12 @@ private:
   //selection
   std::string DirectoryPath; //! 
 
-  bool doCutFlow;
-  bool isStopTL;
+  bool doCutFlow; //!
+  bool isStopTL; //!
+  bool m_skim; //!
   
   TString GRLxmlFile; //!
-  bool    applyPURW;
+  bool    applyPURW; //!
   TString PURW_Folder; //!
   TString PURW_IlumicalcFile; //!
   bool    leptonEfficiencyUnitarity; //!
@@ -434,9 +433,9 @@ private:
   std::vector<std::string> JS_triggers; //!
 
   //OverlapRemoval
-  bool  doOR;
-  bool  doORharmo;
-  bool  doORphotons;
+  bool  doOR; //! 
+  bool  doORharmo; //!
+  bool  doORphotons; //!
 
   //track veto
   bool  tVeto_Enable; //! 
@@ -456,6 +455,8 @@ private:
   float El_PreselEtaCut; //!
   float El_RecoPtCut; //!
   float El_RecoEtaCut; //!
+  string El_baseID; //!
+  string El_ID; //!
   TString El_isoType; //!
   bool El_recoSF; //!
   bool El_idSF; //!
@@ -466,6 +467,7 @@ private:
   float Mu_PreselEtaCut; //!
   float Mu_RecoPtCut; //!
   float Mu_RecoEtaCut; //!
+  string Mu_ID; //!
   TString Mu_isoType; //!
 
   //photons
@@ -479,8 +481,8 @@ private:
   bool Ph_triggerSF; //!  
 
 #ifndef __CINT__
-  ST::IsSignalElectronExpCutArgs* elIsoArgs; //
-  ST::IsSignalMuonExpCutArgs* muIsoArgs; //
+  ST::IsSignalElectronExpCutArgs* elIsoArgs; //!
+  ST::IsSignalMuonExpCutArgs* muIsoArgs; //!
 #endif // not __CINT__
 
   //jets
@@ -512,31 +514,6 @@ private:
   bool Met_doRefJet; //!
   bool Met_doMuons; //!
   bool Met_doSoftTerms; //!
-
-  //btag weights & systematics
-  /* VFloat btag_weight_first;//! */
-  /* VFloat btag_weight_first_80eff;//! */
-  /* VFloat btag_weight;//! */
-  /* VFloat btag_weight_80eff;//! */
-
-  /* VFloat btag_weight_B_down; //! */
-  /* VFloat btag_weight_B_down_80eff; //! */
-  /* VFloat btag_weight_B_up; //! */
-  /* VFloat btag_weight_B_up_80eff; //! */
-  /* VFloat btag_weight_C_down; //! */
-  /* VFloat btag_weight_C_down_80eff; //! */
-  /* VFloat btag_weight_C_up; //! */
-  /* VFloat btag_weight_C_up_80eff; //! */
-  /* VFloat btag_weight_L_down; //! */
-  /* VFloat btag_weight_L_down_80eff; //! */
-  /* VFloat btag_weight_L_up; //! */
-  /* VFloat btag_weight_L_up_80eff; //! */
-
-  //smeared jets kin (for QCD estimation)
-  VFloat smr_met_jets_pt; //!
-  VFloat smr_met_jets_eta; //!
-  VFloat smr_met_jets_phi; //!
-  VFloat smr_met_jets_E; //!
 
   //muons (before overlap removal)
   float         muon_N;  //!
@@ -630,7 +607,7 @@ private:
   UInt_t  RunNumber;        
   UInt_t  EventNumber;
   UInt_t  procID;
-  UInt_t  mc_channel_number;
+  UInt_t  mc_channel_number; //!
   float   averageIntPerXing;
 
   //- Weights  

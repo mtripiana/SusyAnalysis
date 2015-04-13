@@ -58,10 +58,11 @@ void usage(){
   cout << "       -b            : run in batch            " << endl;
   cout << "       -p            : run on the grid (prun)        " << endl;
   cout << "       -g            : run on the grid (ganga)        " << endl;
+  cout << "       -d            : enable Debug mode       " << endl;  
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
-  cout << "       -t            : to run just a test over 50 events " <<endl;
-  cout << "       -v=<V>            : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
+  cout << "       -t            : run over truth xAODs" << endl;
+  cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
   cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
   cout << "                       Just nominal is run by default (Nom)." << endl;       
@@ -214,7 +215,7 @@ int main( int argc, char* argv[] ) {
   }
 
   //config options
-  int nMax=-1;
+  //  int nMax=-1;
   TString syst_str="";
   TString outDir="";
   for( unsigned int iop=0; iop < opts.size(); iop++){
@@ -254,9 +255,9 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("j") ){
       jOption = opts[iop].Copy().ReplaceAll("j=","");
     }
-    else if (opts[iop].BeginsWith("n") ){ //limit run to n events
-      nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
-    }
+    // else if (opts[iop].BeginsWith("n") ){ //limit run to n events
+    //   nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
+    // }
   }
 
 
@@ -397,11 +398,11 @@ int main( int argc, char* argv[] ) {
 	scanDQ2 (sh, run_patterns[i_id].Data() );
       }    
       
-      if(mgd)
-	makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
-      //	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
-      //	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
-      
+      if(mgd){
+	//makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
+	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
+	//	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
+      }
       
       sh.print();
       
@@ -437,7 +438,7 @@ int main( int argc, char* argv[] ) {
       sh.at(0)->setMetaDouble( "DSID", (double)run_ids[i_id] );
 
       //  fetch meta-data from AMI
-      if(amiFound && 0){
+      if(amiFound){
 	try{
 	  fetchMetaData (sh, false); 
 	  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
@@ -508,6 +509,7 @@ int main( int argc, char* argv[] ) {
     }//end of syst loop
   }//end of samples loop
 
+  delete xmlJobOption;
   return 0;
 }
 

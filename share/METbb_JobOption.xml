@@ -7,10 +7,12 @@
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
     <Mode name="DoCutFlow">true</Mode>
-    <Mode name="StopTL">true</Mode>    
+    <Mode name="StopTL">false</Mode>    
+    <Mode name="DoSkimming">true</Mode>    
+    <!--   <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path> -->
+    <!--   <Path name="PartialRootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/CollateralRootFiles/</Path> -->
     <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path>
     <Path name="PartialRootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/CollateralRootFiles/</Path>
-    <!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
     <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
@@ -78,10 +80,13 @@
         <RecoPtCut>15000.</RecoPtCut>
         <RecoEtaCut>2.47</RecoEtaCut>
 
+	<baseID>LooseLLH</baseID>
+	<ID>TightLLH</ID>
+        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+
         <recoSF>true</recoSF>
         <idSF>true</idSF>
         <triggerSF>false</triggerSF>
-        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
       </region>
     </Electron>
     <Muon>
@@ -90,6 +95,7 @@
         <PreselEtaCut>2.4</PreselEtaCut>
         <RecoPtCut>10000.</RecoPtCut>
         <RecoEtaCut>2.4</RecoEtaCut>
+	<ID>Loose</ID>
         <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
       </region>
     </Muon>
@@ -100,10 +106,11 @@
         <RecoPtCut>20000.</RecoPtCut>
         <RecoEtaCut>2.37</RecoEtaCut>
 
+        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+
         <recoSF>true</recoSF>
         <idSF>true</idSF>
         <triggerSF>false</triggerSF>
-        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
       </region>
     </Photon>
     <Jet>
@@ -113,6 +120,7 @@
         <dPhiMin>0.4</dPhiMin>
         <JVFMin>0.5</JVFMin>
         <Collection>AntiKt4LCTopo</Collection>
+	<JESNPset>1</JESNPset>
 
         <PreselPtCut>20000.</PreselPtCut>
         <PreselEtaCut>2.8</PreselEtaCut>
@@ -120,9 +128,9 @@
         <RecoEtaCut>2.8</RecoEtaCut>
 
         <!--- For the c/b-tagger -->
-        <!-- <Tagger>MV1</Tagger> -->
-        <!-- <TaggerOpPoint>0_7892</TaggerOpPoint> -->
-        <!-- <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
+        <!-- 	<Tagger>IP3DSV1</Tagger> -->
+        <!-- 	<TaggerOpPoint>1_85</TaggerOpPoint> -->	
+        <!-- 	<TaggerOpPoint2>m0_70</TaggerOpPoint2> -->				
 	<Tagger>MV1</Tagger>
         <TaggerOpPoint>0_7892</TaggerOpPoint>
         <TaggerOpPoint2>0_3511</TaggerOpPoint2>
@@ -138,9 +146,9 @@
 
         <Term name="doRefEle">true</Term>
         <Term name="doRefGamma">true</Term>
-        <Term name="doRefTau">false</Term>
+        <Term name="doRefTau">true</Term>  <!-- set to true for rel19 at least -->
         <Term name="doRefJet">true</Term>
-        <Term name="doMuons">false</Term>
+        <Term name="doMuons">true</Term>
         <Term name="doSoftTerms">true</Term>
       </region>
     </Etmiss>
