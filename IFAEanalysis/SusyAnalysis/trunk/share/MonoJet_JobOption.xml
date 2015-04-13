@@ -137,9 +137,9 @@
         <doFakeEtmiss>true</doFakeEtmiss>
         <Term name="doRefEle">true</Term>
         <Term name="doRefGamma">true</Term>
-        <Term name="doRefTau">false</Term>
+        <Term name="doRefTau">true</Term>
         <Term name="doRefJet">true</Term>
-        <Term name="doMuons">false</Term>
+        <Term name="doMuons">true</Term>
         <Term name="doSoftTerms">true</Term>
       </region>
     </Etmiss>

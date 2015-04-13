@@ -277,28 +277,25 @@ void RunsMap::LoadMap(){
 
 
   //SIGNAL
-  m_map["13TEV_Sbottom_800_1"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
-  m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
-
-  m_map["13TEV_Sbottom_800_1_af"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_a266_a265_r5853/"));
-  m_map["13TEV_Sbottom_300_290_af"] = rlist( Rpair(202249, ""));
-  
-  m_map["13TEV_Sbottom_800_1_LOCAL"] = rlist( Rpair(202266, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_800_1_202266_13TeV/"));
-  m_map["13TEV_Sbottom_300_290_LOCAL"] = rlist( Rpair(202249, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_300_290_202249_13TeV/"));
-
-  m_map["TestSbottom"]= rlist( Rpair(202266, "/tmp/tripiana/sbottom/full/"));
-  m_map["TestSbottom_af"]= rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/mc14/sbottom/af/"));
+  //  m_map["test_stop"] = rlist( Rpair(204422, "/nfs/at3/scratch/sfracchia/SUSY/test_stop/"));    //CutFlow check Stop0L pre-WT
+  m_map["test_stop"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));    //CutFlow check Stop0L pre-WT (p1872)
 
   m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
   m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
-  
-  m_map["13TEV_Stop_LOCAL"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/af/"));
 
-  m_map["TestStop"] = rlist( Rpair(204422, "/tmp/tripiana/stop/full/"));
-  m_map["TestStop_af"] = rlist( Rpair(204422, "/tmp/tripiana/stop/af/"));
-  /* m_map["TestStop"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/full/")); */
-  /* m_map["TestStop_af"] = rlist( Rpair(204422, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/af/")); */
+  m_map["13TEV_Sbottom_800_1"]   = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
+  m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
+
+  m_map["13TEV_Sbottom_800_1_af"]   = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_a266_a265_r5853/"));
+  m_map["13TEV_Sbottom_300_290_af"] = rlist( Rpair(202249, ""));
   
+  m_map["13TEV_Sbottom_800_1_SUSY1"] = rlist( Rpair(202266, "/nfs/atlas-data06/scratch/tripiana/xAOD/mc14/sbottom/SUSY1/"));
+  m_map["13TEV_Sbottom_800_1_SUSY1_WT"] = rlist( Rpair(202266, "mc14_13TeV:mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));
+
+  m_map["13TEV_Sbottom_800_1_LOCAL"] = rlist( Rpair(202266, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_800_1_202266_13TeV/"));
+  m_map["13TEV_Sbottom_300_290_LOCAL"] = rlist( Rpair(202249, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_300_290_202249_13TeV/"));
+
+  //GGM
   m_map["TestGGM"] = rlist( Rpair(179483, "/nfs/at3/scratch/tripiana/xAOD/truth/GGM/"));
 
   //BACKGROUND

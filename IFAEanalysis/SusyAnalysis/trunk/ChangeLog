@@ -1,105 +1,120 @@
-2014-03-17 Martin <tripiana@cern.ch>
+2015-04-04 Martin <tripiana@cern.ch>
+	* Fix    MET gamma and tau terms. Use xAOD default for now. Set to invisible otherwise.
+	* Fix    PrimaryVertex check
+	* Move   btagging to SUSYTools decoration.
+	* Move   to GetX() methods in SUSYTools
+	* New    isDerived() method
+	* Add    el/mu Id config to jOptions.
+	* Add    JESNPset to jOption
+	* Add    CHECKs for Status and Systematic Codes (no more warnings!)
+	* Add    -d flag for debugging mode   (i.e. lots of printouts)
+	* Add    scripts/analysis/do_stop0L_cutflow.C macro
+	* Remove multiple MET container pointers
+	* Remove unused jClean tool
+	* Remove second instance of SUSYTools 
+
+2015-03-17 Martin <tripiana@cern.ch>
 	* Move to Base,2.1.28 and ST-05-00-24
 
-2014-03-15 Martin <tripiana@cern.ch>
+2015-03-15 Martin <tripiana@cern.ch>
 	* Fix SFs.
 	* Add photon antiSF
 
-2014-03-13 Arely <arelycg@cern.ch>
+2015-03-13 Arely <arelycg@cern.ch>
 	* Added the e_MT and m_MT for Met with TST.
         * Found the issue when running on long samples :) (un-initialized e_SFu,e_SFd).
         * Changed the default location of the samples to IFAE_SCRATCHDISK instead of IFAE_LOCALGROUPDISK
         * Changed the default CM energy to 13TeV.
 
-2014-03-13 Martin <tripiana@cern.ch>
+2015-03-13 Martin <tripiana@cern.ch>
 	* Update qsub-generator to ROOT6
 	* Fix qsub template file
 	* Fix Zll variables filling
 
-2014-03-13 Arely <arelycg@cern.ch>
+2015-03-13 Arely <arelycg@cern.ch>
 	* Change location of test xAOD files from scratch to scratch2
 
-2014-03-12 Arely <arelycg@cern.ch>
+2015-03-12 Arely <arelycg@cern.ch>
 	* Added protection for "R", so it keeps the same size.
         * Change type of tr_thrust from double to float.
         * Took "isTrigger" out of passPreselectionCuts (in case different triggers are used in the regions selection).
           Now it is saved (even if DoCutFlow==false).
         * truth_n_jets has the same pT cut as n_jets: Jet_RecoPtCut (instead of hardcoded 30GeV).
 
-2014-03-12 Silvia <silvia.fracchia@cern.ch>
+2015-03-12 Silvia <silvia.fracchia@cern.ch>
 	* Added information on 3rd and 4th leptons.
         * Added functions to find the Z-candidate in events with 2 and 3 leptons.
 
-2014-03-11 Arely <arelycg@cern.ch>
+2015-03-11 Arely <arelycg@cern.ch>
 	* Added reference folder with Root/chorizo.cxx, to make public.
 	* Corrected error in iPh and iJet counters.
 
-2014-03-04 Cora <cfischer@ifae.es>
+2015-03-04 Cora <cfischer@ifae.es>
 	* Added MET (invisible muons) electrons-corrected.
 	* Arely: changed the muon-cosmic check after the overlap removal.
 
-2014-03-03 Martin <tripiana@cern.ch>
+2015-03-03 Martin <tripiana@cern.ch>
 	* Update to Base,2.1.27
 	* Update to SUSYTools-00-05-00-21
 
-2014-03-01 Martin <tripiana@cern.ch>
+2015-03-01 Martin <tripiana@cern.ch>
 	* Update to Base,2.0.27
 	* Update to SUSYTools-00-05-00-20
 	* Tagging SusyAnalysis-00-00-07     (stable r19 code)
 
-2014-02-28 Martin <tripiana@cern.ch>
+2015-02-28 Martin <tripiana@cern.ch>
 	* Tagging SusyAnalysis-00-00-06     (stable r19 code. superseeded by 07 above.)
 
-2014-02-26 Martin <tripiana@cern.ch>
+2015-02-26 Martin <tripiana@cern.ch>
 	* Add jet smearing tool config
 
-2014-02-26 Martin <tripiana@cern.ch>
+2015-02-26 Martin <tripiana@cern.ch>
 	* Fix initialization of metmap
 
-2014-02-25 Martin <tripiana@cern.ch>
+2015-02-25 Martin <tripiana@cern.ch>
 	* Use ParticleJetTools to label truth jets (not there for MCGN1 from EVNT yet)
 
-2014-02-19 Martin <tripiana@cern.ch>
+2015-02-19 Martin <tripiana@cern.ch>
 	* Fix triggeDec init (seems to be working now)
 	* Fix metmap dependent variables
 	* Add metadata to output file
 
-2014-02-04 Martin <tripiana@cern.ch>
+2015-02-04 Martin <tripiana@cern.ch>
 	* Move to Base,2.0.24
 
-2014-02-04 Martin <tripiana@cern.ch>
+2015-02-04 Martin <tripiana@cern.ch>
 	* Add trigger decisions (tuneable via jOption)  . Check needed packages and patches!
 	* Add trigger meta data ('Triggers' = comma separated list of saved chains)
 	* Update passPreselectionCuts does not longer include the trigger (due to diff triggers in SR/CR).
 
-2014-02-03 Martin <tripiana@cern.ch>
+2015-02-03 Martin <tripiana@cern.ch>
 	* Fix procID calculation
 	* Add new findSusyHP function
 
-2014-02-02 Martin <tripiana@cern.ch>
+2015-02-02 Martin <tripiana@cern.ch>
 	* Fix conflicts with CutFlow code
 	* Move jets Presel eta cut to 2.8 (METbb only)
 
-2014-01-30 Martin <tripiana@cern.ch>
+2015-01-30 Martin <tripiana@cern.ch>
 	* Fix memleak (!)
 	* Add isCosmic flag to tag events with at least one cosmic muon
 	* Add procID flag to indicate the signal process (prospino's Subprocess IDs)
 	* Add patches/ folder to host .diff files (in my public area before)
 
-2014-01-23 Martin <tripiana@cern.ch>
+2015-01-23 Martin <tripiana@cern.ch>
 	* Fix run script
 	* Add code+option to run on truth xAODs
 	* Add code for branch use stats
 	* Add trimming to reclustering functions (optional)
 
 
-2014-01-16 Martin <tripiana@cern.ch>
+2015-01-16 Martin <tripiana@cern.ch>
 	* Updated to SUSYTools-00-05-00-16
 	* Fix decorators.
 	* Add MET flavor with track soft term (InvMuTST).
 
 
-2014-01-15 Martin <tripiana@cern.ch>
+2015-01-15 Martin <tripiana@cern.ch>
 	* Updated to Base,2.0.22
 	* Updated to SUSYTools-00-05-00-15
 	* Remove obsolete tools (FakeMetEstimator, DataPeriod).
@@ -109,7 +124,7 @@
 	* Add patches needed for extra packages.
 	* Add some misc/ scripts.
 
-2014-01-13 Martin <tripiana@cern.ch>
+2015-01-13 Martin <tripiana@cern.ch>
 	* Change all MET-related variables --> all vectors now, to accomodate different MET flavors.
 	* Add transverse thrust and sphericity variables (Silvia).
 

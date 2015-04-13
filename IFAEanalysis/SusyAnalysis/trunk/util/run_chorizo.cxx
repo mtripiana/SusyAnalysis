@@ -33,6 +33,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <sys/stat.h>
 
 // Systematics includes
 #include "PATInterfaces/SystematicList.h"
@@ -60,9 +61,10 @@ void usage(){
   cout << "       -b            : run in batch            " << endl;
   cout << "       -p            : run on the grid (prun)        " << endl;
   cout << "       -g            : run on the grid (ganga)        " << endl;
+  cout << "       -d            : enable Debug mode       " << endl;  
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
-  cout << "       -t            : to run just a test over 50 events " <<endl;
+  cout << "       -t            : run over truth xAODs" << endl;
   cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
   cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
@@ -208,6 +210,7 @@ int main( int argc, char* argv[] ) {
   TString version="";
   bool genPU=false;
   bool isTruth=false;
+  bool debugMode=false;
 
   std::string jOption = "METbb_JobOption.xml";
 
@@ -259,6 +262,9 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "g"){ //run on the grid (ganga)
       runGrid = true;
       runLocal = false;
+    }
+    else if (opts[iop] == "d"){ //enable debug mode
+      debugMode = true;
     }
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
@@ -349,12 +355,13 @@ int main( int argc, char* argv[] ) {
   bool doFlowTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
   bool doPUTree = false; //No option in the xml yet!!
   bool generatePUfile = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
-  bool isStopTL = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
 
   TString FinalPath      = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
   if( outDir.Length() ) FinalPath = outDir;    // Take the submit directory from the input if provided:
 
   TString CollateralPath = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
+
+  doFlowTree = true; // CHECK_ME  //need to arrange the options a bit! We don't want a HUGE logfile. 
 
   //override jOptions if required
   if(genPU){
@@ -382,6 +389,7 @@ int main( int argc, char* argv[] ) {
 	scanDir( sh, run_pattern[p].Data() );
       }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
+	sh.setMetaString ("nc_grid_filter", "*000001.pool.root*");
 	mgd=true;
       }
     }
@@ -396,11 +404,11 @@ int main( int argc, char* argv[] ) {
     //set ID (do it global since there will be only one sample now)
     sh.setMetaDouble( "DSID", (double)run_ids[p] );
   }
-  if(mgd)
-    makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
-  //  makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
-  //    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
-   
+  if(mgd){
+    //makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
+    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
+    //    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
+  }
 
   sh.print(); //print what we found
 
@@ -446,7 +454,7 @@ int main( int argc, char* argv[] ) {
 
     
   //  fetch meta-data from AMI
-  if(amiFound && 0){
+  if(amiFound){
     try{
       fetchMetaData (sh, false); 
       for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
@@ -503,11 +511,11 @@ int main( int argc, char* argv[] ) {
 
     EL::OutputStream output  (osname);
     job.outputAdd (output);
-    EL::NTupleSvc *ntuple = new EL::NTupleSvc (osname);
+    EL::NTupleSvc* ntuple = new EL::NTupleSvc (osname);
     ntuple->treeName("AnalysisTree");
     job.algsAdd (ntuple);
     
-    chorizo *alg = new chorizo();
+    chorizo* alg = new chorizo();
     
     //Alg config options here
     alg->outputName = osname;
@@ -523,6 +531,7 @@ int main( int argc, char* argv[] ) {
     alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
     alg->isNCBG     = false;   //get it from the XML!!
 
+    alg->is8TeV     = (s_ecm=="8"); 
     alg->isTruth    = isTruth;   //to run over truth xAOD (e.g. MGN1 derivation)
 
     alg->doAnaTree  = doAnaTree;     // Output trees
@@ -537,14 +546,17 @@ int main( int argc, char* argv[] ) {
     alg->syst_PU    = syst_PU;
     alg->syst_JVF   = syst_JVF;
     //    alg->syst_BCH   = syst_BCH;
+    alg->syst_JESNPset = 1; //TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$JESNPset")).Atoi();
     
     
+    //debug printing                                                                                                               
+    alg->debug         = debugMode;
     alg->printMet      = false;     //debug printing
     alg->printJet      = false;
     alg->printElectron = false;
     alg->printMuon     = false;
     alg->errIgnoreLevel = (systListOnly ? kFatal : kInfo);
-    
+
     alg->systListOnly  = systListOnly;
     
     //Load alg to job
@@ -585,7 +597,7 @@ int main( int argc, char* argv[] ) {
       Tdriver.submit( job, tmpdir );
     }
     else if(runPrun){ //Prun mode
-
+      
       //** prun
       std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
@@ -611,26 +623,29 @@ int main( int argc, char* argv[] ) {
       Gdriver.submit( job, tmpdir );
     }
 
-
-    if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
     
+    if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
+  
     if(generatePUfile) return 0; //leave if generating PURW files... no need to merge here... (it seems)
     	
     //move output to collateral files' path
     TString sampleName,targetName;
+    struct stat buffer;   
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       
-	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), single_id);
-	
-	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
-	//	system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
-	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
-	system(("rm -rf "+tmpdir).c_str());
-	
-	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+      sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
+      targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), single_id);
+      
+      if(!(stat ((tmpdir+"/data-"+osname+"/"+sampleName.Data()).c_str(), &buffer) == 0)) continue; 
+
+      addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
+      //	system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
+      system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+      system(("rm -rf "+tmpdir).c_str());
+      
+      mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }
-  
+    
     if(single_id<0){ //NOTE: moved to the run wrapper for now!!
 
       //** after-burner to merge samples, add weights and anti-SF
@@ -652,6 +667,8 @@ int main( int argc, char* argv[] ) {
     }
 
   }//end systematics list
+
+  delete xmlReader;
 
   return 0;
 }
