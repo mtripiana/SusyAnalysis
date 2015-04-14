@@ -1,3 +1,9 @@
+2015-04-13 Martin <tripiana@cern.ch>
+	* Clean XML reading (remove SR dependency everywhere)
+	* New vector-like kinematics for baseline and signal muons
+	* New vector-like kinematics for baseline and signal electrons
+	* New Booking block in jOptions
+
 2015-04-04 Martin <tripiana@cern.ch>
 	* Fix    MET gamma and tau terms. Use xAOD default for now. Set to invisible otherwise.
 	* Fix    PrimaryVertex check
@@ -11,7 +17,7 @@
 	* Add    scripts/analysis/do_stop0L_cutflow.C macro
 	* Remove multiple MET container pointers
 	* Remove unused jClean tool
-	* Remove second instance of SUSYTools 
+	* Remove second instance of SUSYTools
 
 2015-03-17 Martin <tripiana@cern.ch>
 	* Move to Base,2.1.28 and ST-05-00-24

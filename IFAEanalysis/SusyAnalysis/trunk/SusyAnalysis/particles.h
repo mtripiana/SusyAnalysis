@@ -22,6 +22,7 @@ class Particle : public TLorentzVector {
     float  Ht;
     bool   isGood;
     bool   isIsolated;
+    int    id;
     bool   isTight;
     float  ptcone20;
     float  etcone20;
@@ -32,7 +33,7 @@ class Particle : public TLorentzVector {
     float  SFu;
     float  SFd;
 
-    int    id;
+    int    index;
     bool   gev;
     int    type;
     int    origin;
@@ -88,12 +89,13 @@ class Jet : public Particle {
     float                   BCH_CORR_CELL;
     float                   BCH_CORR_JET;
 
-    bool isTauJet(float metphi, TString Tagger="MV1");
-    bool isBTagged(TString Tagger, float op);
-    bool isBTagged(TString Tagger);
-    bool isBTagged_80eff(TString Tagger);    
+    bool  isTauJet(float metphi, TString Tagger="MV1");
+    bool  isBTagged(TString Tagger, float op);
+    bool  isBTagged(TString Tagger);
+    bool  isBTagged_80eff(TString Tagger);    
     float getBweight(TString Tagger);
-    void PrintInfo();
+    void  PrintInfo();
+
     ClassDef(Jet,1);
 };
 

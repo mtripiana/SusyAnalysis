@@ -3,13 +3,16 @@
 
   <GeneralSettings>
     <Mode name="setDefinitionRegion">SR</Mode> <!-- Name of the object definition regions, separated by comma -->
-    <Mode name="debug">false</Mode>
+    <Mode name="debug">true</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">true</Mode>
-    <Mode name="StopTL">false</Mode>  
-    <Path name="RootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/SusyAnalysis_14march15/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/COLLATERAL/</Path>
+    <Mode name="DoCutFlow">false</Mode>
+    <Mode name="StopTL">false</Mode>    
+    <Mode name="DoSkimming">false</Mode>    
+    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
+<!--    <Path name="RootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/</Path> -->
+<!--    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/COLLATERAL/</Path> -->
     <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
     <!--   <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path> updated periodB GRL. Due to some job failures, not all lumiblocks are complete. -->
     <Pileup>
@@ -56,110 +59,112 @@
     </Truth>
 
     <Vertex>
-      <region name="SR">2</region> <!-- The default in SUSYTools (IsVertexOk method) is 4 -->
+      <nTracks>2</nTracks> <!-- The default in SUSYTools (IsVertexOk method) is 2 -->
     </Vertex>
 
     <TrackVeto>
       <Enable>false</Enable>
-      <region name="SR">
-        <Pt>10000</Pt>
-        <Eta>2.5</Eta>
-        <d0>1</d0>
-        <z0>2</z0>
-        <ndof>0</ndof>
-        <chi2OverNdof_min>0</chi2OverNdof_min>
-        <chi2OverNdof_max>3</chi2OverNdof_max>
-        <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
-        <TrackIso>0</TrackIso>
-      </region>
+      <Pt>10000</Pt>
+      <Eta>2.5</Eta>
+      <d0>1</d0>
+      <z0>2</z0>
+      <ndof>0</ndof>
+      <chi2OverNdof_min>0</chi2OverNdof_min>
+      <chi2OverNdof_max>3</chi2OverNdof_max>
+      <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
+      <TrackIso>0</TrackIso>
     </TrackVeto>
     <Electron>
-      <region name="SR">
-        <PreselPtCut>20000.</PreselPtCut>
-        <PreselEtaCut>2.47</PreselEtaCut>
-        <RecoPtCut>20000.</RecoPtCut>
-        <RecoEtaCut>2.47</RecoEtaCut>
-
-        <recoSF>true</recoSF>
-        <idSF>true</idSF>
-        <triggerSF>false</triggerSF>
-        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
-      </region>
+      <PreselPtCut>20000.</PreselPtCut>
+      <PreselEtaCut>2.47</PreselEtaCut>
+      <RecoPtCut>20000.</RecoPtCut>
+      <RecoEtaCut>2.47</RecoEtaCut>
+      
+      <baseID>LooseLLH</baseID>
+      <ID>TightLLH</ID>
+      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      
+      <recoSF>true</recoSF>
+      <idSF>true</idSF>
+      <triggerSF>false</triggerSF>
     </Electron>
     <Muon>
-      <region name="SR">
-        <PreselPtCut>10000.</PreselPtCut>
-        <PreselEtaCut>2.4</PreselEtaCut>
-        <RecoPtCut>10000.</RecoPtCut>
-        <RecoEtaCut>2.4</RecoEtaCut>
-        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
-      </region>
+      <PreselPtCut>10000.</PreselPtCut>
+      <PreselEtaCut>2.4</PreselEtaCut>
+      <RecoPtCut>10000.</RecoPtCut>
+      <RecoEtaCut>2.4</RecoEtaCut>
+      <ID>Loose</ID>
+      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
     </Muon>
     <Photon>
-      <region name="SR">
-        <PreselPtCut>20000.</PreselPtCut>
-        <PreselEtaCut>2.37</PreselEtaCut>
-        <RecoPtCut>20000.</RecoPtCut>
-        <RecoEtaCut>2.37</RecoEtaCut>
-
-        <recoSF>true</recoSF>
-        <idSF>true</idSF>
-        <triggerSF>false</triggerSF>
-        <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
-      </region>
+      <PreselPtCut>20000.</PreselPtCut>
+      <PreselEtaCut>2.37</PreselEtaCut>
+      <RecoPtCut>20000.</RecoPtCut>
+      <RecoEtaCut>2.37</RecoEtaCut>
+      
+      <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
+      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      
+      <recoSF>true</recoSF>
+      <idSF>true</idSF>
+      <triggerSF>false</triggerSF>
     </Photon>
     <Jet>
-      <region name="SR">
-        <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
-        <Path name="BtagCalib">SUSYTools/</Path>
-        <dPhiMin>0.4</dPhiMin>
-        <JVFMin>0.5</JVFMin>
-        <Collection>AntiKt4LCTopo</Collection>
-
-        <PreselPtCut>20000.</PreselPtCut>
-        <PreselEtaCut>2.8</PreselEtaCut>
-        <RecoPtCut>30000.</RecoPtCut>
-        <RecoEtaCut>2.8</RecoEtaCut> 
-        
-        <!--- For the c/b-tagger -->
-        <!---<Tagger>MV1</Tagger> -->
-	<Tagger>IP3DSV1</Tagger>
-        <TaggerOpPoint>1_85</TaggerOpPoint>	
-        <TaggerOpPoint2>m0_70</TaggerOpPoint2>				
-        <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
-      </region>
+      <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
+      <Path name="BtagCalib">SUSYTools/</Path>
+      <dPhiMin>0.4</dPhiMin>
+      <JVFMin>0.5</JVFMin>
+      <Collection>AntiKt4LCTopo</Collection>
+      
+      <PreselPtCut>20000.</PreselPtCut>
+      <PreselEtaCut>2.8</PreselEtaCut>
+      <RecoPtCut>30000.</RecoPtCut>
+      <RecoEtaCut>2.8</RecoEtaCut> 
+      
+      <!--- For the c/b-tagger -->
+      <!-- 	<Tagger>IP3DSV1</Tagger> -->
+      <!-- 	<TaggerOpPoint>1_85</TaggerOpPoint> -->	
+      <!-- 	<TaggerOpPoint2>m0_70</TaggerOpPoint2> -->				
+      <Tagger>MV1</Tagger>
+      <TaggerOpPoint>0_7892</TaggerOpPoint>
+      <TaggerOpPoint2>0_3511</TaggerOpPoint2>
+      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
     </Jet>
     <Etmiss>
-      <region name="SR">
-        <Path name="FakeMetEstimator">fest_periodF_v1.root</Path>
-        <Collection>Egamma10NoTau</Collection>
-        <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
-        <doFakeEtmiss>true</doFakeEtmiss>
-        <Term name="doRefEle">true</Term>
-        <Term name="doRefGamma">true</Term>
-        <Term name="doRefTau">true</Term>
-        <Term name="doRefJet">true</Term>
-        <Term name="doMuons">true</Term>
-        <Term name="doSoftTerms">true</Term>
-      </region>
+      <Path name="FakeMetEstimator">fest_periodF_v1.root</Path>
+      <Collection>Egamma10NoTau</Collection>
+      <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
+      <doFakeEtmiss>true</doFakeEtmiss>
+      <Term name="doRefEle">true</Term>
+      <Term name="doRefGamma">true</Term>
+      <Term name="doRefTau">true</Term>
+      <Term name="doRefJet">true</Term>
+      <Term name="doMuons">true</Term>
+      <Term name="doSoftTerms">true</Term>
     </Etmiss>
     <QCD>
       <Enable>false</Enable> <!-- Enable jet smearing  -->
-      <region name="SR">
-	<TrigChains> EF_j460,EF_j55</TrigChains>
-	<JetsPtPreselection>20000.0</JetsPtPreselection>
-	<METSigCut>1.0</METSigCut>
-	<LeadJetPreSel>Stop</LeadJetPreSel>
-	<RandomSeedOffset>123456</RandomSeedOffset>
-	<SmearType>optimal</SmearType>
-	<SmearUseBweight>true</SmearUseBweight>
-	<SmearBtagWeight>0.772</SmearBtagWeight>
-	<SmearMeanShift>low</SmearMeanShift>
-	<SmearExtraSmr>true</SmearExtraSmr>
-	<DoPhiSmearing>true</DoPhiSmearing>
-	<SmearedEvents>250</SmearedEvents>
-      </region>
+      <TrigChains> EF_j460,EF_j55</TrigChains>
+      <JetsPtPreselection>20000.0</JetsPtPreselection>
+      <METSigCut>1.0</METSigCut>
+      <LeadJetPreSel>Stop</LeadJetPreSel>
+      <RandomSeedOffset>123456</RandomSeedOffset>
+      <SmearType>optimal</SmearType>
+      <SmearUseBweight>true</SmearUseBweight>
+      <SmearBtagWeight>0.772</SmearBtagWeight>
+      <SmearMeanShift>low</SmearMeanShift>
+      <SmearExtraSmr>true</SmearExtraSmr>
+      <DoPhiSmearing>true</DoPhiSmearing>
+      <SmearedEvents>250</SmearedEvents>
     </QCD>
+    
+    <Booking>
+      <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
+      <ElSignal>2</ElSignal>   <!-- number of signal electrons to be saved -->
+      <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
+      <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
+    </Booking>
+
   </ObjectDefinition>
 
 </AnalysisOptions>
