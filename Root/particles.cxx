@@ -23,6 +23,7 @@ Particle::Particle(){
   SFu = 0;
   SFd = 0;
   gev=false; //4mom in GeV?
+  index = -1;
   id = -1;
   type = 0; //as defined in MCTruthClassifier::ParticleType
   origin = 0; //as defined in MCTruthClassifier::ParticleOrigin

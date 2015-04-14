@@ -117,8 +117,10 @@ using fastjet::JetDefinition;
 using fastjet::antikt_algorithm;
 
 typedef std::vector<float> VFloat;                          
+typedef std::vector<int> VInt;                          
 typedef std::pair<VFloat, VFloat > VFloatPair;     
 typedef std::vector<VFloat > VVFloat;                          
+
 
 class JetCleaningTool;
 
@@ -137,6 +139,9 @@ enum ZDecayMode{
 
 //MET flavours
 enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPhCorr, VisMuPhCorr, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTSTECorr, VisMuTSTECorr, VisMuTSTMuCorr, InvMuTruth, VisMuTruth, locHadTopo, N};
+
+//Lepton signal criteria (ID-Iso) e.g. LT = LooseTight = loose(LH) ID + TightIso     (N=None, V=VeryLoose, L=Loose, M=Medium, T=Tight)
+enum class LepSig {Base, VN, LN, MN, TN, VL, LL, ML, TL, VM, LM, MM, TM, VT, LT, MT, TT};  
 
 
 class chorizo : public EL::Algorithm
@@ -245,6 +250,9 @@ private:
 
   //MET map
   std::map<MetDef, TVector2> metmap; //!
+
+  //Lepton signal def.  map
+  std::map<LepSig, unsigned int> lepmap; //!
 #endif // not __CINT__
 
   Analysis::JetQuarkLabel* tool_jetlabel; //!
@@ -451,34 +459,42 @@ private:
   float tVeto_TrackIso; //!
 
   //electrons
-  float El_PreselPtCut; //!
-  float El_PreselEtaCut; //!
-  float El_RecoPtCut; //!
-  float El_RecoEtaCut; //!
-  string El_baseID; //!
-  string El_ID; //!
+  float   El_PreselPtCut; //!
+  float   El_PreselEtaCut; //!
+  float   El_RecoPtCut; //!
+  float   El_RecoEtaCut; //!
+  string  El_baseID; //!
+  string  El_ID; //!
   TString El_isoType; //!
-  bool El_recoSF; //!
-  bool El_idSF; //!
-  bool El_triggerSF; //!  
+  bool    El_recoSF; //!
+  bool    El_idSF; //!
+  bool    El_triggerSF; //!  
 
   //muons
-  float Mu_PreselPtCut; //!
-  float Mu_PreselEtaCut; //!
-  float Mu_RecoPtCut; //!
-  float Mu_RecoEtaCut; //!
-  string Mu_ID; //!
+  float   Mu_PreselPtCut; //!
+  float   Mu_PreselEtaCut; //!
+  float   Mu_RecoPtCut; //!
+  float   Mu_RecoEtaCut; //!
+  string  Mu_ID; //!
   TString Mu_isoType; //!
 
   //photons
-  float Ph_PreselPtCut; //!
-  float Ph_PreselEtaCut; //!
-  float Ph_RecoPtCut; //!
-  float Ph_RecoEtaCut; //!
+  float   Ph_PreselPtCut; //!
+  float   Ph_PreselEtaCut; //!
+  float   Ph_RecoPtCut; //!
+  float   Ph_RecoEtaCut; //!
+  string  Ph_ID; //!
   TString Ph_isoType; //!
-  bool Ph_recoSF; //!
-  bool Ph_idSF; //!
-  bool Ph_triggerSF; //!  
+  bool    Ph_recoSF; //!
+  bool    Ph_idSF; //!
+  bool    Ph_triggerSF; //!  
+
+  //Booking options
+  int BookElBase;
+  int BookElSignal;
+  int BookMuBase;
+  int BookMuSignal;
+
 
 #ifndef __CINT__
   ST::IsSignalElectronExpCutArgs* elIsoArgs; //!
@@ -515,35 +531,18 @@ private:
   bool Met_doMuons; //!
   bool Met_doSoftTerms; //!
 
-  //muons (before overlap removal)
-  float         muon_N;  //!
-  VFloat muon_pt; //!
-  VFloat muon_eta; //!
-  VFloat muon_phi; //!
-  VFloat muon_iso; //!
-  VFloat muon_etiso30; //!
-  VFloat muon_ptiso30; //!
-  vector<bool>  muon_truth; //!
-  VFloat muon_jet_dR; //! //matched jet to muon 
-  VFloat muon_jet_dPhi; //!
-  VFloat muon_jet_pt; //!
-  VFloat muon_jet_eta; //!
-  VFloat muon_jet_phi; //!
-  VFloat muon_jet_nTrk; //!
-  VFloat muon_jet_sumPtTrk; //!
-  VFloat muon_jet_chf; //!
-  VFloat muon_jet_emf; //!
-  VFloat muon_jet_mv1; //!
-  VFloat muon_jet_vtxf; //!
 
   //Particle collections
+  std::vector<Particle> electronCandidates; //!
   std::vector<Particle> recoElectrons; //!
-  std::vector<Particle> recoPhotons; //!
   std::vector<Particle> truthElectrons; //!
+  std::vector<Particle> muonCandidates; //!
   std::vector<Particle> recoMuons; //!
+  std::vector<Particle> recoPhotons; //!
   std::vector<Particles::Jet> recoJets; //!
   std::vector<Particles::Jet> seedJets; //!
-  Particles::MET met_obj; 
+  Particles::MET met_obj; //!
+
   std::vector<TLorentzVector> RecoUnmatchedTracksElMu; //!
   std::vector<int> RecoUnmatchedTracksIdx; //!
 
@@ -690,49 +689,38 @@ private:
   int   ph_origin; 
  
   //- Electron Info
-  int   e_N;
-  float e_pt;
-  float e2_pt; 
-  float e3_pt;   
-  float e4_pt;    
-  float e_truth_pt;
-  float e_truth_eta;
-  float e_truth_phi;
-  float e_eta;
-  float e_phi;
-  float e2_eta;
-  float e2_phi;  
-  float e3_eta;
-  float e3_phi;      
-  float e4_eta;
-  float e4_phi;  
-  float e_ptiso30;
-  float e_etiso30;
-  bool  e_tight; 
+  int    e_N;
+  VFloat e_pt;
+  VFloat e_eta;
+  VFloat e_phi;
+  VFloat e_ptiso30;
+  VFloat e_etiso30;
+  VInt   e_id; 
+
+  int    eb_N;
+  VFloat eb_pt;
+  VFloat eb_eta;
+  VFloat eb_phi;
+
+  float  e_truth_pt;
+  float  e_truth_eta;
+  float  e_truth_phi;
  
   //- Muon Info
-  int   m_N;
-  float m_pt;
-  float m_eta;
-  float m_phi;
-  float m2_pt;
-  float m2_eta;
-  float m2_phi;
-  float m3_pt;
-  float m3_eta;
-  float m3_phi;  
-  float m4_pt;
-  float m4_eta;
-  float m4_phi;  
-  float m_iso;
-  float m_ptiso20;
-  float m_etiso20;
-  float m_ptiso30;
-  float m_etiso30;
-  float m2_iso;
-  float m2_ptiso30;
-  float m2_etiso30;
- 
+  int    m_N;
+  VFloat m_pt;
+  VFloat m_eta;
+  VFloat m_phi;
+  VFloat m_ptiso20;
+  VFloat m_etiso20;
+  VFloat m_ptiso30;
+  VFloat m_etiso30;
+
+  int    mb_N;
+  VFloat mb_pt;
+  VFloat mb_eta;
+  VFloat mb_phi;
+
   
   //- 'boson' properties
   float e_M;

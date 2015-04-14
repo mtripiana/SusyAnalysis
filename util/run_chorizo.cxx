@@ -389,7 +389,7 @@ int main( int argc, char* argv[] ) {
 	scanDir( sh, run_pattern[p].Data() );
       }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
-	//sh.setMetaString ("nc_grid_filter", "*000001.pool.root*");
+	sh.setMetaString ("nc_grid_filter", "*000001.pool.root*"); //REMOVE, JUST FOR STOP0L CUTFLOW
 	mgd=true;
       }
     }
