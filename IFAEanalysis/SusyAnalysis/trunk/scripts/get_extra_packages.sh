@@ -16,6 +16,7 @@ rc checkout_pkg $SVNOFF/Reconstruction/EventShapes/EventShapeInterface/tags/Even
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags/ElectronEfficiencyCorrection-00-01-19
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-04-34
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
+rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetUncertainties/tags/JetUncertainties-00-09-19
 
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/TileID/TileTripReader/trunk
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/SampleHandler/tags/SampleHandler-00-00-91
