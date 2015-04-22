@@ -890,6 +890,9 @@ private:
   float sumET_truth;
   float sumET_truth_vmu;
   
+  float soft_met_cst;
+  float soft_met_tst;
+
   float j1_E;
   float j2_E;  
   float j3_E;   
