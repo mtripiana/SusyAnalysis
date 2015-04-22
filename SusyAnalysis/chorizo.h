@@ -695,6 +695,8 @@ private:
   VFloat e_phi;
   VFloat e_ptiso30;
   VFloat e_etiso30;
+  VFloat e_ptiso20;
+  VFloat e_etiso20;
   VInt   e_id; 
 
   int    eb_N;
