@@ -508,6 +508,10 @@ void chorizo :: bookTree(){
       output->tree()->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
       output->tree()->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
       
+      //soft met
+      output->tree()->Branch("soft_met_cst",&soft_met_cst,"soft_met_cst/f", 10000);
+      output->tree()->Branch("soft_met_tst",&soft_met_tst,"soft_met_tst/f", 10000);
+
       //MTs
       output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met);
       output->tree()->Branch("MT_bcl_met",&MT_bcl_met);
@@ -633,7 +637,7 @@ EL::StatusCode chorizo :: histInitialize ()
   }
   
   //Sum of weights for primary sample
-  meta_nwsim += getNWeightedEvents(); //load weighted number of events
+  //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
   m_cfilename = wk()->metaData()->getString(SH::MetaFields::sampleName); //name of current sample
 
   return EL::StatusCode::SUCCESS;
@@ -1044,6 +1048,9 @@ void chorizo :: InitVars()
   sumET_truth = DUMMYDN;
   sumET_truth_vmu = DUMMYDN;
   
+  soft_met_cst = DUMMYDN;
+  soft_met_tst = DUMMYDN;
+
   MT_min_jet_met.clear();  
   MT_bcl_met.clear();  
   MT_bfar_met.clear();  
@@ -1109,7 +1116,7 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  meta_nwsim += getNWeightedEvents(); //load weighted number of events
+  //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
 
   return EL::StatusCode::SUCCESS;
 }
@@ -1692,6 +1699,13 @@ EL::StatusCode chorizo :: loop ()
   xAOD::MissingETContainer* metRFC       = new xAOD::MissingETContainer;
   xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
   metRFC->setStore(metRFCAux);
+
+  // MET (track soft term) -- invisible muons 
+  xAOD::MissingETContainer* metRFC_TST = new xAOD::MissingETContainer;
+  xAOD::MissingETAuxContainer* metRFCAux_TST = new xAOD::MissingETAuxContainer;
+  metRFC_TST->setStore(metRFCAux_TST);
+
+
 
 
   //--- Analysis Code 
@@ -2705,6 +2719,9 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   met_obj.SetVector(v_met_ST_vmu,"met_vmu");  //- Copy met vector to the met data member
   sumET_cst_vmu = (*metRFC)["Final"]->sumet()*0.001;
 
+  // soft terms:
+  soft_met_cst = (*metRFC)["SoftClus"]->met()*0.001;
+
   // //--NEW CHECK------------------------
   // // Create new jet container and its auxiliary store for MET recalculation
   // xAOD::JetContainer* jetsForMET = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
@@ -2767,20 +2784,23 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   if(this->isVertexOk){   //protect against crash in Data from METRebuilder  ///FIX_ME
 
     // MET (track soft term) -- visible muons
-    CHECK( tool_st->GetMET(*metRFC,
+    CHECK( tool_st->GetMET(*metRFC_TST,
 			   jets_sc,
 			   electrons_sc,
 			   muons_sc,
 			   0,
 			   0,
 			   true));
-    TVector2 v_met_ST_vmu_tst = getMET( metRFC, "Final"); 
+    TVector2 v_met_ST_vmu_tst = getMET( metRFC_TST, "Final"); 
     met_obj.SetVector( v_met_ST_vmu_tst, "met_tst_vmu");  //- Copy met vector to the met data member
-    sumET_tst_vmu = (*metRFC)["Final"]->sumet()*0.001;
+    sumET_tst_vmu = (*metRFC_TST)["Final"]->sumet()*0.001;
     
-    v_met_ST_vmu_MU       = getMET( metRFC, "Muons");          //Muon visible Term
-    float sumEt_tst_muons = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt
+    v_met_ST_vmu_MU       = getMET( metRFC_TST, "Muons");          //Muon visible Term
+    float sumEt_tst_muons = (*metRFC_TST)["Muons"]->sumet()*0.001; //Muon visible sumEt
 
+    // soft terms:
+    soft_met_tst = (*metRFC_TST)["PVSoftTrk"]->met()*0.001;
+    
     // MET (track soft term) -- invisible muons
     TVector2 v_met_ST_tst = v_met_ST_vmu_tst;
     v_met_ST_tst -= v_met_ST_vmu_MU; //subtract muon term
@@ -2942,6 +2962,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       delete electrons_sc;         delete electrons_scaux;
       delete photons_sc;           delete photons_scaux;
       delete metRFC;               delete metRFCAux;
+      delete metRFC_TST;           delete metRFCAux_TST; 
 
       if(myfile.is_open())
 	myfile.close();
@@ -3481,7 +3502,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   delete electrons_sc;         delete electrons_scaux;
   delete photons_sc;           delete photons_scaux;
   delete metRFC;               delete metRFCAux;
-  
+  delete metRFC_TST;           delete metRFCAux_TST; 
+
   if(myfile.is_open())
     myfile.close();
 
