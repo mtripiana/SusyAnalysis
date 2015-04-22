@@ -304,6 +304,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_phi",&e_phi);
       output->tree()->Branch("e_etiso30",&e_etiso30);
       output->tree()->Branch("e_ptiso30",&e_ptiso30);
+      output->tree()->Branch("e_etiso20",&e_etiso20);
+      output->tree()->Branch("e_ptiso20",&e_ptiso20);
       output->tree()->Branch("e_id",&e_id);
 
       output->tree()->Branch("eb_N",&eb_N,"eb_N/I", 10000);
@@ -813,6 +815,8 @@ void chorizo :: InitVars()
   e_phi.clear();
   e_ptiso30.clear();
   e_etiso30.clear();
+  e_ptiso20.clear();
+  e_etiso20.clear();
   e_id.clear();
 
   eb_N = 0;  
@@ -4290,6 +4294,8 @@ void chorizo :: dumpLeptons(){
     e_phi.push_back( recoElectrons.at(iel).Phi() );
     e_etiso30.push_back( recoElectrons.at(iel).etcone30 );
     e_ptiso30.push_back( recoElectrons.at(iel).ptcone30 );
+    e_etiso20.push_back( recoElectrons.at(iel).etcone20 );
+    e_ptiso20.push_back( recoElectrons.at(iel).ptcone20 );
     e_id.push_back(  recoElectrons.at(iel).id );
   }
     
