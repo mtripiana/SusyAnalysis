@@ -28,6 +28,8 @@ class Particle : public TLorentzVector {
     float  etcone20;
     float  ptcone30;
     float  etcone30;
+    float  d0_sig;
+    float  z0;    
     int    charge;
     float  SF;
     float  SFu;

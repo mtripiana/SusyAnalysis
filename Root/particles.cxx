@@ -18,6 +18,8 @@ Particle::Particle(){
   etcone20 = 0;
   ptcone30 = 0;
   etcone30 = 0;
+  d0_sig = 0;
+  z0 = 0;
   charge = 0;
   SF = 1;
   SFu = 0;
