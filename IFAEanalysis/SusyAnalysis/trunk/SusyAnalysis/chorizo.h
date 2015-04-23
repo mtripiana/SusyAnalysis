@@ -44,6 +44,9 @@
 #include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "SUSYTools/SUSYCrossSection.h"
 
+#include "SusyAnalysis/TMctLib.h"
+#include "SusyAnalysis/mctlib.h"
+
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
 #include "TileTripReader/TTileTripReader.h"
 #include <fastjet/ClusterSequence.hh>
@@ -55,6 +58,8 @@
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
+
+#include "EventPrimitives/EventPrimitivesHelpers.h"
 
 #ifndef __MAKECINT__
 #include "AssociationUtils/OverlapRemovalTool.h"
@@ -191,7 +196,7 @@ public:
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
   JvfUncErr::JvfSyste syst_JVF;
-
+  
   bool printMet;
   bool printJet;
   bool printElectron;
@@ -270,6 +275,7 @@ private:
   LHAPDF::PDF* m_PDF; //!
   BTaggingEfficiencyTool* tool_btag;  //! //70%op
   BTaggingEfficiencyTool* tool_btag2; //! //80%op
+  TMctLib* mcttool;
 #endif // not __CINT__
 
   SUSY::JetMCSmearingTool* tool_jsmear; //!
@@ -323,6 +329,7 @@ private:
   virtual float Calc_MT(Particle p, TVector2 met);
   virtual float Calc_mct();
   virtual float Calc_mct(Particle p1, Particle p2);
+  virtual float Calc_mct_corr(TMctLib *mcttool, Particle p1, Particle p2, TVector2 met);  
   virtual float Calc_dijetMass();
   virtual float Calc_dijetMass(TLorentzVector ja, TLorentzVector jb);
   virtual std::vector<TLorentzVector> CombineJets();
@@ -693,11 +700,15 @@ private:
   VFloat e_pt;
   VFloat e_eta;
   VFloat e_phi;
+  VFloat e_type;    
+  VFloat e_origin;
   VFloat e_ptiso30;
   VFloat e_etiso30;
   VFloat e_ptiso20;
   VFloat e_etiso20;
   VInt   e_id; 
+  VFloat e_d0_sig; 
+  VFloat e_z0;    
 
   int    eb_N;
   VFloat eb_pt;
@@ -713,10 +724,14 @@ private:
   VFloat m_pt;
   VFloat m_eta;
   VFloat m_phi;
+  VFloat m_type;
+  VFloat m_origin;
   VFloat m_ptiso20;
   VFloat m_etiso20;
   VFloat m_ptiso30;
   VFloat m_etiso30;
+  VFloat m_d0_sig; 
+  VFloat m_z0;    
 
   int    mb_N;
   VFloat mb_pt;
@@ -863,6 +878,7 @@ private:
   float dPhi_j2_j3;
   float dPhi_b1_b2;
   VFloat dPhi_min;
+  VFloat dPhi_min_4jets;  
   VFloat dPhi_min_alljets;
   float dR_j1_j2;
   float dR_j1_j3;
@@ -911,7 +927,8 @@ private:
   float DiJet_Mass;  
   float DiBJet_Mass;    
   
-  float mct;   
+  float mct; 
+  VFloat mct_corr;    
   VFloat meff;
   float HT;   
 

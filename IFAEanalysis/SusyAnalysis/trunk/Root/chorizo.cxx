@@ -9,6 +9,7 @@
 #include <fstream>
 #include <EventLoop/StatusCode.h>
 
+
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
 
@@ -23,6 +24,8 @@
 
 //Pileup Reweighting
 #include "PileupReweighting/PileupReweightingTool.h"
+
+
 
 //Jet Truth Labeling
 #include "ParticleJetTools/JetQuarkLabel.h"
@@ -106,7 +109,8 @@ chorizo :: chorizo ()
     tool_grl(0),            
     tool_jsmear(0),          
     tool_tileTrip(0),       
-    m_PDF(0)
+    m_PDF(0),
+    mcttool(0)
 {
 
   outputName="";
@@ -299,14 +303,18 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_truth_phi",&e_truth_phi,"e_truth_phi/F", 10000);
 
       output->tree()->Branch("e_N",&e_N,"e_N/I", 10000);
-      output->tree()->Branch("e_pt",&e_pt);
+      output->tree()->Branch("e_pt",&e_pt);      
       output->tree()->Branch("e_eta",&e_eta);
       output->tree()->Branch("e_phi",&e_phi);
+      output->tree()->Branch("e_type",&e_type);
+      output->tree()->Branch("e_origin",&e_origin);            
       output->tree()->Branch("e_etiso30",&e_etiso30);
       output->tree()->Branch("e_ptiso30",&e_ptiso30);
       output->tree()->Branch("e_etiso20",&e_etiso20);
       output->tree()->Branch("e_ptiso20",&e_ptiso20);
       output->tree()->Branch("e_id",&e_id);
+      output->tree()->Branch("e_d0_sig",&e_d0_sig);  
+      output->tree()->Branch("e_z0",&e_z0);      
 
       output->tree()->Branch("eb_N",&eb_N,"eb_N/I", 10000);
       output->tree()->Branch("eb_pt",&eb_pt);
@@ -325,12 +333,16 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_N",&m_N,"m_N/I",10000);
       output->tree()->Branch("m_pt",&m_pt);
       output->tree()->Branch("m_eta",&m_eta);
-      output->tree()->Branch("m_phi",&m_phi);
+      output->tree()->Branch("m_phi",&m_phi);      
+      output->tree()->Branch("m_type",&m_type);
+      output->tree()->Branch("m_origin",&m_origin);
       output->tree()->Branch("m_etiso20",&m_etiso20);          
       output->tree()->Branch("m_ptiso20",&m_ptiso20);          
       output->tree()->Branch("m_etiso30",&m_etiso30);          
       output->tree()->Branch("m_ptiso30",&m_ptiso30);          
-
+      output->tree()->Branch("m_d0_sig",&m_d0_sig);  
+      output->tree()->Branch("m_z0",&m_z0);   
+            
       output->tree()->Branch("mb_N",&mb_N,"mb_N/I",10000);
       output->tree()->Branch("mb_pt",&mb_pt);
       output->tree()->Branch("mb_eta",&mb_eta);
@@ -476,6 +488,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("dPhi_met_j4",&dPhi_met_j4);
       output->tree()->Branch("dPhi_met_mettrk",&dPhi_met_mettrk,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
       output->tree()->Branch("dPhi_min",&dPhi_min);
+      output->tree()->Branch("dPhi_min_4jets",&dPhi_min_4jets);      
       output->tree()->Branch("dPhi_min_alljets",&dPhi_min_alljets);
 
       output->tree()->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
@@ -525,7 +538,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("DiJet_Mass",&DiJet_Mass,"DiJet_Mass/F", 10000);  
       output->tree()->Branch("DiBJet_Mass",&DiBJet_Mass,"DiBJet_Mass/F", 10000);         
       
-      output->tree()->Branch("mct",&mct,"mct/F", 10000);    
+      output->tree()->Branch("mct",&mct,"mct/F", 10000);  
+      output->tree()->Branch("mct_corr",&mct_corr);          
       output->tree()->Branch("meff",&meff);
       output->tree()->Branch("HT",&HT,"HT/F", 10000);    
       output->tree()->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
@@ -623,20 +637,31 @@ EL::StatusCode chorizo :: histInitialize ()
   //   h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
   // }
 
+
+  //  syst_CPstr = "JET_GroupedNP_1__1up"; //TESTING!!
+  syst_CPstr = ""; //TESTING!!
+  
   //Systematics (override CP set if string is given) [tmp hack]
   if(!syst_CPstr.IsNull()){
     syst_CP  = CP::SystematicSet(); //needed?
+
+    TString ctag="";
     if(syst_CPstr.Contains("continuous")){
+      ctag="__continuous";
+    
       if(syst_CPstr.Contains("1up"))
-	syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr.Copy().ReplaceAll("__continuous__1up","").Data()), 1));
+	syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr.Copy().ReplaceAll(ctag+"__1up","").Data()), 1));
       else if(syst_CPstr.Contains("1down"))
-	syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr.Copy().ReplaceAll("__continuous__1down","").Data()), -1));
+	syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr.Copy().ReplaceAll(ctag+"__1down","").Data()), -1));
       else{
-	Error("histInitialize()", "Cannot configure a continuous systematics like this : %s . Please attach e.g. __1up to it so I know what to do! ", syst_CPstr.Data());
+	Error("histInitialize()", "Cannot configure a continuous systematic like this : %s . Please attach e.g. __1up to it so I know what to do! ", syst_CPstr.Data());
 	return EL::StatusCode::FAILURE;
       }
     }
-  }
+    else{
+      syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr)));
+    }
+  }  
   
   //Sum of weights for primary sample
   //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
@@ -661,8 +686,8 @@ float chorizo :: getNWeightedEvents(){
   treeform.UpdateFormulaLeaves();
   treeform.GetNdata();
 
-  cout << "Initial = " << treeform.EvalInstance(0) << endl;
-  cout << "Final   = " << treeform.EvalInstance(1) << endl;
+  cout << "Initial = " << treeform.EvalInstance(1) << endl;
+  cout << "Final   = " << treeform.EvalInstance(0) << endl;
 
   return (float)treeform.EvalInstance(0); //initialSumOfWeightsInThisFile
 }
@@ -813,11 +838,15 @@ void chorizo :: InitVars()
   e_pt.clear();
   e_eta.clear();
   e_phi.clear();
+  e_type.clear();
+  e_origin.clear();  
   e_ptiso30.clear();
   e_etiso30.clear();
   e_ptiso20.clear();
   e_etiso20.clear();
   e_id.clear();
+  e_d0_sig.clear();
+  e_z0.clear();
 
   eb_N = 0;  
   eb_pt.clear();
@@ -858,11 +887,15 @@ void chorizo :: InitVars()
   m_N = 0;
   m_pt.clear(); 
   m_eta.clear();               
-  m_phi.clear();               
+  m_phi.clear();     
+  m_type.clear();
+  m_origin.clear();            
   m_ptiso30.clear();          
   m_etiso30.clear();          
   m_ptiso20.clear();          
-  m_etiso20.clear();          
+  m_etiso20.clear();  
+  m_d0_sig.clear();
+  m_z0.clear();          
   mb_N = 0;
   mb_pt.clear(); 
   mb_eta.clear();
@@ -1028,6 +1061,7 @@ void chorizo :: InitVars()
   dPhi_j2_j3 = DUMMYDN;                          
   dPhi_b1_b2 = DUMMYDN;                          
   dPhi_min.clear();
+  dPhi_min_4jets.clear();  
   dPhi_min_alljets.clear();
   dR_j1_j2 = DUMMYDN;                            
   dR_j1_j3 = DUMMYDN;                            
@@ -1065,6 +1099,7 @@ void chorizo :: InitVars()
   DiBJet_Mass=0;
 
   mct=0.;
+  mct_corr.clear();
   meff.clear();
   HT=0.;
 
@@ -1424,7 +1459,7 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_st->SUSYToolsInit() );
   CHECK( tool_st->initialize() );
   tool_st->msg().setLevel( MSG::ERROR ); //set message level 
-
+  
   if(syst_CP.size()){
     if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){    // Tell the SUSYObjDef_xAOD which variation to apply
       Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
@@ -1432,7 +1467,7 @@ EL::StatusCode chorizo :: initialize ()
       Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
     }
   }
-
+  
   
   //--- Overlap Removal
   tool_or = new OverlapRemovalTool("OverlapRemovalTool");
@@ -1560,7 +1595,8 @@ EL::StatusCode chorizo :: initialize ()
     beamE_from = (float) wk()->metaData()->getDouble("ebeam", 4.); //default is 8TeV!
     m_PDF = LHAPDF::mkPDF(input_pdfset.Data(), input_pdfset_member); //LHAPDF6
   }
-                                          
+  mcttool = new TMctLib();
+  
   //--- number of events
   Info("initialize()", Form("Total number of events = %lli", m_event->getEntries() ));
   watch.Stop();
@@ -1574,24 +1610,50 @@ EL::StatusCode chorizo :: initialize ()
 
 void chorizo :: printSystList(){
   //Warning: It has to happen *after* all tools' initialization!
+  cout << bold("\n\n\n List of recommended/implemented systematics") << endl;
+  cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+  
+  vector<ST::SystInfo> systInfoList = tool_st->getSystInfoList();
+  for(const auto& sysInfo : systInfoList){
+    const CP::SystematicSet& sys = sysInfo.systset;
+    //    Info("", (sys.name()).c_str());
+    
+    string affectedType;
+    switch(sysInfo.affectsType) {
+    case ST::SystObjType::Unknown  : affectedType = "UNKNOWN";  break;
+    case ST::SystObjType::Jet      : affectedType = "JET";      break;
+    case ST::SystObjType::Egamma   : affectedType = "EGAMMA";   break;
+    case ST::SystObjType::Electron : affectedType = "ELECTRON"; break;
+    case ST::SystObjType::Photon   : affectedType = "PHOTON";   break;
+    case ST::SystObjType::Muon     : affectedType = "MUON";     break;
+    case ST::SystObjType::Tau      : affectedType = "TAU";      break;
+    case ST::SystObjType::BTag     : affectedType = "BTAG";     break;
+    case ST::SystObjType::MET      : affectedType = "MET";      break;
+    }
+    
+    // TString sout = Form("%s     :   affects %s%s for %s",sys.name(),( sysInfo.affectsWeights ? "weights " : "" ),( sysInfo.affectsKinematics ? "kinematics " : "" ),affectedType);
+    // Info("", sout.Data().c_str());
 
-  const CP::SystematicRegistry& registry = CP::SystematicRegistry::getInstance();
-  const CP::SystematicSet& recommendedSystematics = registry.recommendedSystematics();
-
-  std::cout << bold("\n\n\n List of recommended/implemented systematics") << std::endl;
-  std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
-
-  // this is the nominal set
-  for(CP::SystematicSet::const_iterator sysItr = recommendedSystematics.begin(); sysItr != recommendedSystematics.end(); ++sysItr){
-    //   std::cout << sysItr->basename();
-    std::cout << sysItr->name();
-    // if (*sysItr == CP::SystematicVariation (sysItr->basename(), CP::SystematicVariation::CONTINUOUS)){
-    //   std::cout << "\t +-" ;
-    // }
-    std::cout << std::endl;
+    cout <<  sys.name() << "    : affects " << ( sysInfo.affectsWeights ? "weights " : "" ) << ( sysInfo.affectsKinematics ? "kinematics " : "" ) << "  for " << affectedType << endl;
   }
-  std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" << std::endl;
+  
+  cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" << endl;
+  
+  
+  // const CP::SystematicRegistry& registry = CP::SystematicRegistry::getInstance();
+  // const CP::SystematicSet& recommendedSystematics = registry.recommendedSystematics();
+  
+  // // this is the nominal set
+  // for(CP::SystematicSet::const_iterator sysItr = recommendedSystematics.begin(); sysItr != recommendedSystematics.end(); ++sysItr){
+  //   //   std::cout << sysItr->basename();
+  //   std::cout << sysItr->name();
+  //   // if (*sysItr == CP::SystematicVariation (sysItr->basename(), CP::SystematicVariation::CONTINUOUS)){
+  //   //   std::cout << "\t +-" ;
+  //   // }
+  //   std::cout << std::endl;
+  // }
 }
+
 
 void chorizo :: loadMetaData(){
 
@@ -1703,12 +1765,6 @@ EL::StatusCode chorizo :: loop ()
   xAOD::MissingETContainer* metRFC       = new xAOD::MissingETContainer;
   xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
   metRFC->setStore(metRFCAux);
-
-  // MET (track soft term) -- invisible muons 
-  xAOD::MissingETContainer* metRFC_TST = new xAOD::MissingETContainer;
-  xAOD::MissingETAuxContainer* metRFCAux_TST = new xAOD::MissingETAuxContainer;
-  metRFC_TST->setStore(metRFCAux_TST);
-
 
 
 
@@ -1997,7 +2053,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     //decorate electron with baseline pt requirements ('signal')
     elIsoArgs->_etcut = El_PreselPtCut;
     tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
-    //if(!isStopTL) dec_baseline(*el_itr) = dec_signal(*el_itr);    
+      
   
   }
 
@@ -2026,7 +2082,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_PreselPtCut;
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
-    //    if(!isStopTL) dec_baseline(*mu_itr) = dec_signal(*mu_itr);    
+    
 
     if(debug)
       if( dec_signal(*mu_itr) ) 
@@ -2055,7 +2111,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   
   xAOD::JetContainer* jets_sc(0);
   xAOD::ShallowAuxContainer* jets_scaux(0);
-  CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut ) ); //'baseline' and 'bad' decoration     
+  CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut) ); //'baseline' and 'bad' decoration   . no eta cut for cleaning!
   
   xAOD::Jet jet;
   for( const auto& jet_itr : *jets_sc){
@@ -2068,8 +2124,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	tool_st->IsBJet( *jet_itr, false, Jet_TaggerOp.Atof() ); 
     }
 
-    if(!isStopTL)
-      dec_baseline(*jet_itr) &= (fabs((*jet_itr).eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR for sbottom analysis. //SILVIA //CHECK_ME
+    
+   //dec_baseline(*jet_itr) &= (fabs((*jet_itr).eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR for sbottom analysis. //SILVIA //CHECK_ME
   }
 
   //--- Get (recalculated) MissingEt  
@@ -2126,6 +2182,19 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     recoElectron.etcone20 = acc_etcone20(*el_itr) * 0.001;
     recoElectron.ptcone30 = acc_ptcone30(*el_itr) * 0.001;
     recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
+    
+    
+    const xAOD::TrackParticle* track =  (*el_itr).trackParticle();
+    
+    if (track){
+         
+      const xAOD::Vertex* pv = tool_st->GetPrimVtx();
+      double primvertex_z = pv ? pv->z() : 0;
+      recoElectron.d0_sig = fabs(track->d0()) /  Amg::error(track->definingParametersCovMatrix(),0);
+      recoElectron.z0 = track->z0() + track->vz() - primvertex_z;
+           
+    }
+    
     (*el_itr).passSelection(recoElectron.isTight, "Tight");
       
     recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
@@ -2175,7 +2244,9 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
       
   }//electron loop
+  
 
+  
   //sort the electrons in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end());   //non-signal electrons
   if (recoElectrons.size()>0)      std::sort(recoElectrons.begin(), recoElectrons.end());             //signal electrons
@@ -2196,10 +2267,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     if(debug)
       cout << "Muon pre-sel\n pt = " << (*mu_itr).pt() << endl;
     
-    dec_baseline(*mu_itr) &= ((*mu_itr).muonType() == xAOD::Muon::Combined || (*mu_itr).muonType() == xAOD::Muon::SegmentTagged); //for Sbottom as well?
-    dec_signal(*mu_itr)   &= dec_baseline(*mu_itr); //update signal decoration too!
-    dec_final(*mu_itr )   &= dec_baseline(*mu_itr); //update final decoration too!
-
+    if (isStopTL){ 
+      dec_baseline(*mu_itr) &= ((*mu_itr).muonType() == xAOD::Muon::Combined || (*mu_itr).muonType() == xAOD::Muon::SegmentTagged); //for Sbottom as well?
+      dec_signal(*mu_itr)   &= dec_baseline(*mu_itr); //update signal decoration too!
+      dec_final(*mu_itr )   &= dec_baseline(*mu_itr); //update final decoration too!
+    }
+    
     if(debug && dec_baseline(*mu_itr)) 	cout << "Muon baseline " << endl; 
 
     if(! dec_baseline(*mu_itr) ) continue; //keep baseline objects only
@@ -2245,6 +2318,14 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     recoMuon.etcone20 = acc_etcone20(*mu_itr) * 0.001;
     recoMuon.ptcone30 = acc_ptcone30(*mu_itr) * 0.001;
     recoMuon.etcone30 = acc_etcone30(*mu_itr) * 0.001;
+    
+    const xAOD::TrackParticle* track =  (*mu_itr).primaryTrackParticle();
+    if (track){
+      const xAOD::Vertex* pv = tool_st->GetPrimVtx();
+      double primvertex_z = pv ? pv->z() : 0;
+      recoMuon.d0_sig = fabs(track->d0()) /  Amg::error(track->definingParametersCovMatrix(),0);
+      recoMuon.z0 = track->z0() + track->vz() - primvertex_z;
+    }
     recoMuon.charge   = (float) (*mu_itr).charge();
     //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
     
@@ -2296,7 +2377,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
     
   }//muon loop
-  
+    
   //sort the muon candidates in Pt
   if (muonCandidates.size()>0) std::sort(muonCandidates.begin(), muonCandidates.end());      //not signal muons!
   if (recoMuons.size()>0)      std::sort(recoMuons.begin(), recoMuons.end());                //signal muons!
@@ -2383,9 +2464,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   Particles::Jet recoJet;
   int iJet = 0;
   int n_fakemet_jets=0;
-  for( ; jet_itr != jet_end; ++jet_itr ){
-    
-    if( !dec_baseline(**jet_itr)) continue;
+  for( ; jet_itr != jet_end; ++jet_itr ){   
     
     //look for fake-met jets    
     if (Met_doFakeEtmiss){
@@ -2405,15 +2484,18 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     if( dec_badjet(**jet_itr) ) continue; //just book good jets!
 
+    if( !dec_baseline(**jet_itr)) continue;
+
     if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue;
 
     m_goodJets->push_back (*jet_itr);
+
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.index = iJet;
-    
+   
     //--- Flavor-tagging    
-    //from SUSYTools (based on SV1plusIP3D (70%) at the moment!)
+    //from SUSYTools (based on MV1 (70%) at the moment!)
     recoJet.isbjet = dec_bjet(**jet_itr);
 
     int local_truth_flavor=0;         //for bjets ID
@@ -2667,9 +2749,10 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   if (doCutFlow) myfile << "n of signal b-jets: " << n_bjets << " \n"; 
 
   //** btagging weights
-  // if(isMC){
-  //  btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
-  //  btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
+   // if(isMC){
+   //btag_weight_total = GetBtagSF(m_goodJets, tool_btag); 
+   //btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
+   
   //}
   
   //the list of jets to smear for qcd are not the jet-candidates!
@@ -2713,6 +2796,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
 
   // MET (cluster soft term) -- visible muons
+  metRFC->clear(); 
   CHECK( tool_st->GetMET(*metRFC,
 			 jets_sc,
 			 electrons_sc,
@@ -2788,22 +2872,23 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   if(this->isVertexOk){   //protect against crash in Data from METRebuilder  ///FIX_ME
 
     // MET (track soft term) -- visible muons
-    CHECK( tool_st->GetMET(*metRFC_TST,
+    metRFC->clear();
+    CHECK( tool_st->GetMET(*metRFC,
 			   jets_sc,
 			   electrons_sc,
 			   muons_sc,
 			   0,
 			   0,
 			   true));
-    TVector2 v_met_ST_vmu_tst = getMET( metRFC_TST, "Final"); 
+    TVector2 v_met_ST_vmu_tst = getMET( metRFC, "Final"); 
     met_obj.SetVector( v_met_ST_vmu_tst, "met_tst_vmu");  //- Copy met vector to the met data member
-    sumET_tst_vmu = (*metRFC_TST)["Final"]->sumet()*0.001;
+    sumET_tst_vmu = (*metRFC)["Final"]->sumet()*0.001;
     
-    v_met_ST_vmu_MU       = getMET( metRFC_TST, "Muons");          //Muon visible Term
-    float sumEt_tst_muons = (*metRFC_TST)["Muons"]->sumet()*0.001; //Muon visible sumEt
+    v_met_ST_vmu_MU       = getMET( metRFC, "Muons");          //Muon visible Term
+    float sumEt_tst_muons = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt
 
     // soft terms:
-    soft_met_tst = (*metRFC_TST)["PVSoftTrk"]->met()*0.001;
+    soft_met_tst = (*metRFC)["PVSoftTrk"]->met()*0.001;
     
     // MET (track soft term) -- invisible muons
     TVector2 v_met_ST_tst = v_met_ST_vmu_tst;
@@ -2939,7 +3024,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
 			  || metmap[::MetDef::VisMu].Mod() > 100. );
     
-    bool SK_passSR = ( ((e_N+m_N)==0) &&  (metmap[::MetDef::InvMu].Mod() > 250. 
+    bool SK_passSR = ( ((eb_N+mb_N)==0) &&  (metmap[::MetDef::InvMu].Mod() > 250. 
 					   || metmap[::MetDef::VisMu].Mod() > 250. 
 					   || metmap[::MetDef::VisMuTST].Mod() > 250. 
 					   || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
@@ -2957,7 +3042,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     bool SK_passCRph = ( (ph_N>0) &&  ( SK_passMETdef
 					|| metmap[::MetDef::VisMuPhCorr].Mod() > 100.));
 
-    
+
     bool keep_event = (SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph));
 
     if(!keep_event){
@@ -2966,7 +3051,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       delete electrons_sc;         delete electrons_scaux;
       delete photons_sc;           delete photons_scaux;
       delete metRFC;               delete metRFCAux;
-      delete metRFC_TST;           delete metRFCAux_TST; 
 
       if(myfile.is_open())
 	myfile.close();
@@ -3032,7 +3116,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     //some extra variables
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
-    auto dphi_min_tmp=-1.;
+    auto dphi_min_4jets_tmp=-1.;
+    auto dphi_min_tmp=-1.;  
     int ibcl=-1;  //closest bjet to met
     int ibfar=-1; //most faraway bjet from met
     int ilcl=-1;  //closest light jet to met
@@ -3056,7 +3141,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	dphi_min_allj_tmp = deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
       
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
-	dphi_min_tmp = dphi_jm;
+     
+	dphi_min_tmp = dphi_jm;     
+     
+      if( ijet < 4 && (dphi_min_4jets_tmp < 0 || dphi_min_4jets_tmp > dphi_jm) ) //closest jet to met (4-leading only)
+
+	dphi_min_4jets_tmp = dphi_jm;
 
 
       //--- look for min MT(jet,MET)
@@ -3089,6 +3179,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       ijet++;
     }
     dPhi_min_alljets.push_back(dphi_min_allj_tmp);
+    dPhi_min_4jets.push_back(dphi_min_4jets_tmp);    
     dPhi_min.push_back(dphi_min_tmp);
 
     if( min_mt_jm==999999. )
@@ -3146,6 +3237,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     //==== Razor ====
     fillRazor( makeV3( mk.second ) );
     
+    if (n_jets>1) {
+      mct_corr.push_back(Calc_mct_corr(mcttool, recoJets.at(0), recoJets.at(1), mk.second));
+    }
+    else {
+      mct_corr.push_back(DUMMYUP);
+    }    
     //==== Z-related vars                                                                                                                                                                                                                            
     Zll_extra(mk.second); //be sure to call Zll_candidate() before!                                                                                                                                                                                                      
         
@@ -3505,8 +3602,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   delete muons_sc;             delete muons_scaux;
   delete electrons_sc;         delete electrons_scaux;
   delete photons_sc;           delete photons_scaux;
-  delete metRFC;               delete metRFCAux;
-  delete metRFC_TST;           delete metRFCAux_TST; 
+  delete metRFC;               delete metRFCAux; 
 
   if(myfile.is_open())
     myfile.close();
@@ -3936,6 +4032,7 @@ EL::StatusCode chorizo :: loop_truth()
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
     auto dphi_min_tmp=-1.;
+    auto dphi_min_4jets_tmp=-1.;    
     int ibcl=-1;  //closest bjet to met
     int ibfar=-1; //most faraway bjet from met
     int ilcl=-1;  //closest light jet to met
@@ -3956,7 +4053,10 @@ EL::StatusCode chorizo :: loop_truth()
       
       if(dphi_min_allj_tmp < 0 || dphi_min_allj_tmp > deltaPhi(jet.Phi(), mk.second.Phi()) ) //closest jet to met (all)
 	dphi_min_allj_tmp = deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
-      
+     
+      if( ijet < 4 && (dphi_min_4jets_tmp < 0 || dphi_min_4jets_tmp > dphi_jm) ) //closest jet to met (3-leading only)
+	dphi_min_4jets_tmp = dphi_jm;      
+
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
 	dphi_min_tmp = dphi_jm;
 
@@ -3992,6 +4092,7 @@ EL::StatusCode chorizo :: loop_truth()
       ijet++;
     }
     dPhi_min_alljets.push_back(dphi_min_allj_tmp);
+    dPhi_min_4jets.push_back(dphi_min_4jets_tmp);    
     dPhi_min.push_back(dphi_min_tmp);
 
     if( min_mt_jm==999999. )
@@ -4112,7 +4213,6 @@ EL::StatusCode chorizo :: loop_truth()
 
   //Mct
   mct = Calc_mct();
-
 
   //==== Hadronic top reconstruction ====
   int ibtop1=-1; //book two highest btag-weight jets for later use
@@ -4292,11 +4392,15 @@ void chorizo :: dumpLeptons(){
     e_pt.push_back( recoElectrons.at(iel).Pt() );
     e_eta.push_back( recoElectrons.at(iel).Eta() );
     e_phi.push_back( recoElectrons.at(iel).Phi() );
+    e_type.push_back( recoElectrons.at(iel).type );   
+    e_origin.push_back( recoElectrons.at(iel).origin );        
     e_etiso30.push_back( recoElectrons.at(iel).etcone30 );
     e_ptiso30.push_back( recoElectrons.at(iel).ptcone30 );
     e_etiso20.push_back( recoElectrons.at(iel).etcone20 );
     e_ptiso20.push_back( recoElectrons.at(iel).ptcone20 );
     e_id.push_back(  recoElectrons.at(iel).id );
+    e_d0_sig.push_back( recoElectrons.at(iel).d0_sig );
+    e_z0.push_back( recoElectrons.at(iel).z0 );
   }
     
   if (truthElectrons.size()>0){
@@ -4325,10 +4429,14 @@ void chorizo :: dumpLeptons(){
     m_pt.push_back( recoMuons.at(imu).Pt() );
     m_eta.push_back( recoMuons.at(imu).Eta() );
     m_phi.push_back( recoMuons.at(imu).Phi() );
+    m_type.push_back( recoMuons.at(imu).type ); 
+    m_origin.push_back( recoMuons.at(imu).origin );        
     m_etiso20.push_back( recoMuons.at(imu).etcone20 );
     m_ptiso20.push_back( recoMuons.at(imu).ptcone20 );
     m_etiso30.push_back( recoMuons.at(imu).etcone30 );
     m_ptiso30.push_back( recoMuons.at(imu).ptcone30 );
+    m_d0_sig.push_back( recoMuons.at(imu).d0_sig );  
+    m_z0.push_back( recoMuons.at(imu).z0 );        
   }
   
 }
@@ -5363,8 +5471,8 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 {
   float totalSF = 1.;
   
-  if (this->isMC) return totalSF;
-  
+  if (!this->isMC && !this->isSignal) return totalSF;
+    
   xAOD::JetContainer::const_iterator jet_itr = goodJets->begin();
   xAOD::JetContainer::const_iterator jet_end = goodJets->end();
   
@@ -5374,7 +5482,7 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
     
     CP::CorrectionCode result;
     
-    if ( dec_bjet(**jet_itr) )
+    if ( dec_bjet(**jet_itr))
       {
 	result = btagTool->getScaleFactor(**jet_itr, sf);
 	
@@ -5462,6 +5570,17 @@ float chorizo :: Calc_mct(Particle p1, Particle p2){
 
   return mct;
 };
+
+
+float chorizo :: Calc_mct_corr(TMctLib *mcttool, Particle p1, Particle p2, TVector2 met){
+
+  TLorentzVector vds(0.,0.,0.,0.);
+  float mct_corr = mcttool->mctcorr(p1,p2,vds,met,13000.0);; 
+
+  return mct_corr;
+};
+
+
 
 float chorizo :: TopTransvMass(){
 
