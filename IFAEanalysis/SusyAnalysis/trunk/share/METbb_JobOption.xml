@@ -6,7 +6,7 @@
     <Mode name="debug">true</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">true</Mode>
+    <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path>
