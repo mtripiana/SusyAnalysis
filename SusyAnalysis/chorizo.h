@@ -275,8 +275,9 @@ private:
   LHAPDF::PDF* m_PDF; //!
   BTaggingEfficiencyTool* tool_btag;  //! //70%op
   BTaggingEfficiencyTool* tool_btag2; //! //80%op
-  TMctLib* mcttool;
 #endif // not __CINT__
+
+  TMctLib* tool_mct; //!
 
   SUSY::JetMCSmearingTool* tool_jsmear; //!
 
@@ -329,7 +330,7 @@ private:
   virtual float Calc_MT(Particle p, TVector2 met);
   virtual float Calc_mct();
   virtual float Calc_mct(Particle p1, Particle p2);
-  virtual float Calc_mct_corr(TMctLib *mcttool, Particle p1, Particle p2, TVector2 met);  
+  virtual float Calc_mct_corr(Particle p1, Particle p2, TVector2 met);  
   virtual float Calc_dijetMass();
   virtual float Calc_dijetMass(TLorentzVector ja, TLorentzVector jb);
   virtual std::vector<TLorentzVector> CombineJets();

@@ -53,7 +53,7 @@ void usage(){
   cout << endl;
   cout << "" << endl;
   cout << " [options] : supported option flags" << endl;
-  cout << "       -j=<jOption>  : choose which analysis you want to run over. ( = 'METbb'(default), 'Stop', 'Monojet')	" << endl;		    
+  cout << "       -j=<jOption>  : choose which analysis you want to run over. ( = 'METbb'(default), 'Stop', 'Monojet')	" << endl;
   cout << "       -l            : run locally (default)   " << endl;
   cout << "       -b            : run in batch            " << endl;
   cout << "       -p            : run on the grid (prun)        " << endl;
@@ -286,10 +286,11 @@ int main( int argc, char* argv[] ) {
   }
   //***
 
-  TString allopts=""; //join all options in one string
-  for (unsigned int iopt=0; iopt < opts.size(); iopt++)
+  TString allopts=""; //join all options in one string (all but systematics!)
+  for (unsigned int iopt=0; iopt < opts.size(); iopt++){
+    if (opts[iopt].BeginsWith("s") ) continue; //we'll loop over the systematics later
     allopts += " -"+opts[iopt]+" ";
-
+  }
 
   //check for needed setup 
   std::string ami_check = gSystem->GetFromPipe("which ami 2>/dev/null").Data(); 
@@ -462,7 +463,7 @@ int main( int argc, char* argv[] ) {
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
 
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
-	TString torun = Form("run_chorizo %s -i=%d %s %s", allopts.Data(), run_ids[i_id], args[i_sample].Data(), systematics[i_syst].Data());
+	TString torun = Form("run_chorizo %s -i=%d -s=%s %s", allopts.Data(), run_ids[i_id], systematics[i_syst].Data(), args[i_sample].Data());
 	system(torun.Data());
       }//end of systematics loop
       

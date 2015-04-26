@@ -19,7 +19,7 @@ rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/t
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetUncertainties/tags/JetUncertainties-00-09-19
 
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/TileID/TileTripReader/trunk
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/SampleHandler/tags/SampleHandler-00-00-91
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/SampleHandler/tags/SampleHandler-00-00-92
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/RootCoreUtils/tags/RootCoreUtils-00-00-28
 
 # Offline truth jet tagging for MCGN1 derivations

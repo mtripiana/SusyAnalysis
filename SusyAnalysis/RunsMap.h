@@ -459,6 +459,7 @@ m_map["13TEV_SinglePhotonMassiveCBPt500_BFilter"] = rlist( Rpair(177585,"mc14_13
   
   m_map["13TEV_Sbottom_800_1_SUSY1"] = rlist( Rpair(202266, "/nfs/atlas-data06/scratch/tripiana/xAOD/mc14/sbottom/SUSY1/"));
   m_map["13TEV_Sbottom_800_1_SUSY1_WT"] = rlist( Rpair(202266, "mc14_13TeV:mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));
+  m_map["test_sbottom"] = rlist( Rpair(202266, "mc14_13TeV:mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));
 
   m_map["13TEV_Sbottom_800_1_LOCAL"] = rlist( Rpair(202266, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_800_1_202266_13TeV/"));
   m_map["13TEV_Sbottom_300_290_LOCAL"] = rlist( Rpair(202249, "/nfs/at3/scratch/cfischer/SusyAnalysis/XAODSamples/SM_BB_direct_300_290_202249_13TeV/"));

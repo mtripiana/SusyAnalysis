@@ -109,8 +109,8 @@ chorizo :: chorizo ()
     tool_grl(0),            
     tool_jsmear(0),          
     tool_tileTrip(0),       
-    m_PDF(0),
-    mcttool(0)
+    tool_mct(0),
+    m_PDF(0)
 {
 
   outputName="";
@@ -637,10 +637,7 @@ EL::StatusCode chorizo :: histInitialize ()
   //   h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
   // }
 
-
-  //  syst_CPstr = "JET_GroupedNP_1__1up"; //TESTING!!
-  syst_CPstr = ""; //TESTING!!
-  
+  //  syst_CPstr = ""; //TESTING!!
   //Systematics (override CP set if string is given) [tmp hack]
   if(!syst_CPstr.IsNull()){
     syst_CP  = CP::SystematicSet(); //needed?
@@ -661,7 +658,7 @@ EL::StatusCode chorizo :: histInitialize ()
     else{
       syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr)));
     }
-  }  
+  }
   
   //Sum of weights for primary sample
   //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
@@ -1595,7 +1592,9 @@ EL::StatusCode chorizo :: initialize ()
     beamE_from = (float) wk()->metaData()->getDouble("ebeam", 4.); //default is 8TeV!
     m_PDF = LHAPDF::mkPDF(input_pdfset.Data(), input_pdfset_member); //LHAPDF6
   }
-  mcttool = new TMctLib();
+
+  // Corrected mct calculator
+  tool_mct = new TMctLib();
   
   //--- number of events
   Info("initialize()", Form("Total number of events = %lli", m_event->getEntries() ));
@@ -2053,8 +2052,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     //decorate electron with baseline pt requirements ('signal')
     elIsoArgs->_etcut = El_PreselPtCut;
     tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
-      
-  
   }
 
   //--- Get Muons
@@ -2082,7 +2079,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_PreselPtCut;
     tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
-    
 
     if(debug)
       if( dec_signal(*mu_itr) ) 
@@ -2124,7 +2120,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	tool_st->IsBJet( *jet_itr, false, Jet_TaggerOp.Atof() ); 
     }
 
-    
    //dec_baseline(*jet_itr) &= (fabs((*jet_itr).eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR for sbottom analysis. //SILVIA //CHECK_ME
   }
 
@@ -2267,12 +2262,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     if(debug)
       cout << "Muon pre-sel\n pt = " << (*mu_itr).pt() << endl;
     
-    if (isStopTL){ 
+    if(isStopTL){
       dec_baseline(*mu_itr) &= ((*mu_itr).muonType() == xAOD::Muon::Combined || (*mu_itr).muonType() == xAOD::Muon::SegmentTagged); //for Sbottom as well?
       dec_signal(*mu_itr)   &= dec_baseline(*mu_itr); //update signal decoration too!
       dec_final(*mu_itr )   &= dec_baseline(*mu_itr); //update final decoration too!
     }
-    
+
     if(debug && dec_baseline(*mu_itr)) 	cout << "Muon baseline " << endl; 
 
     if(! dec_baseline(*mu_itr) ) continue; //keep baseline objects only
@@ -2362,7 +2357,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     
     
     //save signal muons
-    if( dec_final(*mu_itr) ){ //|| isStopTL){
+    if( dec_final(*mu_itr) ){ 
       recoMuons.push_back(recoMuon);
       m_N++;
       IsMuon = true;
@@ -2465,7 +2460,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   int iJet = 0;
   int n_fakemet_jets=0;
   for( ; jet_itr != jet_end; ++jet_itr ){   
-    
     //look for fake-met jets    
     if (Met_doFakeEtmiss){
       float bchcorrjet;
@@ -2802,7 +2796,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 			 electrons_sc,
 			 muons_sc,
 			 0,
-			 0));
+			 0,
+			 false));
   TVector2 v_met_ST_vmu = getMET( metRFC, "Final");
   met_obj.SetVector(v_met_ST_vmu,"met_vmu");  //- Copy met vector to the met data member
   sumET_cst_vmu = (*metRFC)["Final"]->sumet()*0.001;
@@ -3045,6 +3040,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     bool keep_event = (SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph));
 
+    keep_event = ((eb_N+mb_N)==0); //CHECK CUTFLOW
+
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;
       delete muons_sc;             delete muons_scaux;
@@ -3238,7 +3235,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     fillRazor( makeV3( mk.second ) );
     
     if (n_jets>1) {
-      mct_corr.push_back(Calc_mct_corr(mcttool, recoJets.at(0), recoJets.at(1), mk.second));
+      mct_corr.push_back(Calc_mct_corr(recoJets.at(0), recoJets.at(1), mk.second));
     }
     else {
       mct_corr.push_back(DUMMYUP);
@@ -4641,18 +4638,23 @@ EL::StatusCode chorizo :: finalize ()
     tool_jsmear = 0;
   }
 
-  //jet jvf                                                                                                                                                                                                                                                                 
+  //jet jvf                                                                                                                                                                     
   if( tool_jvf ) {
     delete tool_jvf;
     tool_jvf = 0;
   }
 
-  //jet label                                                                                                                                                                                                                                                              
+  //jet label                                                                                                                                                                  
   if( tool_jetlabel ) {
     delete tool_jetlabel;
     tool_jetlabel = 0;
   }
 
+  //mct corrected
+  if( tool_mct ) {
+    delete tool_mct;
+    tool_mct = 0;
+  }
 
   //SUSYTools
   if( tool_st ){
@@ -5572,10 +5574,10 @@ float chorizo :: Calc_mct(Particle p1, Particle p2){
 };
 
 
-float chorizo :: Calc_mct_corr(TMctLib *mcttool, Particle p1, Particle p2, TVector2 met){
+float chorizo :: Calc_mct_corr(Particle p1, Particle p2, TVector2 met){
 
   TLorentzVector vds(0.,0.,0.,0.);
-  float mct_corr = mcttool->mctcorr(p1,p2,vds,met,13000.0);; 
+  float mct_corr = tool_mct->mctcorr(p1,p2,vds,met,13000.0);; 
 
   return mct_corr;
 };
