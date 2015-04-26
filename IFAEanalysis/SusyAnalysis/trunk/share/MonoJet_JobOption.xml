@@ -110,17 +110,19 @@
       <triggerSF>false</triggerSF>
     </Photon>
     <Jet>
+      <PreselPtCut>20000.</PreselPtCut>
+      <PreselEtaCut>10</PreselEtaCut>
+      <RecoPtCut>35000.</RecoPtCut>
+      <RecoEtaCut>2.8</RecoEtaCut> 
+
+      <JESNPset>1</JESNPset>
+
       <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
       <Path name="BtagCalib">SUSYTools/</Path>
       <dPhiMin>0.4</dPhiMin>
       <JVFMin>0.5</JVFMin>
       <Collection>AntiKt4LCTopo</Collection>
-      
-      <PreselPtCut>20000.</PreselPtCut>
-      <PreselEtaCut>2.8</PreselEtaCut>
-      <RecoPtCut>30000.</RecoPtCut>
-      <RecoEtaCut>2.8</RecoEtaCut> 
-      
+            
       <!--- For the c/b-tagger -->
       <!-- 	<Tagger>IP3DSV1</Tagger> -->
       <!-- 	<TaggerOpPoint>1_85</TaggerOpPoint> -->	

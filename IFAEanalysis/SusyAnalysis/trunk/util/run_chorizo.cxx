@@ -237,7 +237,8 @@ int main( int argc, char* argv[] ) {
   else if ( args[0] == "slist" ){ //just print systematics list?
     systListOnly=true;
     gErrorIgnoreLevel = kFatal;
-    args[0] = "TestDF"; //rename to test sample to get systematics list
+    args[0] = "test_stop"; //rename to test sample to get systematics list
+    
     // printSystList();
     // return 0;
   }
@@ -539,6 +540,8 @@ int main( int argc, char* argv[] ) {
     alg->doPUTree   = false;         //get it from the XML!!
     alg->genPUfile  = generatePUfile;
     
+    cout << "CP NAME = " << syst_CP.name() << endl;
+
     alg->syst_CP    = syst_CP;      // Systematics
     alg->syst_CPstr = syst_CP.name();
     alg->syst_ST    = syst_ST;      
@@ -546,7 +549,8 @@ int main( int argc, char* argv[] ) {
     alg->syst_PU    = syst_PU;
     alg->syst_JVF   = syst_JVF;
     //    alg->syst_BCH   = syst_BCH;
-    alg->syst_JESNPset = 1; //TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$JESNPset")).Atoi();
+    //    alg->syst_JESNPset = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$JESNPset")).Atoi();
+    alg->syst_JESNPset =  xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Jet$JESNPset");
     
     
     //debug printing                                                                                                               
