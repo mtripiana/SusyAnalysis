@@ -20,6 +20,7 @@ class Particle : public TLorentzVector {
     float  Pt_up;
     float  Pt_down;
     float  Ht;
+    float  ptraw;
     bool   isGood;
     bool   isIsolated;
     int    id;
@@ -90,6 +91,8 @@ class Jet : public Particle {
     bool                    failBCHMedium;
     float                   BCH_CORR_CELL;
     float                   BCH_CORR_JET;
+
+    TLorentzVector          TruthJet;
 
     bool  isTauJet(float metphi, TString Tagger="MV1");
     bool  isBTagged(TString Tagger, float op);

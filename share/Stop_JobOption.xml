@@ -9,8 +9,8 @@
     <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">true</Mode>    
     <Mode name="DoSkimming">false</Mode>    
-    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
+    <Path name="RootFilesFolder">/nfs/at3/scratch/arodriguez/StopAnalysis/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/arodriguez/StopAnalysis/colfiles/</Path>
 <!--    <Path name="RootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/</Path> -->
 <!--    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/COLLATERAL/</Path> -->
     <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>

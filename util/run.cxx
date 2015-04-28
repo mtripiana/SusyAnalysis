@@ -439,7 +439,7 @@ int main( int argc, char* argv[] ) {
       sh.at(0)->setMetaDouble( "DSID", (double)run_ids[i_id] );
 
       //  fetch meta-data from AMI
-      if(amiFound){
+      if(amiFound && 0){
 	try{
 	  fetchMetaData (sh, false); 
 	  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)

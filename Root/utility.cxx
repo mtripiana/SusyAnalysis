@@ -235,7 +235,7 @@ TLorentzVector makeTLV(TVector2 v2){
 float getAsymmetry(float a, float b){
   if( ! (a+b > 0)) return -1;
 
-  return (a-b) / (a+b);
+  return fabs(a-b) / (a+b);
 };
 
 bool isBeamHalo(int run=0,int event=0){ //CHECK_ME
