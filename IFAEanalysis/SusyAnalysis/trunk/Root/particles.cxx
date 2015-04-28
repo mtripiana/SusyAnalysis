@@ -11,6 +11,7 @@ Particle::Particle(){
   Pt_up = 0;
   Pt_down = 0;
   Ht = 0;
+  ptraw=0;
   isGood = true;
   isIsolated = false;
   isTight = false;
@@ -103,6 +104,8 @@ Jet::Jet(){
   failBCHMedium=false;
   BCH_CORR_CELL=-100;
   BCH_CORR_JET=-100;
+
+  TruthJet.Clear();
 }
 
 Jet::~Jet(){}
@@ -139,15 +142,15 @@ bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
 
   if (this->isBTagged(Tagger)) return false;
   if (this->nTrk >= 5) return false;
-  if (deltaPhi(this->Phi(), metphi)>0.2) return false;
-
+  if (deltaPhi(this->Phi(), metphi)>=TMath::Pi()/5.) return false; //CHANGED BEFORE 0.2
+  if (fabs(this->Eta())>2.5) return false;                               //CHANGED BEFORE NOTHING
   return true;
 }
 
 
 float Jet::getBweight(TString Tagger){
   if (Tagger=="MV1")              return (this->MV1);
-  if (Tagger=="IP3DSV1")              return (this->SV1plusIP3D);
+  if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D);
   if (Tagger=="JetFitterCOMBNN")  return (this->JetFitterCombNN);
   if (Tagger=="JetFitterCOMBNNc") return (this->JetFitterCombNNc); 
   

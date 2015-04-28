@@ -76,6 +76,12 @@ static SG::AuxElement::Decorator<char> dec_bjet("bjet");
 static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
 static SG::AuxElement::Decorator<char> dec_final("final");
 
+static SG::AuxElement::Decorator<float> dec_ptraw("ptraw");
+static SG::AuxElement::Decorator<float> dec_truthphi("truthphi");
+static SG::AuxElement::Decorator<float> dec_trutheta("trutheta");
+static SG::AuxElement::Decorator<float> dec_truthpt("truthpt");
+static SG::AuxElement::Decorator<float> dec_truthe("truthe");
+
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
 static SG::AuxElement::Accessor<float> acc_etcone20("etcone20");
@@ -107,10 +113,17 @@ chorizo :: chorizo ()
     tool_btag2(0),          
     tool_jvf(0),            
     tool_grl(0),            
-    tool_jsmear(0),          
     tool_tileTrip(0),       
-    tool_mct(0),
-    m_PDF(0)
+    m_PDF(0),
+#ifdef TILETEST
+    tool_jsmear(0),
+    tool_jettile(0)
+#else
+    tool_jsmear(0),
+#endif
+    tool_mct(0)
+
+
 {
 
   outputName="";
@@ -157,6 +170,7 @@ chorizo :: chorizo ()
 
 EL::StatusCode chorizo :: setupJob (EL::Job& job)
 {
+
   job.useXAOD ();
 
   // let's initialize the algorithm to use the xAODRootAccess package
@@ -166,6 +180,7 @@ EL::StatusCode chorizo :: setupJob (EL::Job& job)
 }
 
 TH1F* chorizo :: InitHist(std::string name, int nbin, float binlow, float binhigh, std::string xaxis, std::string yaxis) {
+
   TH1F *h = new TH1F(name.c_str(), name.c_str(), nbin, binlow, binhigh);
   h->GetXaxis()->SetTitle(xaxis.c_str());
   h->GetYaxis()->SetTitle(yaxis.c_str());
@@ -175,6 +190,7 @@ TH1F* chorizo :: InitHist(std::string name, int nbin, float binlow, float binhig
 }
 
 void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, float binhigh, std::string xaxis, std::string yaxis) {
+
   h = new TH1F(name.c_str(), name.c_str(), nbin, binlow, binhigh);
   h->GetXaxis()->SetTitle(xaxis.c_str());
   h->GetYaxis()->SetTitle(yaxis.c_str());
@@ -267,7 +283,6 @@ void chorizo :: bookTree(){
       //truth
       output->tree()->Branch("truth_M",&truth_M,"truth_M/F", 10000);
       output->tree()->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
-
 
       output->tree()->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
 
@@ -371,6 +386,14 @@ void chorizo :: bookTree(){
       output->tree()->Branch("truth_pt1",&truth_pt1,"truth_pt1/F", 10000);
       output->tree()->Branch("truth_eta1",&truth_eta1,"truth_eta1/F", 10000);
       output->tree()->Branch("pt1",&pt1,"pt1/F", 10000);
+
+      output->tree()->Branch("truthpt1",&truthpt1,"truthpt1/F", 10000);
+      output->tree()->Branch("trutheta1",&trutheta1,"trutheta1/F", 10000);
+      output->tree()->Branch("truthphi1",&truthphi1,"truthphi1/F", 10000);
+
+      output->tree()->Branch("pt1raw",&pt1raw,"pt1raw/F", 10000);
+      output->tree()->Branch("pt2raw",&pt2raw,"pt2raw/F", 10000);
+
       output->tree()->Branch("pt2",&pt2,"pt2/F", 10000);
       output->tree()->Branch("pt3",&pt3,"pt3/F", 10000);
       output->tree()->Branch("pt4",&pt4,"pt4/F", 10000);
@@ -486,7 +509,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("dPhi_met_j2",&dPhi_met_j2);
       output->tree()->Branch("dPhi_met_j3",&dPhi_met_j3);
       output->tree()->Branch("dPhi_met_j4",&dPhi_met_j4);
-      output->tree()->Branch("dPhi_met_mettrk",&dPhi_met_mettrk,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
+      output->tree()->Branch("dPhi_met_mettrk",&dPhi_met_mettrk);//,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
       output->tree()->Branch("dPhi_min",&dPhi_min);
       output->tree()->Branch("dPhi_min_4jets",&dPhi_min_4jets);      
       output->tree()->Branch("dPhi_min_alljets",&dPhi_min_alljets);
@@ -515,7 +538,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
       output->tree()->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
 
-      //sumet  (provisional silvia)                                                                                                                                                                                                         
+      //sumet  (provisional silvia)           
+                                                                                       
       output->tree()->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
       output->tree()->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
       output->tree()->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
@@ -594,6 +618,7 @@ void chorizo :: bookTree(){
 
 EL::StatusCode chorizo :: histInitialize ()
 {
+
   gErrorIgnoreLevel = this->errIgnoreLevel;
 
   if (!outputName.empty()){
@@ -659,7 +684,7 @@ EL::StatusCode chorizo :: histInitialize ()
       syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr)));
     }
   }
-  
+
   //Sum of weights for primary sample
   //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
   m_cfilename = wk()->metaData()->getString(SH::MetaFields::sampleName); //name of current sample
@@ -668,6 +693,8 @@ EL::StatusCode chorizo :: histInitialize ()
 }
 
 float chorizo :: getNWeightedEvents(){
+  //  return 0.; //TAKE OUT!!!
+
 
   //Try to get the original number of events (relevant in case of derivations)
   if (!m_MetaData) 
@@ -920,6 +947,12 @@ void chorizo :: InitVars()
   n_jets60=0;
   n_jets80=0;
   n_taujets.clear();
+  pt1raw = DUMMYDN;
+  pt2raw = DUMMYDN;
+  truthphi1 = DUMMYDN;
+  trutheta1 = DUMMYDN;
+  truthpt1 = DUMMYDN;
+              
   pt1 = DUMMYDN;              
   pt2 = DUMMYDN;              
   pt3 = DUMMYDN;              
@@ -1052,7 +1085,7 @@ void chorizo :: InitVars()
   dPhi_met_j2.clear(); 
   dPhi_met_j3.clear(); 
   dPhi_met_j4.clear(); 
-  dPhi_met_mettrk = DUMMYDN;                     
+  dPhi_met_mettrk.clear();
   dPhi_j1_j2 = DUMMYDN;                          
   dPhi_j1_j3 = DUMMYDN;                          
   dPhi_j2_j3 = DUMMYDN;                          
@@ -1145,6 +1178,7 @@ void chorizo :: InitVars()
 
 EL::StatusCode chorizo :: fileExecute ()
 {
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -1571,7 +1605,21 @@ EL::StatusCode chorizo :: initialize ()
   tool_tileTrip = new Root::TTileTripReader("TileTripReader");
   std::string TileTripReader_file = "CompleteTripList_2011-2012.root";
   CHECK( tool_tileTrip->setTripFile((maindir + "TileTripReader/" + TileTripReader_file).data()) );
-      
+
+  //--- JetTileCorrectionTool
+#ifdef TILETEST
+   tool_jettile = new CP::JetTileCorrectionTool("JetTileCorrectionTool");
+   std::string parfile="param_test.root";
+   // @param part tile partition: LBA=0, LBC=1, EBA=2, EBC=3
+   //  std::vector<std::string> dead_modules = {"0 1","0 10"};
+   std::vector<std::string> dead_modules = {"0 0" , "0 7" ,"0 36", "1 50", "1 24", "1 62", "2 15", "2 35", "2 44", "3 2", "3 57"};
+   bool kill=true;
+   CHECK( tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile) );
+   CHECK( tool_jettile->setProperty("DeadModules",dead_modules) );
+   CHECK( tool_jettile->setProperty("killDead",kill) );
+   CHECK( tool_jettile->initializeTool(tool_tileTrip) );
+#endif 
+
   //--- JVF uncertainty
   tool_jvf = new JVFUncertaintyTool();
   tool_jvf->UseGeV(true);
@@ -1609,6 +1657,7 @@ EL::StatusCode chorizo :: initialize ()
 
 void chorizo :: printSystList(){
   //Warning: It has to happen *after* all tools' initialization!
+
   cout << bold("\n\n\n List of recommended/implemented systematics") << endl;
   cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
   
@@ -1632,6 +1681,7 @@ void chorizo :: printSystList(){
     
     // TString sout = Form("%s     :   affects %s%s for %s",sys.name(),( sysInfo.affectsWeights ? "weights " : "" ),( sysInfo.affectsKinematics ? "kinematics " : "" ),affectedType);
     // Info("", sout.Data().c_str());
+
 
     cout <<  sys.name() << "    : affects " << ( sysInfo.affectsWeights ? "weights " : "" ) << ( sysInfo.affectsKinematics ? "kinematics " : "" ) << "  for " << affectedType << endl;
   }
@@ -1673,7 +1723,7 @@ void chorizo :: loadMetaData(){
 
 EL::StatusCode chorizo :: nextEvent(){
   //*** clean event (store, pointers, etc...) before leaving successfully... ***
-  
+ 
   // Clear View container
   if(m_goodJets)
     m_goodJets->clear();
@@ -1697,7 +1747,7 @@ EL::StatusCode chorizo :: execute ()
 EL::StatusCode chorizo :: loop ()
 {
   //Info("loop()", "Inside loop");
-  
+
 #ifdef PROFCODE
   if(m_eventCounter!=0)
     CALLGRIND_START_INSTRUMENTATION;
@@ -1743,13 +1793,19 @@ EL::StatusCode chorizo :: loop ()
     CHECK( m_event->retrieve( m_truthE,     "TruthEvent" ) );
     CHECK( m_event->retrieve( m_truthP,     "TruthParticle" ) );
     CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
-    CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );
+    CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );//PROBLEM!!!!!!
 
     mtruth_inv = (*cmet_truth)["Int"];
     mtruth_vis = (*cmet_truth)["NonInt"];
 
     sumET_truth     = (*cmet_truth)["Int"]->sumet()*0.001;
     sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
+
+    // mtruth_inv = (*cmet_truth)["Final"];
+    // mtruth_vis = (*cmet_truth)["Final"];
+
+    // sumET_truth     = (*cmet_truth)["Final"]->sumet()*0.001;
+    // sumET_truth_vmu = (*cmet_truth)["Final"]->sumet()*0.001;
   }
 
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
@@ -1807,7 +1863,7 @@ EL::StatusCode chorizo :: loop ()
 
     //--- Weigths for Sherpa, MC@NLO, Acer, ...
     MC_w = eventInfo->mcEventWeight();
-    
+
     //--- PDF reweighting
     xAOD::TruthEventContainer::const_iterator truthE_itr = m_truthE->begin();
     int id1=0; int id2=0;
@@ -2017,7 +2073,7 @@ EL::StatusCode chorizo :: loop ()
   //     }
   //   }
   // }
-  
+
 this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && !this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
 
 
@@ -2054,6 +2110,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
   }
 
+
   //--- Get Muons
   xAOD::MuonContainer* muons_sc(0);                                                                                       
   xAOD::ShallowAuxContainer* muons_scaux(0);                                                                              
@@ -2070,6 +2127,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       if( dec_baseline(*mu_itr) )
 	cout << "is baseline " << endl;
     }
+
 
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_RecoPtCut;
@@ -2110,8 +2168,24 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut) ); //'baseline' and 'bad' decoration   . no eta cut for cleaning!
   
   xAOD::Jet jet;
-  for( const auto& jet_itr : *jets_sc){
+  for( const auto& jet_itr : *jets_sc){    
     
+
+    dec_ptraw(*jet_itr) = (*jet_itr).pt();
+
+    TLorentzVector TruthJetdec=MatchTruthJet(*jet_itr);
+    dec_truthpt(*jet_itr)=TruthJetdec.Pt();
+    dec_trutheta(*jet_itr)=TruthJetdec.Eta();
+    dec_truthphi(*jet_itr)=TruthJetdec.Phi();
+    dec_truthe(*jet_itr)=TruthJetdec.E();
+
+#ifdef TILETEST
+    cout << "*** BEFORE TILE CORRECTION = " << (jet_itr)->pt() << endl;
+     if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
+       Error("loop()", "Failed to apply JetTileCorrection!");
+     cout << "*** AFTER TILE CORRECTION = " << (jet_itr)->pt() << endl;
+#endif
+
     //** Bjet decoration
     if (fabs((*jet_itr).eta()) < 2.5){
       if(Jet_Tagger=="MV1")
@@ -2162,11 +2236,11 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       myfile << "passOR     : " << (((!doOR) || dec_passOR(*el_itr)) ? 1 : 0 ) << "\n";
       myfile << "passSignal : " << (dec_signal(*el_itr) ? 1 : 0 ) << "\n"; //save signal muons (after OR and no-cosmic already)      
     }
-    
+
     //TEST NEW OR tool
     if(dec_passOR(*el_itr) && dec_failOR(*el_itr))
       Info("loop()"," Electron passed STor but not ORtool");
-    
+
     //book not-overlapping electrons only
     if (! ((!doOR) || dec_passOR(*el_itr) )) continue;
 
@@ -2239,7 +2313,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
       
   }//electron loop
-  
+
 
   
   //sort the electrons in Pt
@@ -2267,6 +2341,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       dec_signal(*mu_itr)   &= dec_baseline(*mu_itr); //update signal decoration too!
       dec_final(*mu_itr )   &= dec_baseline(*mu_itr); //update final decoration too!
     }
+
+
 
     if(debug && dec_baseline(*mu_itr)) 	cout << "Muon baseline " << endl; 
 
@@ -2541,6 +2617,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     recoJet.Pt_up = recoJet.Pt();
     recoJet.Pt_down = recoJet.Pt();
 
+    recoJet.ptraw = dec_ptraw(**jet_itr);
+
+    TLorentzVector Truth;
+    Truth.SetPtEtaPhiE(dec_truthpt(**jet_itr),dec_trutheta(**jet_itr),dec_truthphi(**jet_itr),dec_truthe(**jet_itr));
+    recoJet.TruthJet = Truth;
+
     jetCandidates.push_back(recoJet);
     
     if (doCutFlow){
@@ -2718,7 +2800,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   
   if (doCutFlow) myfile << "n of signal jets: " << n_jets << " \n"; 
 
-     
 
   //check for higher pt jet multiplicity
   for (unsigned int ij=0; ij<recoJets.size(); ij++){
@@ -3224,7 +3305,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       j1_mT.push_back( DUMMYUP );
     }
 
-
+    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(),mk.second.Phi()));
     //meff = HT + met
     meff.push_back( HT + mk.second.Mod() );
     
@@ -3303,7 +3384,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   }
   
   //- dPhi & dR
-  dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
   
   if (n_jets>0){
 
@@ -3443,8 +3523,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   int ibtop2=-1;
   int iblead1=-1;
   int iblead2=-1;
-  float maxbw1=0;
-  float maxbw2=0;
+  float maxbw1=-99;
+  float maxbw2=-99;
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
 
@@ -3472,7 +3552,10 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
       ijet++;
   }
+
   RecoHadTops(ibtop1, ibtop2);
+
+  //------------------------------------- (BEFORE JUST CALL RECOHADTOPS)
 
   //dPhi_b1_b2  
   dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
@@ -4120,7 +4203,7 @@ EL::StatusCode chorizo :: loop_truth()
 	}
       }
     }
-
+    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(),mk.second.Phi()));
     //meff = HT + met
     meff.push_back( HT + mk.second.Mod() );
     
@@ -4148,7 +4231,7 @@ EL::StatusCode chorizo :: loop_truth()
   }
   
   //- dPhi & dR
-  dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
+
   
   if (n_jets>0){
 
@@ -4216,8 +4299,8 @@ EL::StatusCode chorizo :: loop_truth()
   int ibtop2=-1;
   int iblead1=-1;
   int iblead2=-1;
-  float maxbw1=0;
-  float maxbw2=0;
+  float maxbw1=-99;
+  float maxbw2=-99;
   auto ijet=0;
   for( auto jet : recoJets ){  //jet loop
 
@@ -4466,8 +4549,15 @@ void chorizo :: dumpJets(){
     tag_JetFitterCu_1 = recoJets.at(0).JetFitterCu;
     tag_JetFitterCb_1 = recoJets.at(0).JetFitterCb;
     pt1 = recoJets.at(0).Pt();
+    pt1raw = recoJets.at(0).ptraw*0.001;
+
     eta1 = recoJets.at(0).Eta();
     phi1 = recoJets.at(0).Phi();
+
+    truthpt1= recoJets.at(0).TruthJet.Pt();
+    trutheta1= recoJets.at(0).TruthJet.Eta();
+    truthphi1= recoJets.at(0).TruthJet.Phi();
+
     j1_E = recoJets.at(0).E();
     j1_chf = recoJets.at(0).chf;
     j1_emf = recoJets.at(0).emf;
@@ -4493,6 +4583,7 @@ void chorizo :: dumpJets(){
       tag_JetFitterCb_2 = recoJets.at(1).JetFitterCb;
       //if (!isTruth) btageffSF2 = recoJets.at(1).TagEffSF;
       //if (!isTruth) btagineffSF2 = recoJets.at(1).TagIneffSF;
+      pt2raw = recoJets.at(1).ptraw*0.001;
       pt2 = recoJets.at(1).Pt();
       eta2 = recoJets.at(1).Eta();
       phi2 = recoJets.at(1).Phi();
@@ -4632,6 +4723,14 @@ EL::StatusCode chorizo :: finalize ()
     tool_tileTrip = 0;
   }
   
+   //jet tile recovery
+#ifdef TILETEST
+   if( tool_jettile ) {
+     delete tool_jettile;
+     tool_jettile = 0;
+   }
+#endif 
+
   //jet smearing
   if( tool_jsmear ) {
     delete tool_jsmear;
@@ -5634,7 +5733,7 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
     muadded=true;
   }
 
-  if(ibtop1<0 || ibtop2<0 || (recoJets.size()<4)){ //at least two bjets and 4 jets  (to build at least the first top)
+  if(ibtop1<0 || ibtop2<0 || (recoJets.size()<4) ){ //at least two bjets and 4 jets  (to build at least the first top)
     m_top_had1=-1;
     m_top_had2=-1;
     return;
@@ -6827,3 +6926,34 @@ void chorizo :: findSusyHP(const xAOD::TruthParticleContainer *truthP, int& pdgi
   if(abs(secondsp->pdgId())>1000000) pdgid2 = secondsp->pdgId();
 
 }//end of findSusyHP()
+
+
+TLorentzVector chorizo::MatchTruthJet(xAOD:: Jet &jet){
+
+  xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
+  xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
+    
+    //loop over truth jets & save 'high-pt' jets for later use 
+
+  double truthpt=0.;
+  double trutheta=0;
+  double truthphi=0;
+  double truthEner=0;
+
+  for( ; tjet_itr != tjet_end; ++tjet_itr ) {
+    if(deltaR(jet.phi(),jet.eta(),(*tjet_itr)->phi(),(*tjet_itr)->eta())<0.4){
+      if ( (*tjet_itr)->pt()/1000.0 > truthpt ){
+	truthpt = (*tjet_itr)->pt()/1000.0;
+	trutheta = (*tjet_itr)->eta();
+	truthphi= (*tjet_itr)->phi();
+	truthEner= (*tjet_itr)->e()*0.001;
+      }
+
+    }
+  }
+  TLorentzVector truthJet;
+  truthJet.SetPtEtaPhiE( truthpt, trutheta, truthphi, truthEner );
+
+  return truthJet;
+
+}

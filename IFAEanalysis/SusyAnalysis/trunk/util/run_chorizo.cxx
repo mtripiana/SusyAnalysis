@@ -390,8 +390,10 @@ int main( int argc, char* argv[] ) {
 	scanDir( sh, run_pattern[p].Data() );
       }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
+
 	if(args[0]=="test_stop")
 	  sh.setMetaString ("nc_grid_filter", "*000001.pool.root*"); //REMOVE, JUST FOR STOP0L CUTFLOW
+
 	mgd=true;
       }
     }
@@ -447,7 +449,7 @@ int main( int argc, char* argv[] ) {
       return 0;
     }
   }
-  
+
   bool amiFound=true;
   if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
     s_ecm="13";
@@ -456,7 +458,7 @@ int main( int argc, char* argv[] ) {
 
     
   //  fetch meta-data from AMI
-  if(amiFound){
+  if(amiFound && 0){
     try{
       fetchMetaData (sh, false); 
       for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
@@ -466,10 +468,10 @@ int main( int argc, char* argv[] ) {
     }
     catch (...) { cout << bold(red("\n Ups! PROBLEMS WITH AMI!")+"Going for SUSYTools DB now...") << endl; }
   }
-
   //  then override some meta-data from SUSYTools
   readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
-  
+
+
   //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 
   std::vector<double> weights;
@@ -588,6 +590,8 @@ int main( int argc, char* argv[] ) {
     EL::PrunDriver   Pdriver;
     EL::GridDriver   Gdriver;
         
+
+
     //submit the job
     if(runLocal){ //local mode 
       Ddriver.submit( job, tmpdir );
@@ -632,12 +636,12 @@ int main( int argc, char* argv[] ) {
     if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
   
     if(generatePUfile) return 0; //leave if generating PURW files... no need to merge here... (it seems)
-    	
+
     //move output to collateral files' path
     TString sampleName,targetName;
     struct stat buffer;   
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
-      
+
       sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
       targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), single_id);
       
@@ -647,10 +651,10 @@ int main( int argc, char* argv[] ) {
       //	system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
       system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
       system(("rm -rf "+tmpdir).c_str());
-      
+
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }
-    
+
     if(single_id<0){ //NOTE: moved to the run wrapper for now!!
 
       //** after-burner to merge samples, add weights and anti-SF

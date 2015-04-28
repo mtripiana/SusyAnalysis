@@ -52,6 +52,12 @@
 #include <fastjet/ClusterSequence.hh>
 //#include "fastjet/ClusterSequence.hh"
 
+//For trigger test
+//#define TILETEST
+#ifdef TILETEST
+#include "JetTileCorrection/JetTileCorrectionTool.h"
+#endif 
+
 // Systematics includes
 #include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicSet.h"
@@ -281,6 +287,10 @@ private:
 
   SUSY::JetMCSmearingTool* tool_jsmear; //!
 
+  //Testing new TileCal correction tool!
+#ifdef TILETEST
+  CP::JetTileCorrectionTool* tool_jettile; //!
+#endif 
 
   //Member Functions
   virtual void InitVars();
@@ -354,6 +364,8 @@ private:
   virtual void  findBparton(); 
   virtual void  findSusyHP(int& pdgid1, int& pdgid2);
   virtual void  findSusyHP(const xAOD::TruthParticleContainer* truthP, int& pdgid1, int& pdgid2);
+
+  TLorentzVector MatchTruthJet(xAOD::Jet &jet);
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
@@ -780,6 +792,12 @@ private:
   float truth_pt1;
   float truth_eta1;
 
+  float pt1raw;
+  float pt2raw;
+  float truthpt1;
+  float trutheta1;
+  float truthphi1;
+
   float pt1;
   float pt2;
   float pt3;
@@ -873,7 +891,7 @@ private:
   VFloat dPhi_met_j2;
   VFloat dPhi_met_j3;
   VFloat dPhi_met_j4;
-  float dPhi_met_mettrk;
+  VFloat dPhi_met_mettrk;
   float dPhi_j1_j2;
   float dPhi_j1_j3;
   float dPhi_j2_j3;

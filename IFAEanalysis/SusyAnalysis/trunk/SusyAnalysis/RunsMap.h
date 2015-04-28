@@ -395,7 +395,9 @@ m_map["13TEV_SinglePhotonMassiveCBPt500_BFilter"] = rlist( Rpair(177585,"mc14_13
 					Rpair(167811,"mc14_8TeV.161986.Sherpa_CT10_llnunu_ZZ_EW6_noHiggs.merge.DAOD_SUSY1.e1434_s1933_s1911_r5591_r5625_p1784/"),
 					Rpair(167823,"mc14_8TeV.161987.Sherpa_CT10_lllnu_WZ_EW6_noHiggs.merge.DAOD_SUSY1.e1434_s1933_s1911_r5591_r5625_p1784/"),
 					Rpair(167835,"mc14_8TeV.161988.Sherpa_CT10_llll_ZZ_EW6_noHiggs.merge.DAOD_SUSY1.e1434_s1933_s1911_r5591_r5625_p1784/"));
-  
+
+  m_map["TestdijetSUSY1"]=rlist(Rpair(147911,"/nfs/at3/scratch/arodriguez/"));  
+
 
   //kt-matching study (SBOTTOM)
   m_map["13TEV_Sbottom_300_290_msb1"] = rlist( Rpair(202249, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_300_290/msb1/"));
@@ -1286,6 +1288,11 @@ m_map["13TEV_SinglePhotonMassiveCBPt500_BFilter"] = rlist( Rpair(177585,"mc14_13
   m_map["MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50"] = rlist( Rpair(202266, "mc14_8TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50*"));
 
   //...
+
+  //GammaJet
+
+  m_map["mc14_13TeV_Gammajet"] = rlist( Rpair(177575,"mc14_13TeV.177575.Sherpa_CT10_SinglePhotonMassiveCBPt140_280_CVetoBVeto.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"), Rpair(177576,"mc14_13TeV.177576.Sherpa_CT10_SinglePhotonMassiveCBPt280_500_CVetoBVeto.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"), Rpair(177577, "mc14_13TeV.177577.Sherpa_CT10_SinglePhotonMassiveCBPt500_CVetoBVeto.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"), Rpair(177579, "mc14_13TeV.177579.Sherpa_CT10_SinglePhotonMassiveCBPt140_280_CFilterBVeto.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"), Rpair(177580,"mc14_13TeV.177580.Sherpa_CT10_SinglePhotonMassiveCBPt280_500_CFilterBVeto.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"),Rpair(177581,"mc14_13TeV.177581.Sherpa_CT10_SinglePhotonMassiveCBPt500_CFilterBVeto.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"),  Rpair(177583,"mc14_13TeV.177583.Sherpa_CT10_SinglePhotonMassiveCBPt140_280_BFilter.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"),    Rpair(177584,"mc14_13TeV.177584.Sherpa_CT10_SinglePhotonMassiveCBPt280_500_BFilter.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"),    Rpair(177585,"mc14_13TeV.177585.Sherpa_CT10_SinglePhotonMassiveCBPt500_BFilter.merge.DAOD_SUSY1.e3083_s1982_s2008_r5787_r5853_p1872/"));
+
 };
 
 VRpair RunsMap :: rlist( Rpair run1, Rpair run2, Rpair run3, Rpair run4, Rpair run5,

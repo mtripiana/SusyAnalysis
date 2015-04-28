@@ -37,7 +37,7 @@ PACKAGE_DEP = EventLoop EventLoopGrid EventLoopAlgs xAODRootAccess AsgTools SUSY
 #Asg_FastJet
 
 # the list of packages we use if present, but that we can work without :
-PACKAGE_TRYDEP   = 
+PACKAGE_TRYDEP   = JetTileCorrection
 
 # list pattern of scripts to link directly into binary path:
 PACKAGE_SCRIPTS  = 

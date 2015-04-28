@@ -991,7 +991,7 @@ void chorizo :: InitVars()
   dPhi_met_j2.clear(); 
   dPhi_met_j3.clear(); 
   dPhi_met_j4.clear(); 
-  dPhi_met_mettrk = DUMMYDN;                     
+  dPhi_met_mettrk.clear();
   dPhi_j1_j2 = DUMMYDN;                          
   dPhi_j1_j3 = DUMMYDN;                          
   dPhi_j2_j3 = DUMMYDN;                          
@@ -3208,7 +3208,7 @@ EL::StatusCode chorizo :: loop ()
     MT_lcl_met.push_back( (ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), mk.second ) : 0.) );
     MT_jsoft_met.push_back( (recoJets.size() > 0 ? Calc_MT( recoJets.back(), mk.second ) : 0.) ); //it assumes jets are pt ordered!
 
-
+    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(),mk.second.Phi()));
     //dphi(jet_i, met+j) ,  MT(j_i, met_j)
     if (n_jets>0){
       dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );	
@@ -3314,7 +3314,7 @@ EL::StatusCode chorizo :: loop ()
   }
   
   //- dPhi & dR
-  dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
+
   
   if (n_jets>0){
 
@@ -4116,7 +4116,7 @@ EL::StatusCode chorizo :: loop_truth()
     MT_lcl_met.push_back( (ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), mk.second ) : 0.) );
     MT_jsoft_met.push_back( (recoJets.size() > 0 ? Calc_MT( recoJets.back(), mk.second ) : 0.) ); //it assumes jets are pt ordered!
 
-
+    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(),mk.second.Phi()));
     //dphi(jet_i, met+j) ,  MT(j_i, met_j)
     if (n_jets>0){
       dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );	
@@ -4162,7 +4162,7 @@ EL::StatusCode chorizo :: loop_truth()
   }
   
   //- dPhi & dR
-  dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
+
   
   if (n_jets>0){
 
