@@ -11,6 +11,7 @@
 #include <EventLoopAlgs/NTupleSvc.h>
 //#include <EventLoopAlgs/AlgSelect.h>
 #include "SampleHandler/MetaFields.h"
+#include "ElectronIsolationSelection/IsolationSelectionTool.h"
 
 
 // Root includes
@@ -281,6 +282,10 @@ private:
   LHAPDF::PDF* m_PDF; //!
   BTaggingEfficiencyTool* tool_btag;  //! //70%op
   BTaggingEfficiencyTool* tool_btag2; //! //80%op
+  CP::IsolationSelectionTool *iso_2;
+  CP::IsolationSelectionTool *iso_1;
+  CP::IsolationSelectionTool *iso_3;
+
 #endif // not __CINT__
 
   TMctLib* tool_mct; //!
@@ -719,6 +724,9 @@ private:
   VFloat e_etiso30;
   VFloat e_ptiso20;
   VFloat e_etiso20;
+  VFloat e_isoTight;
+  VFloat e_isoGradient;
+  VFloat e_isoLoose;
   VInt   e_id; 
   VFloat e_d0_sig; 
   VFloat e_z0;    
@@ -743,8 +751,10 @@ private:
   VFloat m_etiso20;
   VFloat m_ptiso30;
   VFloat m_etiso30;
-  VFloat m_d0_sig; 
-  VFloat m_z0;    
+  VFloat m_isoTight;
+  VFloat m_isoGradient;
+  VFloat m_isoLoose;
+
 
   int    mb_N;
   VFloat mb_pt;

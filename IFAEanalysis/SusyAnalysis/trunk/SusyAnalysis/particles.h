@@ -25,6 +25,9 @@ class Particle : public TLorentzVector {
     bool   isIsolated;
     int    id;
     bool   isTight;
+    float isoTight;
+    float isoLoose;
+    float isoGradient;
     float  ptcone20;
     float  etcone20;
     float  ptcone30;
