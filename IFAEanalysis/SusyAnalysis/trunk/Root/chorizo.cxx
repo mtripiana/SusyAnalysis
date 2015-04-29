@@ -9,6 +9,7 @@
 #include <fstream>
 #include <EventLoop/StatusCode.h>
 
+#include "ElectronIsolationSelection/IsolationSelectionTool.h"
 
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
@@ -110,7 +111,10 @@ chorizo :: chorizo ()
     tool_or(0),             
     tool_purw(0),           
     tool_btag(0),           
-    tool_btag2(0),          
+    tool_btag2(0), 
+    iso_1(0),
+    iso_2(0),
+    iso_3(0),
     tool_jvf(0),            
     tool_grl(0),            
     tool_tileTrip(0),       
@@ -164,6 +168,8 @@ chorizo :: chorizo ()
 
   systListOnly = false;
   errIgnoreLevel = kInfo;
+
+  
 }
 
 
@@ -327,6 +333,9 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_ptiso30",&e_ptiso30);
       output->tree()->Branch("e_etiso20",&e_etiso20);
       output->tree()->Branch("e_ptiso20",&e_ptiso20);
+      output->tree()->Branch("e_isoTight",&e_isoTight);
+      output->tree()->Branch("e_isoGradient",&e_isoGradient);
+      output->tree()->Branch("e_isoLoose",&e_isoLoose);
       output->tree()->Branch("e_id",&e_id);
       output->tree()->Branch("e_d0_sig",&e_d0_sig);  
       output->tree()->Branch("e_z0",&e_z0);      
@@ -355,9 +364,10 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_ptiso20",&m_ptiso20);          
       output->tree()->Branch("m_etiso30",&m_etiso30);          
       output->tree()->Branch("m_ptiso30",&m_ptiso30);          
-      output->tree()->Branch("m_d0_sig",&m_d0_sig);  
-      output->tree()->Branch("m_z0",&m_z0);   
-            
+      output->tree()->Branch("m_isoTight",&m_isoTight);
+      output->tree()->Branch("m_isoGradient",&m_isoGradient);
+      output->tree()->Branch("m_isoLoose",&m_isoLoose);
+
       output->tree()->Branch("mb_N",&mb_N,"mb_N/I",10000);
       output->tree()->Branch("mb_pt",&mb_pt);
       output->tree()->Branch("mb_eta",&mb_eta);
@@ -868,6 +878,9 @@ void chorizo :: InitVars()
   e_etiso30.clear();
   e_ptiso20.clear();
   e_etiso20.clear();
+  e_isoTight.clear();
+  e_isoGradient.clear();
+  e_isoLoose.clear();
   e_id.clear();
   e_d0_sig.clear();
   e_z0.clear();
@@ -917,9 +930,10 @@ void chorizo :: InitVars()
   m_ptiso30.clear();          
   m_etiso30.clear();          
   m_ptiso20.clear();          
-  m_etiso20.clear();  
-  m_d0_sig.clear();
-  m_z0.clear();          
+  m_etiso20.clear(); 
+  m_isoTight.clear();
+  m_isoGradient.clear();
+  m_isoLoose.clear();         
   mb_N = 0;
   mb_pt.clear(); 
   mb_eta.clear();
@@ -1524,6 +1538,36 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_btag2->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) );                                          
   CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );                    
   CHECK( tool_btag2->initialize() );                                                                                               
+
+  //isolation tool
+  // Setup standard working point for 
+  // photons, electrons and muons
+  //  CP::IsolationSelectionTool iso_1( "iso_1" );
+  iso_1 = new CP::IsolationSelectionTool("iso_1");
+  CHECK( iso_1->setProperty("WorkingPoint","Tight") );
+  CHECK( iso_1->initialize() );
+
+  // Pick a different working point
+  //  CP::IsolationSelectionTool iso_2( "iso_2" );
+  iso_2 = new CP::IsolationSelectionTool("iso_2");
+  CHECK( iso_2->setProperty("WorkingPoint","Gradient") );
+  CHECK( iso_2->initialize() );
+
+  // Custom isolation for your own optimization
+  // Select calo and track functions, isolation variables
+  // Function string gets passed to a ROOT TF1 object
+  //  CP::IsolationSelectionTool iso_3( "iso_3" );
+  iso_3 = new CP::IsolationSelectionTool("iso_3");
+  CHECK( iso_3->setProperty("WorkingPoint","Loose") ); 
+  /*  CHECK( iso_3->setProperty("ElectronCaloIsoFunction","0.1*x+90") );
+  CHECK( iso_3->setProperty("ElectronTrackIsoFunction","98") ); // flat 98% efficiency
+  CHECK( iso_3->setProperty("ElectronCaloIsoType","topoetcone30") );  
+  CHECK( iso_3->setProperty("ElectronTrackIsoType","ptcone30") );  
+  CHECK( iso_3->setProperty("MuonCaloIsoFunction","0.1*x+92") );
+  CHECK( iso_3->setProperty("MuonTrackIsoFunction","95") ); // flat 95% efficiency
+  CHECK( iso_3->setProperty("MuonCaloIsoType","topoetcone40") );
+  CHECK( iso_3->setProperty("MuonTrackIsoType","ptcone40") );  */
+  CHECK( iso_3->initialize() ); 
 
   //--- truth jet labeling                                                                                                        
   tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
@@ -2265,7 +2309,11 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
     
     (*el_itr).passSelection(recoElectron.isTight, "Tight");
-      
+
+    if(iso_1->accept(*el_itr)) recoElectron.isoTight = 1.0;
+    if(iso_2->accept(*el_itr)) recoElectron.isoGradient = 1.0;
+    if(iso_3->accept(*el_itr)) recoElectron.isoLoose = 1.0;
+ 
     recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
     recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
     
@@ -2306,7 +2354,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	e_SF *= recoElectron.SF;
 	e_SFu *= recoElectron.SFu;
 	e_SFd *= recoElectron.SFd;
-      }
+      } 
     }
     else{
       electronCandidates.push_back(recoElectron);
@@ -2399,6 +2447,10 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
     recoMuon.charge   = (float) (*mu_itr).charge();
     //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
+
+    if(iso_1->accept(*mu_itr)) recoMuon.isoTight = 1.0;
+    if(iso_2->accept(*mu_itr)) recoMuon.isoGradient = 1.0;
+    if(iso_3->accept(*mu_itr)) recoMuon.isoLoose = 1.0;
     
     recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( mu_itr );
     recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( mu_itr );
@@ -4478,6 +4530,9 @@ void chorizo :: dumpLeptons(){
     e_ptiso30.push_back( recoElectrons.at(iel).ptcone30 );
     e_etiso20.push_back( recoElectrons.at(iel).etcone20 );
     e_ptiso20.push_back( recoElectrons.at(iel).ptcone20 );
+    e_isoTight.push_back( recoElectrons.at(iel).isoTight );
+    e_isoGradient.push_back( recoElectrons.at(iel).isoGradient );
+    e_isoLoose.push_back( recoElectrons.at(iel).isoLoose );
     e_id.push_back(  recoElectrons.at(iel).id );
     e_d0_sig.push_back( recoElectrons.at(iel).d0_sig );
     e_z0.push_back( recoElectrons.at(iel).z0 );
@@ -4515,8 +4570,9 @@ void chorizo :: dumpLeptons(){
     m_ptiso20.push_back( recoMuons.at(imu).ptcone20 );
     m_etiso30.push_back( recoMuons.at(imu).etcone30 );
     m_ptiso30.push_back( recoMuons.at(imu).ptcone30 );
-    m_d0_sig.push_back( recoMuons.at(imu).d0_sig );  
-    m_z0.push_back( recoMuons.at(imu).z0 );        
+    m_isoTight.push_back( recoMuons.at(imu).isoTight );
+    m_isoGradient.push_back( recoMuons.at(imu).isoGradient );
+    m_isoLoose.push_back( recoMuons.at(imu).isoLoose );
   }
   
 }
@@ -4690,6 +4746,19 @@ EL::StatusCode chorizo :: finalize ()
   if(tool_btag2){
     delete tool_btag2;
     tool_btag2=0;
+  }
+  //isolation tool
+  if(iso_1){
+    delete iso_1;
+    iso_1=0;
+  }
+  if(iso_2){
+    delete iso_2;
+    iso_2=0;
+  }
+  if(iso_3){
+    delete iso_3;
+    iso_3=0;
   }
 
   //PURW
