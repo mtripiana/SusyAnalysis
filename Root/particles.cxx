@@ -15,6 +15,9 @@ Particle::Particle(){
   isGood = true;
   isIsolated = false;
   isTight = false;
+  isoTight = 0.;
+  isoLoose = 0.;
+  isoGradient = 0.;
   ptcone20 = 0;
   etcone20 = 0;
   ptcone30 = 0;
