@@ -1,3 +1,7 @@
+2015-04-30 Cora <cora.fischer@cern.ch>
+	* added WPs from IsolationTool
+	* added e_isoTight,e_isoLoose,e_isoGradient
+	* added m_isoTight,m_isoLoose,m_isoGradient as particle properties in the tree
 2015-04-24 Martin <tripiana@cern.ch>
 	* Add mct corrected (Silvia)
 	* Add impact parameter variables (Silvia)
