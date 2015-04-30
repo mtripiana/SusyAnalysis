@@ -21,7 +21,7 @@ rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetUncertainties/tags/JetUncertaintie
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/TileID/TileTripReader/trunk
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/SampleHandler/tags/SampleHandler-00-00-91
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/RootCoreUtils/tags/RootCoreUtils-00-00-28
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronIsolationSelection/ElectronIsolationSelection-00-01-01
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronIsolationSelection/tags/ElectronIsolationSelection-00-01-01
 
 
 
