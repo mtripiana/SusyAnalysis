@@ -187,6 +187,7 @@ int main( int argc, char* argv[] ) {
 
   std::string jOption = "METbb";
   TString queue = "at3";
+  TString version="";
   bool genPU=false;
   int single_id = -1;
   bool isTruth=false;
@@ -255,11 +256,17 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("j") ){
       jOption = opts[iop].Copy().ReplaceAll("j=","");
     }
+    else if (opts[iop].BeginsWith("v") ){
+      version = opts[iop].ReplaceAll("v=","");
+    }
     // else if (opts[iop].BeginsWith("n") ){ //limit run to n events
     //   nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
     // }
   }
 
+  TString vTag="";
+  if(version!="")
+    vTag = "_v"+version;
 
   //samples
   std::vector<TString> samples;
@@ -497,6 +504,8 @@ int main( int argc, char* argv[] ) {
       cout << endl;
 
       TString mergedName = Form("%s_%s.root",systematics[i_syst].Data(), samples[i_sample].Data());
+      if(vTag!="")
+	mergedName.ReplaceAll(".root",vTag+".root");
     
       if (!generatePUfile){
 	if (!doAnaTree) {

@@ -38,6 +38,7 @@
 
 // std includes
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <string>
 
@@ -133,6 +134,8 @@ typedef std::vector<int> VInt;
 typedef std::pair<VFloat, VFloat > VFloatPair;     
 typedef std::vector<VFloat > VVFloat;                          
 
+typedef pair<UInt_t, UInt_t> Pint;
+typedef set<Pint> EvtList;
 
 class JetCleaningTool;
 
@@ -188,6 +191,7 @@ public:
   int  syst_JESNPset;
 
   bool debug;
+  TString eventsFile;
 
   bool isTruth;
   bool dressLeptons;
@@ -247,6 +251,8 @@ private:
   TString m_cfilename; //! 
   TTree*  m_MetaData; //!
 
+  EvtList m_eventList; //!
+
   //Histograms
   //raw 
   TH1F* h_presel_flow; //! 
@@ -282,9 +288,9 @@ private:
   LHAPDF::PDF* m_PDF; //!
   BTaggingEfficiencyTool* tool_btag;  //! //70%op
   BTaggingEfficiencyTool* tool_btag2; //! //80%op
-  CP::IsolationSelectionTool *iso_2;
-  CP::IsolationSelectionTool *iso_1;
-  CP::IsolationSelectionTool *iso_3;
+  CP::IsolationSelectionTool *iso_2; //!
+  CP::IsolationSelectionTool *iso_1; //! 
+  CP::IsolationSelectionTool *iso_3; //!
 
 #endif // not __CINT__
 
@@ -303,8 +309,9 @@ private:
 
   virtual float getNWeightedEvents();
   virtual bool  isDerived();
-
-  virtual void bookTree();
+  virtual void  loadEventList();
+  virtual bool  inEventList(UInt_t run, UInt_t event); 
+  virtual void  bookTree();
 
   virtual void dumpLeptons();
   virtual void dumpPhotons();
@@ -467,6 +474,7 @@ private:
 
   //OverlapRemoval
   bool  doOR; //! 
+  //  int   doORharmo; //!
   bool  doORharmo; //!
   bool  doORphotons; //!
 
