@@ -72,6 +72,7 @@ void usage(){
   cout << "                       To list the available (recommended) systematic variations do: 'run_chorizo slist'" << endl;
   cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
+  cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;
   cout << endl;
 }
 
@@ -208,6 +209,7 @@ int main( int argc, char* argv[] ) {
   bool runPrun  = false;
   TString queue = "at3";
   TString version="";
+  TString eventList="";
   bool genPU=false;
   bool isTruth=false;
   bool debugMode=false;
@@ -293,6 +295,9 @@ int main( int argc, char* argv[] ) {
     }
     else if (opts[iop].BeginsWith("v") ){
       version = opts[iop].ReplaceAll("v=","");
+    }
+    else if (opts[iop].BeginsWith("e") ){
+      eventList = opts[iop].ReplaceAll("e=","");
     }
   }
 
@@ -558,6 +563,7 @@ int main( int argc, char* argv[] ) {
     
     //debug printing                                                                                                               
     alg->debug         = debugMode;
+    alg->eventsFile    = eventList;
     alg->printMet      = false;     //debug printing
     alg->printJet      = false;
     alg->printElectron = false;
@@ -665,6 +671,8 @@ int main( int argc, char* argv[] ) {
       }      
       
       TString mergedName = Form("%s_%s.root",systematic[isys].Data(), args[0].Data());
+      if(vTag!="")
+	mergedName.ReplaceAll(".root",vTag+".root");
       
       if (!doAnaTree) {
 	//--- Case where we run on 1 file

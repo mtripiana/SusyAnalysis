@@ -381,7 +381,7 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
   addAntiWeightToTree(outfile.Data(), isData);  
 
   std::cout << std::endl;
-  std::cout << bold("Target file : ") << outfile  << std::endl;
+  std::cout << bold("Target file : \n              ") << outfile  << std::endl;
   std::cout << std::endl;
 }
 

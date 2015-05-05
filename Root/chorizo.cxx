@@ -85,8 +85,8 @@ static SG::AuxElement::Decorator<float> dec_truthe("truthe");
 
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
-static SG::AuxElement::Accessor<float> acc_etcone20("etcone20");
-static SG::AuxElement::Accessor<float> acc_etcone30("etcone30");
+static SG::AuxElement::Accessor<float> acc_etcone20("topoetcone20");
+static SG::AuxElement::Accessor<float> acc_etcone30("topoetcone30");
 
 static SG::AuxElement::Accessor<float> acc_truth_etcone20("EtCone20");
 static SG::AuxElement::Accessor<float> acc_truth_ptcone30("PtCone30");
@@ -119,15 +119,11 @@ chorizo :: chorizo ()
     tool_grl(0),            
     tool_tileTrip(0),       
     m_PDF(0),
+    tool_jsmear(0),
 #ifdef TILETEST
-    tool_jsmear(0),
-    tool_jettile(0)
-#else
-    tool_jsmear(0),
+    tool_jettile(0),
 #endif
     tool_mct(0)
-
-
 {
 
   outputName="";
@@ -152,6 +148,7 @@ chorizo :: chorizo ()
   doFlowTree=true;
 
   debug=false;
+  eventsFile="";
   printMet=false; 
   printJet=false;
   printElectron=false;
@@ -644,6 +641,9 @@ EL::StatusCode chorizo :: histInitialize ()
   //Book the output Tree
   bookTree();
 
+  //Load event list (if provided)
+  loadEventList();
+
   //JopOption
   meta_jOption= new TNamed("jOption", jOption.c_str());
   wk()->addOutput(meta_jOption);     
@@ -723,7 +723,7 @@ float chorizo :: getNWeightedEvents(){
   cout << "Initial = " << treeform.EvalInstance(1) << endl;
   cout << "Final   = " << treeform.EvalInstance(0) << endl;
 
-  return (float)treeform.EvalInstance(0); //initialSumOfWeightsInThisFile
+  return (float)treeform.EvalInstance(1); //initialSumOfWeightsInThisFile
 }
 
 bool chorizo :: isDerived(){
@@ -753,6 +753,25 @@ bool chorizo :: isDerived(){
   if(streamAOD)
     delete streamAOD;
 
+  return false;
+}
+
+void chorizo :: loadEventList(){
+  //load event list 
+  m_eventList={};
+  if(eventsFile=="") return;
+
+  std::ifstream infile(eventsFile);
+  
+  UInt_t a, b;
+  while (infile >> a >> b)
+    m_eventList.insert( std::make_pair(a, b) );
+  
+}
+
+bool chorizo :: inEventList(UInt_t run, UInt_t event){
+  Pint p  = std::make_pair(run,event);
+  if( m_eventList.find(p) != m_eventList.end() ) return true;
   return false;
 }
 
@@ -1255,6 +1274,7 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
+  //  doORharmo = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
   doORharmo = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
   doORphotons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doPhotons");
   
@@ -1671,7 +1691,6 @@ EL::StatusCode chorizo :: initialize ()
   //--- PDF reweighting
   LHAPDF::setPaths( gSystem->Getenv("LHAPDF_DATA_PATH") );
   Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPDF_DATA_PATH")) );
-  cout << " pdf 0 " << endl;
   TString input_pdfset    = "CT10"; // 10800 //CHECK_ME this was not CT10as but CT10 !!
   int input_pdfset_member = 0;     
   if (this->isSignal || this->isTop) {
@@ -1874,8 +1893,14 @@ EL::StatusCode chorizo :: loop ()
   EventNumber       = eventInfo->eventNumber();
 
   
-  // //DEBUGGING
-  // if(EventNumber!=38079){    output->setFilterPassed (false);    return nextEvent(); } 
+  //EventList
+  if(m_eventList.size()){
+    if( !inEventList(RunNumber, EventNumber) ){
+      output->setFilterPassed (false);    
+      return nextEvent();
+    } 
+  }
+
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
 
   int lb = eventInfo->lumiBlock();
@@ -2225,11 +2250,11 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
 #ifdef TILETEST
     cout << "*** BEFORE TILE CORRECTION = " << (jet_itr)->pt() << endl;
-     if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
-       Error("loop()", "Failed to apply JetTileCorrection!");
-     cout << "*** AFTER TILE CORRECTION = " << (jet_itr)->pt() << endl;
+    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
+      Error("loop()", "Failed to apply JetTileCorrection!");
+    cout << "*** AFTER TILE CORRECTION = " << (jet_itr)->pt() << endl;
 #endif
-
+    
     //** Bjet decoration
     if (fabs((*jet_itr).eta()) < 2.5){
       if(Jet_Tagger=="MV1")
@@ -3173,8 +3198,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     bool keep_event = (SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph));
 
-    keep_event = ((eb_N+mb_N)==0); //CHECK CUTFLOW
-
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;
       delete muons_sc;             delete muons_scaux;
@@ -3580,19 +3603,20 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged(Jet_Tagger) ){
+    //    if( jet.isBTagged(Jet_Tagger) ){
+    if( jet.isbjet ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
 	else if(iblead2<0)
 	  iblead2=ijet;
 
-	float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
+	float locbw = jet.getBweight(Jet_Tagger); //book high bweight jets
 	if(locbw > maxbw1){
-	  if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
-	    maxbw2 = maxbw1;
-	    ibtop2 = ibtop1;
-	  }
+	  //	  if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
+	  maxbw2 = maxbw1;
+	  ibtop2 = ibtop1;
+	  // }
 	  ibtop1 = ijet;
 	  maxbw1 = locbw;
 	}
@@ -3600,13 +3624,13 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	  ibtop2 = ijet;
 	  maxbw2 = locbw;
 	}
-      }
-
-      ijet++;
+    }
+    
+    ijet++;
   }
-
+  
   RecoHadTops(ibtop1, ibtop2);
-
+  
   //------------------------------------- (BEFORE JUST CALL RECOHADTOPS)
 
   //dPhi_b1_b2  
@@ -5817,14 +5841,14 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
   //       tuple<int, int, float> Whad1(-1, -1, 999.);  //requires C++0x
   //       tuple<int, int, float> Whad2(-1, -1, 999.);
 
-  for(int ij1=0; ij1<n_jets; ij1++){
+  for(int ij1=0; ij1 < n_jets; ij1++){
     if(ij1==ibtop1  || ij1==ibtop2) continue; //skip btags
-    for(int ij2=ij1+1; ij2<n_jets; ij2++){
+    for(int ij2=ij1+1; ij2 < n_jets; ij2++){
       if(ij2==ibtop1  || ij2==ibtop2) continue; //skip btags
       float locdr = recoJets.at(ij1).DeltaR( recoJets.at(ij2).GetVector() );
       
       if(locdr < W1dr){
-	if(W1dr<999){
+	if(W1dr<999 && ij1!=W1j1 && ij1!=W1j2 && ij2!=W1j1 && ij2!=W1j2){
 	  W2j1 = W1j1;
 	  W2j2 = W1j2;
 	  W2dr = W1dr;
