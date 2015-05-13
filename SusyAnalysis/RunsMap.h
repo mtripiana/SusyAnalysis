@@ -76,12 +76,27 @@ std::vector<TString> RunsMap::getPatterns(TString runname){
 void RunsMap::LoadMap(){
 
   // new 13 TeV derivations
+
+m_map["test_wenu"] = rlist( Rpair(167788, "/nfs/at3/scratch/sfracchia/SUSY/test_Wenu/"));  
+m_map["test_wmunu"] = rlist( Rpair(167791, "/nfs/at3/scratch/sfracchia/SUSY/test_Wmunu/"));  
+
+  
   
 //SBOTTOM   ---------------------------
 m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_Sbottom_700_1"] = rlist( Rpair(202260, "mc14_13TeV.202260.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_700_1_MET50.merge.DAOD_SUSY1.e3460_a266_a265_r5853_p1872//"));
 m_map["13TEV_Sbottom_800_1"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));
 m_map["13TEV_Sbottom_900_1"] = rlist( Rpair(202270, "mc14_13TeV.202270.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_900_1_MET50.merge.DAOD_SUSY1.e3460_a266_a265_r5853_p1872/"));
 m_map["13TEV_Sbottom_1000_1"] = rlist( Rpair(202277, "mc14_13TeV.202277.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_1000_1_MET50.merge.DAOD_SUSY1.e3460_a266_a265_r5853_p1872/"));
+
+
+//STOP   ---------------------------
+m_map["13TEV_StopTL_600_1"] = rlist( Rpair(205030, "mc14_13TeV.205030.Herwigpp_UEEE4_CTEQ6L1_Tt_T600_L1.merge.DAOD_SUSY1.e3469_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_StopTL_900_1"] = rlist( Rpair(205032, "mc14_13TeV.205032.Herwigpp_UEEE4_CTEQ6L1_Tt_T900_L1.merge.DAOD_SUSY1.e3469_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_StopTL_200_1"] = rlist( Rpair(204421, "mc14_13TeV.204421.Herwigpp_UEEE4_CTEQ6L1_Tt_T200_L1.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_StopTL_1000_1"] = rlist( Rpair(205033, "mc14_13TeV.205033.Herwigpp_UEEE4_CTEQ6L1_Tt_T1000_L1.merge.DAOD_SUSY1.e3469_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_StopTL_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_StopTL_700_1"] = rlist( Rpair(205031, "mc14_13TeV.205031.Herwigpp_UEEE4_CTEQ6L1_Tt_T700_L1.merge.DAOD_SUSY1.e3469_s1982_s2008_r5787_r5853_p1872/"));
 
 
 //SINGLETOP ---------------------------
@@ -91,7 +106,12 @@ m_map["13TEV_Part3singleTop_PowhegPythia"] = rlist( Rpair(110302,"mc14_13TeV.110
 m_map["13TEV_Part4singleTop_PowhegPythia"] = rlist( Rpair(110305,"mc14_13TeV.110305.PowhegPythia_P2012_st_Wtchan_incl_DR.merge.DAOD_SUSY1.e3049_s1982_s2008_r5787_r5853_p1872/"));
 
 //TTBAR ---------------------------
-m_map["13TEV_ttbar_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_ttbar1_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_ttbar2_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_ttbar3_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_ttbar4_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1872/"));
+m_map["13TEV_ttbar5_PowhegPythia"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.DAOD_SUSY1.e2928_s1982_s2008_r5787_r5853_p1872/"));
+
 
 // TTBAR+V ---------------------------
 m_map["13TEV_ttbarW_MadGraphPythia"]	   = rlist( Rpair(119353,"mc14_13TeV.119353.MadGraphPythia_AUET2BCTEQ6L1_ttbarW.merge.DAOD_SUSY1.e3214_s1982_s2008_r5787_r5853_p1872/"));
@@ -454,7 +474,7 @@ m_map["13TEV_SinglePhotonMassiveCBPt500_BFilter"] = rlist( Rpair(177585,"mc14_13
   m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
 
   //m_map["13TEV_Sbottom_800_1"]   = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
-  m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
+  //m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
 
   m_map["13TEV_Sbottom_800_1_af"]   = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_a266_a265_r5853/"));
   m_map["13TEV_Sbottom_300_290_af"] = rlist( Rpair(202249, ""));
