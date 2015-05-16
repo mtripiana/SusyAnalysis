@@ -546,6 +546,7 @@ int main( int argc, char* argv[] ) {
     alg->syst_PU    = syst_PU;
     alg->syst_JVF   = syst_JVF;
     //    alg->syst_BCH   = syst_BCH;
+    alg->syst_JESNPset =  xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Jet$JESNPset");
     
     
     //debug printing

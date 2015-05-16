@@ -11,7 +11,7 @@
 #include <EventLoopAlgs/NTupleSvc.h>
 //#include <EventLoopAlgs/AlgSelect.h>
 #include "SampleHandler/MetaFields.h"
-
+#include "ElectronIsolationSelection/IsolationSelectionTool.h"
 
 // Root includes
 #include <TH1.h>
@@ -45,6 +45,9 @@
 #include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "SUSYTools/SUSYCrossSection.h"
 
+#include "SusyAnalysis/TMctLib.h"
+#include "SusyAnalysis/mctlib.h"
+
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
 #include "fastjet/ClusterSequence.hh"
 #include "TileTripReader/TTileTripReader.h"
@@ -62,6 +65,8 @@
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
+
+#include "EventPrimitives/EventPrimitivesHelpers.h"
 
 #ifndef __MAKECINT__
 #include "AssociationUtils/OverlapRemovalTool.h"
@@ -123,9 +128,13 @@ using fastjet::ClusterSequence;
 using fastjet::JetDefinition;
 using fastjet::antikt_algorithm;
 
+typedef std::vector<int> VInt;                          
 typedef std::vector<float> VFloat;                          
 typedef std::pair<VFloat, VFloat > VFloatPair;     
 typedef std::vector<VFloat > VVFloat;                          
+
+typedef pair<UInt_t, UInt_t> Pint;
+typedef set<Pint> EvtList;
 
 class JetCleaningTool;
 
@@ -143,9 +152,8 @@ enum ZDecayMode{
 };
 
 //MET flavours
-const string sMetDef[] = {"InvMu", "VisMu", "InvMuECorr", "VisMuECorr", "VisMuMuCorr", "InvMuPh", "VisMuPh", "Track", "InvMuRef", "VisMuRef", "InvMuTST", "VisMuTST", "InvMuTruth", "VisMuTruth", "locHadTopo"};
-enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPh, VisMuPh, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTruth, VisMuTruth, locHadTopo, N};
-
+const string sMetDef[] = {"InvMu", "VisMu", "InvMuECorr", "VisMuECorr", "VisMuMuCorr", "InvMuPhCorr", "VisMuPhCorr", "Track", "InvMuRef", "VisMuRef", "InvMuTST", "VisMuTST", "InvMuTSTECorr", "VisMuTSTECorr", "VisMuTSTMuCorr", "InvMuTruth", "VisMuTruth", "locHadTopo"};
+enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPhCorr, VisMuPhCorr, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTSTECorr, VisMuTSTECorr, VisMuTSTMuCorr, InvMuTruth, VisMuTruth, locHadTopo, N};
 
 class chorizo : public EL::Algorithm
 {
@@ -174,9 +182,11 @@ public:
   bool isTop;
   bool isAtlfast;
   bool isNCBG;
+  bool is8TeV;
   TString leptonType;
 
   bool debug;
+  TString eventsFile;
 
   bool isTruth;
   bool dressLeptons;
@@ -193,6 +203,7 @@ public:
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
   JvfUncErr::JvfSyste syst_JVF;
+  int  syst_JESNPset;
 
   bool printMet;
   bool printJet;
@@ -237,6 +248,8 @@ private:
   TString m_cfilename; //! 
   TTree*  m_MetaData; //!
 
+  EvtList m_eventList; //!
+
   //Histograms
   //raw 
   TH1F* h_presel_flow; //! 
@@ -249,7 +262,6 @@ private:
   XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; //!
-  ST::SUSYObjDef_xAOD* tool_st_1; //! 
 
   //MET map
   std::map<MetDef, TVector2> metmap; //!
@@ -268,12 +280,22 @@ private:
    
 #ifndef __CINT__  
   OverlapRemovalTool* tool_or; //!
+
   CP::PileupReweightingTool *tool_purw; //! 
+
   GoodRunsListSelectionTool *tool_grl; //!
+
   LHAPDF::PDF* m_PDF; //!
-  BTaggingEfficiencyTool* tool_btag;  //70%op
-  BTaggingEfficiencyTool* tool_btag2; //80%op
+
+  BTaggingEfficiencyTool* tool_btag;  //! //70%op
+  BTaggingEfficiencyTool* tool_btag2; //! //80%op
+
+  CP::IsolationSelectionTool *iso_2; //!
+  CP::IsolationSelectionTool *iso_1; //! 
+  CP::IsolationSelectionTool *iso_3; //!
 #endif // not __CINT__
+
+  TMctLib* tool_mct; //!
 
   SUSY::JetMCSmearingTool* tool_jsmear; //!
 
@@ -288,6 +310,9 @@ private:
   virtual void ReadXML();
 
   virtual float getNWeightedEvents();
+  virtual bool  isDerived();
+  virtual void  loadEventList();
+  virtual bool  inEventList(UInt_t run, UInt_t event); 
 
   virtual void bookTree();
 
@@ -333,8 +358,9 @@ private:
   virtual float Calc_MT(Particle p, TVector2 met);
   virtual float Calc_mct();
   virtual float Calc_mct(Particle p1, Particle p2);
-  virtual float Calc_dijetMass();
-  virtual float Calc_dijetMass(TLorentzVector ja, TLorentzVector jb);
+  virtual float Calc_mct_corr(Particle p1, Particle p2, TVector2 met);  
+  virtual float Calc_Mjj();
+  virtual float Calc_Mjj(TLorentzVector ja, TLorentzVector jb);
   virtual std::vector<TLorentzVector> CombineJets();
   virtual std::vector<TLorentzVector> CombineJets(std::vector<TLorentzVector>);
   virtual float Calc_MR(TLorentzVector ja, TLorentzVector jb);
@@ -354,9 +380,6 @@ private:
   virtual std::vector<TLorentzVector> getFatJets(double R, double fcut=-1);
 
   virtual void  findBparton(); 
-
-  virtual void  findSusyHP(int& pdgid1, int& pdgid2);
-  virtual void  findSusyHP(const xAOD::TruthParticleContainer* truthP, int& pdgid1, int& pdgid2);
 
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
@@ -391,6 +414,7 @@ private:
   bool isTileTrip; //!
   bool isCoreFlag; //!
   bool isCosmic; //!
+  bool isBadMuon; //!
   
   bool passPreselectionCuts; //!
 
@@ -438,7 +462,9 @@ private:
   //selection
   std::string DirectoryPath; //! 
 
-  bool doCutFlow;
+  bool doCutFlow; //! 
+  bool isStopTL; //!  
+  bool m_skim; //! 
   
   TString GRLxmlFile; //!
   bool    applyPURW;
@@ -478,7 +504,7 @@ private:
   float El_RecoEtaCut; //!
   string El_baseID; //!
   string El_ID; //!
-  TString El_isoType; //!
+  TString El_isoWP; //!
   bool El_recoSF; //!
   bool El_idSF; //!
   bool El_triggerSF; //!  
@@ -489,7 +515,7 @@ private:
   float Mu_RecoPtCut; //!
   float Mu_RecoEtaCut; //!
   string Mu_ID; //!
-  TString Mu_isoType; //!
+  TString Mu_isoWP; //!
 
   //photons
   float Ph_PreselPtCut; //!
@@ -497,10 +523,17 @@ private:
   float Ph_RecoPtCut; //!
   float Ph_RecoEtaCut; //!
   string  Ph_ID; //!
-  TString Ph_isoType; //!
+  TString Ph_isoWP; //!
   bool Ph_recoSF; //!
   bool Ph_idSF; //!
   bool Ph_triggerSF; //!  
+
+  //Booking options
+  int BookElBase;
+  int BookElSignal;
+  int BookMuBase;
+  int BookMuSignal;
+  int BookJetSignal;
 
 #ifndef __CINT__
   ST::IsSignalElectronExpCutArgs* elIsoArgs; //!
@@ -537,54 +570,22 @@ private:
   bool Met_doMuons; //!
   bool Met_doSoftTerms; //!
 
-  //btag weights & systematics
-  /* VFloat btag_weight_first;//! */
-  /* VFloat btag_weight_first_80eff;//! */
-  /* VFloat btag_weight;//! */
-  /* VFloat btag_weight_80eff;//! */
-
-  /* VFloat btag_weight_B_down; //! */
-  /* VFloat btag_weight_B_down_80eff; //! */
-  /* VFloat btag_weight_B_up; //! */
-  /* VFloat btag_weight_B_up_80eff; //! */
-  /* VFloat btag_weight_C_down; //! */
-  /* VFloat btag_weight_C_down_80eff; //! */
-  /* VFloat btag_weight_C_up; //! */
-  /* VFloat btag_weight_C_up_80eff; //! */
-  /* VFloat btag_weight_L_down; //! */
-  /* VFloat btag_weight_L_down_80eff; //! */
-  /* VFloat btag_weight_L_up; //! */
-  /* VFloat btag_weight_L_up_80eff; //! */
-
-  //muons (before overlap removal)
-  float  muon_N;  //!
-  VFloat muon_pt; //!
-  VFloat muon_eta; //!
-  VFloat muon_phi; //!
-  VFloat muon_iso; //!
-  VFloat muon_etiso30; //!
-  VFloat muon_ptiso30; //!
-  vector<bool>  muon_truth; //!
-  VFloat muon_jet_dR; //! //matched jet to muon 
-  VFloat muon_jet_dPhi; //!
-  VFloat muon_jet_pt; //!
-  VFloat muon_jet_eta; //!
-  VFloat muon_jet_phi; //!
-  VFloat muon_jet_nTrk; //!
-  VFloat muon_jet_sumPtTrk; //!
-  VFloat muon_jet_chf; //!
-  VFloat muon_jet_emf; //!
-  VFloat muon_jet_mv1; //!
-  VFloat muon_jet_vtxf; //!
 
   //Particle collections
+  std::vector<Particle> electronCandidates; //!                                                                                                                                                                                                                              
+  std::vector<Particle> muonCandidates; //!                                                                                                                                                                                                                             
+
   std::vector<Particle> recoElectrons; //!
   std::vector<Particle> recoPhotons; //!
-  std::vector<Particle> truthElectrons; //!
   std::vector<Particle> recoMuons; //!
   std::vector<Particles::Jet> recoJets; //!
+
+  std::vector<Particle> truthElectrons; //!
+
   std::vector<Particles::Jet> seedJets; //!
-  Particles::MET met_obj; 
+
+  Particles::MET met_obj; //!
+
   std::vector<TLorentzVector> RecoUnmatchedTracksElMu; //!
   std::vector<int> RecoUnmatchedTracksIdx; //!
 
@@ -648,7 +649,7 @@ private:
   UInt_t  RunNumber;        
   UInt_t  EventNumber;
   UInt_t  procID;
-  UInt_t  mc_channel_number;
+  UInt_t  mc_channel_number;//!
   float   averageIntPerXing;
 
   //- Weights  
@@ -731,54 +732,55 @@ private:
   int   ph_origin; 
 
   //- Electron Info
-  int   e_N;
-  float e_pt;
-  float e2_pt;  
-  float e2_eta;
-  float e2_phi;  
-  float e3_pt;  
-  float e3_eta;
-  float e3_phi;  
-  float e4_pt;  
-  float e4_eta;
-  float e4_phi;  
-  float e_truth_pt;
-  float e_truth_eta;
-  float e_truth_phi;
-  float e_eta;
-  float e_phi;
-  float e_ptiso30;
-  float e_etiso30;
-  bool  e_tight; 
-  bool  e_trigger; 
-  int   e_type; 
-  int   e_origin; 
+  int    e_N;
+  VFloat e_pt;
+  VFloat e_eta;
+  VFloat e_phi;
+  VFloat e_type;    
+  VFloat e_origin;
+  VFloat e_ptiso30;
+  VFloat e_etiso30;
+  VFloat e_ptiso20;
+  VFloat e_etiso20;
+  VFloat e_isoTight;
+  VFloat e_isoGradient;
+  VFloat e_isoLoose;
+  VInt   e_id; 
+  VFloat e_d0_sig; 
+  VFloat e_z0;    
+
+  int    eb_N;
+  VFloat eb_pt;
+  VFloat eb_eta;
+  VFloat eb_phi;
+
+  float  e_truth_pt;
+  float  e_truth_eta;
+  float  e_truth_phi;
+
+  VInt   e_trigger; 
 
   //- Muon Info
-  int   m_N;
-  float m_pt;
-  float m_eta;
-  float m_phi;
-  float m2_pt;
-  float m2_eta;
-  float m2_phi;
-  float m3_pt;
-  float m3_eta;
-  float m3_phi;
-  float m4_pt;
-  float m4_eta;
-  float m4_phi;
-  float m_iso;
-  float m_ptiso20;
-  float m_etiso20;
-  float m_ptiso30;
-  float m_etiso30;
-  float m2_iso;
-  float m2_ptiso30;
-  float m2_etiso30;
-  int   m_type; 
-  int   m_origin; 
-  bool  m_trigger; 
+  int    m_N;
+  VFloat m_pt;
+  VFloat m_eta;
+  VFloat m_phi;
+  VFloat m_type;
+  VFloat m_origin;
+  VFloat m_ptiso20;
+  VFloat m_etiso20;
+  VFloat m_ptiso30;
+  VFloat m_etiso30;
+  VFloat m_isoTight;
+  VFloat m_isoGradient;
+  VFloat m_isoLoose;
+
+  int    mb_N;
+  VFloat mb_pt;
+  VFloat mb_eta;
+  VFloat mb_phi;
+
+  VInt   m_trigger; 
 
   //- 'boson' properties
   float e_M;
@@ -787,6 +789,7 @@ private:
   float e_MT_tst;
   float e_MT_tst_vmu;  
   float e_Zpt;
+
   float m_M;
   float m_MT;
   float m_MT_vmu;  
@@ -795,14 +798,15 @@ private:
   float m_Zpt;
   float m_EM;
 
-  //- Z candidate                                                                                                                                                                                                                                                             
+  //- Z candidate                                          
+                                                                                                        
   //truth
   int     Z_decay; //0=unknown, 1=ee, 2=mumu, 3=qq, 4=nunu, -99=no-Z-found
   float   Z_pt; 
   float   Z_eta;
   float   Z_phi;
   //leplep
-  int Z_flav;                                                                                                                                                                                                                                                             
+  int Z_flav;                                                                                         
   int Z_lep1;
   int Z_lep2;
   float Z_m;
@@ -810,95 +814,47 @@ private:
   float lep_mct;
 
   //- Jet info
+  int   j_N;
+  int   j_N40;
+  int   j_N50;
+  int   j_N60;
+  int   j_N80;
+
+  std::vector<int> j_tau_N;
+
   bool  JVF_min;
-  int   n_jets;
-  int   n_tjets;
-  int   n_jets40;
-  int   n_jets50;
-  int   n_jets60;
-  int   n_jets80;
-  std::vector<int> n_taujets;
 
-  int truth_n_jets;
-  float truth_pt1;
-  float truth_eta1;
+  int   jb_truth_N; //baseline truth jets
+  int   j_truth_N;  //signal truth jets
+  float j_truth_pt1;
+  float j_truth_eta1;
 
-  float pt1;
-  float pt2;
-  float pt3;
-  float pt4;  
-  float pt5;
-  float pt6;
-  float eta1;
-  float eta2;
-  float eta3;
-  float eta4;  
-  float eta5;
-  float eta6;
-  float phi1;
-  float phi2;
-  float phi3;
-  float phi4;  
-  float phi5;
-  float phi6;
-  float j1_chf;
-  float j2_chf;
-  float j3_chf;
-  float j4_chf;  
-  float j1_emf;
-  float j2_emf;
-  float j3_emf;
-  float j4_emf;  
-  float j1_fsm;
-  float j2_fsm;
-  float j3_fsm;
-  float j4_fsm;  
-  float j1_time;
-  float j2_time;
-  float j3_time;
-  float j4_time;  
-  float j1_nTrk;
-  float j2_nTrk;
-  float j3_nTrk;
-  float j4_nTrk;  
-  float j1_sumPtTrk;
-  float j2_sumPtTrk;
-  float j3_sumPtTrk;
-  float j4_sumPtTrk;  
-  float j1_jvtxf;
-  float j2_jvtxf;
-  float j3_jvtxf;
-  float j4_jvtxf;  
-  float j1_tflavor;
-  float j2_tflavor;
-  float j3_tflavor;
-  float j4_tflavor;
- 
+  VFloat j_pt;
+  VFloat j_eta;
+  VFloat j_phi;
+  VFloat j_m;
+  VFloat j_chf;
+  VFloat j_emf;
+  VFloat j_fsm;
+  VFloat j_time;
+  VFloat j_nTrk;
+  VFloat j_sumPtTrk;
+  VFloat j_jvtxf;
+  VFloat j_tflavor;
+  VFloat j_tag_MV1;
+
   //- Btagging
-  int   n_bjets;
-  int   n_bjets_80eff;
-  /* float btag_weight1;  */
-  /* float btag_weight2;  */
-  /* float btag_weight3;  */
-  /* float btag_weight4;  */
-  /* float btag_weight_80eff1;  */
-  /* float btag_weight_80eff2;  */
-  /* float btag_weight_80eff3;  */
-  /* float btag_weight_80eff4;  */
+  int   bj_N;
+  int   bj_Ne80;
   float btag_weight_total;
   float btag_weight_total_80eff;
-
-  float tag_MV1_1, tag_MV1_2, tag_MV1_3, tag_MV1_4;
-  float tag_SV1_1, tag_SV1_2, tag_SV1_3, tag_SV1_4;
-  float tag_JetFitterCu_1, tag_JetFitterCu_2, tag_JetFitterCu_3, tag_JetFitterCu_4;
-  float tag_JetFitterCb_1, tag_JetFitterCb_2, tag_JetFitterCb_3, tag_JetFitterCb_4;
 
   
   //- MET
   VFloat met; 
   VFloat met_phi; 
 
-  float met_lochadtopo;
+  float  met_lochadtopo;
 
   //recoiling system
   VFloat rmet_par;  //parallel
@@ -922,6 +878,7 @@ private:
   float dPhi_j2_j3;
   float dPhi_b1_b2;
   VFloat dPhi_min;
+  VFloat dPhi_min_4jets;
   VFloat dPhi_min_alljets;
   float dR_j1_j2;
   float dR_j1_j3;
@@ -957,19 +914,21 @@ private:
   VFloat MT_lcl_met;  
   VFloat MT_jsoft_met;  
 
-  float DiJet_Mass;  
-  float DiBJet_Mass;    
+  float mjj;  
+  float mbb;    
   
-  float mct;   
+  float  mct;   
+  VFloat mct_corr;   
   VFloat meff;
-  float HT;   
+  float  HT;   
 
-  float AlphaT;
 
   //Razor
-  float MR;  
+  float  MR;  
   VFloat MTR;
   VFloat R;
+
+  float  AlphaT;
   
   //new super-razor (Martin)
   VFloat shatR;  

@@ -19,6 +19,8 @@ rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-0
 
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
 
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/TileID/TileTripReader/trunk
+
 # Offline truth jet tagging for MCGN1 derivations
 svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
 

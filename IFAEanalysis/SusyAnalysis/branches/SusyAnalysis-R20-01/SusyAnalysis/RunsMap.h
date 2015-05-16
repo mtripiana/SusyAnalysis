@@ -276,6 +276,9 @@ void RunsMap::LoadMap(){
   m_map["directHG"] = rlist( Rpair(300604,"/nfs/at3/scratch/tripiana/xAOD/truth/directHG/"));
 
 
+  m_map["test_roger"] = rlist( Rpair(555555, "/nfs/atlas-data06/scratch/tripiana/xAOD/test/roger/"));
+
+
   //SIGNAL
   m_map["13TEV_Sbottom_800_1"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
   m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
@@ -993,6 +996,8 @@ void RunsMap::LoadMap(){
   m_map["TestTruth20"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/rel20/"));
   m_map["TestTruth2"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/stop/"));
   m_map["TestTruth3"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/Gtt/"));
+  m_map["TestTruthMC15"] = rlist( Rpair(406003, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/mc15/"));
+  m_map["TestTruthDC14"] = rlist( Rpair(406003, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/dc14/"));
   
   //Test trigger
   m_map["TestTrig"] = rlist( Rpair(147912, "/nfs/at3/scratch/tripiana/Trigger/test/"));

@@ -8,25 +8,37 @@ using namespace Particles;
 
 // Default constructor for Particle
 Particle::Particle(){
-  Pt_up = 0;
-  Pt_down = 0;
-  Ht = 0;
+
+  gev=false; //4mom in GeV?
+  index = -1;
+
+  type = 0; //as defined in MCTruthClassifier::ParticleType
+  origin = 0; //as defined in MCTruthClassifier::ParticleOrigin
+
   isGood = true;
-  isIsolated = false;
+  id = -1;
   isTight = false;
+
   isTrigMatch = false;
+
+  isIsolated = false;
+  isoTight = 0.;
+  isoLoose = 0.;
+  isoGradient = 0.;
   ptcone20 = 0;
   etcone20 = 0;
   ptcone30 = 0;
   etcone30 = 0;
+
+  d0_sig = 0;
+  z0 = 0;
   charge = 0;
+
+  Pt_up = 0;
+  Pt_down = 0;
   SF = 1;
   SFu = 0;
   SFd = 0;
-  gev=false; //4mom in GeV?
-  id = -1;
-  type = 0; //as defined in MCTruthClassifier::ParticleType
-  origin = 0; //as defined in MCTruthClassifier::ParticleOrigin
 }
 
 Particle::~Particle(){}
@@ -167,17 +179,21 @@ MET::MET(){
   met_vmu.Set(0., 0.);  
   met_tst_imu.Set(0., 0.);
   met_tst_vmu.Set(0., 0.);  
+  met_tst_imu_ecorr.Set(0., 0.);
+  met_tst_vmu_ecorr.Set(0., 0.);
+  met_tst_vmu_mucorr.Set(0., 0.);
   met_trk.Set(0., 0.);
-  met_mucorr_vmu.Set(0., 0.);
-  met_ecorr_imu.Set(0., 0.);
-  met_ecorr_vmu.Set(0., 0.);
+  met_vmu_mucorr.Set(0., 0.);
+  met_vmu_ecorr.Set(0., 0.);
   met_reffinal_imu.Set(0., 0.);
   met_reffinal_vmu.Set(0., 0.);  
   met_lochadtopo.Set(0., 0.);
-  met_phcorr_imu.Set(0., 0.);
-  met_phcorr_vmu.Set(0., 0.);  
+  met_imu_ecorr.Set(0., 0.);
+  met_imu_phcorr.Set(0., 0.);
+  met_vmu_phcorr.Set(0., 0.);  
   met_truth_imu.Set(0., 0.);
   met_truth_vmu.Set(0., 0.);    
+
   m_hasMuons = false;
   gev=false;
 }
@@ -202,17 +218,23 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   else if(which=="met_tst_vmu"){
     this->met_tst_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }  
+  else if(which=="met_tst_vmu_mucorr"){
+    this->met_tst_vmu_mucorr.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_tst_vmu_ecorr"){
+    this->met_tst_vmu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_tst_imu_ecorr"){
+    this->met_tst_imu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
+  }
   else if(which=="met_trk"){
     this->met_trk.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_mucorr_vmu"){
-    this->met_mucorr_vmu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_vmu_mucorr"){
+    this->met_vmu_mucorr.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_ecorr_imu"){
-    this->met_ecorr_imu.Set(vec.X() * sf, vec.Y() * sf);
-  }
-  else if(which=="met_ecorr_vmu"){
-    this->met_ecorr_vmu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_vmu_ecorr"){
+    this->met_vmu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
   }    
   else if(which=="met_refFinal_imu"){
     this->met_reffinal_imu.Set(vec.X() * sf, vec.Y() * sf);
@@ -223,11 +245,14 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   else if(which=="met_locHadTopo"){
     this->met_lochadtopo.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_phcorr_imu"){
-    this->met_phcorr_imu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_imu_ecorr"){
+    this->met_imu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_phcorr_vmu"){
-    this->met_phcorr_vmu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_imu_phcorr"){
+    this->met_imu_phcorr.Set(vec.X() * sf, vec.Y() * sf);
+  }
+  else if(which=="met_vmu_phcorr"){
+    this->met_vmu_phcorr.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_truth_imu"){
     this->met_truth_imu.Set(vec.X() * sf, vec.Y() * sf);
@@ -235,10 +260,11 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   else if(which=="met_truth_vmu"){
     this->met_truth_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }  
+
 }
 
 TVector2 MET::GetVector(TString which){
-  
+
   if(which=="met_imu"){
     return TVector2(this->met_imu);
   }
@@ -251,17 +277,23 @@ TVector2 MET::GetVector(TString which){
   if(which=="met_tst_vmu"){
     return TVector2(this->met_tst_vmu);
   }  
+  if(which=="met_tst_vmu_mucorr"){
+    return TVector2(this->met_tst_vmu_mucorr);
+  }
+  if(which=="met_tst_vmu_ecorr"){
+    return TVector2(this->met_tst_vmu_ecorr);
+  }
+  if(which=="met_tst_imu_ecorr"){
+    return TVector2(this->met_tst_imu_ecorr);
+  }
   if(which=="met_trk"){
     return TVector2(this->met_trk);
   }
-  if(which=="met_mucorr_vmu"){
-    return TVector2(this->met_mucorr_vmu);
+  if(which=="met_vmu_mucorr"){
+    return TVector2(this->met_vmu_mucorr);
   }
-  if(which=="met_ecorr_imu"){
-    return TVector2(this->met_ecorr_imu);
-  }
-  if(which=="met_ecorr_vmu"){
-    return TVector2(this->met_ecorr_vmu);
+  if(which=="met_vmu_ecorr"){
+    return TVector2(this->met_vmu_ecorr);
   }  
   if(which=="met_refFinal_vmu"){
     return TVector2(this->met_reffinal_vmu);
@@ -272,11 +304,14 @@ TVector2 MET::GetVector(TString which){
   if(which=="met_locHadTopo"){
     return TVector2(this->met_lochadtopo);
   }
-  if(which=="met_phcorr_imu"){
-    return TVector2(this->met_phcorr_imu);
+  if(which=="met_imu_ecorr"){
+    return TVector2(this->met_imu_ecorr);
   }
-  if(which=="met_phcorr_vmu"){
-    return TVector2(this->met_phcorr_vmu);
+  if(which=="met_imu_phcorr"){
+    return TVector2(this->met_imu_phcorr);
+  }
+  if(which=="met_vmu_phcorr"){
+    return TVector2(this->met_vmu_phcorr);
   }  
   if(which=="met_truth_imu"){
     return TVector2(this->met_truth_imu);
@@ -284,7 +319,7 @@ TVector2 MET::GetVector(TString which){
   if(which=="met_truth_vmu"){
     return TVector2(this->met_truth_vmu);
   }      
-
+  
 }
 
 float MET::Phi(TString which){
@@ -323,15 +358,18 @@ void MET::Reset(){
   met_vmu.Set(0., 0.);  
   met_tst_imu.Set(0., 0.);
   met_tst_vmu.Set(0., 0.);  
+  met_tst_imu_ecorr.Set(0., 0.);
+  met_tst_vmu_mucorr.Set(0., 0.);
+  met_tst_vmu_ecorr.Set(0., 0.);
   met_trk.Set(0., 0.);
-  met_mucorr_vmu.Set(0., 0.);  
-  met_ecorr_imu.Set(0., 0.);
-  met_ecorr_vmu.Set(0., 0.);  
+  met_imu_ecorr.Set(0., 0.);
+  met_vmu_mucorr.Set(0., 0.);  
+  met_vmu_ecorr.Set(0., 0.);  
   met_lochadtopo.Set(0., 0.);
   met_reffinal_vmu.Set(0., 0.);
   met_reffinal_imu.Set(0., 0.);
-  met_phcorr_vmu.Set(0., 0.);
-  met_phcorr_imu.Set(0., 0.);  
+  met_vmu_phcorr.Set(0., 0.);
+  met_imu_phcorr.Set(0., 0.);  
   met_truth_vmu.Set(0., 0.);
   met_truth_imu.Set(0., 0.);  
 }

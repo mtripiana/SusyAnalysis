@@ -1,4 +1,12 @@
 2014-04-08 Martin <tripiana@cern.ch>
+	* Move to Base,2.3.12
+	* Move to SUSYTools-00-06-05
+	* Move latest developments from DC14 branch (trunk)
+	* New vectorized jet block (as for leptons)
+	* New eventList option
+
+
+2014-04-08 Martin <tripiana@cern.ch>
 	* Move to Base,2.3.9
 	* Update run*cxx to new ami metadata (at least for valid* samples)
 	* Add Status and Systematic Code checks

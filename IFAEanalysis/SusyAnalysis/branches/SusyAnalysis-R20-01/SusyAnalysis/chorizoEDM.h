@@ -43,8 +43,8 @@
 #include "xAODTrigEgamma/TrigElectronContainer.h"
 
 #include "SUSYTools/SUSYObjDef_xAOD.h"
-ST::SignalIsoExp::IsoExp elIsoType;
-ST::SignalIsoExp::IsoExp muIsoType;
+/* ST::SignalIsoExp::IsoExp elIsoType; */
+/* ST::SignalIsoExp::IsoExp muIsoType; */
 
 // Transient object store. Needed for the CP tools.
 xAOD::TStore* m_store;
@@ -56,11 +56,12 @@ xAOD::JetContainer* m_goodJets;
 xAOD::JetContainer* m_smdJets;
 
 
-const xAOD::JetContainer* m_jets;
+/* const xAOD::JetContainer* m_jets; */
+/* const xAOD::ElectronContainer* m_electrons; */
+/* const xAOD::MuonContainer* m_muons; */
+/* const xAOD::PhotonContainer* m_photons; */
+
 const xAOD::JetContainer* m_truth_jets;
-const xAOD::ElectronContainer* m_electrons;
-const xAOD::MuonContainer* m_muons;
-const xAOD::PhotonContainer* m_photons;
 
 const xAOD::TruthEventContainer* m_truthE;
 const xAOD::TruthParticleContainer* m_truthP;

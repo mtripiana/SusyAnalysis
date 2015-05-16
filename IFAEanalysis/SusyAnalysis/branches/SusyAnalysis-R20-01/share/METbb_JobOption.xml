@@ -69,6 +69,14 @@
       <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
       <TrackIso>0</TrackIso>
     </TrackVeto>
+
+    <Booking>
+      <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
+      <ElSignal>5</ElSignal>   <!-- number of signal electrons to be saved -->
+      <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
+      <MuSignal>5</MuSignal> <!-- number of signal muons to be saved -->
+    </Booking>
+
     <Electron>
       <PreselPtCut>7000.</PreselPtCut>
       <PreselEtaCut>2.47</PreselEtaCut>
@@ -79,16 +87,18 @@
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
       <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
     </Electron>
+
     <Muon>
       <PreselPtCut>6000.</PreselPtCut>
       <PreselEtaCut>2.4</PreselEtaCut>
       <RecoPtCut>6000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
       <triggers>HLT_mu26_imedium</triggers>
     </Muon>
+
     <Photon>
       <PreselPtCut>20000.</PreselPtCut>
       <PreselEtaCut>2.37</PreselEtaCut>
@@ -98,30 +108,34 @@
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
       <triggers></triggers>
     </Photon>
+
     <Jet>
+      <PreselPtCut>20000.</PreselPtCut>
+      <PreselEtaCut>10</PreselEtaCut>
+      <RecoPtCut>35000.</RecoPtCut>
+      <RecoEtaCut>2.8</RecoEtaCut>
+
+      <JESNPset>1</JESNPset>
+
       <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
       <Path name="BtagCalib">SUSYTools/</Path>
       <dPhiMin>0.4</dPhiMin>
       <JVFMin>0.5</JVFMin>
-      <Collection>AntiKt4LCTopo</Collection>
-      
-      <PreselPtCut>20000.</PreselPtCut>
-      <PreselEtaCut>2.8</PreselEtaCut>
-      <RecoPtCut>30000.</RecoPtCut>
-      <RecoEtaCut>2.8</RecoEtaCut>
-      
+      <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
+
       <!--- For the c/b-tagger -->
-      <!-- <Tagger>MV1</Tagger> -->
-      <!-- <TaggerOpPoint>0_7892</TaggerOpPoint> -->
-      <!-- <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
-      <Tagger>IP3DSV1</Tagger>
-      <TaggerOpPoint>1_85</TaggerOpPoint>
-      <TaggerOpPoint2>m0_70</TaggerOpPoint2>
+      <!--      <Tagger>IP3DSV1</Tagger> -->
+      <!--      <TaggerOpPoint>1_85</TaggerOpPoint> -->
+      <!--      <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
+      <Tagger>MV1</Tagger>
+      <TaggerOpPoint>0_7892</TaggerOpPoint>
+      <TaggerOpPoint2>0_3511</TaggerOpPoint2>
       <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
     </Jet>
+
     <Etmiss>
       <Path name="FakeMetEstimator">fest_periodF_v1.root</Path>
       <Collection>Egamma10NoTau</Collection>
@@ -135,6 +149,7 @@
       <Term name="doMuons">false</Term>
       <Term name="doSoftTerms">true</Term>
     </Etmiss>
+
     <QCD>
       <Enable>false</Enable> <!-- Enable jet smearing  -->
       <TrigChains> HLT_xe.* </TrigChains>
@@ -150,6 +165,7 @@
       <DoPhiSmearing>true</DoPhiSmearing>
       <SmearedEvents>250</SmearedEvents>
     </QCD>
+
   </ObjectDefinition>
 
 </AnalysisOptions>

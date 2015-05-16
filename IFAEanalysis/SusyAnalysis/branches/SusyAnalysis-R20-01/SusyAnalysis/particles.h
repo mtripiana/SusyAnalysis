@@ -17,26 +17,39 @@ class Particle : public TLorentzVector {
   public:
     Particle();
     ~Particle();
-    float  Pt_up;
-    float  Pt_down;
-    float  Ht;
+
+    int    index;
+    bool   gev;
+    int    type;
+    int    origin;
+
     bool   isGood;
-    bool   isIsolated;
+    int    id;
     bool   isTight;
+
     bool   isTrigMatch;
+
+    bool   isIsolated;
+    float  isoTight;
+    float  isoLoose;
+    float  isoGradient;
     float  ptcone20;
     float  etcone20;
     float  ptcone30;
     float  etcone30;
+
+    float  d0_sig;
+    float  z0;    
     int    charge;
+
     float  SF;
     float  SFu;
     float  SFd;
 
-    int    id;
-    bool   gev;
-    int    type;
-    int    origin;
+    float  Pt_up;
+    float  Pt_down;
+
+    float  Ht;
 
 
     TLorentzVector GetVector() const;
@@ -105,18 +118,21 @@ class MET : public TVector2{
     TVector2  met_imu;   
     TVector2  met_vmu;
     TVector2  met_tst_imu;
-    TVector2  met_tst_vmu;    
+    TVector2  met_tst_vmu;  
+    TVector2  met_tst_imu_ecorr;
+    TVector2  met_tst_vmu_ecorr;
+    TVector2  met_tst_vmu_mucorr;  
     TVector2  met_trk;
-    TVector2  met_mucorr_vmu;    
-    TVector2  met_ecorr_imu;
-    TVector2  met_ecorr_vmu;
+    TVector2  met_imu_ecorr;
+    TVector2  met_vmu_ecorr;
     TVector2  met_lochadtopo;
     TVector2  met_reffinal_imu;
     TVector2  met_reffinal_vmu;
-    TVector2  met_phcorr_imu;
-    TVector2  met_phcorr_vmu;
+    TVector2  met_vmu_mucorr;    
+    TVector2  met_imu_phcorr;
+    TVector2  met_vmu_phcorr;
     TVector2  met_truth_imu;
-    TVector2  met_truth_vmu;        
+    TVector2  met_truth_vmu;
     bool      m_hasMuons;
 
     void SetVector(TVector2 vec, TString which="", bool inGeV=false); 
@@ -147,6 +163,5 @@ bool operator<(const Particle& Particle1, const Particle& Particle2);
 bool operator<(const Jet& Jet1, const Jet& Jet2);
 
 bool bw_MV1_sort(const Jet& Jet1, const Jet& Jet2);
-
 
 #endif
