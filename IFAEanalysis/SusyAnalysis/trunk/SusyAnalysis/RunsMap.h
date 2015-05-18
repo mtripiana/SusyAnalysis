@@ -462,12 +462,14 @@ m_map["13TEV_SinglePhotonMassiveCBPt500_BFilter"] = rlist( Rpair(177585,"mc14_13
   m_map["13TEV_Sbottom_700_690_msb10"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb10/"));
   m_map["13TEV_Sbottom_700_690_msb12"] = rlist( Rpair(300373, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/ktmatching/BB_700_690/msb12/"));
 
+  m_map["TestTruthTakashi"] = rlist( Rpair(406003,"user.yamanaka.mc15_13TeV.406003.MadGraphPythia8EvtGen_A14NNPDF23LO_BB_direct_800_1.evgen.EVNT.e3468_9_EXT0/"));
+
   //EWK directHG study
   m_map["directHG"] = rlist( Rpair(300604,"/nfs/at3/scratch/tripiana/xAOD/truth/directHG/"));
 
 
   //SIGNAL
-    m_map["test_stop"] = rlist( Rpair(204422, "/nfs/at3/scratch/sfracchia/SUSY/test_stop/"));    
+  m_map["test_stop"] = rlist( Rpair(204422, "/nfs/at3/scratch/sfracchia/SUSY/test_stop/"));    
   //m_map["test_stop"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));    //CutFlow check Stop0L pre-WT (p1872)
 
   m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  

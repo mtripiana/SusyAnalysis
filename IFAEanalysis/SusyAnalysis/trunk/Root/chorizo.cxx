@@ -1274,8 +1274,8 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
-  //  doORharmo = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
-  doORharmo = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
+  doORharmo = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
+  //doORharmo = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
   doORphotons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doPhotons");
   
   Info(whereAmI, Form(" - TrackVeto" ));
@@ -1520,6 +1520,12 @@ EL::StatusCode chorizo :: initialize ()
   // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
   // if(!Met_doRefGamma)   CHECK(tool_st->setProperty("METGammaTerm","")); //No GammaTerm default
   // if(!Met_doRefTau)     CHECK(tool_st->setProperty("METTauTerm", "")); //No TauTerm default
+
+  //NEW
+  if(isderived){
+    CHECK(tool_st->setProperty("METInputMap", "METMap_RefFinalFix"));
+    CHECK(tool_st->setProperty("METInputCont", "MET_RefFinalFix"));
+  }
   
   CHECK( tool_st->SUSYToolsInit() );
   CHECK( tool_st->initialize() );
@@ -1544,7 +1550,7 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_or->initialize() );
   
 
-  //--- B-tagging                                                                                                                 
+  //--- B-tagging               
   tool_btag  = new BTaggingEfficiencyTool("BTag70");
   CHECK( tool_btag->setProperty("TaggerName",          Jet_Tagger.Data()) );
   CHECK( tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data()) );
@@ -1942,46 +1948,34 @@ EL::StatusCode chorizo :: loop ()
     //pdf reweighting
     if(doPDFrw){
       
-      //** For newer tags when they come...
-      ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1);
-      ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2);
-      ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
-      ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
-      ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
-      ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
-      // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
-      // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
-      ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::SCALE);
-      // ( *truthE_itr )->pdfInfoParameter(pdf_Q, xAOD::TruthEvent::Q);
-      // ( *truthE_itr )->pdfInfoParameter(pdf_xf1, xAOD::TruthEvent::XF1);
-      // ( *truthE_itr )->pdfInfoParameter(pdf_xf2, xAOD::TruthEvent::XF2);
-      
-      //** For the old EDM
-      // ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::id1);
-      // ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::id2);
-      // ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::x1);
-      // ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::x2);
-      // ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::pdfId1);
-      // ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::pdfId2);
-      // // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::pdf1);
-      // // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::pdf2);
-      // ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::scalePDF);
-      
+      //incompatible pdfInfoAccessot for DC14! hacked for now...
+      id1 = (*truthE_itr)->auxdata< int >( "id1" ); 
+      id2 = (*truthE_itr)->auxdata< int >( "id2" ); 
+      x1  = (*truthE_itr)->auxdata< float >( "id1" ); 
+      x2  = (*truthE_itr)->auxdata< float >( "id2" ); 
+      pdfId1 = (*truthE_itr)->auxdata< int >( "pdfId1" ); 
+      pdfId2 = (*truthE_itr)->auxdata< int >( "pdfId2" ); 
+      pdf1 = (*truthE_itr)->auxdata< int >( "pdf1" ); 
+      pdf2 = (*truthE_itr)->auxdata< int >( "pdf2" ); 
+      scalePDF = (*truthE_itr)->auxdata< float >( "scalePDF" ); 
+            
       PDF_w *= getPdfRW((double)beamE_to/beamE_from, (double)(scalePDF*scalePDF), (double)x1, (double)x2, id1, id2);     
       
-      // cout << "-------------------------------------" << endl;
-      // cout << "DEBUG :: rwScale = " << beamE_to/beamE_from << endl; 
-      // cout << "DEBUG :: scalePDF = " << scalePDF << endl; 
-      // cout << "DEBUG :: x1 = " << x1 << endl; 
-      // cout << "DEBUG :: x2 = " << x2 << endl; 
-      // cout << "DEBUG :: id1 = " << id1 << endl; 
-      // cout << "DEBUG :: id2 = " << id2 << endl; 
-      // cout << "DEBUG :: pdfId1 = " << pdfId1 << endl; 
-      // cout << "DEBUG :: pdfId2 = " << pdfId2 << endl; 
-      // cout << "DEBUG :: PDF_w = " << PDF_w << endl; 
-      // cout << "-------------------------------------" << endl;
+      if(debug){
+	cout << "-------------------------------------" << endl;
+	cout << "DEBUG :: rwScale = " << beamE_to/beamE_from << endl; 
+	cout << "DEBUG :: scalePDF = " << scalePDF << endl; 
+	cout << "DEBUG :: x1 = " << x1 << endl; 
+	cout << "DEBUG :: x2 = " << x2 << endl; 
+	cout << "DEBUG :: id1 = " << id1 << endl; 
+	cout << "DEBUG :: id2 = " << id2 << endl; 
+	cout << "DEBUG :: pdfId1 = " << pdfId1 << endl; 
+	cout << "DEBUG :: pdfId2 = " << pdfId2 << endl; 
+	cout << "DEBUG :: PDF_w = " << PDF_w << endl; 
+	cout << "-------------------------------------" << endl;
+      }
     }
-  
+    
     //Find Hard Process particles
     int pdgid1 = 0;
     int pdgid2 = 0;
@@ -2170,7 +2164,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     //decorate electron with final pt requirements ('final')
     elIsoArgs->_etcut = El_RecoPtCut;
-    elIsoArgs->_calo_isocut = 0.;    
     tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
     dec_final(*el_itr) = dec_signal(*el_itr);
 
@@ -2239,7 +2232,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   xAOD::Jet jet;
   for( const auto& jet_itr : *jets_sc){    
     
-
     dec_ptraw(*jet_itr) = (*jet_itr).pt();
 
     TLorentzVector TruthJetdec=MatchTruthJet(*jet_itr);
@@ -2266,15 +2258,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
    //dec_baseline(*jet_itr) &= (fabs((*jet_itr).eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR for sbottom analysis. //SILVIA //CHECK_ME
   }
 
-  //--- Get (recalculated) MissingEt  
-  if(doORphotons)
-    CHECK( tool_st->GetMET(*metRFC, jets_sc, electrons_sc, muons_sc, photons_sc, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
-  else
-    CHECK( tool_st->GetMET(*metRFC, jets_sc, electrons_sc, muons_sc, 0, 0) );//CHECK_ME arely: the MuonTerm is set to "" for tool_st-> no muon term here then. 
-  
-  
-  TVector2 metRF = getMET(metRFC, "Final"); 
-    
   //--- Do overlap removal   
   if(doOR){
     if(doORphotons)
@@ -2387,7 +2370,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       
   }//electron loop
 
-
   
   //sort the electrons in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end());   //non-signal electrons
@@ -2414,7 +2396,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       dec_signal(*mu_itr)   &= dec_baseline(*mu_itr); //update signal decoration too!
       dec_final(*mu_itr )   &= dec_baseline(*mu_itr); //update final decoration too!
     }
-
 
 
     if(debug && dec_baseline(*mu_itr)) 	cout << "Muon baseline " << endl; 
@@ -2611,18 +2592,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   auto jet_end = jets_sc->end();
   Particles::Jet recoJet;
   int iJet = 0;
-  int n_fakemet_jets=0;
   for( ; jet_itr != jet_end; ++jet_itr ){   
-    //look for fake-met jets    
-    if (Met_doFakeEtmiss){
-      float bchcorrjet;
-      (*jet_itr)->getAttribute(xAOD::JetAttribute::BchCorrJet, bchcorrjet);
-      if((*jet_itr)->pt() > 40000. && 
-	 bchcorrjet > 0.05 && 
-	 deltaPhi(metRF.Phi(), (*jet_itr)->phi()) < 0.3){
-	n_fakemet_jets++;
-      }
-    }    
 	
     if( doOR && !dec_passOR(**jet_itr) ) continue;
 
@@ -2728,15 +2698,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   //  *after lepton overlap removal*
   //  from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
   this->passPreselectionCuts &= (!this->isBadID);
-  
-  //--- Additional jet cleaning 
-  //  To remove events with fake missing Et due to non operational cells in the Tile and the HEC.
-  //  *before lepton overlap removal*
-  //  from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
-  this->isFakeMet = (n_fakemet_jets>0);
-  this->passPreselectionCuts &= (!this->isFakeMet);
-
-  
+    
 
   //--- Get truth electrons 
   if ( this->isMC && !this->isSignal ){
@@ -3080,8 +3042,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   //--- Met with electrons as invisible (signal electrons)
   TVector2 v_met_elinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
   TVector2 v_met_elinv_ST_vmu = met_obj.GetVector("met_vmu"); //== met_ST (GeV)   
-
-  TVector2 v_met_elinv_TST = met_obj.GetVector("met_tst_imu"); //== met_ST (GeV)                                                                                                                                                            
+  TVector2 v_met_elinv_TST = met_obj.GetVector("met_tst_imu"); //== met_ST (GeV)                                                      
   TVector2 v_met_elinv_TST_vmu = met_obj.GetVector("met_tst_vmu"); //== met_ST (GeV) 
 
   TLorentzVector vels(0.,0.,0.,0.);
@@ -3125,16 +3086,10 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   v_met_phinv_ST.Set( v_met_phinv_ST.Px() + vphs.Px(), v_met_phinv_ST.Py() + vphs.Py() );
   v_met_phinv_ST_vmu.Set( v_met_phinv_ST_vmu.Px() + vphs.Px(), v_met_phinv_ST_vmu.Py() + vphs.Py() );  
 
-  met_obj.SetVector(v_met_phinv_ST, "met_phcorr_imu", true); //already in GeV    
-  met_obj.SetVector(v_met_phinv_ST_vmu, "met_phcorr_vmu", true); //already in GeV  
+  met_obj.SetVector(v_met_phinv_ST, "met_imu_phcorr", true); //already in GeV    
+  met_obj.SetVector(v_met_phinv_ST_vmu, "met_vmu_phcorr", true); //already in GeV  
   
-  //***
-  if(doORphotons){ //FIX_ME //temporary hack to accomodate ttbargamma studies. This way all met-related variables are computed with invisible photons
-    met_obj.SetVector(v_met_phinv_ST, "", true); //already in GeV 
-    met_obj.SetVector(v_met_phinv_ST_vmu, "", true); //already in GeV        
-  }
-  //***  
-  
+
   // truth met
   if(this->isMC){
     TVector2 v_met_truth_imu(mtruth_inv->mpx(), mtruth_inv->mpy()); 
@@ -3152,8 +3107,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_imu_ecorr");
   metmap[::MetDef::VisMuECorr] = met_obj.GetVector("met_vmu_ecorr");  
   metmap[::MetDef::VisMuMuCorr] = met_obj.GetVector("met_vmu_mucorr");  
-  metmap[::MetDef::InvMuPhCorr] = met_obj.GetVector("met_phcorr_imu");
-  metmap[::MetDef::VisMuPhCorr] = met_obj.GetVector("met_phcorr_vmu");
+  metmap[::MetDef::InvMuPhCorr] = met_obj.GetVector("met_imu_phcorr");
+  metmap[::MetDef::VisMuPhCorr] = met_obj.GetVector("met_vmu_phcorr");
   metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
   metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
   metmap[::MetDef::VisMuRef] = met_obj.GetVector("met_refFinal_vmu");  
@@ -3168,6 +3123,14 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");  
   metmap[::MetDef::locHadTopo] = met_obj.GetVector("met_locHadTopo");    
 
+
+  if (printMet){
+    cout<<"Info for MET "<<endl;
+    met_obj.PrintInfo();
+    cout<<"met_ST.Mod() = " << v_met_ST.Mod()*0.001 << endl;
+    cout<<"MET from D3PD = " << v_met_rfinal_mu.Mod()*0.001 << endl;
+    cout<<endl;
+  }
   
   //*** Event Skimming (if requested)
   if(m_skim){
@@ -3218,14 +3181,28 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     isMetCleaned = ( ( (myMetMuon.Mod() / v_met_rfinal_mu.Mod()) * cos(v_met_rfinal_mu.Phi() - myMetMuon.Phi()) ) < 0.8);
   }
 
-  if (printMet){
-    cout<<"Info for MET "<<endl;
-    met_obj.PrintInfo();
-    cout<<"met_ST.Mod() = " << v_met_ST.Mod()*0.001 << endl;
-    cout<<"MET from D3PD = " << v_met_rfinal_mu.Mod()*0.001 << endl;
-    cout<<endl;
-  }
+  jet_itr = jets_sc->begin();
+  jet_end = jets_sc->end();
+  int n_fakemet_jets=0;
+  for( ; jet_itr != jet_end; ++jet_itr ){   
+    //look for fake-met jets    
+    if (Met_doFakeEtmiss){
+      float bchcorrjet;
+      (*jet_itr)->getAttribute(xAOD::JetAttribute::BchCorrJet, bchcorrjet);
+      if((*jet_itr)->pt() > 40000. && 
+	 bchcorrjet > 0.05 && 
+	 deltaPhi(met_obj.GetVector("met_vmu").Phi(), (*jet_itr)->phi()) < 0.3){
+	n_fakemet_jets++;
+      }
+    }
+  }    
 
+  //--- Additional jet cleaning 
+  //  To remove events with fake missing Et due to non operational cells in the Tile and the HEC.
+  //  *before lepton overlap removal*
+  //  from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
+  this->isFakeMet = (n_fakemet_jets>0);
+  this->passPreselectionCuts &= (!this->isFakeMet);
 
   
   //Recoiling system against MET (prebooking)
@@ -4771,6 +4748,7 @@ EL::StatusCode chorizo :: finalize ()
     delete tool_btag2;
     tool_btag2=0;
   }
+
   //isolation tool
   if(iso_1){
     delete iso_1;

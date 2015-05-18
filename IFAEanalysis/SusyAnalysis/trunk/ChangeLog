@@ -1,3 +1,6 @@
+2015-05-18 Martin <tripiana@cern.ch>
+	* Fix pdf accessors (hacked)
+
 2015-05-05 Martin <tripiana@cern.ch>
 	* Move to Base,2.1.32
 	* Add -e option to pass list of derised events

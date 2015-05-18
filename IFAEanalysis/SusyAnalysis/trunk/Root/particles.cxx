@@ -185,8 +185,8 @@ MET::MET(){
   met_reffinal_vmu.Set(0., 0.);  
   met_lochadtopo.Set(0., 0.);
   met_imu_ecorr.Set(0., 0.);
-  met_phcorr_imu.Set(0., 0.);
-  met_phcorr_vmu.Set(0., 0.);  
+  met_imu_phcorr.Set(0., 0.);
+  met_vmu_phcorr.Set(0., 0.);  
   met_truth_imu.Set(0., 0.);
   met_truth_vmu.Set(0., 0.);    
   m_hasMuons = false;
@@ -243,11 +243,11 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   else if(which=="met_imu_ecorr"){
     this->met_imu_ecorr.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_phcorr_imu"){
-    this->met_phcorr_imu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_imu_phcorr"){
+    this->met_imu_phcorr.Set(vec.X() * sf, vec.Y() * sf);
   }
-  else if(which=="met_phcorr_vmu"){
-    this->met_phcorr_vmu.Set(vec.X() * sf, vec.Y() * sf);
+  else if(which=="met_vmu_phcorr"){
+    this->met_vmu_phcorr.Set(vec.X() * sf, vec.Y() * sf);
   }
   else if(which=="met_truth_imu"){
     this->met_truth_imu.Set(vec.X() * sf, vec.Y() * sf);
@@ -301,11 +301,11 @@ TVector2 MET::GetVector(TString which){
   if(which=="met_imu_ecorr"){
     return TVector2(this->met_imu_ecorr);
   }
-  if(which=="met_phcorr_imu"){
-    return TVector2(this->met_phcorr_imu);
+  if(which=="met_imu_phcorr"){
+    return TVector2(this->met_imu_phcorr);
   }
-  if(which=="met_phcorr_vmu"){
-    return TVector2(this->met_phcorr_vmu);
+  if(which=="met_vmu_phcorr"){
+    return TVector2(this->met_vmu_phcorr);
   }  
   if(which=="met_truth_imu"){
     return TVector2(this->met_truth_imu);
@@ -362,8 +362,8 @@ void MET::Reset(){
   met_lochadtopo.Set(0., 0.);
   met_reffinal_vmu.Set(0., 0.);
   met_reffinal_imu.Set(0., 0.);
-  met_phcorr_vmu.Set(0., 0.);
-  met_phcorr_imu.Set(0., 0.);  
+  met_vmu_phcorr.Set(0., 0.);
+  met_imu_phcorr.Set(0., 0.);  
   met_truth_vmu.Set(0., 0.);
   met_truth_imu.Set(0., 0.);  
 }
