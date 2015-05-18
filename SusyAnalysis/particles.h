@@ -125,8 +125,8 @@ class MET : public TVector2{
     TVector2  met_reffinal_imu;
     TVector2  met_reffinal_vmu;
     TVector2  met_vmu_mucorr;    
-    TVector2  met_phcorr_imu;
-    TVector2  met_phcorr_vmu;
+    TVector2  met_imu_phcorr;
+    TVector2  met_vmu_phcorr;
     TVector2  met_truth_imu;
     TVector2  met_truth_vmu;
     bool      m_hasMuons;

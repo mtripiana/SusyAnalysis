@@ -129,8 +129,8 @@ using fastjet::ClusterSequence;
 using fastjet::JetDefinition;
 using fastjet::antikt_algorithm;
 
-typedef std::vector<float> VFloat;                          
 typedef std::vector<int> VInt;                          
+typedef std::vector<float> VFloat;                          
 typedef std::pair<VFloat, VFloat > VFloatPair;     
 typedef std::vector<VFloat > VVFloat;                          
 
@@ -474,8 +474,8 @@ private:
 
   //OverlapRemoval
   bool  doOR; //! 
-  //  int   doORharmo; //!
-  bool  doORharmo; //!
+  int   doORharmo; //!
+  //bool  doORharmo; //!
   bool  doORphotons; //!
 
   //track veto

@@ -393,7 +393,8 @@ int main( int argc, char* argv[] ) {
     if(runLocal){
       if( run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
 	scanDir( sh, run_pattern[p].Data() );
-      }else{//PIC samples
+      }
+      else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
 
 	if(args[0]=="test_stop")
