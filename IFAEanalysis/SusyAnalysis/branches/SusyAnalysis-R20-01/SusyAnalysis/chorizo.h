@@ -60,7 +60,7 @@
 #endif 
 
 // Systematics includes
-#include "PATInterfaces/SystematicList.h"
+//#include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicSet.h"
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
@@ -99,6 +99,8 @@ namespace TrigConf{
 
 namespace Trig{
   class TrigDecisionTool;
+  class TrigEgammaMatchingTool;
+  class TrigMuonMatching;
 }
 
 namespace Analysis{
@@ -127,6 +129,12 @@ using fastjet::PseudoJet;
 using fastjet::ClusterSequence;
 using fastjet::JetDefinition;
 using fastjet::antikt_algorithm;
+
+struct CutflowInfo{
+  uint64_t nEvents;
+  double   weightSum;
+  double   weight2Sum;
+};
 
 typedef std::vector<int> VInt;                          
 typedef std::vector<float> VFloat;                          
@@ -277,6 +285,9 @@ private:
 
   Trig::TrigDecisionTool* tool_trigdec; //! 
   TrigConf::xAODConfigTool* tool_trigconfig; //!
+
+  Trig::TrigEgammaMatchingTool* tool_trig_match_el; //!
+  Trig::TrigMuonMatching* tool_trig_match_mu; //!
    
 #ifndef __CINT__  
   OverlapRemovalTool* tool_or; //!
@@ -309,7 +320,7 @@ private:
   virtual void InitVars();
   virtual void ReadXML();
 
-  virtual float getNWeightedEvents();
+  virtual CutflowInfo getNinfo();
   virtual bool  isDerived();
   virtual void  loadEventList();
   virtual bool  inEventList(UInt_t run, UInt_t event); 
@@ -399,6 +410,7 @@ private:
   //--- Variable definition                                                             
   bool isMC; //!  
 
+  bool m_isderived; //!
   int  m_eventCounter; //!
   int  m_metwarnCounter; //!
   int  m_pdfwarnCounter; //!
@@ -480,9 +492,11 @@ private:
   std::vector<std::string> JS_triggers; //!
 
   //OverlapRemoval
-  bool  doOR;
-  bool  doORharmo;
-  bool  doORphotons;
+  bool  doOR; //! 
+  bool  m_or_useSigLep; //!
+  bool  m_or_useIsoLep; //!
+  bool  m_or_bjetOR; //!
+  bool  doORphotons; //!
 
   //track veto
   bool  tVeto_Enable; //! 
@@ -504,7 +518,7 @@ private:
   float El_RecoEtaCut; //!
   string El_baseID; //!
   string El_ID; //!
-  TString El_isoWP; //!
+  string El_isoWP; //!
   bool El_recoSF; //!
   bool El_idSF; //!
   bool El_triggerSF; //!  
@@ -515,15 +529,15 @@ private:
   float Mu_RecoPtCut; //!
   float Mu_RecoEtaCut; //!
   string Mu_ID; //!
-  TString Mu_isoWP; //!
+  string Mu_isoWP; //!
 
   //photons
   float Ph_PreselPtCut; //!
   float Ph_PreselEtaCut; //!
   float Ph_RecoPtCut; //!
   float Ph_RecoEtaCut; //!
-  string  Ph_ID; //!
-  TString Ph_isoWP; //!
+  string Ph_ID; //!
+  string Ph_isoWP; //!
   bool Ph_recoSF; //!
   bool Ph_idSF; //!
   bool Ph_triggerSF; //!  
@@ -533,6 +547,7 @@ private:
   int BookElSignal;
   int BookMuBase;
   int BookMuSignal;
+  int BookPhSignal;
   int BookJetSignal;
 
 #ifndef __CINT__
@@ -722,14 +737,14 @@ private:
 
   //- Photon Info
   int   ph_N;
-  float ph_pt;
-  float ph_eta;
-  float ph_phi;
-  float ph_ptiso30;
-  float ph_etiso30;
-  bool  ph_tight; 
-  int   ph_type; 
-  int   ph_origin; 
+  VFloat ph_pt;
+  VFloat ph_eta;
+  VFloat ph_phi;
+  VFloat ph_ptiso30;
+  VFloat ph_etiso30;
+  VInt   ph_tight; 
+  VInt   ph_type; 
+  VInt   ph_origin; 
 
   //- Electron Info
   int    e_N;
@@ -842,6 +857,7 @@ private:
   VFloat j_jvtxf;
   VFloat j_tflavor;
   VFloat j_tag_MV1;
+  VFloat j_tag_MV2c20;
 
   //- Btagging
   int   bj_N;

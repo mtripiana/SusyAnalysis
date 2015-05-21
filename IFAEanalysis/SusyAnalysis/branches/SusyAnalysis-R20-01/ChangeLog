@@ -1,4 +1,21 @@
-2014-04-08 Martin <tripiana@cern.ch>
+2014-05-21 Martin <tripiana@cern.ch>
+	* Move to 06-06@Base,2.3.12
+	* New BtagSF() for total SF
+	* New overlap removal configuration
+	* New b-tagger default : MV2c20
+	* Fix data run mode
+	* Fix truth run mode (b-weights)
+
+2014-05-19 Martin <tripiana@cern.ch>
+	* New vectorized photon block
+	* New option for user defined inputDirectory (no need of RunsMap entry)
+
+2014-05-18 Martin <tripiana@cern.ch>
+	* Add trigger matching for leptons
+	* Move to EMTopo for jets and MET
+
+
+2014-05-16 Martin <tripiana@cern.ch>
 	* Move to Base,2.3.12
 	* Move to SUSYTools-00-06-05
 	* Move latest developments from DC14 branch (trunk)

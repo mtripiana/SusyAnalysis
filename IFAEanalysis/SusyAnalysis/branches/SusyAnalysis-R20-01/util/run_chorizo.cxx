@@ -35,7 +35,7 @@
 #include <string>
 
 // Systematics includes
-#include "PATInterfaces/SystematicList.h"
+//#include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
@@ -64,12 +64,15 @@ void usage(){
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
   cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
+  cout << "       -i=<ID>       : specify a specific dataset ID inside the container" << endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
   cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
   cout << "                       Just nominal is run by default (Nom)." << endl;       
   cout << "                       To list the available (recommended) systematic variations do: 'run_chorizo slist'" << endl;
   cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
+  cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;  
+  cout << "       -c=<inputDir>  : run over specific directory, over-passing RunsMap (mainly for tests)" << endl;
   cout << endl;
 }
 
@@ -222,6 +225,8 @@ int main( int argc, char* argv[] ) {
   bool genPU=false;
   bool isTruth=false;
 
+  bool userDir=false;
+
   std::string jOption = "METbb_JobOption.xml";
 
   std::vector<TString> systematic; 
@@ -282,6 +287,9 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
       genPU = true;
     }
+    else if (opts[iop] == "c" ){ //user-defined input dir
+      userDir = true;
+    }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].ReplaceAll("s=","");
     }
@@ -340,12 +348,15 @@ int main( int argc, char* argv[] ) {
   RunsMap mapOfRuns;
   //check if sample is mapped
   RMap mymap = mapOfRuns.getMap();
-  RMap::iterator it = mymap.find( args[0] );
-  if(it == mymap.end()){
-    cout << bold(red("\n Ups! "));    
-    cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
-    cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
-    return 0;
+  if(!userDir){
+    RMap::iterator it = mymap.find( args[0] );
+    if(it == mymap.end()){
+      cout << bold(red("\n Ups! "));    
+      cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
+      cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
+      cout << "            To run over a user-directory directly use -c.'\n" << endl;
+      return 0;
+    }
   }
 
 
@@ -377,8 +388,16 @@ int main( int argc, char* argv[] ) {
   }
 
   // Get patterns/paths to load for this sample
-  std::vector<TString> run_pattern = mapOfRuns.getPatterns( args[0] );
-  std::vector<int>     run_ids     = mapOfRuns.getIDs( args[0] );
+  std::vector<TString> run_pattern;
+  std::vector<int>     run_ids;
+  if(!userDir){
+    run_pattern  = mapOfRuns.getPatterns( args[0] );
+    run_ids       = mapOfRuns.getIDs( args[0] );
+  }
+  else{
+    run_pattern.push_back( args[0] );
+    run_ids.push_back( single_id );
+  }
 
   // Construct the samples to run on:
   SampleHandler sh;
@@ -390,7 +409,7 @@ int main( int argc, char* argv[] ) {
     //** Run on local samples
     //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
     if(runLocal){
-      if( run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
+      if( userDir || run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
 	scanDir( sh, run_pattern[p].Data() );
       }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
@@ -455,6 +474,7 @@ int main( int argc, char* argv[] ) {
     amiFound=false;
   }
 
+  bool isData = (sh.size() ? (sh.at(0)->getMetaString( MetaFields::isData )=="Y") : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
     
   //  fetch meta-data from AMI
   if(amiFound && 0){
@@ -464,14 +484,13 @@ int main( int argc, char* argv[] ) {
       (*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
     }                                                          
   }
-
   //  then override some meta-data from SUSYTools
-  readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+  if(!isData)
+    readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
   
   //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 
   std::vector<double> weights;
-  bool isData = (sh.size() ? (sh.at(0)->getMetaString( MetaFields::isData )=="Y") : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
   
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       printSampleMeta( *iter );
@@ -634,7 +653,7 @@ int main( int argc, char* argv[] ) {
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       
 	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), single_id);
+	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), gSystem->BaseName(args[0]), single_id);
 	
 	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
 	//	system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
@@ -653,7 +672,7 @@ int main( int argc, char* argv[] ) {
 	cout<<"\t\t" << i << ": " << mergeList[i] << endl;
       }      
       
-      TString mergedName = Form("%s_%s.root",systematic[isys].Data(), args[0].Data());
+      TString mergedName = Form("%s_%s.root",systematic[isys].Data(), gSystem->BaseName(args[0]));
       
       if (!doAnaTree) {
 	//--- Case where we run on 1 file

@@ -7,6 +7,8 @@
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
     <Mode name="DoCutFlow">true</Mode>
+    <Mode name="StopTL">false</Mode>    
+    <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
     <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
     <!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
@@ -40,7 +42,9 @@
 
     <OverlapRemoval>
       <Enable>false</Enable>
-      <Harmonisation>false</Harmonisation>
+      <useSignalLeptons>false</useSignalLeptons>
+      <useIsoLeptons>false</useIsoLeptons>
+      <doBjetOR>false</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
@@ -75,27 +79,36 @@
       <ElSignal>5</ElSignal>   <!-- number of signal electrons to be saved -->
       <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
       <MuSignal>5</MuSignal> <!-- number of signal muons to be saved -->
+      <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
+      <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
 
     <Electron>
-      <PreselPtCut>7000.</PreselPtCut>
+      <PreselPtCut>10000.</PreselPtCut>
       <PreselEtaCut>2.47</PreselEtaCut>
-      <RecoPtCut>7000.</RecoPtCut>
+      <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.47</RecoEtaCut>
+
+      <baseID>LooseLLH</baseID>
+      <ID>TightLLH</ID>
+      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+
+      <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
-      <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
-      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
     </Electron>
 
     <Muon>
-      <PreselPtCut>6000.</PreselPtCut>
+      <PreselPtCut>10000.</PreselPtCut>
       <PreselEtaCut>2.4</PreselEtaCut>
-      <RecoPtCut>6000.</RecoPtCut>
+      <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
-      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
+
+      <ID>Loose</ID>
+      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+
       <triggers>HLT_mu26_imedium</triggers>
     </Muon>
 
@@ -105,14 +118,18 @@
       <RecoPtCut>20000.</RecoPtCut>
       <RecoEtaCut>2.37</RecoEtaCut>
       
+      <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
+      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+
+      <triggers>HLT_g140_loose</triggers>
+
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
-      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
-      <triggers></triggers>
     </Photon>
 
     <Jet>
+      <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
       <PreselPtCut>20000.</PreselPtCut>
       <PreselEtaCut>10</PreselEtaCut>
       <RecoPtCut>35000.</RecoPtCut>
@@ -124,16 +141,23 @@
       <Path name="BtagCalib">SUSYTools/</Path>
       <dPhiMin>0.4</dPhiMin>
       <JVFMin>0.5</JVFMin>
-      <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
+
 
       <!--- For the c/b-tagger -->
       <!--      <Tagger>IP3DSV1</Tagger> -->
       <!--      <TaggerOpPoint>1_85</TaggerOpPoint> -->
       <!--      <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
-      <Tagger>MV1</Tagger>
-      <TaggerOpPoint>0_7892</TaggerOpPoint>
-      <TaggerOpPoint2>0_3511</TaggerOpPoint2>
-      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
+
+      <!--      <Tagger>MV1</Tagger> -->
+      <!--      <TaggerOpPoint>0_7892</TaggerOpPoint> -->
+      <!--      <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
+      <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
+
+      <Tagger>MV2c20</Tagger> --> 
+      <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
+      <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
+
+      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->  <!-- remove? -->
     </Jet>
 
     <Etmiss>
@@ -146,7 +170,7 @@
       <Term name="doRefGamma">true</Term>
       <Term name="doRefTau">false</Term>
       <Term name="doRefJet">true</Term>
-      <Term name="doMuons">false</Term>
+      <Term name="doMuons">true</Term>
       <Term name="doSoftTerms">true</Term>
     </Etmiss>
 

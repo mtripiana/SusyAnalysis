@@ -996,6 +996,7 @@ void RunsMap::LoadMap(){
   m_map["TestTruth20"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/rel20/"));
   m_map["TestTruth2"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/stop/"));
   m_map["TestTruth3"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/Gtt/"));
+
   m_map["TestTruthMC15"] = rlist( Rpair(406003, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/mc15/"));
   m_map["TestTruthDC14"] = rlist( Rpair(406003, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/dc14/"));
   

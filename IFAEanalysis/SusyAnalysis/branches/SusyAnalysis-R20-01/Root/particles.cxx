@@ -77,6 +77,7 @@ void Particle::PrintInfo(){
 Jet::Jet(){
   isbjet = false;
   MV1 = -1;
+  MV2c20 = -1;
   SV1plusIP3D = -1;
   SV1_pb = -1;
   SV1_pc = -1;
@@ -120,6 +121,7 @@ Jet::~Jet(){}
 bool Jet::isBTagged(TString Tagger, float op){ 
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
   if      (Tagger=="MV1")            return (this->MV1 > op);
+  else if (Tagger=="MV2c20")         return (this->MV2c20 > op);
   else if (Tagger=="IP3DSV1")        return (this->SV1plusIP3D > op);
   else if (Tagger=="Truth")          return (abs(this->FlavorTruth)==5);
   // else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > op && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
@@ -129,25 +131,26 @@ bool Jet::isBTagged(TString Tagger, float op){
 }
 
 
-bool Jet::isBTagged(TString Tagger){ 
+bool Jet::isBTagged_70eff(TString Tagger){ 
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
   if      (Tagger=="MV1")              return (this->MV1 > 0.7892); //70% b eff  
+  else if (Tagger=="MV2c20")           return (this->MV2c20 > 0.0314 ); //70% b eff  
   else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > 1.85); //70% b eff 
-  else if (Tagger=="JetFitterCombNN")  return (this->JetFitterCombNN > -2.55 && this->JetFitterCombNNc < 1.0); //57-80% b eff 
-  else if (Tagger=="JetFitterCombNNc") return (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2);
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
 bool Jet::isBTagged_80eff(TString Tagger){ 
-  if      (Tagger=="MV1"              && (this->MV1 > 0.3511))              {return true;}
-  if      (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > -0.70))       {return true;}
+  if      (Tagger=="MV1")              return (this->MV1 > 0.3511); //80% b eff  
+  else if (Tagger=="MV2c20")           return (this->MV2c20 > -0.5517); //80% b eff  
+  else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > -0.70); //80% b eff 
+  else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
 bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
 
-  if (this->isBTagged(Tagger)) return false;
+  if (this->isBTagged_70eff(Tagger)) return false;
   if (this->nTrk >= 5) return false;
   if (deltaPhi(this->Phi(), metphi)>0.2) return false;
 
@@ -157,9 +160,9 @@ bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
 
 float Jet::getBweight(TString Tagger){
   if (Tagger=="MV1")              return (this->MV1);
-  if (Tagger=="IP3DSV1")              return (this->SV1plusIP3D);
-  if (Tagger=="JetFitterCOMBNN")  return (this->JetFitterCombNN);
-  if (Tagger=="JetFitterCOMBNNc") return (this->JetFitterCombNNc); 
+  if (Tagger=="MV2c20")           return (this->MV2c20);
+  if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D);
+  else if (Tagger=="Truth")       return (abs(this->FlavorTruth)); 
   
   return -1; //not valid Tagger!
 }
@@ -168,7 +171,7 @@ void Jet::PrintInfo(){
   cout<<"Pt: "<<this->Pt()<<" Pt_up: "<<this->Pt_up<<" Pt_down: "<<this->Pt_down<<endl;
   cout<<"Eta: "<<this->Eta()<<" Phi: "<<this->Phi()<<endl;
   cout<<"Chf: "<<this->chf<<" Emf: "<<this->emf<<" time: "<<this->time<<" fsm: "<<this->fsm<<" width: "<<this->width<<" n90: "<<this->n90<<" hecf: "<<this->hecf<<" HECQuality: "<<this->HECQuality<<" NegativeE: "<<this->NegativeE<<" LArQuality: "<<this->LArQuality<<" jvtxf: "<<this->jvtxf<<"  failBCHTight: "<<this->failBCHTight<<"  failBCHMedium: "<<this->failBCHMedium<<endl;
-  cout<<" MV1: "<<this->MV1<<" JetFitterCOMBNN: "<<this->JetFitterCombNN<<" JetFitterCOMBNNc: "<<this->JetFitterCombNNc<<" EffSF: "<<this->TagEffSF.first<<" IneffSF: "<<this->TagIneffSF.first<<" EffMC: "<<TagEffMC.first<<endl;
+  cout<<" MV1: "<<this->MV1<<" MV2c20: "<<this->MV2c20<<" EffSF: "<<this->TagEffSF.first<<" IneffSF: "<<this->TagIneffSF.first<<" EffMC: "<<TagEffMC.first<<endl;
   cout<<endl;
 }
 
@@ -384,4 +387,8 @@ bool operator<(const Particle& Particle1, const Particle& Particle2){
 
 bool bw_MV1_sort(const Jet& Jet1, const Jet& Jet2){
   return Jet1.MV1 > Jet2.MV1;
+};
+
+bool bw_MV2c20_sort(const Jet& Jet1, const Jet& Jet2){
+  return Jet1.MV2c20 > Jet2.MV2c20;
 };

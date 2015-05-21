@@ -31,6 +31,10 @@
 #include "ParticleJetTools/JetQuarkLabel.h"
 #include "ParticleJetTools/JetFlavourInfo.h"
 
+//CutBookkeeping
+#include "xAODCutFlow/CutBookkeeper.h"
+#include "xAODCutFlow/CutBookkeeperContainer.h"
+
 //TeV unit (w.r.t MeV)
 #ifndef TEV
 #define TEV 1000000.
@@ -58,7 +62,8 @@
 #define TRIGGERTEST
 #include "TrigDecisionTool/TrigDecisionTool.h"
 #include "TrigConfxAOD/xAODConfigTool.h"
-
+#include "TrigEgammaMatchingTool/TrigEgammaMatchingTool.h"
+#include "TrigMuonMatching/TrigMuonMatching.h"
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
@@ -99,6 +104,8 @@ chorizo :: chorizo ()
     tool_st(0),
     tool_trigdec(0), 
     tool_trigconfig(0), 
+    tool_trig_match_el(0),
+    tool_trig_match_mu(0),
     tool_jetlabel(0), 
     tool_jvf(0), 
     tool_jClean(0), 
@@ -297,14 +304,15 @@ void chorizo :: bookTree(){
 
       //photons
       output->tree()->Branch("ph_N",&ph_N,"ph_N/I", 10000);
-      output->tree()->Branch("ph_pt",&ph_pt,"ph_pt/F", 10000);
-      output->tree()->Branch("ph_eta",&ph_eta,"ph_eta/F", 10000);
-      output->tree()->Branch("ph_phi",&ph_phi,"ph_phi/F", 10000);
-      output->tree()->Branch("ph_etiso30",&ph_etiso30,"ph_etiso30/F", 10000);
-      output->tree()->Branch("ph_ptiso30",&ph_ptiso30,"ph_ptiso30/F", 10000);
-      output->tree()->Branch("ph_tight",&ph_tight,"ph_tight/O", 10000);
-      output->tree()->Branch("ph_type",&ph_type,"ph_type/I", 10000);
-      output->tree()->Branch("ph_origin",&ph_origin,"ph_origin/I", 10000);
+      output->tree()->Branch("ph_pt",&ph_pt);
+      output->tree()->Branch("ph_eta",&ph_eta);
+      output->tree()->Branch("ph_phi",&ph_phi);
+      output->tree()->Branch("ph_etiso30",&ph_etiso30);
+      output->tree()->Branch("ph_ptiso30",&ph_ptiso30);
+      output->tree()->Branch("ph_tight",&ph_tight);
+      output->tree()->Branch("ph_type",&ph_type);
+      output->tree()->Branch("ph_origin",&ph_origin);
+
       output->tree()->Branch("ph_SF",&ph_SF,"ph_SF/F");
       output->tree()->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
       output->tree()->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
@@ -418,7 +426,7 @@ void chorizo :: bookTree(){
       output->tree()->Branch("btag_weight_total_80eff",&btag_weight_total_80eff,"btag_weight_total_80eff/F", 10000);
 
       output->tree()->Branch("j_tag_MV1",&j_tag_MV1);
-      //      output->tree()->Branch("j_tag_MV2",&tag_MV2);
+      output->tree()->Branch("j_tag_MV2c20",&j_tag_MV2c20);
       
       //met 
       output->tree()->Branch("met",&met);
@@ -674,23 +682,51 @@ EL::StatusCode chorizo :: histInitialize ()
   return EL::StatusCode::SUCCESS;
 }
 
-float chorizo :: getNWeightedEvents(){
+CutflowInfo chorizo :: getNinfo(){
 
-  //Try to get the original number of events (relevant in case of derivations)
-  if (!m_MetaData) 
-    m_MetaData = dynamic_cast<TTree* > (wk()->inputFile()->Get("MetaData"));
-
-  if (!m_MetaData) {
-    Error("getNWeightedEvents()", "\nDid not manage to get MetaData tree. Leaving...");
-    return EL::StatusCode::FAILURE;
+  //Read the CutBookkeeper container
+  const xAOD::CutBookkeeperContainer* completeCBC = 0;
+  if (!m_event->retrieveMetaInput(completeCBC, "CutBookkeepers").isSuccess()) {
+    Error( APP_NAME, "Failed to retrieve CutBookkeepers from MetaData! Exiting.");
   }
 
-  TTreeFormula treeform("treeform","EventBookkeepers.m_nWeightedAcceptedEvents",m_MetaData);
-  m_MetaData->LoadTree(0);
-  treeform.UpdateFormulaLeaves();
-  treeform.GetNdata();
+  // First, let's find the smallest cycle number,
+  // i.e., the original first processing step/cycle
+  int minCycle = 10000;
+  for ( auto cbk : *completeCBC ) {
+    if ( minCycle > cbk->cycle() ) { minCycle = cbk->cycle(); }
+  }
+  // Now, let's actually find the right one that contains all the needed info...
+  const xAOD::CutBookkeeper* allEventsCBK = 0;
+  for ( auto cbk :  *completeCBC ) {
+    if ( minCycle == cbk->cycle() && cbk->name() == "AllExecutedEvents" ) {
+      allEventsCBK = cbk;
+      break;
+    }
+  }
 
-  return (float)treeform.EvalInstance(1);  // initialSumOfWeightsInThisFile
+  CutflowInfo sinfo;
+  sinfo.nEvents    = allEventsCBK->nAcceptedEvents();
+  sinfo.weightSum  = allEventsCBK->sumOfEventWeights();
+  sinfo.weight2Sum = allEventsCBK->sumOfEventWeightsSquared();
+
+  return sinfo;
+
+  // //Try to get the original number of events (relevant in case of derivations)
+  // if (!m_MetaData) 
+  //   m_MetaData = dynamic_cast<TTree* > (wk()->inputFile()->Get("MetaData"));
+
+  // if (!m_MetaData) {
+  //   Error("getNWeightedEvents()", "\nDid not manage to get MetaData tree. Leaving...");
+  //   return EL::StatusCode::FAILURE;
+  // }
+
+  // TTreeFormula treeform("treeform","EventBookkeepers.m_nWeightedAcceptedEvents",m_MetaData);
+  // m_MetaData->LoadTree(0);
+  // treeform.UpdateFormulaLeaves();
+  // treeform.GetNdata();
+
+  // return (float)treeform.EvalInstance(1);  // initialSumOfWeightsInThisFile
 
 }
 
@@ -772,7 +808,7 @@ void chorizo :: InitVars()
   isLarGood = true;                 
   isTileGood = true;                
   isTileTrip = false;                
-  isCoreFlag = true;          
+  isCoreFlag = false;          
   isCosmic = false;          
   isBadMuon = false;          
       
@@ -886,15 +922,15 @@ void chorizo :: InitVars()
   e_Zpt = DUMMYDN;             
 
   //- Photon Info
-  ph_N = 0; //DUMMYDN;               
-  ph_pt = 0; //DUMMYDN;              
-  ph_eta = 0.; //DUMMYDN;             
-  ph_phi = 0.; //DUMMYDN;             
-  ph_ptiso30 = 0.; //DUMMYDN;         
-  ph_etiso30 = 0.; //DUMMYDN;         
-  ph_tight = false;           
-  ph_type = 0; //Unknown
-  ph_origin = 0; //NonDefined
+  ph_N = 0; 
+  ph_pt.clear();
+  ph_eta.clear();
+  ph_phi.clear();
+  ph_ptiso30.clear();
+  ph_etiso30.clear();
+  ph_tight.clear();           
+  ph_type.clear();
+  ph_origin.clear();
 
   //- Muon info
   m_N = 0;
@@ -961,6 +997,7 @@ void chorizo :: InitVars()
   j_jvtxf.clear();
   j_tflavor.clear();
   j_tag_MV1.clear();
+  j_tag_MV2c20.clear();
 
                                                
   //- Btagging                                 
@@ -1238,7 +1275,9 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
-  doORharmo = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
+  m_or_useSigLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$useSignalLeptons");
+  m_or_useIsoLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$useIsoLeptons");
+  m_or_bjetOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doBjetOR");
   doORphotons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doPhotons");
   
   Info(whereAmI, Form(" - TrackVeto" ));
@@ -1264,7 +1303,7 @@ void chorizo :: ReadXML(){
 
   El_baseID        = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$baseID")).Data());
   El_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$ID")).Data());
-  El_isoWP         = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoWP"));
+  El_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoWP")).Data());
   
   El_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$recoSF");
   El_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$idSF");
@@ -1277,7 +1316,7 @@ void chorizo :: ReadXML(){
   Mu_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoEtaCut");
 
   Mu_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$ID")).Data());
-  Mu_isoWP         = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoWP").c_str());    
+  Mu_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoWP")).Data());    
 
   Info(whereAmI, Form(" - Photons") );
   Ph_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselPtCut");
@@ -1286,7 +1325,7 @@ void chorizo :: ReadXML(){
   Ph_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$RecoEtaCut");
 
   Ph_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$ID")).Data());
-  Ph_isoWP         = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoWP").c_str());
+  Ph_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoWP")).Data());    
   
   Ph_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$recoSF");
   Ph_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$idSF");
@@ -1347,6 +1386,7 @@ void chorizo :: ReadXML(){
   BookElSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$ElSignal");
   BookMuBase   = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$MuBase");
   BookMuSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$MuSignal");
+  BookPhSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$PhSignal");
   BookJetSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$JetSignal");
 
 
@@ -1418,13 +1458,14 @@ EL::StatusCode chorizo :: initialize ()
 #ifdef TRIGGERTEST
   if(!this->isTruth){
     //--- Trigger Decision
+    cout << "CONFIGURING TRIGGER STUFF" << endl;
     // The configuration tool.
     if(!tool_trigconfig)
       tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
-    CHECK( tool_trigconfig->initialize() );                                                  
+    CHECK( tool_trigconfig->initialize() ); 
+    
     ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
-    //    configHandle->initialize();                                                   
-                                                                                     
+    
     // The decision tool  
     if(!tool_trigdec)
       tool_trigdec = new Trig::TrigDecisionTool("TrigDecTool");
@@ -1432,17 +1473,27 @@ EL::StatusCode chorizo :: initialize ()
     CHECK( tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision") );
     //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
     CHECK( tool_trigdec->initialize() );
-
+    
+    if(!tool_trig_match_el)    
+      tool_trig_match_el = new Trig::TrigEgammaMatchingTool("TrigEgammaMatchingTool");
+    CHECK( tool_trig_match_el->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
+    CHECK( tool_trig_match_el->initialize());
+    
+    if(!tool_trig_match_mu)    
+      tool_trig_match_mu = new Trig::TrigMuonMatching("TrigMuonMatchingTool");
+    CHECK( tool_trig_match_mu->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
+    CHECK( tool_trig_match_mu->initialize());
+    
   }
 #endif
-
-
+  
+  
   // get event info needed for tool's config
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
-
+  
   isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
-
+  
   //--- Corrected mct calculator
   tool_mct = new TMctLib();
 
@@ -1451,47 +1502,64 @@ EL::StatusCode chorizo :: initialize ()
   maindir = maindir + "/data/";
 
   ST::SettingDataSource datasource = !this->isMC ? ST::Data : (this->isAtlfast ? ST::AtlfastII : ST::FullSim);
-  bool isderived = isDerived();
+  m_isderived = isDerived();
 
   //--- SUSYTools
-  tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
-  CHECK(tool_st->setProperty("DataSource", datasource) );
-  //  CHECK(tool_st->setProperty("IsDerived", isderived) );
-  //  CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
+  if(!this->isTruth){
 
-  if(JetCollection.Contains("LCTopo"))
-    CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::LCTopo ));
-  else if(JetCollection.Contains("EMTopo"))
-    CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::EMTopo ));
+    tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
+    CHECK(tool_st->setProperty("DataSource", datasource) );
+    //  CHECK(tool_st->setProperty("IsDerived", m_isderived) );
+    //  CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
+    
+    if(JetCollection.Contains("LCTopo"))
+      CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::LCTopo ));
+    else if(JetCollection.Contains("EMTopo"))
+      CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::EMTopo ));
+    
+    if(El_isoWP!="None"){      
+      CHECK( tool_st->setProperty("IsoWP",El_isoWP) );  //only one tool for it !! need to expand to el/mu splitting! 
+    }
+    else{
+      CP::IsolationSelectionTool *IsoToolDummy = new CP::IsolationSelectionTool( "IsoTool" );
+      CHECK( IsoToolDummy->setProperty("m_doPhotonCaloIsolation", false) );
+      CHECK( IsoToolDummy->setProperty("m_doPhotonTrackIsolation", false) );
+      CHECK( IsoToolDummy->setProperty("m_doElectronCaloIsolation", false) );
+      CHECK( IsoToolDummy->setProperty("m_doElectronTrackIsolation", false) );
+      CHECK( IsoToolDummy->setProperty("m_doMuonCaloIsolation", false) );
+      CHECK( IsoToolDummy->setProperty("m_doMuonTrackIsolation", false) );
+      CHECK( IsoToolDummy->initialize() );
 
-  CHECK( tool_st->setProperty("IsoWP",El_isoWP) );  //only one tool for it !! need to expand to el/mu splitting! 
+      CHECK( tool_st->setProperty("IsolationSelectionTool",IsoToolDummy) );  //only one tool for it !! need to expand to el/mu splitting! 
+    }
 
-  CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
-  CHECK( tool_st->setProperty("EleId",El_ID) ); 
-  CHECK( tool_st->setProperty("MuId",Mu_ID) );
-  CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
+    CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
+    CHECK( tool_st->setProperty("EleId",El_ID) ); 
+    CHECK( tool_st->setProperty("MuId",Mu_ID) );
+    CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
+    
+    // Set to true for DxAOD, false for primary xAOD
+    CHECK(tool_st->setProperty("DoJetAreaCalib",m_isderived) );
+    // Set to false if not doing JetAreaCalib
+    CHECK(tool_st->setProperty("DoJetGSCCalib",m_isderived) );
+    // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                            
+    CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) );
+    
+    // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
+    // if(!Met_doRefGamma)   CHECK(tool_st->setProperty("METGammaTerm","")); //No GammaTerm default
+    // if(!Met_doRefTau)     CHECK(tool_st->setProperty("METTauTerm", "")); //No TauTerm default
+    
+    CHECK( tool_st->SUSYToolsInit() );
+    CHECK( tool_st->initialize() );
+    tool_st->msg().setLevel( MSG::ERROR ); //set message level 
 
-  // Set to true for DxAOD, false for primary xAOD
-  CHECK(tool_st->setProperty("DoJetAreaCalib",isderived) );
-  // Set to false if not doing JetAreaCalib
-  CHECK(tool_st->setProperty("DoJetGSCCalib",isderived) );
-  // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                            
-  CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) );
-
-  // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
-  // if(!Met_doRefGamma)   CHECK(tool_st->setProperty("METGammaTerm","")); //No GammaTerm default
-  // if(!Met_doRefTau)     CHECK(tool_st->setProperty("METTauTerm", "")); //No TauTerm default
-
-  CHECK( tool_st->SUSYToolsInit() );
-  CHECK( tool_st->initialize() );
-  tool_st->msg().setLevel( MSG::ERROR ); //set message level 
-
-  if(syst_CP.size()){
-    // Tell the SUSYObjDef_xAOD which variation to apply
-    if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){
-      Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
-    }else{
-      Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
+    if(syst_CP.size()){
+      // Tell the SUSYObjDef_xAOD which variation to apply
+      if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){
+	Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
+      }else{
+	Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
+      }
     }
   }
 
@@ -1523,7 +1591,6 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- truth jet labeling
   tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
-  //  tool_jetlabel->setProperty("McEventCollection","TruthEvents");
   CHECK( tool_jetlabel->setProperty("McEventCollection","TruthEvents") );
   CHECK( tool_jetlabel->initialize() );
   
@@ -1803,7 +1870,7 @@ EL::StatusCode chorizo :: loop ()
   loadMetaData();
    
   if(m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName)){ //name of current file
-    meta_nwsim += getNWeightedEvents(); //load weighted number of events
+    meta_nwsim += getNinfo().weightSum; //load weighted number of events
     m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName);
   }
 
@@ -1818,8 +1885,8 @@ EL::StatusCode chorizo :: loop ()
   const xAOD::MissingET* mtruth_vis;
   if(this->isMC){
         
-    CHECK( m_event->retrieve( m_truthE,     "TruthEvent" ) );
-    CHECK( m_event->retrieve( m_truthP,     "TruthParticle" ) );
+    CHECK( m_event->retrieve( m_truthE,     "TruthEvents" ) );
+    CHECK( m_event->retrieve( m_truthP,     "TruthParticles" ) );
     CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
     CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );//PROBLEM!!!!!!
 
@@ -1903,37 +1970,28 @@ EL::StatusCode chorizo :: loop ()
       ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
       ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
       ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
-      // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
-      // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
+      ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
+      ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
       ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::SCALE);
       // ( *truthE_itr )->pdfInfoParameter(pdf_Q, xAOD::TruthEvent::Q);
       // ( *truthE_itr )->pdfInfoParameter(pdf_xf1, xAOD::TruthEvent::XF1);
       // ( *truthE_itr )->pdfInfoParameter(pdf_xf2, xAOD::TruthEvent::XF2);
-      
-      //** For the old EDM
-      // ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::id1);
-      // ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::id2);
-      // ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::x1);
-      // ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::x2);
-      // ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::pdfId1);
-      // ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::pdfId2);
-      // // ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::pdf1);
-      // // ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::pdf2);
-      // ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::scalePDF);
-      
+            
       PDF_w *= getPdfRW((double)beamE_to/beamE_from, (double)(scalePDF*scalePDF), (double)x1, (double)x2, id1, id2);     
       
-      // cout << "-------------------------------------" << endl;
-      // cout << "DEBUG :: rwScale = " << beamE_to/beamE_from << endl; 
-      // cout << "DEBUG :: scalePDF = " << scalePDF << endl; 
-      // cout << "DEBUG :: x1 = " << x1 << endl; 
-      // cout << "DEBUG :: x2 = " << x2 << endl; 
-      // cout << "DEBUG :: id1 = " << id1 << endl; 
-      // cout << "DEBUG :: id2 = " << id2 << endl; 
-      // cout << "DEBUG :: pdfId1 = " << pdfId1 << endl; 
-      // cout << "DEBUG :: pdfId2 = " << pdfId2 << endl; 
-      // cout << "DEBUG :: PDF_w = " << PDF_w << endl; 
-      // cout << "-------------------------------------" << endl;
+      if(debug){
+	cout << "-------------------------------------" << endl;
+	cout << "DEBUG :: rwScale = " << beamE_to/beamE_from << endl; 
+	cout << "DEBUG :: scalePDF = " << scalePDF << endl; 
+	cout << "DEBUG :: x1 = " << x1 << endl; 
+	cout << "DEBUG :: x2 = " << x2 << endl; 
+	cout << "DEBUG :: id1 = " << id1 << endl; 
+	cout << "DEBUG :: id2 = " << id2 << endl; 
+	cout << "DEBUG :: pdfId1 = " << pdfId1 << endl; 
+	cout << "DEBUG :: pdfId2 = " << pdfId2 << endl; 
+	cout << "DEBUG :: PDF_w = " << PDF_w << endl; 
+	cout << "-------------------------------------" << endl;
+      }
     }
 
     //Find Hard Process particles
@@ -1942,7 +2000,7 @@ EL::StatusCode chorizo :: loop ()
     CHECK(tool_st->FindSusyHP(m_truthP, pdgid1, pdgid2) );
     
     //procID
-    if(!isDerived() && pdgid1!=0 && pdgid2!=0) //(just to avoid warnings)
+    if(!m_isderived && pdgid1!=0 && pdgid2!=0) //(just to avoid warnings)
       procID = SUSY::finalState(id1, id2); // get prospino proc ID
 
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
@@ -2160,10 +2218,12 @@ EL::StatusCode chorizo :: loop ()
 
     //** Bjet decoration 
     if (fabs((*jet_itr).eta()) < 2.5){
-      if(Jet_Tagger=="MV1")
-	tool_st->IsBJet( *jet_itr, true, Jet_TaggerOp.Atof() );  
-      else if(Jet_Tagger=="IP3DSV1")
-	tool_st->IsBJet( *jet_itr, false, Jet_TaggerOp.Atof() ); 
+      tool_st->IsBJet( *jet_itr );  //rel20 0.77 eff value from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks#MV2c20_tagger_antikt4topoem_jets
+
+      // if(Jet_Tagger=="MV1")
+      // 	tool_st->IsBJet( *jet_itr, true, Jet_TaggerOp.Atof() );  
+      // else if(Jet_Tagger=="IP3DSV1")
+      // 	tool_st->IsBJet( *jet_itr, false, Jet_TaggerOp.Atof() ); 
     }
 
     //book jets for smearing method
@@ -2175,9 +2235,9 @@ EL::StatusCode chorizo :: loop ()
   //--- Do overlap removal   
   if(doOR){
     if(doORphotons)
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, doORharmo) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
     else
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, doORharmo) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
   }
 
   // Apply the overlap removal to all objects (dumb example)
@@ -2238,7 +2298,13 @@ EL::StatusCode chorizo :: loop ()
     //trigger matching
     std::vector<bool> el_trig_pass;
     for(const auto& t : ElTriggers){
-      el_trig_pass.push_back( hasTrigMatch( *el_itr, t ) );
+      if(t.substr(0, 4) == "HLT_"){ 
+	std::string tsub = t.substr(4);
+	el_trig_pass.push_back( tool_trig_match_el->matchHLT( el_itr, tsub ));
+      }
+      else
+	el_trig_pass.push_back( false ); //only check for HLT items at the moment
+     
       recoElectron.isTrigMatch |= el_trig_pass.back();
     }
     
@@ -2363,9 +2429,16 @@ EL::StatusCode chorizo :: loop ()
     //trigger matching
     std::vector<bool> mu_trig_pass;
     for(const auto& t : MuTriggers){
-      mu_trig_pass.push_back( hasTrigMatch( *mu_itr, t, 0.15 ) );
+      if(t.substr(0, 4) == "HLT_"){ 
+	std::string tsub = t.substr(4);
+	mu_trig_pass.push_back( tool_trig_match_mu->match( mu_itr, tsub ));
+      }
+      else
+	mu_trig_pass.push_back( false ); //only check for HLT items at the moment
+     
       recoMuon.isTrigMatch |= mu_trig_pass.back();
     }
+
     
     //get muon scale factors
     if(this->isMC){
@@ -2523,9 +2596,9 @@ EL::StatusCode chorizo :: loop ()
 
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
-      local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID");
+      //local_truth_flavor = (*jet_itr)->getAttribute<int>("PartonTruthLabelID");
       //      local_truth_flavor = (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
-      //      local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
+      local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
     }    
     
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
@@ -2720,7 +2793,7 @@ EL::StatusCode chorizo :: loop ()
     //   // }
     // }
 
-    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
+    if ( jetCandidates.at(iJet).isBTagged_70eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter++;
     if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter_80eff++;	
@@ -2765,8 +2838,9 @@ EL::StatusCode chorizo :: loop ()
 
   //** btagging weights
   if(isMC){
-    btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
-    btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
+    btag_weight_total       = tool_st->BtagSF(m_goodJets);
+    //    btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
+    btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2); //CHECK! not to trust for now
   }
   
   //the list of jets to smear for qcd are not the jet-candidates!
@@ -2786,17 +2860,22 @@ EL::StatusCode chorizo :: loop ()
   const xAOD::MissingETContainer* cmet_lhtopo;
   const xAOD::MissingETContainer* cmet_track;
 
-  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); 
+  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4EMTopo") ); 
   //  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); //??
-  //  CHECK( m_event->retrieve( cmet_reffinal, "MET_LocHadTopo") ); //??
-  CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );
-  CHECK( m_event->retrieve( cmet_track, "MET_Track") );
-
   const xAOD::MissingET* mrf    = (*cmet_reffinal)["FinalClus"];
-  const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-  //  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];
-  const xAOD::MissingET* mtrack = (*cmet_track)["Track"];
 
+  const xAOD::MissingET* mtopo(0);
+  const xAOD::MissingET* mtrack(0);
+
+  if(!m_isderived){
+    CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") ); //not in MC15??
+    CHECK( m_event->retrieve( cmet_track, "MET_Track") );
+    mtopo  = (*cmet_lhtopo)["LocHadTopo"];
+    mtrack = (*cmet_track)["PVTrack"];
+    // mtrack = (*cmet_track)["Track"];
+  }
+  
+  
   //** Met components
   //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
 
@@ -2855,13 +2934,19 @@ EL::StatusCode chorizo :: loop ()
 
 
   //- Track met
-  TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
-  met_obj.SetVector(v_met_trk, "met_trk");
-  
+  if(mtrack){
+    cout << "checking MET track" << endl;
+    TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
+    met_obj.SetVector(v_met_trk, "met_trk");
+  }
+
   //--- Met LocHadTopo (from the branches)
-  TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); 
-  met_obj.SetVector(v_met_lochadtopo, "met_locHadTopo");
-  
+  if(mtopo){
+    cout << "checking MET topo" << endl;
+     TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); 
+     met_obj.SetVector(v_met_lochadtopo, "met_locHadTopo");
+  }
+
   //--- Met RefFinal, visible muons (from the branches) [retrieved above]
   TVector2 v_met_rfinal_mu(mrf->mpx(), mrf->mpy());
   met_obj.SetVector(v_met_rfinal_mu, "met_refFinal_vmu");
@@ -2944,20 +3029,27 @@ EL::StatusCode chorizo :: loop ()
   metmap[::MetDef::VisMuMuCorr] = met_obj.GetVector("met_vmu_mucorr");  
   metmap[::MetDef::InvMuPhCorr] = met_obj.GetVector("met_imu_phcorr");
   metmap[::MetDef::VisMuPhCorr] = met_obj.GetVector("met_vmu_phcorr");
-  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  if(mtrack)
+    metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  else 
+    metmap[::MetDef::Track] = TVector2((float)DUMMYDN, (float)DUMMYDN);
   metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
   metmap[::MetDef::VisMuRef] = met_obj.GetVector("met_refFinal_vmu");  
   metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst_imu");
   metmap[::MetDef::VisMuTST] = met_obj.GetVector("met_tst_vmu");
-
+  
   metmap[::MetDef::InvMuTSTECorr] = met_obj.GetVector("met_tst_imu_ecorr");
   metmap[::MetDef::VisMuTSTECorr] = met_obj.GetVector("met_tst_vmu_ecorr");
   metmap[::MetDef::VisMuTSTMuCorr] = met_obj.GetVector("met_tst_vmu_mucorr");
-
+  
   metmap[::MetDef::InvMuTruth] = met_obj.GetVector("met_truth_imu");
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");  
-  metmap[::MetDef::locHadTopo] = met_obj.GetVector("met_locHadTopo");    
-
+  
+  if(mtopo)
+    metmap[::MetDef::locHadTopo] = met_obj.GetVector("met_locHadTopo");  
+  else  
+    metmap[::MetDef::locHadTopo] = TVector2((float)DUMMYDN, (float)DUMMYDN);
+  
   
   //meta data (fill it once)
   if(smetmap==""){ 
@@ -3143,7 +3235,7 @@ EL::StatusCode chorizo :: loop ()
       }
             
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged(Jet_Tagger) ){
+      if( jet.isBTagged_70eff(Jet_Tagger) ){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -3235,7 +3327,8 @@ EL::StatusCode chorizo :: loop ()
 
   }//end of met flavor loop
 
-  met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
+  if(mtopo)
+    met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
 
   //--- Track Veto
   //init vars
@@ -3419,7 +3512,7 @@ EL::StatusCode chorizo :: loop ()
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged(Jet_Tagger) && recoJets.at(1).isBTagged(Jet_Tagger) )
+    if( recoJets.at(0).isBTagged_70eff(Jet_Tagger) && recoJets.at(1).isBTagged_70eff(Jet_Tagger) )
       mbb = mjj;
   }
 
@@ -3436,7 +3529,7 @@ EL::StatusCode chorizo :: loop ()
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged(Jet_Tagger) ){
+    if( jet.isBTagged_70eff(Jet_Tagger) ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -3732,7 +3825,7 @@ EL::StatusCode chorizo :: loop ()
 //****************************//
 EL::StatusCode chorizo :: loop_truth()
 {
-  //Info("loop_truth()", "Inside loop_truth");
+  //  Info("loop_truth()", "Inside loop_truth");
 
   InitVars();
 
@@ -3970,12 +4063,24 @@ EL::StatusCode chorizo :: loop_truth()
       }
     }
 
+
+    //hack for cutflow afterwards
+    if(recoJet.FlavorTruth==5){
+      recoJet.MV1 = 99.;
+      recoJet.MV2c20 = 99.;
+    }
+    else{
+      recoJet.MV1 = -99.;
+      recoJet.MV2c20 = -99.;
+    }
+
+
     //CHECK
     // int label = xAOD::jetFlavourLabel(*tjet_itr);
     // cout << "label = " << label << "   ,   pdg = " << recoJet.FlavorTruth << endl;
     //
 
-    recoJet.isbjet = recoJet.isBTagged("Truth");
+    recoJet.isbjet = recoJet.isBTagged_70eff("Truth");
 
     jetCandidates.push_back(recoJet);
 
@@ -4208,7 +4313,7 @@ EL::StatusCode chorizo :: loop_truth()
       
       
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged(Jet_Tagger) ){
+      if( jet.isBTagged_70eff(Jet_Tagger) ){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -4273,7 +4378,7 @@ EL::StatusCode chorizo :: loop_truth()
 
   }//end of met flavor loop
 
-  met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();
+  //  met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();
 
 
   //--- Some other event variables
@@ -4345,7 +4450,7 @@ EL::StatusCode chorizo :: loop_truth()
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged(Jet_Tagger) && recoJets.at(1).isBTagged(Jet_Tagger) )
+    if( recoJets.at(0).isBTagged_70eff(Jet_Tagger) && recoJets.at(1).isBTagged_70eff(Jet_Tagger) )
       mbb = mjj;
   }
 
@@ -4363,7 +4468,7 @@ EL::StatusCode chorizo :: loop_truth()
   auto ijet=0;
   for( auto jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged(Jet_Tagger) ){
+    if( jet.isBTagged_70eff(Jet_Tagger) ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -4576,15 +4681,17 @@ void chorizo :: dumpLeptons(){
 //Fill photon data members
 void chorizo :: dumpPhotons(){
 
-  if(ph_N>0){
-    ph_pt = recoPhotons.at(0).Pt();
-    ph_eta = recoPhotons.at(0).Eta();
-    ph_phi = recoPhotons.at(0).Phi();
-    ph_etiso30 = recoPhotons.at(0).etcone30;
-    ph_ptiso30 = recoPhotons.at(0).ptcone30;
-    ph_tight = recoPhotons.at(0).isTight;
-    ph_type = recoPhotons.at(0).type;
-    ph_origin = recoPhotons.at(0).origin;
+  //-signal
+  for(unsigned int iph = 0; iph < TMath::Min((int)recoPhotons.size(), BookPhSignal); iph++){
+
+    ph_pt.push_back( recoPhotons.at(iph).Pt() );
+    ph_eta.push_back( recoPhotons.at(iph).Eta() );
+    ph_phi.push_back( recoPhotons.at(iph).Phi() );
+    ph_etiso30.push_back( recoPhotons.at(iph).etcone30 );
+    ph_ptiso30.push_back( recoPhotons.at(iph).ptcone30 );
+    ph_tight.push_back( (int)recoPhotons.at(iph).isTight );
+    ph_type.push_back( recoPhotons.at(iph).type );
+    ph_origin.push_back( recoPhotons.at(iph).origin );
   }
 }
 
@@ -4595,21 +4702,22 @@ void chorizo :: dumpJets(){
   //-signal
   for(unsigned int ijet = 0; ijet < TMath::Min((int)recoJets.size(), BookJetSignal); ijet++){
 
-    j_pt.push_back( recoJets.at(0).Pt() );
-    j_eta.push_back( recoJets.at(0).Eta() );
-    j_phi.push_back( recoJets.at(0).Phi() );
-    j_m.push_back( recoJets.at(0).M() );
+    j_pt.push_back( recoJets.at(ijet).Pt() );
+    j_eta.push_back( recoJets.at(ijet).Eta() );
+    j_phi.push_back( recoJets.at(ijet).Phi() );
+    j_m.push_back( recoJets.at(ijet).M() );
 
-    j_tag_MV1.push_back( recoJets.at(0).MV1 );
+    j_tag_MV1.push_back( recoJets.at(ijet).MV1 );
+    j_tag_MV2c20.push_back( recoJets.at(ijet).MV2c20 );
 
-    j_chf.push_back( recoJets.at(0).chf );
-    j_emf.push_back( recoJets.at(0).emf );
-    j_fsm.push_back( recoJets.at(0).fsm );
-    j_time.push_back( recoJets.at(0).time );
-    j_jvtxf.push_back( recoJets.at(0).jvtxf );
-    j_tflavor.push_back( recoJets.at(0).FlavorTruth );
-    j_nTrk.push_back( recoJets.at(0).nTrk );
-    j_sumPtTrk.push_back( recoJets.at(0).sumPtTrk );
+    j_chf.push_back( recoJets.at(ijet).chf );
+    j_emf.push_back( recoJets.at(ijet).emf );
+    j_fsm.push_back( recoJets.at(ijet).fsm );
+    j_time.push_back( recoJets.at(ijet).time );
+    j_jvtxf.push_back( recoJets.at(ijet).jvtxf );
+    j_tflavor.push_back( recoJets.at(ijet).FlavorTruth );
+    j_nTrk.push_back( recoJets.at(ijet).nTrk );
+    j_sumPtTrk.push_back( recoJets.at(ijet).sumPtTrk );
   }
 
 } //end filling jet data members
@@ -5014,8 +5122,8 @@ bool chorizo :: passMCor(){
     TVector2 met(0.,0.);
     xAOD::MissingETContainer* metRFcutvar = 0; // = new xAOD::MissingETContainer;
     //    CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
-    //    CHECK( m_event->retrieve( metRFcutvar, "MET_Reference_AntiKt4LCTopo")); //??
-    CHECK( m_event->retrieve( metRFcutvar, "LocHadTopo") );
+    CHECK( m_event->retrieve( metRFcutvar, "MET_Reference_AntiKt4EMTopo")); //??
+    //    CHECK( m_event->retrieve( metRFcutvar, "LocHadTopo") );
     met = getMET( metRFcutvar, "Final"); //METRefFinal for now... //FIX_ME !! Reco MET??
 
     bos_pt = met.Mod();

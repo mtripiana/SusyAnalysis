@@ -10,23 +10,17 @@ cd $ANALYSISCODE
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/branches/SUSYTools-00-05-00-branch SUSYTools
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-05-00-20 # (needs patching)
 #rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/trunk    # (needs patching)
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-06-00-03
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-06-00-05
 
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags/ElectronEfficiencyCorrection-00-01-19
-rc checkout_pkg $SVNOFF/Reconstruction/MET/METUtilities/tags/METUtilities-00-01-30
-rc checkout_pkg $SVNOFF/Reconstruction/MET/METInterface/tags/METInterface-00-01-09
-rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetCalibTools/tags/JetCalibTools-00-04-33
+
+rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigEgammaMatchingTool/tags/TrigEgammaMatchingTool-00-00-01
 
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
-
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/TileID/TileTripReader/trunk
 
-# Offline truth jet tagging for MCGN1 derivations
+# Offline truth jet tagging for TRUTH1 derivations (no longer needed?)
 svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
-
-# Streamers problems with derivations
-#rc checkout_pkg atlasoff/Event/xAOD/xAODCore/trunk    (it should work too)
-rc checkout_pkg atlasoff/Event/xAOD/xAODCore/tags/xAODCore-00-00-87-01
 
 
 # patching SUSYTools (add photon tool. Just copy here. Probably not a good idea to properly patch a trunk :))

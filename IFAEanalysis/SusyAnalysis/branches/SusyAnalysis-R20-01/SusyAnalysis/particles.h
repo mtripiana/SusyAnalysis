@@ -68,6 +68,7 @@ class Jet : public Particle {
     ~Jet();
     bool                    isbjet; //--- as from SUSYTools (decoration)
     float                   MV1;
+    float                   MV2c20;
     float                   SV1plusIP3D;
     float                   SV1_pb;
     float                   SV1_pc;
@@ -104,7 +105,7 @@ class Jet : public Particle {
 
     bool isTauJet(float metphi, TString Tagger="MV1");
     bool isBTagged(TString Tagger, float op);
-    bool isBTagged(TString Tagger);
+    bool isBTagged_70eff(TString Tagger);
     bool isBTagged_80eff(TString Tagger);    
     float getBweight(TString Tagger);
     void PrintInfo();
@@ -163,5 +164,6 @@ bool operator<(const Particle& Particle1, const Particle& Particle2);
 bool operator<(const Jet& Jet1, const Jet& Jet2);
 
 bool bw_MV1_sort(const Jet& Jet1, const Jet& Jet2);
+bool bw_MV2c20_sort(const Jet& Jet1, const Jet& Jet2);
 
 #endif

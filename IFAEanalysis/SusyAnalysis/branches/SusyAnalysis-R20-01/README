@@ -91,25 +91,27 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 			  
 	        [options] : supported option flags
 
-			    	 -j=<jOption>  : choose which analysis you want to run over. ( = METbb, Stop, Monojet)	
-			         -l            : run locally (default) 
-			         -b            : run in batch          
-				 -p            : run on the grid    (prun)   
-				 -g            : run on the grid    (ganga)     
-				 -u            : generate pileup file (overrides jOption config)
-				 -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
-				 -t            : run over truth xAODs
-				 -n=<N>        : run over N events
-				 -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)
-				 -s=<S>        : systematics to be considered (comma-separated list) [optional]. 
-		            	 	         Just nominal is taken by default (Nom).
+			    	 -j=<jOption>   : choose which analysis you want to run over. ( = METbb, Stop, Monojet)	
+			         -l             : run locally (default) 
+			         -b             : run in batch          
+				 -p             : run on the grid    (prun)   
+				 -g             : run on the grid    (ganga)     
+				 -u             : generate pileup file (overrides jOption config)
+				 -x             : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
+				 -t             : run over truth xAODs
+				 -n=<N>         : run over N events
+				 -i=<ID>        : specify a specific dataset ID inside the container
+				 -v=<V>         : output version. To tag output files. (adds a '_vV' suffix)
+				 -s=<S>         : systematics to be considered (comma-separated list) [optional]. 
+		            	 	          Just nominal is taken by default (Nom).
 
- 						 To list the available (recommended) systematic variations do:     'run slist'
+ 						  To list the available (recommended) systematic variations do:     'run slist'
 
-						 or well run './SusyAnalysis/scripts/list_systematics.sh'
+						  or well run './SusyAnalysis/scripts/list_systematics.sh'
 
- 				 -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)).
- 	
+ 				 -o=<outDir>    : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)).
+                                 -e=<eventList> : provide list of run & event numbers you want to keep. ("Run EventNumber" formatted file. One per line)
+ 				 -d=<inputDir>  : run over specific directory, over-passing RunsMap (mainly for tests)
 
 
        or just type:  'run'  to get this help.

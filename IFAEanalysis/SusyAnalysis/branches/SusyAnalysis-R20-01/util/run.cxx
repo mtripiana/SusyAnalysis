@@ -32,7 +32,7 @@
 #include <string>
 
 // Systematics includes
-#include "PATInterfaces/SystematicList.h"
+//#include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
@@ -50,6 +50,7 @@ void usage(){
   cout << endl;
   cout << " <Sample> : The sample name to run over. " << endl;
   cout << "            To list the implemented samples do: 'run samples'" << endl;
+  cout << "            You can also specify the input directory directly here (in combination with -u option. see below)" << endl;
   cout << endl;
   cout << "" << endl;
   cout << " [options] : supported option flags" << endl;
@@ -61,13 +62,16 @@ void usage(){
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
-  cout << "       -v=<V>            : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
+  cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
+  cout << "       -i=<ID>       : specify a specific dataset ID inside the container" << endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
   cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
   cout << "                       Just nominal is run by default (Nom)." << endl;       
   cout << "                       To list the available (recommended) systematic variations do: 'run slist'" << endl;
   cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
+  cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;  
+  cout << "       -u             : run over user-specific directory, over-passing RunsMap (mainly for tests)" << endl;
   cout << endl;
 }
 
@@ -198,6 +202,8 @@ int main( int argc, char* argv[] ) {
   int single_id = -1;
   bool isTruth=false;
 
+  bool userDir=false;
+
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
     if( std::string(argv[i]).find("-") != std::string::npos )// is option
@@ -249,6 +255,9 @@ int main( int argc, char* argv[] ) {
     }
     else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
       genPU = true;
+    }
+    else if (opts[iop] == "c" ){ //user-defined input dir
+      userDir = true;
     }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].Copy().ReplaceAll("s=","");
@@ -361,12 +370,15 @@ int main( int argc, char* argv[] ) {
     RunsMap mapOfRuns;
     //check if sample is mapped
     RMap mymap = mapOfRuns.getMap();
-    RMap::iterator it = mymap.find( samples[i_sample] );
-    if(it == mymap.end()){
-      cout << bold(red("\n Ups! "));    
-      cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
-      cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
-      return 0;
+    if(!userDir){
+      RMap::iterator it = mymap.find( samples[i_sample] );
+      if(it == mymap.end()){
+	cout << bold(red("\n Ups! "));    
+	cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
+	cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
+	cout << "            To run over a user-directory directly use -c.'\n" << endl;
+	return 0;
+      }
     }
 
     //Print meta-data and save weights+names for later use
@@ -375,16 +387,25 @@ int main( int argc, char* argv[] ) {
     isData=false;
 
     // Get patterns/paths to load for this sample
-    std::vector<TString> run_patterns  = mapOfRuns.getPatterns( args[i_sample] );
-    std::vector<int>     run_ids       = mapOfRuns.getIDs( args[i_sample] );
+    std::vector<TString> run_patterns;
+    std::vector<int>     run_ids;
+    if(!userDir){
+      run_patterns  = mapOfRuns.getPatterns( args[i_sample] );
+      run_ids       = mapOfRuns.getIDs( args[i_sample] );
+    }
+    else{
+      run_patterns.push_back( args[i_sample] );
+      run_ids.push_back( 0 );
+    }
+
     bool mgd=false;  //make grid direct (for direct access to PIC disks)
     for(unsigned int i_id = 0; i_id < run_ids.size(); i_id++){ //id loop
       
-      if(single_id>=0 && run_ids[i_id] != single_id) continue; //pick only chosen id (if given)
+      if(!userDir && single_id>=0 && run_ids[i_id] != single_id) continue; //pick only chosen id (if given)
 
       //** Run on local samples
       if(runLocal){
-	if( run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
+	if( userDir || run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
 	  scanDir( sh, run_patterns[i_id].Data() );
 	  //.Find( run_patterns[i_id].Data() );
 	}
@@ -406,8 +427,7 @@ int main( int argc, char* argv[] ) {
       if(mgd)
 	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
       //	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
-      
-      
+            
       //      sh.print();
       
 
@@ -441,6 +461,8 @@ int main( int argc, char* argv[] ) {
       //set ID
       sh.at(0)->setMetaDouble( "DSID", (double)run_ids[i_id] );
 
+      isData = (sh.at(0)->getMetaString( MetaFields::isData )=="Y"); //global flag. It means we can't run MC and data at the same time. Probably ok?
+
       //  fetch meta-data from AMI
       if(amiFound && 0){
 	fetchMetaData (sh, false); 
@@ -450,9 +472,10 @@ int main( int argc, char* argv[] ) {
 	}                                                          
       }
       //  then override some meta-data from SUSYTools
-      readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+      if(!isData)
+	readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
 
-      isData = (sh.at(0)->getMetaString( MetaFields::isData )=="Y"); //global flag. It means we can't run MC and data at the same time. Probably ok?
+
       
 
       if(!isData)
@@ -460,7 +483,7 @@ int main( int argc, char* argv[] ) {
       else
 	weights.push_back( 1. );
 
-      TString targetName = Form("SYST_%s_%d.root", samples[i_sample].Data(), run_ids[i_id]);
+      TString targetName = Form("SYST_%s_%d.root", gSystem->BaseName(samples[i_sample]), run_ids[i_id]);
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
 
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
@@ -497,7 +520,7 @@ int main( int argc, char* argv[] ) {
       }      
       cout << endl;
 
-      TString mergedName = Form("%s_%s.root",systematics[i_syst].Data(), samples[i_sample].Data());
+      TString mergedName = Form("%s_%s.root",systematics[i_syst].Data(), gSystem->BaseName(samples[i_sample]));
     
       if (!generatePUfile){
 	if (!doAnaTree) {
