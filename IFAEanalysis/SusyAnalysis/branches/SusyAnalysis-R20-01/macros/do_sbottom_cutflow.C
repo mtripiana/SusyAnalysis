@@ -7,6 +7,9 @@
 std::pair<int, float> get(TChain* c, TString var, TString cut);
 void print(TChain* ch, TString sel, TString var, TString cut);
 
+float N_in;
+float N_last;
+
 void do_sbottom_cutflow(TString sample=""){
   
   if(sample=="")
@@ -23,8 +26,23 @@ void do_sbottom_cutflow(TString sample=""){
 
   
   cout << "SBOTTOM 0L CUTFLOW " << endl;
-  //  cout << "-----------------------------------------------------------------------------------------------------" << endl;
-  cout << "---presel--------------------------------------------------------------------------------------------" << endl;
+  cout << "---------------------------------------------------------------------------------------------------------------------------------" << endl;
+  std::cout  << std::setw(45)
+             << std::left
+             << "Selection"
+             << std::setiosflags(std::ios::fixed)
+             << std::setprecision(3)
+             << std::setw(18)
+             << std::left
+             << "Nraw"
+             << "\t\t"
+             << "Rel.Eff."
+             << "\t"
+             << "Abs.Eff"
+             << "\t\t"
+             << "Nweighted"
+             << std::endl;
+  cout << "---presel------------------------------------------------------------------------------------------------------------------------" << endl;
   print(ch, "No sel", myvar, base+" )");
   print(ch, "GRL", myvar, base+" && isGRL )");
   print(ch, "LarGood", myvar, base+" && isGRL && isLarGood)");  
@@ -36,7 +54,7 @@ void do_sbottom_cutflow(TString sample=""){
   print(ch, "JetCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID)"); 
   print(ch, "CosmicVeto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic)"); 
   print(ch, "MuonCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon)"); 
-  cout << "---SR------------------------------------------------------------------------------------------------" << endl;
+  cout << "---SR----------------------------------------------------------------------------------------------------------------------------" << endl;
   print(ch, "MET (loose)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && met[0]>100.)");  
   print(ch, "1 < Njets < 5", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && met[0]>100. && j_N>1 && j_N<5)");  
   print(ch, "jpt1>50, |eta|<2.8", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && met[0]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && fabs(j_eta[1])<2.8 && fabs(j_eta[1])<2.8)");  
@@ -67,16 +85,29 @@ std::pair<int, float> get(TChain* ch, TString var, TString cut){
 
 void print(TChain* ch, TString sel, TString var, TString cut){ 
   std::pair<int, float> flow = get(ch, var, cut); 
+
+  if(N_in<0) N_in = flow.first;
+  if(N_last<0) N_last = N_in;
+
+  float releff = (N_last!=0 ? flow.first/(float)N_last : 0.);
+  float abseff = (N_in!=0 ? flow.first/(float)N_in : 0.);
+
   std::cout  << std::setw(45)
-	     << std::left
-	     << sel
-	     << std::setiosflags(std::ios::fixed)
-	     << std::setprecision(3)
-	     << std::setw(18)
-	     << std::left
-	     << flow.first
-	     << "\t\t" 
-	     << flow.second 
-	     << std::endl;
-  //cout << sel << "     = " << flow.first << "\t\t" << flow.second << endl;
+             << std::left
+             << sel
+             << std::setiosflags(std::ios::fixed)
+             << std::setprecision(3)
+             << std::setw(18)
+             << std::left
+             << flow.first
+             << "\t\t"
+             << releff
+             << "\t\t"
+             << abseff
+             << "\t\t"
+             << flow.second
+             << std::endl;
+
+  N_last = flow.first;
+
 }
