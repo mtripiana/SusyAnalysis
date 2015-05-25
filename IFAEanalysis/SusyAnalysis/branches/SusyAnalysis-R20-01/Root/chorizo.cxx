@@ -1,3 +1,4 @@
+
 #define  chorizo_cxx
 #include <EventLoop/Job.h>
 #include <EventLoop/Worker.h>
@@ -204,6 +205,7 @@ void chorizo :: bookTree(){
   if (output){
     output->tree()->Branch ("RunNumber", &RunNumber, "RunNumber/I");
     output->tree()->Branch ("EventNumber", &EventNumber, "EventNumber/I");
+    output->tree()->Branch ("lb", &lb, "lb/I");
     output->tree()->Branch ("procID", &procID, "procID/I");
     //    output->tree()->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
     output->tree()->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
@@ -795,6 +797,7 @@ void chorizo :: InitVars()
   //- Event info
   RunNumber = 0;
   EventNumber = 0;
+  lb = 0;
   procID = 0;
   averageIntPerXing = 0;
 
@@ -1535,7 +1538,11 @@ EL::StatusCode chorizo :: initialize ()
 
     CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
     CHECK( tool_st->setProperty("EleId",El_ID) ); 
-    CHECK( tool_st->setProperty("MuId",Mu_ID) );
+    int imuid = xAOD::Muon::VeryLoose;
+    if(Mu_ID=="Loose") imuid = xAOD::Muon::Loose; 
+    else if(Mu_ID=="Medium") imuid = xAOD::Muon::Medium; 
+    else if(Mu_ID=="Tight") imuid = xAOD::Muon::Tight; 
+    CHECK( tool_st->setProperty("MuId",imuid) );
     CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
     
     // Set to true for DxAOD, false for primary xAOD
@@ -1914,7 +1921,7 @@ EL::StatusCode chorizo :: loop ()
   RunNumber = eventInfo->runNumber();
   mc_channel_number = (isMC ? eventInfo->mcChannelNumber() : 0); 
   EventNumber = eventInfo->eventNumber();
-
+  
   //EventList
   if(m_eventList.size()){
     if( !inEventList(RunNumber, EventNumber) ){
@@ -1925,7 +1932,7 @@ EL::StatusCode chorizo :: loop ()
   
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
 
-  int lb = eventInfo->lumiBlock();
+  lb = eventInfo->lumiBlock();
   averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
 
   //PURW
@@ -2002,6 +2009,8 @@ EL::StatusCode chorizo :: loop ()
     //procID
     if(!m_isderived && pdgid1!=0 && pdgid2!=0) //(just to avoid warnings)
       procID = SUSY::finalState(id1, id2); // get prospino proc ID
+
+    cout << "PROCID = " << procID << endl;
 
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
     this->w_average = this->GetAverageWeight();
@@ -2403,6 +2412,8 @@ EL::StatusCode chorizo :: loop ()
     
     if(!muonok) continue;
 
+    mb_N++;
+
     recoMuon.index = iMu;
     recoMuon.ptcone20 = acc_ptcone20(*mu_itr) * 0.001;
     recoMuon.etcone20 = acc_etcone20(*mu_itr) * 0.001;
@@ -2603,6 +2614,14 @@ EL::StatusCode chorizo :: loop ()
     
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
     recoJet.MV1 = btag->MV1_discriminant(); 
+    double wmv2=-1;
+    if ( !btag->MVx_discriminant("MV2c20", wmv2)) {
+      Error(APP_NAME, "Failed to retrieve MV2c20 weight!");
+    }
+    else{
+      recoJet.MV2c20 = wmv2;
+    }
+
     recoJet.SV1plusIP3D = btag->SV1plusIP3D_discriminant();
 
     recoJet.IP3D_pb = btag->IP3D_pb(); 
@@ -3881,7 +3900,8 @@ EL::StatusCode chorizo :: loop_truth()
   if(spOK && id1!=0 && id2!=0) //(just to avoid warnings)
     procID = SUSY::finalState(id1, id2); // get prospino proc ID
   
- 
+  cout << "PROCID = " << procID << endl;
+
   //Truth Electrons 
   CHECK( m_event->retrieve( m_truthEl, "TruthElectrons" ) );
   xAOD::TruthParticleContainer::const_iterator truthEl_itr = m_truthEl->begin();

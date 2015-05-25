@@ -663,6 +663,7 @@ private:
   //- Event Info
   UInt_t  RunNumber;        
   UInt_t  EventNumber;
+  UInt_t  lb;
   UInt_t  procID;
   UInt_t  mc_channel_number;//!
   float   averageIntPerXing;

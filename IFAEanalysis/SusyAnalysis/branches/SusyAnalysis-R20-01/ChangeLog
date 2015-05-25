@@ -1,3 +1,14 @@
+2014-05-24 Martin <tripiana@cern.ch>
+	* Add lb variable
+	* Add custom GRL for first dat15_comm data
+
+2014-05-23 Martin <tripiana@cern.ch>
+	* Fix baseline muons counter (mb_N)
+
+2014-05-22 Martin <tripiana@cern.ch>
+	* Move to 06-07@Base,2.3.12
+	* Add eos/ support
+
 2014-05-21 Martin <tripiana@cern.ch>
 	* Move to 06-06@Base,2.3.12
 	* New BtagSF() for total SF

@@ -13,6 +13,8 @@
 #include "SampleHandler/ToolsDiscovery.h"
 #include "SampleHandler/ToolsMeta.h"
 #include "SampleHandler/DiskListLocal.h"
+#include "SampleHandler/DiskListEOS.h"
+#include "SampleHandler/DiskListXRD.h"
 #include "SampleHandler/MetaFields.h"
 #include "SampleHandler/fetch.h"
 #include "EventLoop/Job.h"
@@ -203,6 +205,8 @@ int main( int argc, char* argv[] ) {
   bool isTruth=false;
 
   bool userDir=false;
+
+  string wildcard="*";
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -404,9 +408,18 @@ int main( int argc, char* argv[] ) {
       if(!userDir && single_id>=0 && run_ids[i_id] != single_id) continue; //pick only chosen id (if given)
 
       //** Run on local samples
-      if(runLocal){
-	if( userDir || run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
-	  scanDir( sh, run_patterns[i_id].Data() );
+      if(runLocal || userDir){
+	if( run_patterns[i_id].BeginsWith("/eos/") ){
+	  //	  SH::DiskListEOS list ("eosatlas.cern.ch", run_patterns[i_id].Data());
+	  SH::DiskListXRD list ("eosatlas.cern.ch", gSystem->DirName(run_patterns[i_id]), true);
+	  TString bname_regexp = Form("%s*", gSystem->BaseName(run_patterns[i_id]));
+	  SH::scanDir (sh, list, "*", bname_regexp.Data());
+	}
+	else if(userDir || run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
+	  cout << "Local SCAN" << endl;
+	  cout << "pattern = " << run_patterns[i_id].Data() << endl;
+	  cout << "wildcard = " << wildcard << endl;
+	  scanDir( sh, run_patterns[i_id].Data(), wildcard );
 	  //.Find( run_patterns[i_id].Data() );
 	}
 	else{//PIC samples
@@ -426,10 +439,9 @@ int main( int argc, char* argv[] ) {
       
       if(mgd)
 	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
-      //	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
-            
-      //      sh.print();
+	//	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
       
+      sh.print();
 
       //*** Handle Meta-Data
       sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
@@ -476,8 +488,6 @@ int main( int argc, char* argv[] ) {
 	readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
 
 
-      
-
       if(!isData)
 	weights.push_back( getLumiWeight(sh.at(0)) );
       else
@@ -495,7 +505,7 @@ int main( int argc, char* argv[] ) {
       sh.remove(sh.at(0));
 
     }//end of id loop
-
+    
 
     //Done merging step only if running locally
     if(!runLocal) return 0;

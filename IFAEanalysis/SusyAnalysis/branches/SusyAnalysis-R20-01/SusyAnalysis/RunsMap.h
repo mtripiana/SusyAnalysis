@@ -609,6 +609,9 @@ void RunsMap::LoadMap(){
   //note: Run numbers for data containers follow this convention:   '9900XY'  , X=period, Y=sub-period (0 for whole container)
   m_map["8TEV_data12_B"] = rlist( Rpair(990020, "data12_8TeV.periodB.physics_JetTauEtmiss.PhysCont.AOD.repro16_v04/")); //period B
   
+
+  //Test EOS (data) 900GeV
+  m_map["TestEOS"] = rlist( Rpair(264034, "/eos/atlas/atlastier0/rucio/data15_comm/physics_MinBias/00264034/data15_comm.00264034.physics_MinBias.merge.AOD.f577_m1420"));
   
   //======================================================================================================================
   //                                                 Grid tests
@@ -1021,7 +1024,12 @@ void RunsMap::LoadMap(){
 
   //Data 
   m_map["TestDataB"] = rlist( Rpair(203432, "/nfs/at3/scratch/tripiana/xAOD/data12/JetTauEtmiss/"));
-  
+
+  ///nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/First13TeV_collisions_data_may15/data15_comm.00265532.physics_Main/"));
+  m_map["data15_265532"] = rlist( Rpair(265532, "/nfs/at3/scratch2/tripiana/xAOD/data/13TeV/data15_comm/physics_Main/265532/"));
+  m_map["data15_265545"] = rlist( Rpair(265545, "/nfs/at3/scratch2/tripiana/xAOD/data/13TeV/data15_comm/physics_Main/265545/"));
+  m_map["data15_265573"] = rlist( Rpair(265573, "/nfs/at3/scratch2/tripiana/xAOD/data/13TeV/data15_comm/physics_Main/265573/"));
+
   //New DAOD_IFAE3G derivation
   m_map["TestIFAE3G"] = rlist( Rpair(117050, "/nfs/at3users/users/tripiana/Derivations/WorkArea/run/test/"));
   

@@ -21,7 +21,8 @@ int comparevars(TString file1="", TString file2="", TString label1="xAOD", TStri
   TChain* ch2 = new TChain("AnalysisTree");
 
   ch1->Add(file1);
-  ch2->Add(file2);
+  if(file2!="")
+    ch2->Add(file2);
 
   TString vonly = (onlyThis.Index("[")>=0 ? TString(onlyThis(0,onlyThis.Index("["))) : onlyThis);
 
@@ -39,12 +40,14 @@ int comparevars(TString file1="", TString file2="", TString label1="xAOD", TStri
 
     bool inboth=false;
     //check if in the other file too
-    leaves2  = (TObjArray*) ch2->GetListOfLeaves();
-    for(unsigned int il2=0; il2 < leaves2->GetEntriesFast(); il2++){ 
-      leaf2 = (TLeaf*)leaves2->UncheckedAt(il2); 
-      if( leaf2->GetName() == vname ){
-	inboth=true;
-	break;
+    if(file2!=""){
+      leaves2  = (TObjArray*) ch2->GetListOfLeaves();
+      for(unsigned int il2=0; il2 < leaves2->GetEntriesFast(); il2++){ 
+	leaf2 = (TLeaf*)leaves2->UncheckedAt(il2); 
+	if( leaf2->GetName() == vname ){
+	  inboth=true;
+	  break;
+	}
       }
     }
     if(inboth){
@@ -95,7 +98,7 @@ void SetBinning(TString var, int &n, float &min, float &max){
 
 };
 
-void draw_var(TString vname, TChain* ch1, TChain* ch2, TString label1="", TString label2="",  TString outdir="./", bool loadlib=true){
+void draw_var(TString vname, TChain* ch1, TChain* ch2, TString label1, TString label2,  TString outdir, bool loadlib){
 
   bool ok2 = (ch2->GetEntries()>0);
 

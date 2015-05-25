@@ -13,6 +13,7 @@
 #include "SampleHandler/ToolsDiscovery.h"
 #include "SampleHandler/ToolsMeta.h"
 #include "SampleHandler/DiskListLocal.h"
+#include "SampleHandler/DiskListXRD.h"
 #include "SampleHandler/MetaFields.h"
 #include "SampleHandler/fetch.h"
 #include "EventLoop/Job.h"
@@ -227,6 +228,8 @@ int main( int argc, char* argv[] ) {
 
   bool userDir=false;
 
+  string wildcard="*";
+
   std::string jOption = "METbb_JobOption.xml";
 
   std::vector<TString> systematic; 
@@ -408,9 +411,15 @@ int main( int argc, char* argv[] ) {
 
     //** Run on local samples
     //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
-    if(runLocal){
-      if( userDir || run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
-	scanDir( sh, run_pattern[p].Data() );
+    if(runLocal || userDir){
+      if( run_pattern[p].BeginsWith("/eos/") ){
+	//	  SH::DiskListEOS list ("eosatlas.cern.ch", run_patterns[i_id].Data());
+	SH::DiskListXRD list ("eosatlas.cern.ch", gSystem->DirName(run_pattern[p]), true);
+	TString bname_regexp = Form("%s*", gSystem->BaseName(run_pattern[p]));
+	SH::scanDir (sh, list, "*", bname_regexp.Data());
+      }
+      else if( userDir || run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
+	scanDir( sh, run_pattern[p].Data() );// , wildcard);
       }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
 	mgd=true;
