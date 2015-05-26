@@ -16,7 +16,8 @@
 </LumiBlockCollection>
 <LumiBlockCollection>
 <Run>265545</Run>
-<LBRange Start="70" End="133"/>
+<LBRange Start="70" End="112"/>
+<LBRange Start="119" End="133"/>
 </LumiBlockCollection>
 <LumiBlockCollection>
 <Run>265573</Run>
