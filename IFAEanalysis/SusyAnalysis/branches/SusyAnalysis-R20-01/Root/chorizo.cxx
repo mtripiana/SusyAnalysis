@@ -652,12 +652,12 @@ EL::StatusCode chorizo :: histInitialize ()
   InitGHist(h_presel_flow, "h_presel_flow", 10, 0., 10., "", "");
   InitGHist(h_presel_wflow, "h_presel_wflow", 10, 0., 10., "", "");
   
-  const char *cutNames[] = {"GRL","Trigger","PVertex","LarGood","TileGood","CoreFlag","BadJet","FakeMET","MET cleaning","TileTrip"};
+  // const char *cutNames[] = {"GRL","Trigger","PVertex","LarGood","TileGood","CoreFlag","BadJet","FakeMET","MET cleaning","TileTrip"};
   
-  for (int i=1; i<h_presel_flow->GetNbinsX(); ++i) {
-    h_presel_flow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
-    h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
-  }
+  // for (int i=1; i<h_presel_flow->GetNbinsX(); ++i) {
+  //   h_presel_flow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
+  //   h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
+  // }
 
   //Systematics (override CP set if string is given) [tmp hack]
   if(!syst_CPstr.IsNull()){
@@ -1212,7 +1212,7 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  m_event = wk()->xaodEvent();                    
+  //  m_event = wk()->xaodEvent();                    
 
   //  meta_nwsim += getNinfo().weightSum; //load weighted number of events
   return EL::StatusCode::SUCCESS;
