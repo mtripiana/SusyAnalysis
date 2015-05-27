@@ -578,7 +578,7 @@ int main( int argc, char* argv[] ) {
     
     
     //debug printing
-    alg->debug         = false;
+    alg->debug         = true;
     alg->printMet      = false;     
     alg->printJet      = false;
     alg->printElectron = false;
@@ -667,6 +667,8 @@ int main( int argc, char* argv[] ) {
 	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
 	//	system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
 	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+	system("mv "+tmpdir+"/histo-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/histo-"+targetName.Data());
+
 	system(("rm -rf "+tmpdir).c_str());
 	
 	mergeList.push_back(TString(CollateralPath)+"/"+targetName);

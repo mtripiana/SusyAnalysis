@@ -1,3 +1,6 @@
+2014-05-27 Martin <tripiana@cern.ch>
+	* Fix histo writing in output file
+
 2014-05-24 Martin <tripiana@cern.ch>
 	* Add lb variable
 	* Add custom GRL for first dat15_comm data

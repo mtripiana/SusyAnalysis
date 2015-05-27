@@ -259,6 +259,7 @@ private:
   EvtList m_eventList; //!
 
   //Histograms
+  TDirectory* out_TDir; //! 
   //raw 
   TH1F* h_presel_flow; //! 
   //weighted
@@ -392,6 +393,9 @@ private:
 
   virtual void  findBparton(); 
 
+  //for JetSmearing
+  virtual bool  isQCDSeedEvent(float, float, float);
+
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
 
@@ -438,7 +442,12 @@ private:
   TNamed *meta_metmap; //!
 
   //----- Jet smearing config (QCD)
+  TString QCD_btagFileMap; //!
+  TString QCD_bvetoFileMap; //!
+  TString QCD_btagMap; //!
+  TString QCD_bvetoMap; //!
   float   QCD_JetsPtPreselection; //!
+  float   QCD_JetsEtaPreselection; //!
   float   QCD_JetsPtSelection; //! //taken from the jets section
   float   QCD_JetsEtaSelection; //!//taken from the jets section
   float   QCD_METSig; //!

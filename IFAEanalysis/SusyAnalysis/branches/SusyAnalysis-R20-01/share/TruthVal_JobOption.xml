@@ -177,6 +177,7 @@
       <Enable>false</Enable> <!-- Enable jet smearing  -->
       <TrigChains> HLT_xe.* </TrigChains>
       <JetsPtPreselection>20000.0</JetsPtPreselection>
+      <JetsEtaPreselection>2.5</JetsEtaPreselection>
       <METSigCut>1.0</METSigCut>
       <LeadJetPreSel>Stop</LeadJetPreSel>
       <RandomSeedOffset>123456</RandomSeedOffset>
@@ -187,6 +188,10 @@
       <SmearExtraSmr>true</SmearExtraSmr>
       <DoPhiSmearing>true</DoPhiSmearing>
       <SmearedEvents>250</SmearedEvents>
+      <BtagFileMap>Moriond13/R_map2012_btag_WE010_p1328_doublegaus_optimal.root</BtagFileMap>
+      <BtagMap>responseWE010_p1328_doublegaus_optimal</BtagMap>
+      <BvetoFileMap>Moriond13/R_map2012_bveto_WE010_p1328_doublegaus_optimal.root</BvetoFileMap>
+      <BvetoMap>responseWE010_p1328_doublegaus_optimal</BvetoMap>
     </QCD>
 
   </ObjectDefinition>

@@ -197,6 +197,7 @@ void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, flo
   h->GetYaxis()->SetTitle(yaxis.c_str());
   h->Sumw2();
   wk()->addOutput(h);
+  h->SetDirectory(out_TDir);
 }
 
 void chorizo :: bookTree(){
@@ -639,21 +640,24 @@ EL::StatusCode chorizo :: histInitialize ()
   TH2F::SetDefaultSumw2();
   TProfile::SetDefaultSumw2();
 
+  out_TDir = (TDirectory*) wk()->getOutputFile ("output");
+
   //need template to do TH1D as well...
   h_average = new TH1D("beginning","beggining",1,0,1);
   wk()->addOutput(h_average);     
+  h_average->SetDirectory(out_TDir);
 
   //histograms
   InitGHist(h_cut_var, "h_cut_var", 2000, 0, 1000., "Cut Var (GeV)", "");  
-  //  InitGHist(h_presel_flow, "h_presel_flow", 10, 0., 10., "", "");
-  //  InitGHist(h_presel_wflow, "h_presel_wflow", 10, 0., 10., "", "");
-
-  // const char *cutNames[] = {"GRL","Trigger","PVertex","LarGood","TileGood","CoreFlag","BadJet","FakeMET","MET cleaning","TileTrip"};
-
-  // for (int i=1; i<h_presel_flow->GetNbinsX(); ++i) {
-  //   h_presel_flow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
-  //   h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
-  // }
+  InitGHist(h_presel_flow, "h_presel_flow", 10, 0., 10., "", "");
+  InitGHist(h_presel_wflow, "h_presel_wflow", 10, 0., 10., "", "");
+  
+  const char *cutNames[] = {"GRL","Trigger","PVertex","LarGood","TileGood","CoreFlag","BadJet","FakeMET","MET cleaning","TileTrip"};
+  
+  for (int i=1; i<h_presel_flow->GetNbinsX(); ++i) {
+    h_presel_flow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
+    h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
+  }
 
   //Systematics (override CP set if string is given) [tmp hack]
   if(!syst_CPstr.IsNull()){
@@ -679,18 +683,27 @@ EL::StatusCode chorizo :: histInitialize ()
   
   //Sum of weights for primary sample
   //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
-  m_cfilename = wk()->metaData()->getString(SH::MetaFields::sampleName); //name of current sample
+  //  m_cfilename = wk()->metaData()->getString(SH::MetaFields::sampleName); //name of current sample
 
   return EL::StatusCode::SUCCESS;
 }
 
 CutflowInfo chorizo :: getNinfo(){
 
+  CutflowInfo sinfo = {};
+
+  m_event = wk()->xaodEvent();
+
   //Read the CutBookkeeper container
   const xAOD::CutBookkeeperContainer* completeCBC = 0;
   if (!m_event->retrieveMetaInput(completeCBC, "CutBookkeepers").isSuccess()) {
     Error( APP_NAME, "Failed to retrieve CutBookkeepers from MetaData! Exiting.");
+    return sinfo;
   }
+  else{
+    cout << "CB retrieved" << endl;
+  }
+
 
   // First, let's find the smallest cycle number,
   // i.e., the original first processing step/cycle
@@ -707,7 +720,6 @@ CutflowInfo chorizo :: getNinfo(){
     }
   }
 
-  CutflowInfo sinfo;
   sinfo.nEvents    = allEventsCBK->nAcceptedEvents();
   sinfo.weightSum  = allEventsCBK->sumOfEventWeights();
   sinfo.weight2Sum = allEventsCBK->sumOfEventWeightsSquared();
@@ -1192,6 +1204,7 @@ void chorizo :: InitVars()
 
 EL::StatusCode chorizo :: fileExecute ()
 {
+  //  meta_nwsim += getNinfo().weightSum; //load weighted number of events
   return EL::StatusCode::SUCCESS;
 }
 
@@ -1199,6 +1212,9 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
+  m_event = wk()->xaodEvent();                    
+
+  //  meta_nwsim += getNinfo().weightSum; //load weighted number of events
   return EL::StatusCode::SUCCESS;
 }
 
@@ -1376,6 +1392,11 @@ void chorizo :: ReadXML(){
   QCD_SmearExtraSmr      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$SmearExtraSmr");
   QCD_DoPhiSmearing      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$DoPhiSmearing");
   QCD_SmearedEvents      = (unsigned int)xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$QCD$SmearedEvents");
+
+  QCD_btagFileMap        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BtagFileMap").c_str());
+  QCD_btagMap            = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BtagMap").c_str());
+  QCD_bvetoFileMap       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BvetoFileMap").c_str());
+  QCD_bvetoMap           = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BvetoMap").c_str());
 
   std::istringstream QCD_triggerNameIStr(QCD_triggerNameStr);
   std::string stqcd;
@@ -1621,7 +1642,15 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_jsmear->setProperty("GaussianCoreSmearingType", gsmtype) );
   CHECK( tool_jsmear->setProperty("ShiftMeanType",mstype) );
   CHECK( tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing) );
+  CHECK( tool_jsmear->setProperty("PtCutValue",QCD_JetsPtPreselection) );
+  CHECK( tool_jsmear->setProperty("EtaCutValue",QCD_JetsEtaPreselection) );
   CHECK( tool_jsmear->initialize() );
+
+  TFile* bVetoJetFile = new TFile(maindir+"/JetSmearing/"+QCD_bvetoFileMap);
+  TH2F* bVetoJetResponse = (TH2F*)bVetoJetFile->Get(QCD_bvetoMap);
+  TFile* bTagJetFile = new TFile(maindir+"/JetSmearing/"+QCD_btagFileMap);
+  TH2F* bTagJetResponse = (TH2F*)bTagJetFile->Get(QCD_btagMap);
+  tool_jsmear->SetResponseMaps(bVetoJetResponse,bTagJetResponse);
 
   //isolation tool
   // Setup standard working point for 
@@ -1876,10 +1905,10 @@ EL::StatusCode chorizo :: loop ()
 
   loadMetaData();
    
-  if(m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName)){ //name of current file
-    meta_nwsim += getNinfo().weightSum; //load weighted number of events
-    m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName);
-  }
+  // if(m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName)){ //name of current file
+  //   meta_nwsim += getNinfo().weightSum; //load weighted number of events
+  //   m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName);
+  // }
 
   //-- Retrieve objects Containers
   m_truthE= 0;
@@ -2009,8 +2038,6 @@ EL::StatusCode chorizo :: loop ()
     //procID
     if(!m_isderived && pdgid1!=0 && pdgid2!=0) //(just to avoid warnings)
       procID = SUSY::finalState(id1, id2); // get prospino proc ID
-
-    cout << "PROCID = " << procID << endl;
 
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
     this->w_average = this->GetAverageWeight();
@@ -2142,15 +2169,16 @@ EL::StatusCode chorizo :: loop ()
   //--- Preselection flag
   this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
   
-  if(this->isTrigger.size())
-    this->passPreselectionCuts &= this->isTrigger[0];
-
 
   //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
        output->setFilterPassed(false);
        return nextEvent();
   }
+
+  //--- add Trigger requirement to preselection (if not pseudo-data)
+  if(this->isTrigger.size())
+    this->passPreselectionCuts &= this->isTrigger[0];
 
   //--- Non-collision background selection
   if ( this->isNCBG ){
@@ -2912,7 +2940,7 @@ EL::StatusCode chorizo :: loop ()
 			 false));
   TVector2 v_met_ST_vmu = getMET( metRFC, "Final");
   met_obj.SetVector(v_met_ST_vmu,"met_vmu");  //- Copy met vector to the met data member
-
+  
 
   TVector2 v_met_ST_vmu_MU = getMET( metRFC, "Muons"); //Muon visible Term
     
@@ -3813,7 +3841,11 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
-  //...
+  if ( this->isQCD  && ! isQCDSeedEvent(0., 0., QCD_METSig) ){ //FIX !! ( met, sumet, QCD_METSig) ){
+       output->setFilterPassed(false);
+       return nextEvent();
+  }
+
   
   //---Fill missing data members 
   this->dumpLeptons();
@@ -3900,7 +3932,6 @@ EL::StatusCode chorizo :: loop_truth()
   if(spOK && id1!=0 && id2!=0) //(just to avoid warnings)
     procID = SUSY::finalState(id1, id2); // get prospino proc ID
   
-  cout << "PROCID = " << procID << endl;
 
   //Truth Electrons 
   CHECK( m_event->retrieve( m_truthEl, "TruthElectrons" ) );
@@ -4093,17 +4124,57 @@ EL::StatusCode chorizo :: loop_truth()
       recoJet.MV1 = -99.;
       recoJet.MV2c20 = -99.;
     }
-
-
+    
+    //emulate btagging efficiency! (70% here)
+    float bprob = gRandom->Rndm(1);
+    cout << "bprob = " << bprob << endl;
+    if(recoJet.FlavorTruth==5){
+      if(bprob<0.7){
+ 	recoJet.FlavorTruth = 5;
+	recoJet.MV1 = 99.;
+	recoJet.MV2c20 = 99.;
+      }
+      else{
+ 	recoJet.FlavorTruth = 0;
+	recoJet.MV1 = -99.;
+	recoJet.MV2c20 = -99.;
+      }
+    }
+    else if (recoJet.FlavorTruth==4){
+      if(bprob<0.2){
+ 	recoJet.FlavorTruth = 5;
+	recoJet.MV1 = 99.;
+	recoJet.MV2c20 = 99.;
+      }
+      else{
+ 	recoJet.FlavorTruth = 4;
+	recoJet.MV1 = -99.;
+	recoJet.MV2c20 = -99.;
+      }
+    }
+    else{
+      if(bprob<0.07){
+ 	recoJet.FlavorTruth = 5;
+	recoJet.MV1 = 99.;
+	recoJet.MV2c20 = 99.;
+      }
+      else{
+ 	recoJet.FlavorTruth = 0;
+	recoJet.MV1 = -99.;
+	recoJet.MV2c20 = -99.;
+      }
+    }
+    
+    
     //CHECK
     // int label = xAOD::jetFlavourLabel(*tjet_itr);
     // cout << "label = " << label << "   ,   pdg = " << recoJet.FlavorTruth << endl;
     //
-
+    
     recoJet.isbjet = recoJet.isBTagged_70eff("Truth");
-
+    
     jetCandidates.push_back(recoJet);
-
+    
     //apply signal cuts...
     if ( recoJet.Pt() < (Jet_RecoPtCut/1000.) ) continue;
     if ( fabs(recoJet.Eta()) > Jet_RecoEtaCut ) continue;
@@ -6597,7 +6668,13 @@ void chorizo :: findBparton(){
   */
 }
 
-
+bool chorizo :: isQCDSeedEvent(float MissingET, float sumET, float etMissSigCut){
+    
+  const double etMissSig = MissingET / sqrt(sumET);
+  if (etMissSig < etMissSigCut) return true;
+  
+  return false;
+}
 
 void chorizo :: Zll_candidate(){
   
