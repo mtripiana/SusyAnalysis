@@ -255,7 +255,7 @@ int main( int argc, char* argv[] ) {
   else if ( args[0] == "slist" ){ //just print systematics list?
     systListOnly=true;
     gErrorIgnoreLevel = kFatal;
-    args[0] = "TestDF"; //rename to test sample to get systematics list
+    args[0] = "test_slist"; //"mc15_ttbar"; //TestDF"; //rename to test sample to get systematics list
     // printSystList();
     // return 0;
   }

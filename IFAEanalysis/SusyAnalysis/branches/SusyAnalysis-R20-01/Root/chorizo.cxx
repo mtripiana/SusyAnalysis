@@ -207,6 +207,7 @@ void chorizo :: bookTree(){
     output->tree()->Branch ("RunNumber", &RunNumber, "RunNumber/I");
     output->tree()->Branch ("EventNumber", &EventNumber, "EventNumber/I");
     output->tree()->Branch ("lb", &lb, "lb/I");
+    output->tree()->Branch ("bcid", &bcid, "bcid/I");
     output->tree()->Branch ("procID", &procID, "procID/I");
     //    output->tree()->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
     output->tree()->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
@@ -389,6 +390,7 @@ void chorizo :: bookTree(){
 
       //jets
       output->tree()->Branch("j_N"   ,&j_N   ,"j_N/I"   ,10000);
+      output->tree()->Branch("j_N30" ,&j_N30 ,"j_N30/I" ,10000);
       output->tree()->Branch("j_N40" ,&j_N40 ,"j_N40/I" ,10000);
       output->tree()->Branch("j_N50" ,&j_N50 ,"j_N50/I" ,10000);
       output->tree()->Branch("j_N60" ,&j_N60 ,"j_N60/I" ,10000);
@@ -787,6 +789,7 @@ void chorizo :: InitVars()
   RunNumber = 0;
   EventNumber = 0;
   lb = 0;
+  bcid = 0;
   procID = 0;
   averageIntPerXing = 0;
 
@@ -957,6 +960,7 @@ void chorizo :: InitVars()
 
   //- Jet Info
   j_N=0;
+  j_N30=0;
   j_N40=0;
   j_N50=0;
   j_N60=0;
@@ -1935,6 +1939,7 @@ EL::StatusCode chorizo :: loop ()
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
 
   lb = eventInfo->lumiBlock();
+  bcid = eventInfo->bcid();
   averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
 
   //PURW
@@ -2069,10 +2074,11 @@ EL::StatusCode chorizo :: loop ()
 
   for( const auto& vx : *vertices ) {
     if(vx->vertexType() == xAOD::VxType::PriVtx){
-      nVertex++;
+      this->isVertexOk = true;
     }
+    nVertex++;
   }
-  this->isVertexOk = (nVertex > 0);
+  //  this->isVertexOk = (nVertex > 0);
 
 
   //--- trigger debugging (check all MET triggers in menu)
@@ -2821,16 +2827,19 @@ EL::StatusCode chorizo :: loop ()
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
     
     //count high pt jet multiplicity
-    if(jetCandidates.at(iJet).Pt()>40.){
-      j_N40++;
-      if(jetCandidates.at(iJet).Pt()>50.){
-	j_N50++; 
-	if(jetCandidates.at(iJet).Pt()>60.){
-	  j_N60++;
-	  if(jetCandidates.at(iJet).Pt()>80.){
-	    j_N80++;
+    if(jetCandidates.at(iJet).Pt()>30.){
+      j_N30++;
+      if(jetCandidates.at(iJet).Pt()>40.){
+	j_N40++;
+	if(jetCandidates.at(iJet).Pt()>50.){
+	  j_N50++; 
+	  if(jetCandidates.at(iJet).Pt()>60.){
+	    j_N60++;
+	    if(jetCandidates.at(iJet).Pt()>80.){
+	      j_N80++;
+	    }
 	  }
-        }
+	}
       }
     }
 
@@ -4158,19 +4167,21 @@ EL::StatusCode chorizo :: loop_truth()
     }
 
     //check for higher pt jet multiplicity
-    if(recoJet.Pt() > 40.){
-      j_N40++;
-      if(recoJet.Pt() > 50.){
-	j_N50++;
-	if(recoJet.Pt() > 60.){
-	  j_N60++;
-	  if(recoJet.Pt() > 80.){
-	    j_N80++;
+    if(recoJet.Pt() > 30.){
+      j_N30++;
+      if(recoJet.Pt() > 40.){
+	j_N40++;
+	if(recoJet.Pt() > 50.){
+	  j_N50++;
+	  if(recoJet.Pt() > 60.){
+	    j_N60++;
+	    if(recoJet.Pt() > 80.){
+	      j_N80++;
+	    }
 	  }
-        }
+	}
       }
     }
-
 
     //check for overlapping jets
     if(doOR){

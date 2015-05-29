@@ -91,7 +91,7 @@
 
       <baseID>LooseLLH</baseID>
       <ID>TightLLH</ID>
-      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
       
@@ -107,7 +107,7 @@
       <RecoEtaCut>2.4</RecoEtaCut>
 
       <ID>Loose</ID>
-      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_mu26_imedium</triggers>
     </Muon>
@@ -119,7 +119,7 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_g140_loose</triggers>
 

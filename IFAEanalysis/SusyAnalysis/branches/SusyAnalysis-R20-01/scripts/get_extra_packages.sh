@@ -13,6 +13,8 @@ cd $ANALYSISCODE
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-06-00-05
 
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags/ElectronEfficiencyCorrection-00-01-19
+rc checkout_pkg atlasoff/PhysicsAnalysis/ElectronPhotonID/PhotonEfficiencyCorrection/tags/PhotonEfficiencyCorrection-00-01-05
+rc checkout_pkg atlasoff/Event/xAOD/xAODMissingET/tags/xAODMissingET-00-01-23
 
 rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigEgammaMatchingTool/tags/TrigEgammaMatchingTool-00-00-01
 

@@ -279,6 +279,8 @@ void RunsMap::LoadMap(){
   m_map["test_roger"] = rlist( Rpair(555555, "/nfs/atlas-data06/scratch/tripiana/xAOD/test/roger/"));
 
 
+  m_map["test_slist"] = rlist( Rpair(410000, "/nfs/atlas-data07/tripiana/xAOD/ttbar_SUSY1/") );
+
   //SIGNAL
   m_map["13TEV_Sbottom_800_1"] = rlist( Rpair(202266, "mc14_13TeV.202266.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_800_1_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));
   m_map["13TEV_Sbottom_300_290"] = rlist( Rpair(202249, "mc14_13TeV.202249.MadGraphPythia_AUET2BCTEQ6L1_SM_BB_direct_300_290_MET50.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));

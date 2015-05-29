@@ -673,6 +673,7 @@ private:
   UInt_t  RunNumber;        
   UInt_t  EventNumber;
   UInt_t  lb;
+  UInt_t  bcid;
   UInt_t  procID;
   UInt_t  mc_channel_number;//!
   float   averageIntPerXing;
@@ -840,6 +841,7 @@ private:
 
   //- Jet info
   int   j_N;
+  int   j_N30;
   int   j_N40;
   int   j_N50;
   int   j_N60;
