@@ -324,6 +324,8 @@ int main( int argc, char* argv[] ) {
   if(version!="")
     vTag = "_v"+version;
 
+  cout << "vTAG = "  << vTag << endl;
+
   //always run locally for systematics printing!
   if(systListOnly && !runLocal){
     runGrid=false;
@@ -662,7 +664,7 @@ int main( int argc, char* argv[] ) {
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       
 	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-	targetName = Form("%s_%s_%d.root", systematic[isys].Data(), gSystem->BaseName(args[0]), single_id);
+	targetName = Form("%s_%s%s_%d.root", systematic[isys].Data(), gSystem->BaseName(args[0]), vTag.Data(), single_id);
 	
 	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
 	// system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
@@ -683,7 +685,7 @@ int main( int argc, char* argv[] ) {
 	cout<<"\t\t" << i << ": " << mergeList[i] << endl;
       }      
       
-      TString mergedName = Form("%s_%s.root",systematic[isys].Data(), gSystem->BaseName(args[0]));
+      TString mergedName = Form("%s_%s%s.root",systematic[isys].Data(), gSystem->BaseName(args[0]), vTag.Data());
       
       if (!doAnaTree) {
 	//--- Case where we run on 1 file

@@ -628,7 +628,8 @@ EL::StatusCode chorizo :: histInitialize ()
   //Load event list (if provided)
   loadEventList();
 
-  meta_nwsim=0; //only once!
+  meta_nsim=0; 
+  meta_nwsim=0;
 
   //JopOption
   meta_jOption= new TNamed("jOption", jOption.c_str());
@@ -681,18 +682,12 @@ EL::StatusCode chorizo :: histInitialize ()
     }
   }
   
-  //Sum of weights for primary sample
-  //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
-  //  m_cfilename = wk()->metaData()->getString(SH::MetaFields::sampleName); //name of current sample
-
   return EL::StatusCode::SUCCESS;
 }
 
 CutflowInfo chorizo :: getNinfo(){
 
   CutflowInfo sinfo = {};
-
-  m_event = wk()->xaodEvent();
 
   //Read the CutBookkeeper container
   const xAOD::CutBookkeeperContainer* completeCBC = 0;
@@ -725,22 +720,6 @@ CutflowInfo chorizo :: getNinfo(){
   sinfo.weight2Sum = allEventsCBK->sumOfEventWeightsSquared();
 
   return sinfo;
-
-  // //Try to get the original number of events (relevant in case of derivations)
-  // if (!m_MetaData) 
-  //   m_MetaData = dynamic_cast<TTree* > (wk()->inputFile()->Get("MetaData"));
-
-  // if (!m_MetaData) {
-  //   Error("getNWeightedEvents()", "\nDid not manage to get MetaData tree. Leaving...");
-  //   return EL::StatusCode::FAILURE;
-  // }
-
-  // TTreeFormula treeform("treeform","EventBookkeepers.m_nWeightedAcceptedEvents",m_MetaData);
-  // m_MetaData->LoadTree(0);
-  // treeform.UpdateFormulaLeaves();
-  // treeform.GetNdata();
-
-  // return (float)treeform.EvalInstance(1);  // initialSumOfWeightsInThisFile
 
 }
 
@@ -802,8 +781,6 @@ void chorizo :: InitVars()
   meta_xsec_relunc = 0.;
   meta_kfactor = 1.;
   meta_feff = 1.;
-  meta_nsim = 0.; 
-  //meta_nwsim = 0.; 
   meta_lumi = 1.;
   
   //- Event info
@@ -1212,9 +1189,10 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  //  m_event = wk()->xaodEvent();                    
+  m_event = wk()->xaodEvent();                    
 
-  //  meta_nwsim += getNinfo().weightSum; //load weighted number of events
+  meta_nsim  += getNinfo().nEvents; //load number of events
+  meta_nwsim += getNinfo().weightSum; //load weighted number of events
   return EL::StatusCode::SUCCESS;
 }
 
@@ -1834,7 +1812,7 @@ void chorizo :: loadMetaData(){
   meta_xsec_relunc = wk()->metaData()->getDouble( SH::MetaFields::crossSectionRelUncertainty );
   meta_kfactor     = wk()->metaData()->getDouble( SH::MetaFields::kfactor );
   meta_feff        = wk()->metaData()->getDouble( SH::MetaFields::filterEfficiency );
-  meta_nsim        = wk()->metaData()->getDouble( SH::MetaFields::numEvents );
+  //  meta_nsim        = wk()->metaData()->getDouble( SH::MetaFields::numEvents );
   meta_lumi        = wk()->metaData()->getDouble( SH::MetaFields::lumi );
   //  meta_id = (int)wk()->metaData()->getDouble( "DSID" ));
 
@@ -1905,11 +1883,6 @@ EL::StatusCode chorizo :: loop ()
 
   loadMetaData();
    
-  // if(m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName)){ //name of current file
-  //   meta_nwsim += getNinfo().weightSum; //load weighted number of events
-  //   m_cfilename != wk()->metaData()->getString(SH::MetaFields::sampleName);
-  // }
-
   //-- Retrieve objects Containers
   m_truthE= 0;
   m_truthP= 0;

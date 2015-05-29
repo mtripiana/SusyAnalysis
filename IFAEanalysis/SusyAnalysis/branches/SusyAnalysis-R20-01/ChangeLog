@@ -1,3 +1,7 @@
+2014-05-29 Martin <tripiana@cern.ch>
+	* Fix CutBookkeeper access (nsim + nwsim)
+	* Fix -v tag for local running mode
+
 2014-05-27 Martin <tripiana@cern.ch>
 	* Fix histo writing in output file
 

@@ -203,7 +203,7 @@ int main( int argc, char* argv[] ) {
   bool genPU=false;
   int single_id = -1;
   bool isTruth=false;
-
+  TString version="";
   bool userDir=false;
 
   string wildcard="*";
@@ -270,7 +270,7 @@ int main( int argc, char* argv[] ) {
       outDir = opts[iop].Copy().ReplaceAll("o=","");
     }
     else if (opts[iop].BeginsWith("i") ){
-      single_id = opts[iop].ReplaceAll("i=","").Atoi();
+      single_id = opts[iop].Copy().ReplaceAll("i=","").Atoi();
     }
     else if (opts[iop].BeginsWith("j") ){
       jOption = opts[iop].Copy().ReplaceAll("j=","");
@@ -278,7 +278,15 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("n") ){ //limit run to n events
       nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
     }
+    else if (opts[iop].BeginsWith("v") ){
+      version = opts[iop].Copy().ReplaceAll("v=","");
+    }
+
   }
+
+  TString vTag="";
+  if(version!="")
+    vTag = "_v"+version;
 
 
   //samples
@@ -416,9 +424,6 @@ int main( int argc, char* argv[] ) {
 	  SH::scanDir (sh, list, "*", bname_regexp.Data());
 	}
 	else if(userDir || run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
-	  cout << "Local SCAN" << endl;
-	  cout << "pattern = " << run_patterns[i_id].Data() << endl;
-	  cout << "wildcard = " << wildcard << endl;
 	  scanDir( sh, run_patterns[i_id].Data(), wildcard );
 	  //.Find( run_patterns[i_id].Data() );
 	}
@@ -493,11 +498,13 @@ int main( int argc, char* argv[] ) {
       else
 	weights.push_back( 1. );
 
-      TString targetName = Form("SYST_%s_%d.root", gSystem->BaseName(samples[i_sample]), run_ids[i_id]);
+      TString targetName = Form("SYST_%s%s_%d.root", gSystem->BaseName(samples[i_sample]), vTag.Data(), run_ids[i_id]);
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
 
+      cout << "ALLOPTS = " << allopts << endl; 
+
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
-	TString torun = Form("run_chorizo %s -i=%d %s %s", allopts.Data(), run_ids[i_id], args[i_sample].Data(), systematics[i_syst].Data());
+	TString torun = Form("run_chorizo %s -i=%d %s -s=%s", allopts.Data(), run_ids[i_id], args[i_sample].Data(), systematics[i_syst].Data());
 	system(torun.Data());
       }//end of systematics loop
       
@@ -530,7 +537,7 @@ int main( int argc, char* argv[] ) {
       }      
       cout << endl;
 
-      TString mergedName = Form("%s_%s.root",systematics[i_syst].Data(), gSystem->BaseName(samples[i_sample]));
+      TString mergedName = Form("%s_%s%s.root",systematics[i_syst].Data(), gSystem->BaseName(samples[i_sample]), vTag.Data());
     
       if (!generatePUfile){
 	if (!doAnaTree) {
