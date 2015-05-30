@@ -82,19 +82,19 @@ void RunsMap::LoadMap(){
 
 
 // Dijet
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10"] = rlist( Rpair(, "mc15_13TeV.361010.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W"] = rlist( Rpair(, "mc15_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W"] = rlist( Rpair(, "mc15_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W"] = rlist( Rpair(, "mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W"] = rlist( Rpair(, "mc15_13TeV.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W"] = rlist( Rpair(, "mc15_13TeV.361024.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W"] = rlist( Rpair(, "mc15_13TeV.361025.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W"] = rlist( Rpair(, "mc15_13TeV.361026.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W.merge.AOD.e3569_s2608_s2183_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W"] = rlist( Rpair(, "mc15_13TeV.361027.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W.merge.AOD.e3668_s2608_s2183_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W"] = rlist( Rpair(, "mc15_13TeV.361028.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W"] = rlist( Rpair(, "mc15_13TeV.361029.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10W"] = rlist( Rpair(, "mc15_13TeV.361030.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ11W"] = rlist( Rpair(, "mc15_13TeV.361031.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ11W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10"] = rlist( Rpair(361010, "mc15_13TeV.361010.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W"] = rlist( Rpair(361020, "mc15_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W"] = rlist( Rpair(361021, "mc15_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W"] = rlist( Rpair(361022, "mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W"] = rlist( Rpair(361023, "mc15_13TeV.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W"] = rlist( Rpair(361024, "mc15_13TeV.361024.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W"] = rlist( Rpair(361025, "mc15_13TeV.361025.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W"] = rlist( Rpair(361026, "mc15_13TeV.361026.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W.merge.AOD.e3569_s2608_s2183_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W"] = rlist( Rpair(361027, "mc15_13TeV.361027.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W.merge.AOD.e3668_s2608_s2183_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W"] = rlist( Rpair(361028, "mc15_13TeV.361028.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W"] = rlist( Rpair(361029, "mc15_13TeV.361029.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10W"] = rlist( Rpair(361030, "mc15_13TeV.361030.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ11W"] = rlist( Rpair(361031, "mc15_13TeV.361031.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ11W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
 
 
 // Gamma + jets
