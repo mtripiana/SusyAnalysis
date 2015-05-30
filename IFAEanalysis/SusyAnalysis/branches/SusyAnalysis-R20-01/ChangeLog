@@ -1,4 +1,9 @@
 2014-05-29 Martin <tripiana@cern.ch>
+	* Add new variables (j_N30, bcid)
+	* Add flat btag eff variables
+	* Fix nVertex
+
+2014-05-29 Martin <tripiana@cern.ch>
 	* Fix CutBookkeeper access (nsim + nwsim)
 	* Fix -v tag for local running mode
 

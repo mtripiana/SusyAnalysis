@@ -6,7 +6,7 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">true</Mode>
+    <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
@@ -40,10 +40,10 @@
   <ObjectDefinition>
 
     <OverlapRemoval>
-      <Enable>false</Enable>
+      <Enable>true</Enable>
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
-      <doBjetOR>false</doBjetOR>
+      <doBjetOR>true</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
@@ -53,7 +53,7 @@
     
     <Trigger>
       <SaveExtended>true</SaveExtended>
-      <chains>HLT_xe.*,L1_XE.*,L1_TE.*,L1_MBTS.*,HLT_e.*,HLT_mu.*</chains> 
+      <chains>HLT_xe.*,L1_XE.*,L1_TE.*,L1_MBTS.*,HLT_e.*,HLT_mu.*,HLT_j.*,L1_J.*,HLT_g.*</chains> 
     </Trigger>
 
     <Vertex>
@@ -83,14 +83,14 @@
     </Booking>
 
     <Electron>
-      <PreselPtCut>7000.</PreselPtCut>
+      <PreselPtCut>10000.</PreselPtCut>
       <PreselEtaCut>2.47</PreselEtaCut>
-      <RecoPtCut>7000.</RecoPtCut>
+      <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.47</RecoEtaCut>
 
       <baseID>LooseLLH</baseID>
       <ID>TightLLH</ID>
-      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
       
@@ -100,13 +100,13 @@
     </Electron>
 
     <Muon>
-      <PreselPtCut>6000.</PreselPtCut>
+      <PreselPtCut>10000.</PreselPtCut>
       <PreselEtaCut>2.4</PreselEtaCut>
-      <RecoPtCut>6000.</RecoPtCut>
+      <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
 
       <ID>Loose</ID>
-      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_mu26_imedium</triggers>
     </Muon>
@@ -131,7 +131,7 @@
       <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
       <PreselPtCut>20000.</PreselPtCut>
       <PreselEtaCut>10</PreselEtaCut>
-      <RecoPtCut>35000.</RecoPtCut>
+      <RecoPtCut>20000.</RecoPtCut>
       <RecoEtaCut>2.8</RecoEtaCut>
 
       <JESNPset>1</JESNPset>

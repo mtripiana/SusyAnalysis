@@ -51,10 +51,10 @@
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
 #include "fastjet/ClusterSequence.hh"
 #include "TileTripReader/TTileTripReader.h"
-
+#include "BTagEfficiencyReader/BTagEfficiencyReader.h"
 
 //For trigger test
-#define TILETEST
+//#define TILETEST
 #ifdef TILETEST
 #include "JetTileCorrection/JetTileCorrectionTool.h"
 #endif 
@@ -302,9 +302,16 @@ private:
   BTaggingEfficiencyTool* tool_btag;  //! //70%op
   BTaggingEfficiencyTool* tool_btag2; //! //80%op
 
-  CP::IsolationSelectionTool *iso_2; //!
+  BTagEfficiencyReader tool_btag_truth1; //!
+  BTagEfficiencyReader tool_btag_truth2; //!
+  BTagEfficiencyReader tool_btag_truth3; //!
+
   CP::IsolationSelectionTool *iso_1; //! 
+  CP::IsolationSelectionTool *iso_2; //!
   CP::IsolationSelectionTool *iso_3; //!
+  CP::IsolationSelectionTool *iso_4; //!
+  CP::IsolationSelectionTool *iso_5; //!
+  CP::IsolationSelectionTool *iso_6; //!
 #endif // not __CINT__
 
   TMctLib* tool_mct; //!
@@ -769,8 +776,11 @@ private:
   VFloat e_ptiso20;
   VFloat e_etiso20;
   VFloat e_isoTight;
-  VFloat e_isoGradient;
   VFloat e_isoLoose;
+  VFloat e_isoVeryLoose;
+  VFloat e_isoVeryLooseTrackOnly;
+  VFloat e_isoGradient;
+  VFloat e_isoGradientLoose;
   VInt   e_id; 
   VFloat e_d0_sig; 
   VFloat e_z0;    
@@ -798,8 +808,11 @@ private:
   VFloat m_ptiso30;
   VFloat m_etiso30;
   VFloat m_isoTight;
-  VFloat m_isoGradient;
   VFloat m_isoLoose;
+  VFloat m_isoVeryLoose;
+  VFloat m_isoVeryLooseTrackOnly;
+  VFloat m_isoGradient;
+  VFloat m_isoGradientLoose;
 
   int    mb_N;
   VFloat mb_pt;
@@ -870,6 +883,9 @@ private:
   VFloat j_tflavor;
   VFloat j_tag_MV1;
   VFloat j_tag_MV2c20;
+  VInt   j_btruth_70;
+  VInt   j_btruth_77;
+  VInt   j_btruth_80;
 
   //- Btagging
   int   bj_N;
@@ -877,10 +893,17 @@ private:
   float btag_weight_total;
   float btag_weight_total_80eff;
 
+  int bj_Nt70;
+  int bj_Nt77;
+  int bj_Nt80;
   
   //- MET
   VFloat met; 
   VFloat met_phi; 
+
+  //soft met
+  float met_cst;
+  float met_tst;
 
   float  met_lochadtopo;
 

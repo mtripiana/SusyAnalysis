@@ -114,6 +114,9 @@ Jet::Jet(){
   failBCHMedium=false;
   BCH_CORR_CELL=-100;
   BCH_CORR_JET=-100;
+  isbjet_t70=false;
+  isbjet_t77=false;
+  isbjet_t80=false;
 }
 
 Jet::~Jet(){}

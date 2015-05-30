@@ -73,7 +73,8 @@ void usage(){
   cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
   cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;  
-  cout << "       -u             : run over user-specific directory, over-passing RunsMap (mainly for tests)" << endl;
+  cout << "       -c             : run over specific directory, over-passing RunsMap (mainly for tests)" << endl;
+  cout << "       -d             : debug mode " << endl;
   cout << endl;
 }
 
@@ -500,8 +501,6 @@ int main( int argc, char* argv[] ) {
 
       TString targetName = Form("SYST_%s%s_%d.root", gSystem->BaseName(samples[i_sample]), vTag.Data(), run_ids[i_id]);
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
-
-      cout << "ALLOPTS = " << allopts << endl; 
 
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
 	TString torun = Form("run_chorizo %s -i=%d %s -s=%s", allopts.Data(), run_ids[i_id], args[i_sample].Data(), systematics[i_syst].Data());

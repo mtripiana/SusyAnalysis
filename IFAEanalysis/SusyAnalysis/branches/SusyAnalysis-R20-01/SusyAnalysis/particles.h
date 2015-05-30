@@ -1,3 +1,4 @@
+
 #ifndef particles_h
 #define particles_h
 
@@ -32,7 +33,10 @@ class Particle : public TLorentzVector {
     bool   isIsolated;
     float  isoTight;
     float  isoLoose;
+    float  isoVeryLoose;
+    float  isoVeryLooseTrackOnly;
     float  isoGradient;
+    float  isoGradientLoose;
     float  ptcone20;
     float  etcone20;
     float  ptcone30;
@@ -102,6 +106,9 @@ class Jet : public Particle {
     bool                    failBCHMedium;
     float                   BCH_CORR_CELL;
     float                   BCH_CORR_JET;
+    bool                    isbjet_t70;
+    bool                    isbjet_t77;
+    bool                    isbjet_t80;
 
     bool isTauJet(float metphi, TString Tagger="MV1");
     bool isBTagged(TString Tagger, float op);

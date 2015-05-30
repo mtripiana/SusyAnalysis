@@ -1,4 +1,3 @@
-
 #define  chorizo_cxx
 #include <EventLoop/Job.h>
 #include <EventLoop/Worker.h>
@@ -117,6 +116,9 @@ chorizo :: chorizo ()
     iso_1(0),
     iso_2(0),
     iso_3(0),
+    iso_4(0),
+    iso_5(0),
+    iso_6(0),
     tool_btag(0), 
     tool_btag2(0),
     tool_jsmear(0),
@@ -336,9 +338,12 @@ void chorizo :: bookTree(){
       output->tree()->Branch("e_ptiso30",&e_ptiso30);
       output->tree()->Branch("e_etiso20",&e_etiso20);
       output->tree()->Branch("e_ptiso20",&e_ptiso20);
-      output->tree()->Branch("e_isoTight",&e_isoTight);
-      output->tree()->Branch("e_isoGradient",&e_isoGradient);
-      output->tree()->Branch("e_isoLoose",&e_isoLoose);
+      output->tree()->Branch("e_isoT",&e_isoTight);
+      output->tree()->Branch("e_isoL",&e_isoLoose);
+      output->tree()->Branch("e_isoVL",&e_isoVeryLoose);
+      output->tree()->Branch("e_isoVLTO",&e_isoVeryLooseTrackOnly);
+      output->tree()->Branch("e_isoG",&e_isoGradient);
+      output->tree()->Branch("e_isoGLoose",&e_isoGradientLoose);
       output->tree()->Branch("e_id",&e_id);
       output->tree()->Branch("e_d0_sig",&e_d0_sig);  
       output->tree()->Branch("e_z0",&e_z0);      
@@ -370,8 +375,11 @@ void chorizo :: bookTree(){
       output->tree()->Branch("m_etiso30",&m_etiso30);          
       output->tree()->Branch("m_ptiso30",&m_ptiso30);          
       output->tree()->Branch("m_isoTight",&m_isoTight);
-      output->tree()->Branch("m_isoGradient",&m_isoGradient);
       output->tree()->Branch("m_isoLoose",&m_isoLoose);
+      output->tree()->Branch("m_isoVeryLoose",&m_isoVeryLoose);
+      output->tree()->Branch("m_isoVeryLooseTrackOnly",&m_isoVeryLooseTrackOnly);
+      output->tree()->Branch("m_isoGradient",&m_isoGradient);
+      output->tree()->Branch("m_isoGradientLoose",&m_isoGradientLoose);
 
       output->tree()->Branch("mb_N",&mb_N,"mb_N/I",10000);
       output->tree()->Branch("mb_pt",&mb_pt);
@@ -432,11 +440,22 @@ void chorizo :: bookTree(){
 
       output->tree()->Branch("j_tag_MV1",&j_tag_MV1);
       output->tree()->Branch("j_tag_MV2c20",&j_tag_MV2c20);
+
+      output->tree()->Branch("bj_Nt70",&bj_Nt70,"bj_Nt70/I", 10000);
+      output->tree()->Branch("bj_Nt77",&bj_Nt77,"bj_Nt77/I", 10000);
+      output->tree()->Branch("bj_Nt80",&bj_Nt80,"bj_Nt80/I", 10000);
+
+      output->tree()->Branch("j_btruth_70",&j_btruth_70);
+      output->tree()->Branch("j_btruth_77",&j_btruth_77);
+      output->tree()->Branch("j_btruth_80",&j_btruth_80);
       
       //met 
       output->tree()->Branch("met",&met);
       output->tree()->Branch("met_phi",&met_phi);
 
+      output->tree()->Branch("met_cst",&met_cst,"met_cst/f", 10000);
+      output->tree()->Branch("met_tst",&met_tst,"met_tst/f", 10000);
+      
       output->tree()->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
 
       //met recoil system
@@ -647,13 +666,13 @@ EL::StatusCode chorizo :: histInitialize ()
 
   //need template to do TH1D as well...
   h_average = new TH1D("beginning","beggining",1,0,1);
-  wk()->addOutput(h_average);     
-  h_average->SetDirectory(out_TDir);
+  // wk()->addOutput(h_average);     
+  // h_average->SetDirectory(out_TDir);
 
   //histograms
-  InitGHist(h_cut_var, "h_cut_var", 2000, 0, 1000., "Cut Var (GeV)", "");  
-  InitGHist(h_presel_flow, "h_presel_flow", 10, 0., 10., "", "");
-  InitGHist(h_presel_wflow, "h_presel_wflow", 10, 0., 10., "", "");
+  // InitGHist(h_cut_var, "h_cut_var", 2000, 0, 1000., "Cut Var (GeV)", "");  
+  // InitGHist(h_presel_flow, "h_presel_flow", 10, 0., 10., "", "");
+  // InitGHist(h_presel_wflow, "h_presel_wflow", 10, 0., 10., "", "");
   
   // const char *cutNames[] = {"GRL","Trigger","PVertex","LarGood","TileGood","CoreFlag","BadJet","FakeMET","MET cleaning","TileTrip"};
   
@@ -892,8 +911,11 @@ void chorizo :: InitVars()
   e_ptiso20.clear();
   e_etiso20.clear();
   e_isoTight.clear();
-  e_isoGradient.clear();
   e_isoLoose.clear();
+  e_isoVeryLoose.clear();
+  e_isoVeryLooseTrackOnly.clear();
+  e_isoGradient.clear();
+  e_isoGradientLoose.clear();
   e_id.clear();
   e_d0_sig.clear();
   e_z0.clear();
@@ -939,8 +961,11 @@ void chorizo :: InitVars()
   m_ptiso20.clear();          
   m_etiso20.clear(); 
   m_isoTight.clear();
+  m_isoLoose.clear();
+  m_isoVeryLoose.clear();
+  m_isoVeryLooseTrackOnly.clear();
   m_isoGradient.clear();
-  m_isoLoose.clear();         
+  m_isoGradientLoose.clear();
 
   mb_N = 0;
   mb_pt.clear(); 
@@ -1001,10 +1026,21 @@ void chorizo :: InitVars()
   bj_Ne80 = 0;                               
   btag_weight_total = 1.;
   btag_weight_total_80eff = 1.;
-  
+
+  bj_Nt70 = 0;                               
+  bj_Nt77 = 0;                               
+  bj_Nt80 = 0;                              
+   
+  j_btruth_70.clear();
+  j_btruth_77.clear();
+  j_btruth_80.clear();
+
   //met 
   met.clear();
   met_phi.clear();
+
+  met_cst = DUMMYDN;
+  met_tst = DUMMYDN;
 
   met_lochadtopo = DUMMYDN;
 
@@ -1197,6 +1233,7 @@ EL::StatusCode chorizo :: changeInput (bool firstFile)
 
   meta_nsim  += getNinfo().nEvents; //load number of events
   meta_nwsim += getNinfo().weightSum; //load weighted number of events
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -1598,6 +1635,9 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );
   CHECK( tool_btag2->initialize() );
    
+  tool_btag_truth1.Initialize("FlatBEff", "1D", "MV2c20", "70");
+  tool_btag_truth2.Initialize("FlatBEff", "1D", "MV2c20", "77");
+  tool_btag_truth3.Initialize("FlatBEff", "1D", "MV2c20", "80");
 
   //--- truth jet labeling
   tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
@@ -1634,35 +1674,32 @@ EL::StatusCode chorizo :: initialize ()
   TH2F* bTagJetResponse = (TH2F*)bTagJetFile->Get(QCD_btagMap);
   tool_jsmear->SetResponseMaps(bVetoJetResponse,bTagJetResponse);
 
-  //isolation tool
-  // Setup standard working point for 
-  // photons, electrons and muons
-  //  CP::IsolationSelectionTool iso_1( "iso_1" );
+  //--- Isolation tools
+  // Setup standard working point for photons, electrons and muons
   iso_1 = new CP::IsolationSelectionTool("iso_1");
   CHECK( iso_1->setProperty("WorkingPoint","Tight") );
   CHECK( iso_1->initialize() );
 
-  // Pick a different working point
-  //  CP::IsolationSelectionTool iso_2( "iso_2" );
   iso_2 = new CP::IsolationSelectionTool("iso_2");
-  CHECK( iso_2->setProperty("WorkingPoint","Gradient") );
+  CHECK( iso_2->setProperty("WorkingPoint","Loose") );
   CHECK( iso_2->initialize() );
 
-  // Custom isolation for your own optimization
-  // Select calo and track functions, isolation variables
-  // Function string gets passed to a ROOT TF1 object
-  //  CP::IsolationSelectionTool iso_3( "iso_3" );
   iso_3 = new CP::IsolationSelectionTool("iso_3");
-  CHECK( iso_3->setProperty("WorkingPoint","Loose") ); 
-  /*  CHECK( iso_3->setProperty("ElectronCaloIsoFunction","0.1*x+90") );
-  CHECK( iso_3->setProperty("ElectronTrackIsoFunction","98") ); // flat 98% efficiency
-  CHECK( iso_3->setProperty("ElectronCaloIsoType","topoetcone30") );  
-  CHECK( iso_3->setProperty("ElectronTrackIsoType","ptcone30") );  
-  CHECK( iso_3->setProperty("MuonCaloIsoFunction","0.1*x+92") );
-  CHECK( iso_3->setProperty("MuonTrackIsoFunction","95") ); // flat 95% efficiency
-  CHECK( iso_3->setProperty("MuonCaloIsoType","topoetcone40") );
-  CHECK( iso_3->setProperty("MuonTrackIsoType","ptcone40") );  */
-  CHECK( iso_3->initialize() ); 
+  CHECK( iso_3->setProperty("WorkingPoint","VeryLoose") );
+  CHECK( iso_3->initialize() );
+
+  iso_4 = new CP::IsolationSelectionTool("iso_4");
+  CHECK( iso_4->setProperty("WorkingPoint","VeryLooseTrackOnly") );
+  CHECK( iso_4->initialize() );
+
+  iso_5 = new CP::IsolationSelectionTool("iso_5");
+  CHECK( iso_5->setProperty("WorkingPoint","Gradient") );
+  CHECK( iso_5->initialize() );
+
+  iso_6 = new CP::IsolationSelectionTool("iso_6");
+  CHECK( iso_6->setProperty("WorkingPoint","GradientLoose") );
+  CHECK( iso_6->initialize() );
+
 
 
   //--- Pileup Reweighting
@@ -2100,10 +2137,21 @@ EL::StatusCode chorizo :: loop ()
     
     if(debug){
       Info("loop()", "  ");
-      Info("loop()", "  MET TRIGGERS IN MENU ");
+      //      Info("loop()", "  MET TRIGGERS IN MENU ");
+      Info("loop()", "  TRIGGER MENU ");
       Info("loop()", "--------------------------------");
-      auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
-      for(auto &trig : chainGroup->getListOfTriggers()) {
+      Info("loop()", "  L1 ");      
+      Info("loop()", "--------------------------------");
+      //      auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
+      auto chainGroupL1 = tool_trigdec->getChainGroup("L1_.*");
+      for(auto &trig : chainGroupL1->getListOfTriggers()) {
+	Info("loop()", trig.c_str()); 
+      }
+      Info("loop()", "--------------------------------");
+      Info("loop()", "  HLT ");      
+      Info("loop()", "--------------------------------");
+      auto chainGroupHLT = tool_trigdec->getChainGroup("HLT_.*");
+      for(auto &trig : chainGroupHLT->getListOfTriggers()) {
 	Info("loop()", trig.c_str()); 
       }
       Info("loop()", "--------------------------------");
@@ -2295,8 +2343,11 @@ EL::StatusCode chorizo :: loop ()
     recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
     
     if(iso_1->accept(*el_itr)) recoElectron.isoTight = 1.0;
-    if(iso_2->accept(*el_itr)) recoElectron.isoGradient = 1.0;
-    if(iso_3->accept(*el_itr)) recoElectron.isoLoose = 1.0;
+    if(iso_2->accept(*el_itr)) recoElectron.isoLoose = 1.0;
+    if(iso_3->accept(*el_itr)) recoElectron.isoVeryLoose = 1.0;
+    if(iso_4->accept(*el_itr)) recoElectron.isoVeryLooseTrackOnly = 1.0;
+    if(iso_5->accept(*el_itr)) recoElectron.isoGradient= 1.0;
+    if(iso_6->accept(*el_itr)) recoElectron.isoGradientLoose = 1.0;
 
     (*el_itr).passSelection(recoElectron.isTight, "Tight");
     
@@ -2438,9 +2489,12 @@ EL::StatusCode chorizo :: loop ()
     //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
 
     if(iso_1->accept(*mu_itr)) recoMuon.isoTight = 1.0;
-    if(iso_2->accept(*mu_itr)) recoMuon.isoGradient = 1.0;
-    if(iso_3->accept(*mu_itr)) recoMuon.isoLoose = 1.0;
-    
+    if(iso_2->accept(*mu_itr)) recoMuon.isoLoose = 1.0;
+    if(iso_3->accept(*mu_itr)) recoMuon.isoVeryLoose = 1.0;
+    if(iso_4->accept(*mu_itr)) recoMuon.isoVeryLooseTrackOnly = 1.0;
+    if(iso_5->accept(*mu_itr)) recoMuon.isoGradient= 1.0;
+    if(iso_6->accept(*mu_itr)) recoMuon.isoGradientLoose = 1.0;
+
     recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( mu_itr );
     recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( mu_itr );
     
@@ -2611,6 +2665,14 @@ EL::StatusCode chorizo :: loop ()
     //--- Flavor-tagging    
     //from SUSYTools (based on MV1 (70%) at the moment!)
     recoJet.isbjet = dec_bjet(**jet_itr);
+
+    tool_btag_truth1.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta()))); //set a unique seed for each jet                                                             
+    tool_btag_truth2.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
+    tool_btag_truth3.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
+
+    recoJet.isbjet_t70 = tool_btag_truth1.performTruthTagging(*jet_itr);
+    recoJet.isbjet_t77 = tool_btag_truth2.performTruthTagging(*jet_itr);
+    recoJet.isbjet_t80 = tool_btag_truth3.performTruthTagging(*jet_itr);
 
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
@@ -2824,6 +2886,10 @@ EL::StatusCode chorizo :: loop ()
     if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter_80eff++;	
     
+    if( jetCandidates.at(iJet).isbjet_t70 ) bj_Nt70++;
+    if( jetCandidates.at(iJet).isbjet_t77 ) bj_Nt77++;
+    if( jetCandidates.at(iJet).isbjet_t80 ) bj_Nt80++;
+
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
     
     //count high pt jet multiplicity
@@ -2931,6 +2997,8 @@ EL::StatusCode chorizo :: loop ()
   v_met_ST -= v_met_ST_vmu_MU; //subtract muon term
   met_obj.SetVector(v_met_ST,"met_imu");  //- Copy met vector to the met data member
     
+  //Calo soft terms
+  met_cst = (*metRFC)["SoftClus"]->met()*0.001;
 
   //- Recomputed MET via SUSYTools (Track Soft Term (TST))
   if(this->isVertexOk){   //protect against crash in Data from METRebuilder  ///FIX_ME
@@ -2954,6 +3022,10 @@ EL::StatusCode chorizo :: loop ()
     TVector2 v_met_ST_tst = v_met_ST_vmu_tst;
     v_met_ST_tst -= v_met_ST_vmu_MU; //subtract muon term
     met_obj.SetVector(v_met_ST_tst,"met_tst_imu");  //- Copy met vector to the met data member
+
+    // track soft term
+    met_tst = (*metRFC)["PVSoftTrk"]->met()*0.001;
+
   }
   else{
     met_obj.SetVector( met_obj.GetVector("met_imu"), "met_tst_imu", true );  //- Copy met vector to the met data member
@@ -4709,8 +4781,11 @@ void chorizo :: dumpLeptons(){
     e_etiso20.push_back( recoElectrons.at(iel).etcone20 );
     e_ptiso20.push_back( recoElectrons.at(iel).ptcone20 );
     e_isoTight.push_back( recoElectrons.at(iel).isoTight );
-    e_isoGradient.push_back( recoElectrons.at(iel).isoGradient );
     e_isoLoose.push_back( recoElectrons.at(iel).isoLoose );
+    e_isoVeryLoose.push_back( recoElectrons.at(iel).isoVeryLoose );
+    e_isoVeryLooseTrackOnly.push_back( recoElectrons.at(iel).isoVeryLooseTrackOnly );
+    e_isoGradient.push_back( recoElectrons.at(iel).isoGradient );
+    e_isoGradientLoose.push_back( recoElectrons.at(iel).isoGradientLoose );
     e_id.push_back(  recoElectrons.at(iel).id );
     e_d0_sig.push_back( recoElectrons.at(iel).d0_sig );
     e_z0.push_back( recoElectrons.at(iel).z0 );
@@ -4745,8 +4820,11 @@ void chorizo :: dumpLeptons(){
     m_etiso30.push_back( recoMuons.at(imu).etcone30 );
     m_ptiso30.push_back( recoMuons.at(imu).ptcone30 );
     m_isoTight.push_back( recoMuons.at(imu).isoTight );
-    m_isoGradient.push_back( recoMuons.at(imu).isoGradient );
     m_isoLoose.push_back( recoMuons.at(imu).isoLoose );
+    m_isoVeryLoose.push_back( recoMuons.at(imu).isoVeryLoose );
+    m_isoVeryLooseTrackOnly.push_back( recoMuons.at(imu).isoVeryLooseTrackOnly );
+    m_isoGradient.push_back( recoMuons.at(imu).isoGradient );
+    m_isoGradientLoose.push_back( recoMuons.at(imu).isoGradientLoose );
     m_trigger.push_back( (int)recoMuons.at(imu).isTrigMatch );
   }
   
@@ -4784,6 +4862,10 @@ void chorizo :: dumpJets(){
 
     j_tag_MV1.push_back( recoJets.at(ijet).MV1 );
     j_tag_MV2c20.push_back( recoJets.at(ijet).MV2c20 );
+    
+    j_btruth_70.push_back( (int) recoJets.at(ijet).isbjet_t70 );
+    j_btruth_77.push_back( (int) recoJets.at(ijet).isbjet_t77 );
+    j_btruth_80.push_back( (int) recoJets.at(ijet).isbjet_t80 );
 
     j_chf.push_back( recoJets.at(ijet).chf );
     j_emf.push_back( recoJets.at(ijet).emf );
@@ -4841,6 +4923,18 @@ EL::StatusCode chorizo :: finalize ()
   if(iso_3){
     delete iso_3;
     iso_3=0;
+  }
+  if(iso_4){
+    delete iso_4;
+    iso_4=0;
+  }
+  if(iso_5){
+    delete iso_5;
+    iso_5=0;
+  }
+  if(iso_6){
+    delete iso_6;
+    iso_6=0;
   }
   
   //PURW

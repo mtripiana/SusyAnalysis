@@ -73,7 +73,8 @@ void usage(){
   cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
   cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;  
-  cout << "       -c=<inputDir>  : run over specific directory, over-passing RunsMap (mainly for tests)" << endl;
+  cout << "       -c             : run over specific directory, over-passing RunsMap (mainly for tests)" << endl;
+  cout << "       -d             : debug mode " << endl;
   cout << endl;
 }
 
@@ -227,7 +228,7 @@ int main( int argc, char* argv[] ) {
   bool isTruth=false;
 
   bool userDir=false;
-
+  bool debugMode=false;
   string wildcard="*";
 
   std::string jOption = "METbb_JobOption.xml";
@@ -293,6 +294,9 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "c" ){ //user-defined input dir
       userDir = true;
     }
+    else if (opts[iop] == "d" ){ //debug mode
+      debugMode = true;
+    }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].ReplaceAll("s=","");
     }
@@ -323,8 +327,6 @@ int main( int argc, char* argv[] ) {
   TString vTag="";
   if(version!="")
     vTag = "_v"+version;
-
-  cout << "vTAG = "  << vTag << endl;
 
   //always run locally for systematics printing!
   if(systListOnly && !runLocal){
@@ -375,7 +377,7 @@ int main( int argc, char* argv[] ) {
   xmlReader->readXML(maindir+"/data/SusyAnalysis/"+jOption);
 
   bool doAnaTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/doTree");
-  bool doFlowTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
+  bool doFlowTree = true; //xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
   bool doPUTree = false; //No option in the xml yet!!
   bool generatePUfile = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
 
@@ -580,7 +582,7 @@ int main( int argc, char* argv[] ) {
     
     
     //debug printing
-    alg->debug         = true;
+    alg->debug         = debugMode;;
     alg->printMet      = false;     
     alg->printJet      = false;
     alg->printElectron = false;
