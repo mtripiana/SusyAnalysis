@@ -905,6 +905,13 @@ private:
   float met_cst;
   float met_tst;
 
+  float sumET_cst;
+  float sumET_cst_vmu;
+  float sumET_tst;
+  float sumET_tst_vmu;
+  float sumET_truth;
+  float sumET_truth_vmu;
+
   float  met_lochadtopo;
 
   //recoiling system
