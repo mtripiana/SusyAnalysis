@@ -503,6 +503,14 @@ void chorizo :: bookTree(){
       output->tree()->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
       output->tree()->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
       
+      output->tree()->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
+      output->tree()->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
+      output->tree()->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
+      output->tree()->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
+      output->tree()->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
+      output->tree()->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
+
+
       //MTs
       output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met);
       output->tree()->Branch("MT_bcl_met",&MT_bcl_met);
@@ -1083,6 +1091,15 @@ void chorizo :: InitVars()
   Melb_min = DUMMYDN; 
   Mmub_min = DUMMYDN;   
   
+
+  sumET_cst = DUMMYDN;
+  sumET_cst_vmu = DUMMYDN;
+  sumET_tst = DUMMYDN;
+  sumET_tst_vmu = DUMMYDN;
+  sumET_truth = DUMMYDN;
+  sumET_truth_vmu = DUMMYDN;
+
+
   MT_min_jet_met.clear();  
   MT_bcl_met.clear();  
   MT_bfar_met.clear();  
@@ -1942,8 +1959,9 @@ EL::StatusCode chorizo :: loop ()
 
     mtruth_inv = (*cmet_truth)["Int"];
     mtruth_vis = (*cmet_truth)["NonInt"];
-    // sumET_truth     = (*cmet_truth)["Int"]->sumet()*0.001;
-    // sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
+
+    sumET_truth     = (*cmet_truth)["Int"]->sumet()*0.001;
+    sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
   }
   
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
@@ -2670,9 +2688,11 @@ EL::StatusCode chorizo :: loop ()
     tool_btag_truth2.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
     tool_btag_truth3.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
 
-    recoJet.isbjet_t70 = tool_btag_truth1.performTruthTagging(*jet_itr);
-    recoJet.isbjet_t77 = tool_btag_truth2.performTruthTagging(*jet_itr);
-    recoJet.isbjet_t80 = tool_btag_truth3.performTruthTagging(*jet_itr);
+    if(isMC){
+      recoJet.isbjet_t70 = tool_btag_truth1.performTruthTagging(*jet_itr);
+      recoJet.isbjet_t77 = tool_btag_truth2.performTruthTagging(*jet_itr);
+      recoJet.isbjet_t80 = tool_btag_truth3.performTruthTagging(*jet_itr);
+    }
 
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
@@ -2988,15 +3008,17 @@ EL::StatusCode chorizo :: loop ()
 			 false));
   TVector2 v_met_ST_vmu = getMET( metRFC, "Final");
   met_obj.SetVector(v_met_ST_vmu,"met_vmu");  //- Copy met vector to the met data member
-  
+  sumET_cst_vmu = (*metRFC)["Final"]->sumet()*0.001;
 
   TVector2 v_met_ST_vmu_MU = getMET( metRFC, "Muons"); //Muon visible Term
+  float sumEt_cst_muons    = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt 
     
   // MET (cluster soft term) -- invisible muons
   TVector2 v_met_ST = v_met_ST_vmu;
   v_met_ST -= v_met_ST_vmu_MU; //subtract muon term
   met_obj.SetVector(v_met_ST,"met_imu");  //- Copy met vector to the met data member
-    
+  sumET_cst = sumET_cst_vmu - sumEt_cst_muons;    
+
   //Calo soft terms
   met_cst = (*metRFC)["SoftClus"]->met()*0.001;
 
@@ -3014,14 +3036,17 @@ EL::StatusCode chorizo :: loop ()
 			   true));
     TVector2 v_met_ST_vmu_tst = getMET( metRFC, "Final"); 
     met_obj.SetVector( v_met_ST_vmu_tst, "met_tst_vmu");  //- Copy met vector to the met data member
+    sumET_tst_vmu = (*metRFC)["Final"]->sumet()*0.001;
+
 
     v_met_ST_vmu_MU       = getMET( metRFC, "Muons");          //Muon visible Term
-
+    float sumEt_tst_muons = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt
     
     // MET (track soft term) -- invisible muons
     TVector2 v_met_ST_tst = v_met_ST_vmu_tst;
     v_met_ST_tst -= v_met_ST_vmu_MU; //subtract muon term
     met_obj.SetVector(v_met_ST_tst,"met_tst_imu");  //- Copy met vector to the met data member
+    sumET_tst = sumET_tst_vmu - sumEt_tst_muons;
 
     // track soft term
     met_tst = (*metRFC)["PVSoftTrk"]->met()*0.001;
