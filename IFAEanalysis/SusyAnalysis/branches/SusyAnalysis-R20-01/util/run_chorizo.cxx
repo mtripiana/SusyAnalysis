@@ -180,7 +180,6 @@ void printSampleMeta(Sample* sample){
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
-  cout << " isData          = " << (is_data(sample) ? "Y" : "N") << endl;
   cout << " isData          = " << sample->getMetaString( MetaFields::isData ) << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
@@ -649,7 +648,14 @@ int main( int argc, char* argv[] ) {
       // Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
 
       Pdriver.submitOnly( job, tmpdir );
-      std::cout << "\n" << bold("Submitted!") << "  Check it in " << link("http://bigpanda.cern.ch") << " \n " << std::endl;
+
+      std::cout << "\n" << bold("Submitted!") << std::endl;
+      SH::SampleHandler sh2;
+      sh2.load(tmpdir);
+      for (unsigned int i = 0; i < sh.size(); ++i) {
+	std::cout << "  Check it in " << link(Form("http://bigpanda.cern.ch/task/%d", (int)sh[i]->getMetaDouble("nc_jediTaskID"))) << " \n " << std::endl; //sh[i]->name()
+      }
+
       break;
     }
     else if(runGrid){ //grid mode

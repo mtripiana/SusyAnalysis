@@ -1,6 +1,7 @@
 2014-06-03 Martin <tripiana@cern.ch>
 	* Fix bug when running on the grid
-	* Fix is_data metadata 
+	* Fix is_data metadata
+	* Add link to bigpanda task after grid submission  (Cmd+double-click to open it in MAC)
 
 2014-06-02 Martin <tripiana@cern.ch>
 	* Move to Base,2.3.13
