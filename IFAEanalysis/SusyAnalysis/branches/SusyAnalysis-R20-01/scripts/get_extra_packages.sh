@@ -6,17 +6,14 @@
 
 cd $ANALYSISCODE
 
-# Extra tags needed for Base,2.3.12
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-06-00-07
-
-rc checkout_pkg $SVNOFF/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags/ElectronEfficiencyCorrection-00-01-19
-rc checkout_pkg atlasoff/PhysicsAnalysis/ElectronPhotonID/PhotonEfficiencyCorrection/tags/PhotonEfficiencyCorrection-00-01-05
-rc checkout_pkg atlasoff/Event/xAOD/xAODMissingET/tags/xAODMissingET-00-01-23
-
-rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigEgammaMatchingTool/tags/TrigEgammaMatchingTool-00-00-01
+# Extra tags needed for Base,2.3.13
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-06-07
 
 rc checkout_pkg $SVNOFF/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags/JVFUncertaintyTool-00-00-04 
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/TileID/TileTripReader/trunk
+
+rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/EventLoop/tags/EventLoop-00-01-10
+
 
 # Offline truth jet tagging for TRUTH1 derivations (no longer needed?)
 svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools

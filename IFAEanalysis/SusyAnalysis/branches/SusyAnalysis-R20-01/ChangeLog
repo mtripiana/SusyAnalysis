@@ -1,7 +1,14 @@
+2014-06-03 Martin <tripiana@cern.ch>
+	* Fix bug when running on the grid
+	* Fix is_data metadata 
+
+2014-06-02 Martin <tripiana@cern.ch>
+	* Move to Base,2.3.13
+
 2015-06-02 Cora <cora.fischer@cern.ch>
 	* included sumET variables (again)
 	* fix in chorizo.cxx: add isMC flag to avoid data samples from crashing (performTruthTagging function)
-	
+
 2014-05-29 Martin <tripiana@cern.ch>
 	* Add new variables (j_N30, bcid)
 	* Add flat btag eff variables

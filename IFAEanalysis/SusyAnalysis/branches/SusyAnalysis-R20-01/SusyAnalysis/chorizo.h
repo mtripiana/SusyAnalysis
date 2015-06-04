@@ -4,6 +4,7 @@
 // Infrastructure include(s):
 #include "xAODRootAccess/Init.h"
 #include "xAODRootAccess/TEvent.h"
+
 #include "xAODRootAccess/TStore.h"
 
 #include <EventLoop/StatusCode.h>
@@ -134,6 +135,9 @@ struct CutflowInfo{
   uint64_t nEvents;
   double   weightSum;
   double   weight2Sum;
+  uint64_t nEventsDx;
+  double   weightSumDx;
+  double   weight2SumDx;
 };
 
 typedef std::vector<int> VInt;                          
@@ -253,7 +257,6 @@ public:
 private:
   xAOD::TEvent *m_event;  //!
 
-  TString m_cfilename; //! 
   TTree*  m_MetaData; //!
 
   EvtList m_eventList; //!
@@ -302,9 +305,9 @@ private:
   BTaggingEfficiencyTool* tool_btag;  //! //70%op
   BTaggingEfficiencyTool* tool_btag2; //! //80%op
 
-  BTagEfficiencyReader tool_btag_truth1; //!
-  BTagEfficiencyReader tool_btag_truth2; //!
-  BTagEfficiencyReader tool_btag_truth3; //!
+  BTagEfficiencyReader* tool_btag_truth1; //!
+  BTagEfficiencyReader* tool_btag_truth2; //!
+  BTagEfficiencyReader* tool_btag_truth3; //!
 
   CP::IsolationSelectionTool *iso_1; //! 
   CP::IsolationSelectionTool *iso_2; //!

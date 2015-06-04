@@ -121,12 +121,17 @@ chorizo :: chorizo ()
     iso_6(0),
     tool_btag(0), 
     tool_btag2(0),
+    tool_btag_truth1(0),
+    tool_btag_truth2(0),
+    tool_btag_truth3(0),
     tool_jsmear(0),
 #ifdef TILETEST
     tool_jettile(0),
 #endif
     tool_mct(0)
 {
+  //  Info("chorizo()", "HERE");
+
   outputName="";
   Region="";
   defaultRegion="SR";
@@ -172,6 +177,8 @@ chorizo :: chorizo ()
 
 EL::StatusCode chorizo :: setupJob (EL::Job& job)
 {
+  //Info("setupJob()", "HERE");
+
   job.useXAOD ();
 
   // let's initialize the algorithm to use the xAODRootAccess package
@@ -642,6 +649,8 @@ void chorizo :: bookTree(){
 
 EL::StatusCode chorizo :: histInitialize ()
 {
+  //Info("histInitialize()", "HERE");
+
   gErrorIgnoreLevel = this->errIgnoreLevel;
 
   if (!outputName.empty()){
@@ -674,7 +683,7 @@ EL::StatusCode chorizo :: histInitialize ()
 
   //need template to do TH1D as well...
   h_average = new TH1D("beginning","beggining",1,0,1);
-  // wk()->addOutput(h_average);     
+  wk()->addOutput(h_average);     
   // h_average->SetDirectory(out_TDir);
 
   //histograms
@@ -716,45 +725,67 @@ EL::StatusCode chorizo :: histInitialize ()
 
 CutflowInfo chorizo :: getNinfo(){
 
+  //Info("getNinfo()", "HERE");
+
+  m_event = wk()->xaodEvent();   
+
   CutflowInfo sinfo = {};
 
-  //Read the CutBookkeeper container
-  const xAOD::CutBookkeeperContainer* completeCBC = 0;
-  if (!m_event->retrieveMetaInput(completeCBC, "CutBookkeepers").isSuccess()) {
-    Error( APP_NAME, "Failed to retrieve CutBookkeepers from MetaData! Exiting.");
-    return sinfo;
-  }
-  else{
-    cout << "CB retrieved" << endl;
-  }
+  if(m_isderived){
 
+    const xAOD::CutBookkeeperContainer* incompleteCBC = nullptr;
+    if(!m_event->retrieveMetaInput(incompleteCBC, "IncompleteCutBookkeepers").isSuccess()){
+      Error("initializeEvent()","Failed to retrieve IncompleteCutBookkeepers from MetaData! Exiting.");
+      return sinfo;
+    }
+    if ( incompleteCBC->size() != 0 ) {
+      Error("initializeEvent()","Found incomplete Bookkeepers! Check file for corruption.");
+      return sinfo;
+    }
 
-  // First, let's find the smallest cycle number,
-  // i.e., the original first processing step/cycle
-  int minCycle = 10000;
-  for ( auto cbk : *completeCBC ) {
-    if ( minCycle > cbk->cycle() ) { minCycle = cbk->cycle(); }
-  }
-  // Now, let's actually find the right one that contains all the needed info...
-  const xAOD::CutBookkeeper* allEventsCBK = 0;
-  for ( auto cbk :  *completeCBC ) {
-    if ( minCycle == cbk->cycle() && cbk->name() == "AllExecutedEvents" ) {
-      allEventsCBK = cbk;
-      break;
+    //Read the CutBookkeeper container
+    const xAOD::CutBookkeeperContainer* completeCBC = 0;
+    if (!m_event->retrieveMetaInput(completeCBC, "CutBookkeepers").isSuccess()) {
+      Error( APP_NAME, "Failed to retrieve CutBookkeepers from MetaData! Exiting.");
+      return sinfo;
+    }
+    
+    // First, let's find the smallest cycle number,
+    // i.e., the original first processing step/cycle
+    int minCycle = 10000;
+    for ( auto cbk : *completeCBC ) {
+      if ( ! cbk->name().empty()  && minCycle > cbk->cycle() ){ minCycle = cbk->cycle(); }
+    }
+    // Now, let's actually find the right one that contains all the needed info...
+    const xAOD::CutBookkeeper* allEventsCBK=0;
+    const xAOD::CutBookkeeper* DxAODEventsCBK=0;
+    std::string derivationName = "SUSY1Kernel"; //need to replace by appropriate name
+    for ( auto cbk :  *completeCBC ) {
+      if ( minCycle == cbk->cycle() && cbk->name() == "AllExecutedEvents" ) {
+	allEventsCBK = cbk;
+	//	break;
+      }
+      if ( cbk->name() == derivationName){
+	DxAODEventsCBK = cbk;
+      }
+    }
+
+    if(allEventsCBK){    
+      sinfo.nEvents    = allEventsCBK->nAcceptedEvents();
+      sinfo.weightSum  = allEventsCBK->sumOfEventWeights();
+      sinfo.weight2Sum = allEventsCBK->sumOfEventWeightsSquared();
+    }
+    if(DxAODEventsCBK){
+      sinfo.nEventsDx    = DxAODEventsCBK->nAcceptedEvents();
+      sinfo.weightSumDx  = DxAODEventsCBK->sumOfEventWeights();
+      sinfo.weight2SumDx = DxAODEventsCBK->sumOfEventWeightsSquared();
     }
   }
-
-  sinfo.nEvents    = allEventsCBK->nAcceptedEvents();
-  sinfo.weightSum  = allEventsCBK->sumOfEventWeights();
-  sinfo.weight2Sum = allEventsCBK->sumOfEventWeightsSquared();
-
   return sinfo;
 
 }
 
 bool chorizo :: isDerived(){
-
-  return true; //dummy for now!
 
   //Try to get the original number of events (relevant in case of derivations)
   if (!m_MetaData) 
@@ -765,21 +796,10 @@ bool chorizo :: isDerived(){
     return EL::StatusCode::FAILURE;
   }
   
-  TTreeFormula* streamAOD = new TTreeFormula("StreamAOD","StreamAOD",m_MetaData);
-  m_MetaData->LoadTree(0);
-  streamAOD->UpdateFormulaLeaves();
-  if(streamAOD->GetNcodes() < 1 ){
-    // This is not an xAOD, that's a derivation!
-    Info( "isDerived()", "This file is a derivation"); 
-    return true;
-  }
-  else{
-    Info( "isDerived()", "This file is NOT a derivation"); 
-  }
-  if(streamAOD)
-    delete streamAOD;
+  
+  //check if file is from a DxAOD
+  return !m_MetaData->GetBranch("StreamAOD");
 
-  return false;
 }
 
 void chorizo :: loadEventList(){
@@ -1238,7 +1258,29 @@ void chorizo :: InitVars()
 
 EL::StatusCode chorizo :: fileExecute ()
 {
-  //  meta_nwsim += getNinfo().weightSum; //load weighted number of events
+  //Info("fileExecute()", "HERE");
+
+  //--- Load xs_section, kfactors, etc...
+  loadMetaData();
+
+  //--- Get sum of weights and initial numbers of events
+  // get the MetaData tree once a new file is opened, with
+  if (!m_MetaData) 
+    m_MetaData = dynamic_cast<TTree*> (wk()->inputFile()->Get("MetaData"));
+
+  if (!m_MetaData) {
+    Error("fileExecute()", "MetaData not found! Exiting.");
+    return EL::StatusCode::FAILURE;
+  }
+  m_MetaData->LoadTree(0);
+
+  //check if file is from a DxAOD
+  m_isderived = !m_MetaData->GetBranch("StreamAOD");
+
+  CutflowInfo sinfo = getNinfo(); 
+  meta_nsim  += sinfo.nEvents; //load number of events
+  meta_nwsim += sinfo.weightSum; //load weighted number of events
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -1246,10 +1288,7 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  m_event = wk()->xaodEvent();                    
-
-  meta_nsim  += getNinfo().nEvents; //load number of events
-  meta_nwsim += getNinfo().weightSum; //load weighted number of events
+  //Info("changeInput()", "HERE");
 
   return EL::StatusCode::SUCCESS;
 }
@@ -1259,7 +1298,6 @@ void chorizo :: ReadXML(){
   const char* whereAmI = "chorizo::ReadXML()";
   Info(whereAmI, "--- Read XML options ---");
   //read XML options
-  //  DirectoryPath = gSystem->Getenv("ANALYSISCODE");
   std::string maindir = getenv("ROOTCOREBIN");
 
   xmlReader = new XMLReader();
@@ -1475,6 +1513,7 @@ void chorizo :: ReadXML(){
 
 EL::StatusCode chorizo :: initialize ()
 {
+  //Info("initialize()", "HERE");
 
   //Start Clock
   watch.Start();
@@ -1518,7 +1557,6 @@ EL::StatusCode chorizo :: initialize ()
 #ifdef TRIGGERTEST
   if(!this->isTruth){
     //--- Trigger Decision
-    cout << "CONFIGURING TRIGGER STUFF" << endl;
     // The configuration tool.
     if(!tool_trigconfig)
       tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
@@ -1562,7 +1600,7 @@ EL::StatusCode chorizo :: initialize ()
   maindir = maindir + "/data/";
 
   ST::SettingDataSource datasource = !this->isMC ? ST::Data : (this->isAtlfast ? ST::AtlfastII : ST::FullSim);
-  m_isderived = isDerived();
+  //  m_isderived = isDerived(); //should be filled in already!
 
   //--- SUSYTools
   if(!this->isTruth){
@@ -1622,7 +1660,7 @@ EL::StatusCode chorizo :: initialize ()
       if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){
 	Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
       }else{
-	Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
+	if(debug) Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
       }
     }
   }
@@ -1652,9 +1690,14 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );
   CHECK( tool_btag2->initialize() );
    
-  tool_btag_truth1.Initialize("FlatBEff", "1D", "MV2c20", "70");
-  tool_btag_truth2.Initialize("FlatBEff", "1D", "MV2c20", "77");
-  tool_btag_truth3.Initialize("FlatBEff", "1D", "MV2c20", "80");
+  cout << "DERIVED = " << m_isderived << endl;
+
+  tool_btag_truth1 = new BTagEfficiencyReader();
+  tool_btag_truth2 = new BTagEfficiencyReader();
+  tool_btag_truth3 = new BTagEfficiencyReader();
+  tool_btag_truth1->Initialize("FlatBEff", "1D", "MV2c20", "70");
+  tool_btag_truth2->Initialize("FlatBEff", "1D", "MV2c20", "77");
+  tool_btag_truth3->Initialize("FlatBEff", "1D", "MV2c20", "80");
 
   //--- truth jet labeling
   tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
@@ -1851,10 +1894,6 @@ void chorizo :: printSystList(){
     case ST::SystObjType::MET      : affectedType = "MET";      break;
     }
     
-    // TString sout = Form("%s     :   affects %s%s for %s",sys.name(),( sysInfo.affectsWeights ? "weights " : "" ),( sysInfo.affectsKinematics ? "kinematics " : "" ),affectedType);
-    // Info("", sout.Data().c_str());
-
-
     cout <<  sys.name() << "    : affects " << ( sysInfo.affectsWeights ? "weights " : "" ) << ( sysInfo.affectsKinematics ? "kinematics " : "" ) << "  for " << affectedType << endl;
   }
   
@@ -1863,6 +1902,8 @@ void chorizo :: printSystList(){
 }
 
 void chorizo :: loadMetaData(){
+
+  //Info("loadMetaData()", "HERE");
 
   if(!isMC) return;
 
@@ -1898,6 +1939,8 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
+  Info("execute()", "HERE");
+
   if(this->isTruth) //truth derivations
     return loop_truth();
   
@@ -1907,7 +1950,7 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  //  Info("loop()", "Inside loop");
+  Info("loop()", "Inside loop");
   
 #ifdef PROFCODE
   if(m_eventCounter!=0)
@@ -1915,10 +1958,12 @@ EL::StatusCode chorizo :: loop ()
 #endif  
 
   ofstream myfile; //produces a text file with event information
-  string ocfile=string(gSystem->Getenv("ANALYSISCODE"))+"/cutflow.txt";
-  //  if (doCutFlow) myfile.open (gSystem->Getenv("ANALYSISCODE")+ocfile.c_str(), ios::app);
-  if (doCutFlow) myfile.open (ocfile.c_str(), ios::app);
-
+  string ocfile; 
+  if (doCutFlow){
+    //    ocfile = (gSystem->Getenv("ANALYSISCODE") ? string(gSystem->Getenv("ANALYSISCODE")) : ".")+"/cutflow.txt"; //this works too
+    ocfile = string(gSystem->Getenv("ROOTCOREBIN"))+"/cutflow.txt";
+    myfile.open (ocfile.c_str(), ios::app);
+  }
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
     wk()->skipEvent();
@@ -1939,7 +1984,7 @@ EL::StatusCode chorizo :: loop ()
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
-  loadMetaData();
+  //  loadMetaData();
    
   //-- Retrieve objects Containers
   m_truthE= 0;
@@ -1976,6 +2021,8 @@ EL::StatusCode chorizo :: loop ()
   xAOD::MissingETContainer* metRFC       = new xAOD::MissingETContainer;
   xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
   metRFC->setStore(metRFCAux);
+
+  Info("loop()", "Before analysis code");
 
   //--- Analysis Code 
   //--- 
@@ -2119,6 +2166,8 @@ EL::StatusCode chorizo :: loop ()
     this->GetTruthShat(sigSamPdgId);
   }
 
+  Info("loop()", "Before analysis CRITERIA");
+
   //----------------------------------------------------------
   //--- ANALYSIS CRITERIA ------------------------------------
   //----------------------------------------------------------
@@ -2192,6 +2241,7 @@ EL::StatusCode chorizo :: loop ()
   }
 #endif
 
+  Info("loop()", "After TRIGGER");
 
   //--- GRL
   if( !this->isMC )
@@ -2230,7 +2280,7 @@ EL::StatusCode chorizo :: loop ()
     if ( ! isBeamHalo(RunNumber,EventNumber) ){
       return nextEvent(); // select only events spotted by the beam halo tool
     }
-    Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
+    if(debug) Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
   }
 
   //--- Get Electrons
@@ -2250,6 +2300,8 @@ EL::StatusCode chorizo :: loop ()
     tool_st->IsSignalElectronExp( (*el_itr), *elIsoArgs);
   }
 
+  Info("loop()", "After GetElectrons");
+
   //--- Get Muons
   xAOD::MuonContainer* muons_sc(0);
   xAOD::ShallowAuxContainer* muons_scaux(0);
@@ -2265,6 +2317,7 @@ EL::StatusCode chorizo :: loop ()
     muIsoArgs->_ptcut = Mu_PreselPtCut;
     tool_st->IsSignalMuonExp( *mu_itr, *muIsoArgs);  //'signal' decoration.
   }
+  Info("loop()", "After GetElectrons");
 
   //--- Get Photons
   xAOD::PhotonContainer* photons_sc(0);
@@ -2283,6 +2336,7 @@ EL::StatusCode chorizo :: loop ()
     tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
   }
 
+  Info("loop()", "After GetElectrons");
   //--- Get Jets
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
 
@@ -2313,6 +2367,7 @@ EL::StatusCode chorizo :: loop ()
       m_smdJets->push_back(jet_itr);
   }
 
+  Info("loop()", "After GetElectrons");
 
   //--- Do overlap removal   
   if(doOR){
@@ -2347,7 +2402,7 @@ EL::StatusCode chorizo :: loop ()
     
     //TEST NEW OR tool
     if(dec_passOR(*el_itr) && dec_failOR(*el_itr)) 
-      Info("loop()"," Electron passed STor but not ORtool");
+      if(debug) Info("loop()"," Electron passed STor but not ORtool");
     
     //book not-overlapping electrons
     if (! ((!doOR) || dec_passOR(*el_itr) )) continue;
@@ -2442,6 +2497,7 @@ EL::StatusCode chorizo :: loop ()
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end()); //non-signal electrons
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end()); //signal electrons
 
+  Info("loop()", "After Electrons booking");
 
   //-- Pre-book baseline muons (after OR)
   bool IsMuon = false; // any good not-overlapping muon in the event?
@@ -2529,6 +2585,7 @@ EL::StatusCode chorizo :: loop ()
       recoMuon.isTrigMatch |= mu_trig_pass.back();
     }
 
+    Info("loop()", "After Muons booking");
     
     //get muon scale factors
     if(this->isMC){
@@ -2656,6 +2713,8 @@ EL::StatusCode chorizo :: loop ()
   if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
   if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
 
+  Info("loop()", "After photons booking");
+
   //-- pre-book good jets now (after OR)
   auto jet_itr = jets_sc->begin();
   auto jet_end = jets_sc->end();
@@ -2684,14 +2743,14 @@ EL::StatusCode chorizo :: loop ()
     //from SUSYTools (based on MV1 (70%) at the moment!)
     recoJet.isbjet = dec_bjet(**jet_itr);
 
-    tool_btag_truth1.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta()))); //set a unique seed for each jet                                                             
-    tool_btag_truth2.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
-    tool_btag_truth3.setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
+    tool_btag_truth1->setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta()))); //set a unique seed for each jet                                                             
+    tool_btag_truth2->setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
+    tool_btag_truth3->setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
 
     if(isMC){
-      recoJet.isbjet_t70 = tool_btag_truth1.performTruthTagging(*jet_itr);
-      recoJet.isbjet_t77 = tool_btag_truth2.performTruthTagging(*jet_itr);
-      recoJet.isbjet_t80 = tool_btag_truth3.performTruthTagging(*jet_itr);
+      recoJet.isbjet_t70 = tool_btag_truth1->performTruthTagging(*jet_itr);
+      recoJet.isbjet_t77 = tool_btag_truth2->performTruthTagging(*jet_itr);
+      recoJet.isbjet_t80 = tool_btag_truth3->performTruthTagging(*jet_itr);
     }
 
     int local_truth_flavor=0;         //for bjets ID
@@ -2784,6 +2843,8 @@ EL::StatusCode chorizo :: loop ()
     
   //sort the jet candidates in Pt
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
+
+  Info("loop()", "After Jets booking");
     
   //--- Jet cleaning
   //  Reject events with at least one looser bad jet.
@@ -2967,6 +3028,8 @@ EL::StatusCode chorizo :: loop ()
   }
 
 
+  Info("loop()", "Before GetMET:");
+
   //--- Get MET
   // For the moment only the official flavors are available.
   // Re-computing MET will be possible in the future though, once the METUtility interface is updated!!
@@ -3057,7 +3120,8 @@ EL::StatusCode chorizo :: loop ()
     met_obj.SetVector( met_obj.GetVector("met_vmu"), "met_tst_vmu", true );  //- Copy met vector to the met data member
     Warning("loop()", "MET_CST assigned to MET_TST to avoid METRebuilder crash.");
   }
-
+  
+  Info("loop()", "Before Track MET");
 
   //- Track met
   if(mtrack){
@@ -3145,6 +3209,8 @@ EL::StatusCode chorizo :: loop ()
     met_obj.SetVector(v_met_truth_vmu, "met_truth_vmu");  //- Copy met vector to the met data member 
   }
 
+  Info("loop()","Before METMAP");
+
   //*** CONFIG
   // book MET flavours
   metmap={};
@@ -3197,6 +3263,8 @@ EL::StatusCode chorizo :: loop ()
     cout<<"MET from D3PD = " << v_met_rfinal_mu.Mod()*0.001 << endl;
     cout<<endl;
   }
+
+  Info("loop()","Before Skimming");
   
   //*** Event Skimming (if requested)
   if(m_skim){
@@ -3280,7 +3348,6 @@ EL::StatusCode chorizo :: loop ()
   this->isFakeMet = (n_fakemet_jets>0);
   this->passPreselectionCuts &= (!this->isFakeMet);
 
-
   
   //Recoiling system against MET (prebooking)
   TLorentzVector sjet(0.,0.,0.,0.);
@@ -3298,6 +3365,8 @@ EL::StatusCode chorizo :: loop ()
 
   //Z(ll) candidate
   Zll_candidate();
+
+  Info("loop()","Before METMAP filling");
 
   //--- Fill MET related variables  -  vectorized now!
   for (auto& mk : metmap) {
@@ -3790,6 +3859,7 @@ EL::StatusCode chorizo :: loop ()
     }
   }
   
+  Info("loop()","Before Trigger extended");
 
   //Extended trigger info (if requested)
   if(doTrigExt){
@@ -3925,13 +3995,14 @@ EL::StatusCode chorizo :: loop ()
        return nextEvent();
   }
 
-  
+
+  Info("loop()","Before Dumping");  
   //---Fill missing data members 
   this->dumpLeptons();
   this->dumpPhotons();
   this->dumpJets();
   
-
+  Info("loop()","after Dumping");  
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
   if(isMC) RunNumber = mc_channel_number;
   
@@ -3945,6 +4016,8 @@ EL::StatusCode chorizo :: loop ()
 
   if(myfile.is_open())
     myfile.close();
+
+  Info("loop()","Before nextEvent()");  
 
   output->setFilterPassed (true);
   return nextEvent(); //SUCCESS + cleaning
@@ -3984,7 +4057,7 @@ EL::StatusCode chorizo :: loop_truth()
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
-  loadMetaData();
+  //  loadMetaData();
 
   //--- Weigths for Sherpa, MC@NLO, Acer, ...
   MC_w = eventInfo->mcEventWeight();
@@ -4914,6 +4987,8 @@ EL::StatusCode chorizo :: postExecute ()
 
 EL::StatusCode chorizo :: finalize ()
 {
+  Info("finalize()","HERE");
+
   //VIEW containers
   if(m_goodJets)
     delete m_goodJets;
@@ -4934,6 +5009,18 @@ EL::StatusCode chorizo :: finalize ()
   if(tool_btag2){
     delete tool_btag2;
     tool_btag2=0;
+  }
+  if(tool_btag_truth1){
+    delete tool_btag_truth1;
+    tool_btag_truth1=0;
+  }
+  if(tool_btag_truth2){
+    delete tool_btag_truth2;
+    tool_btag_truth2=0;
+  }
+  if(tool_btag_truth3){
+    delete tool_btag_truth3;
+    tool_btag_truth3=0;
   }
 
   //isolation tool

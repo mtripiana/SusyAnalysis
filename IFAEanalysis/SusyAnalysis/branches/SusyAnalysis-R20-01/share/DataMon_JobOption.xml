@@ -156,7 +156,7 @@
       <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
       <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
 
-      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->  <!-- remove? -->
+      <TaggerCollection>AntiKt4TopoEMnoJVF</TaggerCollection> -->  <!-- remove? -->
     </Jet>
 
     <Etmiss>

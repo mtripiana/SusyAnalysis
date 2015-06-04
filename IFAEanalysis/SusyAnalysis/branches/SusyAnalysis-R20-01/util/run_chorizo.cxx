@@ -145,14 +145,17 @@ bool type_consistent(SampleHandler sh){
 bool is_data(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
-  std::size_t found = itis.find("collisions");
-  if (found!=std::string::npos) return true;
-  //add extra check for physics containers
-  itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
-  if(TString(itis).Contains("period")) return true;
 
-  return false;
+  return !getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'").empty();
+
+  // std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
+  // std::size_t found = itis.find("collisions");
+  // if (found!=std::string::npos) return true;
+  // //add extra check for physics containers
+  // itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
+  // if(TString(itis).Contains("period")) return true;
+
+  //  return false;
 }
 
 
@@ -178,6 +181,7 @@ void printSampleMeta(Sample* sample){
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
   cout << " isData          = " << (is_data(sample) ? "Y" : "N") << endl;
+  cout << " isData          = " << sample->getMetaString( MetaFields::isData ) << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
   cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
@@ -607,6 +611,7 @@ int main( int argc, char* argv[] ) {
     
     //create tmp output dir
     string tmpdir = tmpdirname();
+    if(debugMode)   std::cout << "OUTPUT TMPDIR = " << tmpdir << std::endl;
 
     // Run the job using the appropiate driver:
     EL::DirectDriver Ddriver;
@@ -634,15 +639,17 @@ int main( int argc, char* argv[] ) {
       std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
-      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
+      //      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
       //      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
 
       // Pdriver.options()->setString("nc_rootVer", "5.34.22");'
-      Pdriver.options()->setString("nc_rootVer", "6.02.05");
-      Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
+
+      // Pdriver.options()->setString("nc_rootVer", "6.02.05");
+      // Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
 
       Pdriver.submitOnly( job, tmpdir );
+      std::cout << "\n" << bold("Submitted!") << "  Check it in " << link("http://bigpanda.cern.ch") << " \n " << std::endl;
       break;
     }
     else if(runGrid){ //grid mode
@@ -671,10 +678,10 @@ int main( int argc, char* argv[] ) {
 	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
 	// system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
 	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
-	// system("mv "+tmpdir+"/histo-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/histo-"+targetName.Data());
+	//system("mv "+tmpdir+"/histo-"+sampleName.Data()+" "+CollateralPath+"/histo-"+targetName.Data());
 	
 	system(("rm -rf "+tmpdir).c_str());
-	
+	       
 	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }
   

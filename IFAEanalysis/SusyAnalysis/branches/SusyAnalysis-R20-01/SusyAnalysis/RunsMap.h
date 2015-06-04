@@ -754,7 +754,9 @@ m_map["13TEV_PowhegPythia_P2012_singletop_Wt_dilepton_antitop"] = rlist( Rpair(4
   //======================================================================================================================
   
   
-  m_map["TestGrid1"] = rlist( Rpair(167752, "mc14_8TeV.167752.Sherpa_CT10_ZmumuMassiveCBPt0_BFilter.merge.AOD.e1585_s1933_s1911_r5591_r5625/"));
+  m_map["TestGrid0"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY1.e3698_s2608_s2183_r6630_r6264_p2353"));
+
+  m_map["TestGrid1"] = rlist( Rpair(301065, "mc15_13TeV.301065.PowhegPythia8EvtGen_AZNLOCTEQ6L1_Wplusenu_800M1000.merge.AOD.e3663_s2608_s2183_r6630_r6264/"));
   
   m_map["TestGrid2"] = rlist( Rpair(167836, "mc14_8TeV.167836.Sherpa_CT10_ZmumuMassiveCBPt500_BFilter.merge.AOD.e1620_s1933_s1911_r5591_r5625/"));
   

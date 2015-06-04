@@ -10,6 +10,14 @@ TString red(TString t){
   return "\x1b[31m"+t+"\x1b[0m";
 }
 
+TString blue(TString t){
+  return "\x1b[36m"+t+"\x1b[0m";
+}
+
+TString link(TString t){
+  return "\e[4m"+blue(t)+"\e[0m";
+}
+
 std::string getCmdOutput(const std::string& mStr)
 {
   std::string result, file;

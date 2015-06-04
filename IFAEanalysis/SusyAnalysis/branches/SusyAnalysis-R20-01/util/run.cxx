@@ -123,14 +123,17 @@ bool type_consistent(SampleHandler sh){
 bool is_data(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
-  std::size_t found = itis.find("collisions");
-  if (found!=std::string::npos) return true;
-  //add extra check for physics containers
-  itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
-  if(TString(itis).Contains("period")) return true;
 
-  return false;
+  return !getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'").empty();
+
+  // std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
+  // std::size_t found = itis.find("collisions");
+  // if (found!=std::string::npos) return true;
+
+  //add extra check for physics containers
+  //  if(TString(itis).Contains("period")) return true;
+
+  // return false;
 }
 
 double getNPrimary(Sample* sample){ 
