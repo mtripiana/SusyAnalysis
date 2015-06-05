@@ -640,7 +640,11 @@ int main( int argc, char* argv[] ) {
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
       //      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
       //      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
+
       sh.setMetaString ("nc_grid_filter", "*.root*");
+ 
+      sh.setMetaDouble (EL::Job::optGridNJobs, 1); //TEST //TAKE OUT!!
+      sh.setMetaDouble (EL::Job::optGridNFilesPerJob, 1); //TEST //TAKE OUT!!
 
       // Pdriver.options()->setString("nc_rootVer", "5.34.22");'
 

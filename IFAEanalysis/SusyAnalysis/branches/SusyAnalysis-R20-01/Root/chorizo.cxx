@@ -2272,8 +2272,8 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //--- add Trigger requirement to preselection (if not pseudo-data)
-  if(this->isTrigger.size())
-    this->passPreselectionCuts &= this->isTrigger[0];
+  // if(this->isTrigger.size())
+  //   this->passPreselectionCuts &= this->isTrigger[0];
 
   //--- Non-collision background selection
   if ( this->isNCBG ){
