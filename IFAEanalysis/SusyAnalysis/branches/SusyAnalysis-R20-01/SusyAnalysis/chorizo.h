@@ -186,8 +186,6 @@ public:
   //algo options
   std::string outputName;
   std::string jOption;
-  std::string Region;
-  std::string defaultRegion;
 
   bool isQCD;
   bool isSignal;
@@ -278,7 +276,7 @@ private:
   //MET map
   std::map<MetDef, TVector2> metmap; //!
 #endif // not __CINT__
-  std::string smetmap="";
+  std::string smetmap=""; //!
 
   Analysis::JetQuarkLabel* tool_jetlabel; //!
 
@@ -433,7 +431,7 @@ private:
   bool isFakeMet; //!
   bool isBadID; //!
   bool isMetCleaned; //!
-  std::vector<int> isTrigger; //!
+  std::vector<int> isTrigger; 
   bool isVertexOk; //!
   bool isLarGood; //!
   bool isTileGood; //!
@@ -442,7 +440,7 @@ private:
   bool isCosmic; //!
   bool isBadMuon; //!
   
-  bool passPreselectionCuts; //!
+  bool passPreselectionCuts; 
 
   TNamed *meta_jOption; //!
   TNamed *meta_triggers; //!
@@ -459,7 +457,7 @@ private:
   float   QCD_JetsPtPreselection; //!
   float   QCD_JetsEtaPreselection; //!
   float   QCD_JetsPtSelection; //! //taken from the jets section
-  float   QCD_JetsEtaSelection; //!//taken from the jets section
+  float   QCD_JetsEtaSelection; //! //taken from the jets section
   float   QCD_METSig; //!
   TString QCD_LeadJetPreSel; //!
   int     QCD_RandomSeedOffset; //!
@@ -584,11 +582,11 @@ private:
   float Jet_RecoEtaCut; //!
   /* float Jet_ORElPt; //! */
   /* float Jet_ORMuPt; //! */
-  bool Jet_DoOR;
-  TString Jet_Tagger;
-  TString Jet_TaggerOp;
-  TString Jet_TaggerOp2;  
-  TString Jet_Tagger_Collection;
+  bool Jet_DoOR; //! 
+  TString Jet_Tagger; //!
+  TString Jet_TaggerOp; //!
+  TString Jet_TaggerOp2;   //!
+  TString Jet_Tagger_Collection; //!
 
   //met
   TString METCollection; //!
@@ -666,7 +664,7 @@ private:
 
   void Fill(TH1 *h, float value, float weight=1.);
 
-  TStopwatch watch; 
+  TStopwatch watch; //!
 
   //MetaData
   float meta_xsec;
@@ -1015,22 +1013,22 @@ private:
   float mtasym08;
 
   //Extended trigger info
-  float trig_l1_ex; 
-  float trig_l1_ey; 
-  float trig_l1_et; 
-  float trig_l1_sumet; 
+  float trig_l1_ex;
+  float trig_l1_ey;
+  float trig_l1_et;
+  float trig_l1_sumet;
   float trig_l1_phi;
 
-  float trig_hlt_EFJetEtSum_ex; 
-  float trig_hlt_EFJetEtSum_ey; 
-  float trig_hlt_EFJetEtSum_et; 
-  float trig_hlt_EFJetEtSum_sumet; 
+  float trig_hlt_EFJetEtSum_ex;
+  float trig_hlt_EFJetEtSum_ey;
+  float trig_hlt_EFJetEtSum_et;
+  float trig_hlt_EFJetEtSum_sumet;
   float trig_hlt_EFJetEtSum_phi;
  
-  float trig_hlt_T2MissingET_ex; 
-  float trig_hlt_T2MissingET_ey; 
-  float trig_hlt_T2MissingET_et; 
-  float trig_hlt_T2MissingET_sumet; 
+  float trig_hlt_T2MissingET_ex;
+  float trig_hlt_T2MissingET_ey;
+  float trig_hlt_T2MissingET_et;
+  float trig_hlt_T2MissingET_sumet;
   float trig_hlt_T2MissingET_phi;
 
   float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex; 
@@ -1038,12 +1036,11 @@ private:
   float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et; 
   float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet; 
   float trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi;
-
  
-  float trig_hlt_TrigL2MissingET_FEB_ex; 
-  float trig_hlt_TrigL2MissingET_FEB_ey; 
-  float trig_hlt_TrigL2MissingET_FEB_et; 
-  float trig_hlt_TrigL2MissingET_FEB_sumet; 
+  float trig_hlt_TrigL2MissingET_FEB_ex;
+  float trig_hlt_TrigL2MissingET_FEB_ey;
+  float trig_hlt_TrigL2MissingET_FEB_et;
+  float trig_hlt_TrigL2MissingET_FEB_sumet;
   float trig_hlt_TrigL2MissingET_FEB_phi;
  
   float trig_hlt_TrigEFMissingET_FEB_ex; 

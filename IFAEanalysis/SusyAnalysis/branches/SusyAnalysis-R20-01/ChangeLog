@@ -1,3 +1,7 @@
+2014-06-09 Martin <tripiana@cern.ch>
+	* Fix grid running
+	* Add cutflow histos (to be filled properly yet)
+
 2014-06-05 Martin <tripiana@cern.ch>
 	* Fix passPreselection flag (Trigger is out again).
 

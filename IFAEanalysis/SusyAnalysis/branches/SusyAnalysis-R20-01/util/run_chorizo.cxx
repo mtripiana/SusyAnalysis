@@ -554,9 +554,6 @@ int main( int argc, char* argv[] ) {
     
     //Alg config options here
     alg->outputName = osname;
-    alg->Region = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
-    
-    alg->defaultRegion = "SR"; //from XML?
     alg->jOption = jOption;
     
     alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)

@@ -760,6 +760,8 @@ m_map["13TEV_PowhegPythia_P2012_singletop_Wt_dilepton_antitop"] = rlist( Rpair(4
   
   m_map["TestGrid2"] = rlist( Rpair(167836, "mc14_8TeV.167836.Sherpa_CT10_ZmumuMassiveCBPt500_BFilter.merge.AOD.e1620_s1933_s1911_r5591_r5625/"));
   
+  m_map["TestGrid3"] = rlist( Rpair(361399, "mc15_13TeV.361399.Sherpa_CT10_Zmumu_Pt70_140_CVetoBVeto.merge.DAOD_SUSY1.e3651_s2586_s2174_r6630_r6264_p2353/"));
+
   m_map["ttbar13"] = rlist( Rpair(110401,"mc14_13TeV.110401.PowhegPythia_P2012_ttbar_nonallhad.merge.AOD.e2928_s1982_s2008_r5787_r5853/"));
   
   m_map["data12_Egamma_202798"] = rlist( Rpair(202798, "data12_8TeV.00202798.physics_Egamma.merge.AOD.r5723_p1751/"));
