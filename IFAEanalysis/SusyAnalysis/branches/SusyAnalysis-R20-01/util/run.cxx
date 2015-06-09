@@ -411,7 +411,7 @@ int main( int argc, char* argv[] ) {
     }
     else{
       run_patterns.push_back( args[i_sample] );
-      run_ids.push_back( 0 );
+      run_ids.push_back( single_id );
     }
 
     bool mgd=false;  //make grid direct (for direct access to PIC disks)
@@ -420,7 +420,7 @@ int main( int argc, char* argv[] ) {
       if(!userDir && single_id>=0 && run_ids[i_id] != single_id) continue; //pick only chosen id (if given)
 
       //** Run on local samples
-      if(runLocal || userDir){
+      if(runLocal){ // || userDir){
 	if( run_patterns[i_id].BeginsWith("/eos/") ){
 	  //	  SH::DiskListEOS list ("eosatlas.cern.ch", run_patterns[i_id].Data());
 	  SH::DiskListXRD list ("eosatlas.cern.ch", gSystem->DirName(run_patterns[i_id]), true);

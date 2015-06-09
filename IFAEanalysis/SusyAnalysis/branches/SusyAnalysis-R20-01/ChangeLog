@@ -1,4 +1,7 @@
 2014-06-09 Martin <tripiana@cern.ch>
+	* New -c option can be used also for grid submission (i.e. no need to add the sample to RunsMap.h)
+
+2014-06-09 Martin <tripiana@cern.ch>
 	* Fix grid running
 	* Add cutflow histos (to be filled properly yet)
 

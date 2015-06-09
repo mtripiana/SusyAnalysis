@@ -53,7 +53,7 @@
     
     <Trigger>
       <SaveExtended>true</SaveExtended>
-      <chains>HLT_xe.*,L1_XE.*,L1_TE.*,L1_MBTS.*,HLT_e.*,HLT_mu.*,HLT_j.*,L1_J.*,HLT_g.*</chains> 
+      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM12,L1_MU10,L1_J50</chains> 
     </Trigger>
 
     <Vertex>

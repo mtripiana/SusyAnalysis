@@ -418,7 +418,7 @@ int main( int argc, char* argv[] ) {
 
     //** Run on local samples
     //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
-    if(runLocal || userDir){
+    if(runLocal){ // || userDir){
       if( run_pattern[p].BeginsWith("/eos/") ){
 	//	  SH::DiskListEOS list ("eosatlas.cern.ch", run_patterns[i_id].Data());
 	SH::DiskListXRD list ("eosatlas.cern.ch", gSystem->DirName(run_pattern[p]), true);
