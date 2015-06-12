@@ -159,23 +159,25 @@ void ComputeNewBranch(TString fileName){
   TFile *f4= new TFile(fileName.Data(),"update");
   cout << fileName.Data() << endl;
   TTree *t3 = (TTree*)f4->Get("AnalysisTree");
+  TH1F *histo_nsim = (TH1F*)f4->Get("h_presel_flow");  
   
 
   TBranch *b_xsec;
   TBranch *b_feff;
   TBranch *b_kfactor;
-  TBranch *b_nsim;
+  //TBranch *b_nsim;
 
   float xsec = 0.0;
   float feff = 0.0;
   float kfactor = 1.0;
   float nsim = 1;
   
+  nsim = histo_nsim->GetBinContent(1);
   
   t3->SetBranchAddress("xsec",&xsec,&b_xsec);
   t3->SetBranchAddress("feff",&feff,&b_feff);
   t3->SetBranchAddress("kfactor",&kfactor,&b_kfactor);
-  t3->SetBranchAddress("nsim",&nsim,&b_nsim);
+  //t3->SetBranchAddress("nsim",&nsim,&b_nsim);
 
 
   
@@ -186,7 +188,7 @@ void ComputeNewBranch(TString fileName){
   b_xsec->GetEntry(0);
   b_feff->GetEntry(0);
   b_kfactor->GetEntry(0);
-  b_nsim->GetEntry(0);
+  //b_nsim->GetEntry(0);
 
   FileWeight = xsec*feff*kfactor/nsim;
     
