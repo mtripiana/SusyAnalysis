@@ -109,7 +109,8 @@ Jet::Jet(){
   HECQuality=-100.;
   NegativeE=-100.;
   LArQuality=-100.;
-  jvtxf=-100.;
+  jvf=-100.;
+  jvt=-100.;
   failBCHTight=false;
   failBCHMedium=false;
   BCH_CORR_CELL=-100;
@@ -173,7 +174,7 @@ float Jet::getBweight(TString Tagger){
 void Jet::PrintInfo(){
   cout<<"Pt: "<<this->Pt()<<" Pt_up: "<<this->Pt_up<<" Pt_down: "<<this->Pt_down<<endl;
   cout<<"Eta: "<<this->Eta()<<" Phi: "<<this->Phi()<<endl;
-  cout<<"Chf: "<<this->chf<<" Emf: "<<this->emf<<" time: "<<this->time<<" fsm: "<<this->fsm<<" width: "<<this->width<<" n90: "<<this->n90<<" hecf: "<<this->hecf<<" HECQuality: "<<this->HECQuality<<" NegativeE: "<<this->NegativeE<<" LArQuality: "<<this->LArQuality<<" jvtxf: "<<this->jvtxf<<"  failBCHTight: "<<this->failBCHTight<<"  failBCHMedium: "<<this->failBCHMedium<<endl;
+  cout<<"Chf: "<<this->chf<<" Emf: "<<this->emf<<" time: "<<this->time<<" fsm: "<<this->fsm<<" width: "<<this->width<<" n90: "<<this->n90<<" hecf: "<<this->hecf<<" HECQuality: "<<this->HECQuality<<" NegativeE: "<<this->NegativeE<<" LArQuality: "<<this->LArQuality<<" JVF: "<<this->jvf<<" JVT: "<<this->jvt<<"  failBCHTight: "<<this->failBCHTight<<"  failBCHMedium: "<<this->failBCHMedium<<endl;
   cout<<" MV1: "<<this->MV1<<" MV2c20: "<<this->MV2c20<<" EffSF: "<<this->TagEffSF.first<<" IneffSF: "<<this->TagIneffSF.first<<" EffMC: "<<TagEffMC.first<<endl;
   cout<<endl;
 }

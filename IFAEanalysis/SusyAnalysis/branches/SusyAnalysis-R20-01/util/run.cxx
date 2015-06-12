@@ -411,7 +411,7 @@ int main( int argc, char* argv[] ) {
     }
     else{
       run_patterns.push_back( args[i_sample] );
-      run_ids.push_back( single_id );
+      run_ids.push_back( 0 ); //single_id );
     }
 
     bool mgd=false;  //make grid direct (for direct access to PIC disks)

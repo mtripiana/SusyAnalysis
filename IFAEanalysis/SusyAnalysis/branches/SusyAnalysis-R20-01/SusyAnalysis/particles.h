@@ -101,7 +101,8 @@ class Jet : public Particle {
     float                   HECQuality;
     float                   NegativeE;
     float                   LArQuality;
-    float                   jvtxf;
+    float                   jvf;
+    float                   jvt;
     bool                    failBCHTight;
     bool                    failBCHMedium;
     float                   BCH_CORR_CELL;

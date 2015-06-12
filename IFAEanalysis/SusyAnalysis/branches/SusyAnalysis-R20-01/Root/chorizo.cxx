@@ -28,8 +28,8 @@
 #include "PileupReweighting/PileupReweightingTool.h"
 
 //Jet Truth Labeling
-#include "ParticleJetTools/JetQuarkLabel.h"
-#include "ParticleJetTools/JetFlavourInfo.h"
+// #include "ParticleJetTools/JetQuarkLabel.h"
+// #include "ParticleJetTools/JetFlavourInfo.h"
 
 //CutBookkeeping
 #include "xAODCutFlow/CutBookkeeper.h"
@@ -106,8 +106,9 @@ chorizo :: chorizo ()
     tool_trigconfig(0), 
     tool_trig_match_el(0),
     tool_trig_match_mu(0),
-    tool_jetlabel(0), 
+    //    tool_jetlabel(0), 
     tool_jvf(0), 
+    tool_jvt(0), 
     tool_jClean(0), 
     tool_tileTrip(0), 
     tool_or(0), 
@@ -420,7 +421,8 @@ void chorizo :: bookTree(){
       output->tree()->Branch("j_time",&j_time);
       output->tree()->Branch("j_nTrk",&j_nTrk);
       output->tree()->Branch("j_sumPtTrk",&j_sumPtTrk);
-      output->tree()->Branch("j_jvtxf",&j_jvtxf);
+      output->tree()->Branch("j_jvf",&j_jvf);
+      output->tree()->Branch("j_jvt",&j_jvt);
       output->tree()->Branch("j_tflavor",&j_tflavor);
 
       output->tree()->Branch("j1_mT" ,&j1_mT);
@@ -671,6 +673,14 @@ EL::StatusCode chorizo :: histInitialize ()
   meta_jOption= new TNamed("jOption", jOption.c_str());
   wk()->addOutput(meta_jOption);     
 
+  //Trigger meta
+  meta_triggers = new TNamed("Triggers", " "); //to be filled later
+  wk()->addOutput(meta_triggers);     
+
+  //METMAP
+  meta_metmap = new TNamed("METmap", " ");
+  wk()->addOutput(meta_metmap);     
+
   //Histos
   //---  right errors in histos with weights
   TH1F::SetDefaultSumw2();
@@ -736,11 +746,11 @@ CutflowInfo chorizo :: getNinfo(){
 
   //Info("getNinfo()", "HERE");
 
-  m_event = wk()->xaodEvent();   
-
   CutflowInfo sinfo = {};
 
   if(m_isderived){
+
+    m_event = wk()->xaodEvent();   
 
     const xAOD::CutBookkeeperContainer* incompleteCBC = nullptr;
     if(!m_event->retrieveMetaInput(incompleteCBC, "IncompleteCutBookkeepers").isSuccess()){
@@ -1052,7 +1062,8 @@ void chorizo :: InitVars()
   j_time.clear();
   j_nTrk.clear();
   j_sumPtTrk.clear();
-  j_jvtxf.clear();
+  j_jvf.clear();
+  j_jvt.clear();
   j_tflavor.clear();
   j_tag_MV1.clear();
   j_tag_MV2c20.clear();
@@ -1719,9 +1730,9 @@ EL::StatusCode chorizo :: initialize ()
   tool_btag_truth3->Initialize("FlatBEff", "1D", "MV2c20", "80");
 
   //--- truth jet labeling
-  tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
-  CHECK( tool_jetlabel->setProperty("McEventCollection","TruthEvents") );
-  CHECK( tool_jetlabel->initialize() );
+  // tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
+  // CHECK( tool_jetlabel->setProperty("McEventCollection","TruthEvents") );
+  // CHECK( tool_jetlabel->initialize() );
   
   //--- Jet smearing tool
   SUSY::SmearingType gsmtype = SUSY::SmearingType::optimal;
@@ -1851,6 +1862,13 @@ EL::StatusCode chorizo :: initialize ()
   //--- JVF uncertainty
   tool_jvf = new JVFUncertaintyTool();
   tool_jvf->UseGeV(true);
+
+  //--- JetVertexTool
+  tool_jvt = new JetVertexTaggerTool("JetVertexTaggerTool");
+  CHECK( tool_jvt->setProperty("JVTFileName",maindir+"JetMomentTools/JVTlikelihood_20140805.root") );
+  CHECK( tool_jvt->initialize() );
+
+
   
   //--- PDF reweighting
   // LHAPDF::setPDFPath( gSystem->Getenv("LHAPATH") );
@@ -2214,8 +2232,7 @@ EL::StatusCode chorizo :: loop ()
       }
     }
     TriggerNames = trigtmp; //overwrite it with fully expanded list
-    meta_triggers = new TNamed("Triggers", trigchains.c_str());
-    wk()->addOutput(meta_triggers);     
+    meta_triggers->SetTitle( trigchains.c_str() );
     
     if(debug){
       Info("loop()", "  ");
@@ -2440,8 +2457,8 @@ EL::StatusCode chorizo :: loop ()
       recoElectron.z0 = track->z0() + track->vz() - primvertex_z;
     }
 
-    recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-    recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+    recoElectron.type   = xAOD::TruthHelpers::getParticleTruthType( *el_itr );
+    recoElectron.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *el_itr );
 
     //trigger matching
     std::vector<bool> el_trig_pass;
@@ -2576,8 +2593,8 @@ EL::StatusCode chorizo :: loop ()
     if(iso_5->accept(*mu_itr)) recoMuon.isoGradient= 1.0;
     if(iso_6->accept(*mu_itr)) recoMuon.isoGradientLoose = 1.0;
 
-    recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( mu_itr );
-    recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( mu_itr );
+    recoMuon.type   = xAOD::TruthHelpers::getParticleTruthType( *mu_itr );
+    recoMuon.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *mu_itr );
     
     //trigger matching
     std::vector<bool> mu_trig_pass;
@@ -2666,8 +2683,8 @@ EL::StatusCode chorizo :: loop ()
       recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
       (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
 
-      recoPhoton.type   = xAOD::EgammaHelpers::getParticleTruthType( ph_itr );
-      recoPhoton.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( ph_itr );
+      recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
+      recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
 
       //get photon scale factors
       if(this->isMC){
@@ -2766,13 +2783,13 @@ EL::StatusCode chorizo :: loop ()
 	  local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID"); 
 	}
 	catch(...){
-	  try{
-	    local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
-	  }
-	  catch(...){ //else 
+	  // try{
+	  //   local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
+	  // }
+	  // catch(...){ //else 
 	    Warning("loop()","Impossible to get truth label ID. (Set to 0)");
 	    local_truth_flavor = 0;
-	  }
+	    //	  }
 	}
       }
     }
@@ -2822,7 +2839,11 @@ EL::StatusCode chorizo :: loop ()
     std::vector<float> v_jvf = (*jet_itr)->getAttribute< std::vector<float> >(xAOD::JetAttribute::JVF);
     for(unsigned int ii=0; ii < v_jvf.size()-1; ++ii)
       jvfsum += v_jvf[ii];
-    recoJet.jvtxf = (v_jvf.size() ? v_jvf[0] : 0.);
+    recoJet.jvf = (v_jvf.size() ? v_jvf[0] : 0.);
+
+    //JVT
+    recoJet.jvt = tool_jvt->updateJvt(**jet_itr, "Jvt", "JetPileupScaleMomentum");
+
 
     (*jet_itr)->getAttribute(xAOD::JetAttribute::EMFrac, recoJet.emf);
     (*jet_itr)->getAttribute(xAOD::JetAttribute::Timing, recoJet.time);
@@ -2976,7 +2997,7 @@ EL::StatusCode chorizo :: loop ()
     // 	else if (syst_JVF==JvfUncErr::JvfUncLow) jvfCut = tool_jvf->getJVFcut(0.5, isPileUp, jetCandidates.at(iJet).Pt(), jetCandidates.at(iJet).Eta(), false );
     //   }
       
-    //   // if ( jetCandidates.at(iJet).jvtxf < jvfCut) {  //MARTIN PUT THIS BACK!!
+    //   // if ( jetCandidates.at(iJet).jvf < jvfCut) {  //MARTIN PUT THIS BACK!!
     //   // 	JVF_min = false;
     //   // 	continue;          
     //   // }
@@ -3043,7 +3064,7 @@ EL::StatusCode chorizo :: loop ()
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
     if ( jetCandidates.at(iJet).Pt() < QCD_JetsPtPreselection/1000.0/*20.*/ ) continue;
     if ( fabs(jetCandidates.at(iJet).Eta()) > QCD_JetsEtaSelection/*2.8*/ ) continue;
-    if ( jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta())<2.4 && jetCandidates.at(iJet).jvtxf < 0.5) continue;
+    if ( jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta())<2.4 && jetCandidates.at(iJet).jvf < 0.5) continue;
     seedJets.push_back( jetCandidates.at(iJet) );
   }
 
@@ -3262,8 +3283,7 @@ EL::StatusCode chorizo :: loop ()
       smetmap += sMetDef[(unsigned int)mk.first];
       smetmap += ",";
     }
-    meta_metmap = new TNamed("METmap", smetmap.c_str());
-    wk()->addOutput(meta_metmap);     
+    meta_metmap->SetTitle( smetmap.c_str() );
   }
 
   //***
@@ -4139,8 +4159,6 @@ EL::StatusCode chorizo :: loop_truth()
       // recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
       // (*el_itr).passSelection(recoElectron.isTight, "Tight");
       
-      // recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( *truthEl_itr );
-      // recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( *truthEl_itr );
       recoElectron.type   = ( *truthEl_itr )->auxdata< unsigned int >( "particleType" );
       recoElectron.origin = ( *truthEl_itr )->auxdata< unsigned int >( "particleOrigin" );
             
@@ -4192,8 +4210,6 @@ EL::StatusCode chorizo :: loop_truth()
     // recoMuon.etcone30 = acc_etcone30(*el_itr) * 0.001;
     // (*el_itr).passSelection(recoMuon.isTight, "Tight");
     
-    // recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-    // recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
     recoMuon.type   = ( *truthMu_itr )->auxdata< unsigned int >( "particleType" );
     recoMuon.origin = ( *truthMu_itr )->auxdata< unsigned int >( "particleOrigin" );
     
@@ -4229,8 +4245,6 @@ EL::StatusCode chorizo :: loop_truth()
       // recoPhoton.etcone30 = acc_etcone30(*el_itr) * 0.001;
       // (*el_itr).passSelection(recoPhoton.isTight, "Tight");
       
-      // recoPhoton.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-      // recoPhoton.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
       recoPhoton.type   = ( *truthPh_itr )->auxdata< unsigned int >( "particleType" );
       recoPhoton.origin = ( *truthPh_itr )->auxdata< unsigned int >( "particleOrigin" );
             
@@ -4261,15 +4275,16 @@ EL::StatusCode chorizo :: loop_truth()
       //recoJet.FlavorTruth = xAOD::jetFlavourLabel(*jet_itr);
     }
     catch(...){
-      try{
-	bool matched = tool_jetlabel->matchJet(**tjet_itr);
-	cout << "using jetLabel" << endl;
-	if(matched)
-	  recoJet.FlavorTruth = tool_jetlabel->pdgCode();
-      }
-      catch(...){//else
-	recoJet.FlavorTruth = 0;
-      }
+      recoJet.FlavorTruth = 0;
+      // try{
+      // 	bool matched = tool_jetlabel->matchJet(**tjet_itr);
+      // 	cout << "using jetLabel" << endl;
+      // 	if(matched)
+      // 	  recoJet.FlavorTruth = tool_jetlabel->pdgCode();
+      // }
+      // catch(...){//else
+      // 	recoJet.FlavorTruth = 0;
+      // }
     }
 
     //hack for cutflow afterwards
@@ -4974,7 +4989,8 @@ void chorizo :: dumpJets(){
     j_emf.push_back( recoJets.at(ijet).emf );
     j_fsm.push_back( recoJets.at(ijet).fsm );
     j_time.push_back( recoJets.at(ijet).time );
-    j_jvtxf.push_back( recoJets.at(ijet).jvtxf );
+    j_jvf.push_back( recoJets.at(ijet).jvf );
+    j_jvt.push_back( recoJets.at(ijet).jvt );
     j_tflavor.push_back( recoJets.at(ijet).FlavorTruth );
     j_nTrk.push_back( recoJets.at(ijet).nTrk );
     j_sumPtTrk.push_back( recoJets.at(ijet).sumPtTrk );
@@ -5115,11 +5131,17 @@ EL::StatusCode chorizo :: finalize ()
     tool_jvf = 0;
   }
 
-  //jet label
-  if( tool_jetlabel ) {
-    delete tool_jetlabel;
-    tool_jetlabel = 0;
+  //jet jvt
+  if( tool_jvt ) {
+    delete tool_jvt;
+    tool_jvt = 0;
   }
+
+  //jet label
+  // if( tool_jetlabel ) {
+  //   delete tool_jetlabel;
+  //   tool_jetlabel = 0;
+  // }
 
   //jet smearing
   if( tool_jsmear ) {

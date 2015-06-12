@@ -640,8 +640,8 @@ int main( int argc, char* argv[] ) {
 
       sh.setMetaString ("nc_grid_filter", "*.root*");
  
-      sh.setMetaDouble (EL::Job::optGridNJobs, 1); //TEST //TAKE OUT!!
-      sh.setMetaDouble (EL::Job::optGridNFilesPerJob, 1); //TEST //TAKE OUT!!
+      // sh.setMetaDouble (EL::Job::optGridNJobs, 1); //TEST //TAKE OUT!!
+      // sh.setMetaDouble (EL::Job::optGridNFilesPerJob, 1); //TEST //TAKE OUT!!
 
       // Pdriver.options()->setString("nc_rootVer", "5.34.22");'
 
@@ -687,7 +687,7 @@ int main( int argc, char* argv[] ) {
 	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
 	//system("mv "+tmpdir+"/histo-"+sampleName.Data()+" "+CollateralPath+"/histo-"+targetName.Data());
 	
-	system(("rm -rf "+tmpdir).c_str());
+	//	system(("rm -rf "+tmpdir).c_str());
 	       
 	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }

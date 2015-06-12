@@ -11,7 +11,8 @@
     <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch2/tripiana/anafiles/</Path>
     <Path name="PartialRootFilesFolder">/tmp/</Path>
-    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_comm_13TeV.periodD2_PHYS_StandardGRL_All_Good.xml</Path>
+    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_HEAD_DQDefects-00-01-02_PHYS_StandardGRL_Atlas_Ready.xml</Path>
+    <!--    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_comm_13TeV.periodD2_PHYS_StandardGRL_All_Good.xml</Path> -->
     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
       <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->

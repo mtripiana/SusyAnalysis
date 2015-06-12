@@ -35,7 +35,8 @@
 #include "xAODTracking/VertexContainer.h"
 #include "xAODTracking/Vertex.h"
 //#include "xAODTracking/TrackingPrimitives.h"
-#include "xAODEgamma/EgammaxAODHelpers.h"
+//#include "xAODEgamma/EgammaxAODHelpers.h"
+#include "xAODTruth/xAODTruthHelpers.h"
 
 #include "xAODTrigger/EnergySumRoI.h"
 #include "xAODTrigMissingET/TrigMissingET.h"

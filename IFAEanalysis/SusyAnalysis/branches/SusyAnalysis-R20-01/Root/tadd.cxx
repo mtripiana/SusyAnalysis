@@ -100,14 +100,25 @@ void MergeSplittedFiles(TString fileName){
 
 void AddNewBranch(TString fileName, Float_t FileWeight){
   TFile *f = new TFile(fileName.Data(),"update");
-  TTree *t3 = (TTree*)f->Get("AnalysisTree");
-  TBranch *newBranch = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
-  //read the number of entries in the t3
-  Int_t nentries = (Int_t)t3->GetEntries();
-  for (Int_t i = 0; i < nentries; i++){
-    newBranch->Fill();
+
+  if(!f->GetListOfKeys()->Contains("AnalysisTree")){
+    cout << "WARNING no AnalysisTree found !! Please check" << endl;
+    f->Close();
   }
-  t3->Write("",TObject::kOverwrite);     // save only the new version of the tree
+
+  TTree *t3 = (TTree*)f->Get("AnalysisTree");
+  Int_t nentries = (Int_t)t3->GetEntries();
+
+  if(nentries){
+    TBranch *newBranch = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
+    //read the number of entries in the t3
+    Int_t nentries = (Int_t)t3->GetEntries();
+    for (Int_t i = 0; i < nentries; i++){
+      newBranch->Fill();
+    }
+    t3->Write("",TObject::kOverwrite);     // save only the new version of the tree
+  }
+
   f->Close();
 }
 
@@ -367,6 +378,8 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
     MergeSplittedFiles(filelist.at(i));
   }
 
+  cout << "AFTER MergeSplittedFiles" << endl; 
+
   //--- Add some new branches
   for(unsigned int i=0; i<filelist.size(); i++){
     cout<<"Adding new branches..."<<endl;
@@ -374,9 +387,12 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
     addAverageWeight(filelist.at(i));
   }
 
-  
+  cout << "AFTER AddNewBranch" << endl; 
+
   //--- Join the "joined" files in a single root file. Add also FileWeight branch
   MergeFiles(filelist, outfile.Data());
+
+  cout << "AFTER MergeFiles" << endl; 
 
   //--- Remove file in the Collateral folder
   for(unsigned int i=0; i<filelist.size(); i++){
@@ -385,6 +401,8 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
 
   cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
+
+  cout << "AFTER addAntiWeightToTree" << endl; 
 
   cout << endl;
   cout << bold("Target file : \n                    ") << outfile  << endl;

@@ -50,6 +50,8 @@
 #include "SusyAnalysis/mctlib.h"
 
 #include "JVFUncertaintyTool/JVFUncertaintyTool.h"
+#include "JetMomentTools/JetVertexTaggerTool.h"
+
 #include "fastjet/ClusterSequence.hh"
 #include "TileTripReader/TTileTripReader.h"
 #include "BTagEfficiencyReader/BTagEfficiencyReader.h"
@@ -278,10 +280,12 @@ private:
 #endif // not __CINT__
   std::string smetmap=""; //!
 
-  Analysis::JetQuarkLabel* tool_jetlabel; //!
+  //  Analysis::JetQuarkLabel* tool_jetlabel; //!
 
   //  DataPeriod     tool_DPeriod; //!
   JVFUncertaintyTool* tool_jvf; //!
+  JetVertexTaggerTool* tool_jvt; //!
+
   JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
 
@@ -880,7 +884,8 @@ private:
   VFloat j_time;
   VFloat j_nTrk;
   VFloat j_sumPtTrk;
-  VFloat j_jvtxf;
+  VFloat j_jvf;
+  VFloat j_jvt;
   VFloat j_tflavor;
   VFloat j_tag_MV1;
   VFloat j_tag_MV2c20;
