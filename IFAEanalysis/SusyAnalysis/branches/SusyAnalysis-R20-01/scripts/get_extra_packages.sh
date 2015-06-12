@@ -16,9 +16,14 @@ rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/EventLoop/tags/EventLoop-00-01
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/EventLoopGrid/tags/EventLoopGrid-00-00-38
 rc checkout_pkg $SVNOFF/PhysicsAnalysis/D3PDTools/SampleHandler/tags/SampleHandler-00-00-96
 
+rc checkout_pkg $SVNOFF/Trigger/TrigConfiguration/TrigConfxAOD/tags/TrigConfxAOD-00-00-19
+rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-28
+rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigEgammaMatchingTool/tags/TrigEgammaMatchingTool-00-00-05
+rc checkout_pkg $SVNOFF/Trigger/TrigAnalysis/TrigMuonMatching/tags/TrigMuonMatching-00-00-07
+
 
 # Offline truth jet tagging for TRUTH1 derivations (no longer needed?)
-svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
+#svn co svn+ssh://svn.cern.ch/reps/atlasoff/PhysicsAnalysis/AnalysisCommon/ParticleJetTools/tags/ParticleJetTools-00-03-24 ParticleJetTools
 
 
 # Boost libraries
