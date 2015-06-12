@@ -155,11 +155,11 @@ void addAverageWeight(TString fileName){
 }
 
 //---for grid jobs: FileWeight has to be computed
-void ComputeNewBranch(TString fileName){
+void ComputeNewBranch(TString fileName, float nsim){
+
   TFile *f4= new TFile(fileName.Data(),"update");
   cout << fileName.Data() << endl;
   TTree *t3 = (TTree*)f4->Get("AnalysisTree");
-  TH1F *histo_nsim = (TH1F*)f4->Get("h_presel_flow");  
   
 
   TBranch *b_xsec;
@@ -170,9 +170,8 @@ void ComputeNewBranch(TString fileName){
   float xsec = 0.0;
   float feff = 0.0;
   float kfactor = 1.0;
-  float nsim = 1;
-  
-  nsim = histo_nsim->GetBinContent(1);
+  //float nsim = 1.0;
+
   
   t3->SetBranchAddress("xsec",&xsec,&b_xsec);
   t3->SetBranchAddress("feff",&feff,&b_feff);
@@ -396,10 +395,21 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   
   //--- Join the "joined" files in a single root file. Add also FileWeight branch
   TChain *chain = new TChain("AnalysisTree");
+    
+  float nsim_total = 0;
+  
   for(unsigned int i=0; i<filelist.size(); i++){
+  
+    TFile f1(filelist.at(i));
+    TH1F *histo_nsim = (TH1F*)f1.Get("h_presel_flow");
+    nsim_total+=histo_nsim->GetBinContent(1);
+    delete histo_nsim;
+    
     cout<<"Adding file: "<<filelist.at(i)<<endl;
     chain->Add(filelist.at(i));
   }
+    cout<<"Total events for this sample: "<<nsim_total<<endl;
+
 
   chain->SetMaxTreeSize(15000000000LL);
   chain->Merge(outfile.Data());
@@ -412,7 +422,7 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   cout<<"\nAdding FileWeight"<<endl;  
   cout<<"\nAdding average weight w"<<endl;  
   cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
-  ComputeNewBranch(outfile.Data());
+  ComputeNewBranch(outfile.Data(),nsim_total);
   addAverageWeight(outfile.Data());
   addAntiWeightToTree(outfile.Data(), isData);  
 
