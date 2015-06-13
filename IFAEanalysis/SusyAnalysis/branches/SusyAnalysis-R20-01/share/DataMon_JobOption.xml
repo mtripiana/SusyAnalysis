@@ -106,7 +106,7 @@
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
 
-      <ID>Loose</ID>
+      <ID>Medium</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_mu26_imedium</triggers>
