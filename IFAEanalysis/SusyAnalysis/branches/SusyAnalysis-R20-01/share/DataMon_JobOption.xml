@@ -45,7 +45,7 @@
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
       <doBjetOR>true</doBjetOR>
-      <doPhotons>false</doPhotons>
+      <doPhotons>true</doPhotons>
     </OverlapRemoval> 
 
     <Truth>
@@ -118,8 +118,8 @@
       <RecoPtCut>20000.</RecoPtCut>
       <RecoEtaCut>2.37</RecoEtaCut>
       
-      <ID>Loose</ID> <!-- None,Loose,Medium,Tight -->
-      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_g140_loose</triggers>
 

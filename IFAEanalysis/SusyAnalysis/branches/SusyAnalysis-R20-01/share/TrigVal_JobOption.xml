@@ -41,10 +41,10 @@
   <ObjectDefinition>
 
     <OverlapRemoval>
-      <Enable>false</Enable>
+      <Enable>true</Enable>
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
-      <doBjetOR>false</doBjetOR>
+      <doBjetOR>true</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
