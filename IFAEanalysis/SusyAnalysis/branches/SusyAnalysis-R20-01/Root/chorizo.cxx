@@ -669,10 +669,13 @@ EL::StatusCode chorizo :: histInitialize ()
   meta_nsim=0.; 
   meta_nwsim=0.;
 
+  out_TDir = (TDirectory*) wk()->getOutputFile ("output");
+
+
   //JopOption
   meta_jOption= new TNamed("jOption", jOption.c_str());
   wk()->addOutput(meta_jOption);     
-
+  
   //Trigger meta
   meta_triggers = new TNamed("Triggers", " "); //to be filled later
   wk()->addOutput(meta_triggers);     
@@ -687,7 +690,6 @@ EL::StatusCode chorizo :: histInitialize ()
   TH2F::SetDefaultSumw2();
   TProfile::SetDefaultSumw2();
 
-  out_TDir = (TDirectory*) wk()->getOutputFile ("output");
 
   // ** NOT working ... not sure why!
   // InitGHist(h_cut_var, "h_cut_var", 2000, 0, 1000., "Cut Var (GeV)", "");  
@@ -3694,13 +3696,13 @@ EL::StatusCode chorizo :: loop ()
   
   //Do we need this??
   //- (truth) Tau veto for 3rd- and 4th leading jet
-  float dR_truthTau_j3, dR_truthTau_j4;
+  float dR_truthTau_j3=999.;
+  float dR_truthTau_j4=999.;
   
   if (this->isMC){
     if (j_N>2){
       
-      TLorentzVector TruthTau3(0.,0.,0.,0.);
-      TLorentzVector TruthTau4(0.,0.,0.,0.);
+      TLorentzVector TruthTau(0.,0.,0.,0.);
       
       if(recoJets.at(2).nTrk>0 && recoJets.at(2).nTrk<5 && dPhi_met_j3[0] < TMath::Pi()/5. && j3_mT[0]<100.){
 	
@@ -3708,27 +3710,26 @@ EL::StatusCode chorizo :: loop ()
 	for( ; truthP_itr != truthP_end; ++truthP_itr ) {
 	  
 	  if ( isHard((*truthP_itr)) && isTau((*truthP_itr)) ){
-	    fillTLV(TruthTau3, (*truthP_itr));
+	    fillTLV(TruthTau, (*truthP_itr));
 	    
-	    dR_truthTau_j3 = TruthTau3.DeltaR(recoJets.at(2));
+ 	    float tmpDR = TruthTau.DeltaR(recoJets.at(2));
+	    if(dR_truthTau_j3 > tmpDR)
+	      dR_truthTau_j3 = tmpDR;
+	    
+	  }
+
+	  if (j_N>3){
+	    if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4[0] < TMath::Pi()/5. && j4_mT[0]<100.){
+
+	      float tmpDR = TruthTau.DeltaR(recoJets.at(3));
+	      if(dR_truthTau_j4 > tmpDR)
+		dR_truthTau_j4 = tmpDR;
+	      
+	    }
 	  }
 	}
       } 
       
-      if (j_N>3){
-	if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4[0] < TMath::Pi()/5. && j4_mT[0]<100.){
-	  
-	  truthP_itr = m_truthP->begin();
-	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	    
-	    if ( isHard((*truthP_itr)) && isTau((*truthP_itr)) ){
-	      fillTLV(TruthTau4, (*truthP_itr));
-	      
-	      dR_truthTau_j4 = TruthTau4.DeltaR(recoJets.at(3));
-	    }
-	  }
-	}            
-      }
     }
   }
   

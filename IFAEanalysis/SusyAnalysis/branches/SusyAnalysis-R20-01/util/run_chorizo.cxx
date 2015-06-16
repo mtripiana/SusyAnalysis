@@ -632,7 +632,7 @@ int main( int argc, char* argv[] ) {
     else if(runPrun){ //Prun mode
 
       //** prun
-      std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
+      std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%in:name[3]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
       //      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
@@ -663,7 +663,7 @@ int main( int argc, char* argv[] ) {
 
       //** ganga
       sh.setMetaString ("nc_grid_filter", "*.root*");
-      Gdriver.outputSampleName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
+      Gdriver.outputSampleName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%in:name[3]%")+vTag.Data());
       Gdriver.nFiles = 1;
       Gdriver.mergeOutput = 1; 
 
@@ -683,6 +683,7 @@ int main( int argc, char* argv[] ) {
 	targetName = Form("%s_%s%s_%d.root", systematic[isys].Data(), gSystem->BaseName(args[0]), vTag.Data(), single_id);
 	
 	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
+
 	// system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
 	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
 	//system("mv "+tmpdir+"/histo-"+sampleName.Data()+" "+CollateralPath+"/histo-"+targetName.Data());

@@ -1,3 +1,6 @@
+2014-06-16 Martin <tripiana@cern.ch>
+	* New dq2get.sh to handle metadata merging + new input options (to overcome RunsMap coding).
+
 2014-06-12 Martin <tripiana@cern.ch>
 	* Fix tadd handling of empty files
 

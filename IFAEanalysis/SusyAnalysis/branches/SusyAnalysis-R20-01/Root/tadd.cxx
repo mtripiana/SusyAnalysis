@@ -169,27 +169,19 @@ void addAverageWeight(TString fileName){
 void ComputeNewBranch(TString fileName, float nsim){
 
   TFile *f4= new TFile(fileName.Data(),"update");
-  cout << fileName.Data() << endl;
   TTree *t3 = (TTree*)f4->Get("AnalysisTree");
-  
 
   TBranch *b_xsec;
   TBranch *b_feff;
   TBranch *b_kfactor;
-  //TBranch *b_nsim;
 
   float xsec = 0.0;
   float feff = 0.0;
   float kfactor = 1.0;
-  //float nsim = 1.0;
-
   
   t3->SetBranchAddress("xsec",&xsec,&b_xsec);
   t3->SetBranchAddress("feff",&feff,&b_feff);
   t3->SetBranchAddress("kfactor",&kfactor,&b_kfactor);
-  //t3->SetBranchAddress("nsim",&nsim,&b_nsim);
-
-
   
   float FileWeight = 1.;
 
@@ -198,7 +190,6 @@ void ComputeNewBranch(TString fileName, float nsim){
   b_xsec->GetEntry(0);
   b_feff->GetEntry(0);
   b_kfactor->GetEntry(0);
-  //b_nsim->GetEntry(0);
 
   FileWeight = xsec*feff*kfactor/nsim;
     
@@ -378,8 +369,6 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
     MergeSplittedFiles(filelist.at(i));
   }
 
-  cout << "AFTER MergeSplittedFiles" << endl; 
-
   //--- Add some new branches
   for(unsigned int i=0; i<filelist.size(); i++){
     cout<<"Adding new branches..."<<endl;
@@ -387,22 +376,16 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
     addAverageWeight(filelist.at(i));
   }
 
-  cout << "AFTER AddNewBranch" << endl; 
-
   //--- Join the "joined" files in a single root file. Add also FileWeight branch
   MergeFiles(filelist, outfile.Data());
-
-  cout << "AFTER MergeFiles" << endl; 
 
   //--- Remove file in the Collateral folder
   for(unsigned int i=0; i<filelist.size(); i++){
     gROOT->ProcessLine(Form(".! rm %s", filelist.at(i).Data()));
   }
 
-  cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
+  cout<<"\nAdding anti_e_SF and anti_m_SF..."<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
-
-  cout << "AFTER addAntiWeightToTree" << endl; 
 
   cout << endl;
   cout << bold("Target file : \n                    ") << outfile  << endl;
@@ -411,41 +394,33 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
 
 void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   
-  //--- Join the "joined" files in a single root file. Add also FileWeight branch
-  TChain *chain = new TChain("AnalysisTree");
-    
-  float nsim_total = 0;
-  
+  if( !filelist.size() ){
+    cout << "tadd_grid()   WARNING ** no input files provided! Just leaving..." << endl;
+    return;
+  }
+
+  float nsim_total = 0;  
   for(unsigned int i=0; i<filelist.size(); i++){
-  
+    cout<<"Adding file: "<<filelist.at(i)<<endl;
     TFile f1(filelist.at(i));
     TH1F *histo_nsim = (TH1F*)f1.Get("h_presel_flow");
     nsim_total+=histo_nsim->GetBinContent(1);
     delete histo_nsim;
-    
-    cout<<"Adding file: "<<filelist.at(i)<<endl;
-    chain->Add(filelist.at(i));
   }
-    cout<<"Total events for this sample: "<<nsim_total<<endl;
+  cout << "Total events for this sample: " << nsim_total << endl;
 
+  MergeFiles(filelist, outfile);
+  
 
-  chain->SetMaxTreeSize(15000000000LL);
-  chain->Merge(outfile.Data());
-
-  //--- Remove file in the Collateral folder
-  //for(unsigned int i=0; i<filelist.size(); i++){
-  //  gROOT->ProcessLine(Form(".! rm %s", filelist.at(i).Data()));
-  //}
-
-  cout<<"\nAdding FileWeight"<<endl;  
-  cout<<"\nAdding average weight w"<<endl;  
-  cout<<"\nAdding anti_e_SF and anti_m_SF"<<endl;
+  cout<<"\nAdding FileWeight ..."<<endl;  
   ComputeNewBranch(outfile.Data(),nsim_total);
+  cout<<"\nAdding average weight w ..."<<endl;  
   addAverageWeight(outfile.Data());
+  cout<<"\nAdding anti_e_SF and anti_m_SF ..."<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
 
   cout << endl;
-  cout << bold("Target file : ") << outfile  << endl;
+  cout << bold("Target file : \n                    ") << outfile  << endl;
   cout << endl;
 }
 
