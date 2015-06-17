@@ -1282,9 +1282,6 @@ EL::StatusCode chorizo :: fileExecute ()
 {
   //  Info("fileExecute()", "HERE");
 
-  //--- Load xs_section, kfactors, etc...
-  loadMetaData();
-
   //--- Get sum of weights and initial numbers of events
   // get the MetaData tree once a new file is opened, with
   //  if (!m_MetaData) 
@@ -1323,6 +1320,16 @@ EL::StatusCode chorizo :: fileExecute ()
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
   //  Info("changeInput()", "HERE");
+
+  // get event info needed for tool's config
+  const xAOD::EventInfo* eventInfo = 0;
+  CHECK( m_event->retrieve( eventInfo, "EventInfo") );
+  
+  isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
+  
+
+  //--- Load xs_section, kfactors, etc...
+  loadMetaData();
 
   return EL::StatusCode::SUCCESS;
 }
@@ -1547,7 +1554,7 @@ void chorizo :: ReadXML(){
 
 EL::StatusCode chorizo :: initialize ()
 {
-  //Info("initialize()", "HERE");
+  Info("initialize()", "HERE");
 
   //Start Clock
   watch.Start();
@@ -1942,7 +1949,7 @@ void chorizo :: printSystList(){
 
 void chorizo :: loadMetaData(){
 
-  //Info("loadMetaData()", "HERE");
+  //  Info("loadMetaData()", "HERE");
 
   if(!isMC) return;
 
