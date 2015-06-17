@@ -666,6 +666,13 @@ EL::StatusCode chorizo :: histInitialize ()
   //Load event list (if provided)
   loadEventList();
 
+  //Init MetaData
+  meta_xsec = 1.;
+  meta_xsec_relunc = 0.;
+  meta_kfactor = 1.;
+  meta_feff = 1.;
+  meta_lumi = 1.;
+  
   meta_nsim=0.; 
   meta_nwsim=0.;
 
@@ -846,13 +853,6 @@ void chorizo :: InitVars()
 {
   //Initialize ntuple variables
 
-  //- MetaData
-  meta_xsec = 1.;
-  meta_xsec_relunc = 0.;
-  meta_kfactor = 1.;
-  meta_feff = 1.;
-  meta_lumi = 1.;
-  
   //- Event info
   RunNumber = 0;
   EventNumber = 0;

@@ -632,7 +632,7 @@ int main( int argc, char* argv[] ) {
     else if(runPrun){ //Prun mode
 
       //** prun
-      std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%in:name[3]%")+vTag.Data());
+      std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%.%in:name[3]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
       //      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
@@ -710,6 +710,9 @@ int main( int argc, char* argv[] ) {
       } 
       else {
 	tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
+	
+	//clean ROOTMERGE leftovers  (investigate a bit more anyways...)
+	system("rm -rf /tmp/ROOTMERGE*");
       }
     }
 

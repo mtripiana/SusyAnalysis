@@ -44,7 +44,12 @@ if [[ $2 != "" ]]; then DIRECTORY=$2;fi
 if [[ $3 != "" ]]; then GRIDUSER=$3;fi
 if [[ $4 != "" ]]; then MERGE=$4;fi
 
-if [[ $5 != "" ]]; then PATTERN=$5;fi
+if [[ $5 != "" ]]; 
+then 
+    PATTERN=$5
+else
+    PATTERN="*"
+fi
 if [[ $6 != "" ]]; then 
     OFILE=$6;
     optOFILE=" -m="$6
