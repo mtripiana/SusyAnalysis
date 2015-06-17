@@ -48,13 +48,13 @@ if [[ $5 != "" ]];
 then 
     PATTERN=$5
 else
-    PATTERN="*"
+    PATTERN=""
 fi
+
 if [[ $6 != "" ]]; then 
     OFILE=$6;
     optOFILE=" -m="$6
 fi
-
 
 TAGLIST="${TAG//,/ }"
 PATLIST="${PATTERN//,/ }"
@@ -77,12 +77,11 @@ do
 	echo "----------------------------------------------------------------------------"
 	echo "   TAG: "$tag
 	echo "----------------------------------------------------------------------------"
-	
+
 	echo "   Doing: dq2-ls user."$GRIDUSER".*"$pat"*"$tag"*_output.root/ > tmp_dq2ls.txt"
 	dq2-ls "user."$GRIDUSER".*"$pat"*"$tag"*_output.root/" >> tmp_dq2ls.txt
 	
 	echo " " >> tmp_dq2ls.txt
-    done
     
     cat tmp_dq2ls.txt
     echo " "
