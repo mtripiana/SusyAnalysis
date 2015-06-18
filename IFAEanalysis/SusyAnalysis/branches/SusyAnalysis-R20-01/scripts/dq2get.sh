@@ -69,20 +69,28 @@ echo "--------------------------------------------------------------------------
 cd $DIRECTORY
 for tag in $TAGLIST ;
 do
-
-    for pat in $PATLIST ;
-    do
-	
-	
-	echo "----------------------------------------------------------------------------"
-	echo "   TAG: "$tag
-	echo "----------------------------------------------------------------------------"
-
-	echo "   Doing: dq2-ls user."$GRIDUSER".*"$pat"*"$tag"*_output.root/ > tmp_dq2ls.txt"
-	dq2-ls "user."$GRIDUSER".*"$pat"*"$tag"*_output.root/" >> tmp_dq2ls.txt
+    
+    echo "----------------------------------------------------------------------------"
+    echo "   TAG: "$tag
+    echo "----------------------------------------------------------------------------"
+    
+    if [ -z "$VAR" ]; then
+	echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"*_output.root/ > tmp_dq2ls.txt"
+	dq2-ls "user."$GRIDUSER".*"$tag"*_output.root/" >> tmp_dq2ls.txt
 	
 	echo " " >> tmp_dq2ls.txt
-    
+    else
+	for pat in $PATLIST ;
+	do
+	    
+	    
+	    echo "   Doing: dq2-ls user."$GRIDUSER".*"$pat"*"$tag"*_output.root/ > tmp_dq2ls.txt"
+	    dq2-ls "user."$GRIDUSER".*"$pat"*"$tag"*_output.root/" >> tmp_dq2ls.txt
+	    
+	    echo " " >> tmp_dq2ls.txt
+	done
+    fi
+
     cat tmp_dq2ls.txt
     echo " "
     
