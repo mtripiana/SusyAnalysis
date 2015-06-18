@@ -1319,7 +1319,9 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  //  Info("changeInput()", "HERE");
+  Info("changeInput()", "HERE");
+
+  m_event = wk()->xaodEvent();   
 
   // get event info needed for tool's config
   const xAOD::EventInfo* eventInfo = 0;
@@ -1327,6 +1329,7 @@ EL::StatusCode chorizo :: changeInput (bool firstFile)
   
   isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
   
+  Info("changeInput()", "After EvtInfo");
 
   //--- Load xs_section, kfactors, etc...
   loadMetaData();
@@ -2294,10 +2297,10 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Quality cuts applied only on data
   if (!this->isMC) {
-    this->isLarGood = (eventInfo->eventFlags(xAOD::EventInfo::LAr)!=2);
-    this->isTileGood = (eventInfo->eventFlags(xAOD::EventInfo::Tile)!=2);
+    this->isLarGood = (eventInfo->eventFlags(xAOD::EventInfo::LAr) != xAOD::EventInfo::Error);
+    this->isTileGood = (eventInfo->eventFlags(xAOD::EventInfo::Tile) != xAOD::EventInfo::Error);
     this->isTileTrip = !tool_tileTrip->checkEvent(RunNumber,  lb,  EventNumber); //--- Does not depend on the definition of the objects.
-    this->isCoreFlag = (eventInfo->eventFlags(xAOD::EventInfo::Core)==0);
+    this->isCoreFlag = !(eventInfo->eventFlags(xAOD::EventInfo::Core) & 0x40000);
   }
 
   //--- Preselection flag

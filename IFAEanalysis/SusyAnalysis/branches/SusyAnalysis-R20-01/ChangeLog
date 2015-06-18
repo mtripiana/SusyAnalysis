@@ -1,3 +1,6 @@
+2014-06-19 Martin <tripiana@cern.ch>
+	* Fix running on primary xAOD
+
 2014-06-18 Martin <tripiana@cern.ch>
 	* Add autoremoval of ROOTMERGE files after tadd* calls
 
