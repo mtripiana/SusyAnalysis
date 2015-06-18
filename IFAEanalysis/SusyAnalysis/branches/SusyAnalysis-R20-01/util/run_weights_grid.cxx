@@ -135,6 +135,9 @@ int main( int argc, char* argv[] ) {
 
   tadd_grid(fileNames, outDirectory+"/Nom_"+mergedName+"_tree"+tagDSid+".root", false);
 
+  //clean ROOTMERGE leftovers  (investigate a bit more anyways...)
+  system("ls -lrt1 ROOTMERGE* | grep $USER | rev | cut -d' ' -f 1 | rev | while read i; do rm -rf $i; done");
+
   return 0;
 }
 
