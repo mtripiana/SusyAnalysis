@@ -178,7 +178,7 @@ EL::StatusCode chorizo :: setupJob (EL::Job& job)
 {
   //Info("setupJob()", "HERE");
 
-  job.useXAOD ();
+  job.useXAOD();
 
   // let's initialize the algorithm to use the xAODRootAccess package
   xAOD::Init( "chorizo" ).ignore(); // call before opening first file
@@ -212,451 +212,451 @@ void chorizo :: bookTree(){
 
   //add the branches to be saved
   if (output){
-    output->tree()->Branch ("RunNumber", &RunNumber, "RunNumber/I");
-    output->tree()->Branch ("EventNumber", &EventNumber, "EventNumber/I");
-    output->tree()->Branch ("lb", &lb, "lb/I");
-    output->tree()->Branch ("bcid", &bcid, "bcid/I");
-    output->tree()->Branch ("procID", &procID, "procID/I");
-    //    output->tree()->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
-    output->tree()->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
-    output->tree()->Branch ("nVertex", &nVertex, "nVertex/I");                        
+    m_atree->Branch ("RunNumber", &RunNumber, "RunNumber/I");
+    m_atree->Branch ("EventNumber", &EventNumber, "EventNumber/I");
+    m_atree->Branch ("lb", &lb, "lb/I");
+    m_atree->Branch ("bcid", &bcid, "bcid/I");
+    m_atree->Branch ("procID", &procID, "procID/I");
+    //    m_atree->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
+    m_atree->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
+    m_atree->Branch ("nVertex", &nVertex, "nVertex/I");                        
     //common vars
-    output->tree()->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
-    output->tree()->Branch ("MC_w", &MC_w, "MC_w/F");                       
+    m_atree->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
+    m_atree->Branch ("MC_w", &MC_w, "MC_w/F");                       
 
     //presel
-    output->tree()->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
-    output->tree()->Branch("isTrigger",&isTrigger);
+    m_atree->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
+    m_atree->Branch("isTrigger",&isTrigger);
     
     //FlowTree
     if (doFlowTree){
-      output->tree()->Branch("isGRL",&isGRL,"isGRL/O", 10000);
-      output->tree()->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
-      output->tree()->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
-      output->tree()->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
-      output->tree()->Branch("isTileTrip",&isTileTrip,"isTileTrip/O", 10000);
-      output->tree()->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
-      output->tree()->Branch("isFakeMet",&isFakeMet,"isFakeMet/O", 10000);
-      output->tree()->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
-      output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 10000);
-      output->tree()->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
-      output->tree()->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
+      m_atree->Branch("isGRL",&isGRL,"isGRL/O", 10000);
+      m_atree->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
+      m_atree->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
+      m_atree->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
+      m_atree->Branch("isTileTrip",&isTileTrip,"isTileTrip/O", 10000);
+      m_atree->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
+      m_atree->Branch("isFakeMet",&isFakeMet,"isFakeMet/O", 10000);
+      m_atree->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
+      m_atree->Branch("isBadID",&isBadID,"isBadID/O", 10000);
+      m_atree->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
+      m_atree->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
     }
 
     
     //metadata
-    output->tree()->Branch ("xsec", &meta_xsec, "xsec/F");
-    output->tree()->Branch ("xsec_relunc", &meta_xsec_relunc, "xsec_relunc/F");
-    output->tree()->Branch ("kfactor", &meta_kfactor, "kfactor/F");
-    output->tree()->Branch ("feff", &meta_feff, "feff/F");
-    output->tree()->Branch ("nsim", &meta_nsim, "nsim/F");
-    output->tree()->Branch ("nwsim", &meta_nwsim, "nwsim/F");
-    output->tree()->Branch ("lumi", &meta_lumi, "lumi/F");
+    m_atree->Branch ("xsec", &meta_xsec, "xsec/F");
+    m_atree->Branch ("xsec_relunc", &meta_xsec_relunc, "xsec_relunc/F");
+    m_atree->Branch ("kfactor", &meta_kfactor, "kfactor/F");
+    m_atree->Branch ("feff", &meta_feff, "feff/F");
+    m_atree->Branch ("nsim", &meta_nsim, "nsim/F");
+    m_atree->Branch ("nwsim", &meta_nwsim, "nwsim/F");
+    m_atree->Branch ("lumi", &meta_lumi, "lumi/F");
 
 
     if(doAnaTree){ //AnalysisTree
       //weights
-      //output->tree()->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
-      output->tree()->Branch ("w_average", &w_average, "w_average/F");             
-      output->tree()->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
-      output->tree()->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
-      output->tree()->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
-      output->tree()->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
-      output->tree()->Branch ("e_SF", &e_SF,"e_SF/F");
-      output->tree()->Branch ("m_SF", &m_SF,"m_SF/F");
-      output->tree()->Branch ("ph_SF", &ph_SF,"ph_SF/F");
-      output->tree()->Branch ("e_SFu", &e_SFu,"e_SFu/F");
-      output->tree()->Branch ("m_SFu", &m_SFu,"m_SFu/F");
-      output->tree()->Branch ("ph_SFu", &ph_SFu,"ph_SFu/F");
-      output->tree()->Branch ("e_SFd", &e_SFd,"e_SFd/F");
-      output->tree()->Branch ("m_SFd", &m_SFd,"m_SFd/F");
-      output->tree()->Branch ("ph_SFd", &ph_SFd,"ph_SFd/F");
+      //m_atree->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
+      m_atree->Branch ("w_average", &w_average, "w_average/F");             
+      m_atree->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
+      m_atree->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
+      m_atree->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
+      m_atree->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
+      m_atree->Branch ("e_SF", &e_SF,"e_SF/F");
+      m_atree->Branch ("m_SF", &m_SF,"m_SF/F");
+      m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
+      m_atree->Branch ("e_SFu", &e_SFu,"e_SFu/F");
+      m_atree->Branch ("m_SFu", &m_SFu,"m_SFu/F");
+      m_atree->Branch ("ph_SFu", &ph_SFu,"ph_SFu/F");
+      m_atree->Branch ("e_SFd", &e_SFd,"e_SFd/F");
+      m_atree->Branch ("m_SFd", &m_SFd,"m_SFd/F");
+      m_atree->Branch ("ph_SFd", &ph_SFd,"ph_SFd/F");
 
       //boson 
-      output->tree()->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
+      m_atree->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
 
-      output->tree()->Branch ("bosonVec_reco_pt", &bosonVec_reco_pt, "bosonVec_reco_pt/F");             
-      output->tree()->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
-      output->tree()->Branch ("bosonVec_reco_phi", &bosonVec_reco_phi, "bosonVec_reco_phi/F");      
+      m_atree->Branch ("bosonVec_reco_pt", &bosonVec_reco_pt, "bosonVec_reco_pt/F");             
+      m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
+      m_atree->Branch ("bosonVec_reco_phi", &bosonVec_reco_phi, "bosonVec_reco_phi/F");      
       
-      output->tree()->Branch ("bosonVec_reco_pt_vmu", &bosonVec_reco_pt_vmu, "bosonVec_reco_pt_vmu/F");             
-      //output->tree()->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
-      output->tree()->Branch ("bosonVec_reco_phi_vmu", &bosonVec_reco_phi_vmu, "bosonVec_reco_phi_vmu/F");                
+      m_atree->Branch ("bosonVec_reco_pt_vmu", &bosonVec_reco_pt_vmu, "bosonVec_reco_pt_vmu/F");             
+      //m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
+      m_atree->Branch ("bosonVec_reco_phi_vmu", &bosonVec_reco_phi_vmu, "bosonVec_reco_phi_vmu/F");                
       
-      output->tree()->Branch ("bosonVec_truth_pt", &bosonVec_truth_pt, "bosonVec_truth_pt/F");             
-      output->tree()->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
-      output->tree()->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
+      m_atree->Branch ("bosonVec_truth_pt", &bosonVec_truth_pt, "bosonVec_truth_pt/F");             
+      m_atree->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
+      m_atree->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
 
-      output->tree()->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
-      output->tree()->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
-      output->tree()->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
-      output->tree()->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
+      m_atree->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
+      m_atree->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
+      m_atree->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
+      m_atree->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
 
       //truth
-      output->tree()->Branch("truth_M",&truth_M,"truth_M/F", 10000);
-      output->tree()->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
+      m_atree->Branch("truth_M",&truth_M,"truth_M/F", 10000);
+      m_atree->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
 
 
-      output->tree()->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
+      m_atree->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
 
-      output->tree()->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
-      output->tree()->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
-      output->tree()->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
-      output->tree()->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
-      output->tree()->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
-      output->tree()->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
-      output->tree()->Branch("truth_met",&truth_met,"truth_met/F", 10000);
-      output->tree()->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
+      m_atree->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
+      m_atree->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
+      m_atree->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
+      m_atree->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
+      m_atree->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
+      m_atree->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
+      m_atree->Branch("truth_met",&truth_met,"truth_met/F", 10000);
+      m_atree->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
 
       //top
-      output->tree()->Branch("Top_truth_pt",&Top_truth_pt,"Top_truth_pt/F", 10000);
-      output->tree()->Branch("Topbar_truth_pt",&Topbar_truth_pt,"Topbar_truth_pt/F", 10000);
-      output->tree()->Branch("avTop_truth_pt",&avTop_truth_pt,"avTop_truth_pt/F", 10000);
-      output->tree()->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
+      m_atree->Branch("Top_truth_pt",&Top_truth_pt,"Top_truth_pt/F", 10000);
+      m_atree->Branch("Topbar_truth_pt",&Topbar_truth_pt,"Topbar_truth_pt/F", 10000);
+      m_atree->Branch("avTop_truth_pt",&avTop_truth_pt,"avTop_truth_pt/F", 10000);
+      m_atree->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
 
       //photons
-      output->tree()->Branch("ph_N",&ph_N,"ph_N/I", 10000);
-      output->tree()->Branch("ph_pt",&ph_pt);
-      output->tree()->Branch("ph_eta",&ph_eta);
-      output->tree()->Branch("ph_phi",&ph_phi);
-      output->tree()->Branch("ph_etiso30",&ph_etiso30);
-      output->tree()->Branch("ph_ptiso30",&ph_ptiso30);
-      output->tree()->Branch("ph_tight",&ph_tight);
-      output->tree()->Branch("ph_type",&ph_type);
-      output->tree()->Branch("ph_origin",&ph_origin);
+      m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
+      m_atree->Branch("ph_pt",&ph_pt);
+      m_atree->Branch("ph_eta",&ph_eta);
+      m_atree->Branch("ph_phi",&ph_phi);
+      m_atree->Branch("ph_etiso30",&ph_etiso30);
+      m_atree->Branch("ph_ptiso30",&ph_ptiso30);
+      m_atree->Branch("ph_tight",&ph_tight);
+      m_atree->Branch("ph_type",&ph_type);
+      m_atree->Branch("ph_origin",&ph_origin);
 
-      output->tree()->Branch("ph_SF",&ph_SF,"ph_SF/F");
-      output->tree()->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
-      output->tree()->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
+      m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
+      m_atree->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
+      m_atree->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
 
       //electrons
-      output->tree()->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
-      output->tree()->Branch("e_truth_eta",&e_truth_eta,"e_truth_eta/F", 10000);
-      output->tree()->Branch("e_truth_phi",&e_truth_phi,"e_truth_phi/F", 10000);
+      m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
+      m_atree->Branch("e_truth_eta",&e_truth_eta,"e_truth_eta/F", 10000);
+      m_atree->Branch("e_truth_phi",&e_truth_phi,"e_truth_phi/F", 10000);
 
-      output->tree()->Branch("e_N",&e_N,"e_N/I", 10000);
-      output->tree()->Branch("e_pt",&e_pt);      
-      output->tree()->Branch("e_eta",&e_eta);
-      output->tree()->Branch("e_phi",&e_phi);
-      output->tree()->Branch("e_type",&e_type);
-      output->tree()->Branch("e_origin",&e_origin);            
-      output->tree()->Branch("e_etiso30",&e_etiso30);
-      output->tree()->Branch("e_ptiso30",&e_ptiso30);
-      output->tree()->Branch("e_etiso20",&e_etiso20);
-      output->tree()->Branch("e_ptiso20",&e_ptiso20);
-      output->tree()->Branch("e_isoT",&e_isoTight);
-      output->tree()->Branch("e_isoL",&e_isoLoose);
-      output->tree()->Branch("e_isoVL",&e_isoVeryLoose);
-      output->tree()->Branch("e_isoVLTO",&e_isoVeryLooseTrackOnly);
-      output->tree()->Branch("e_isoG",&e_isoGradient);
-      output->tree()->Branch("e_isoGLoose",&e_isoGradientLoose);
-      output->tree()->Branch("e_id",&e_id);
-      output->tree()->Branch("e_d0_sig",&e_d0_sig);  
-      output->tree()->Branch("e_z0",&e_z0);      
+      m_atree->Branch("e_N",&e_N,"e_N/I", 10000);
+      m_atree->Branch("e_pt",&e_pt);      
+      m_atree->Branch("e_eta",&e_eta);
+      m_atree->Branch("e_phi",&e_phi);
+      m_atree->Branch("e_type",&e_type);
+      m_atree->Branch("e_origin",&e_origin);            
+      m_atree->Branch("e_etiso30",&e_etiso30);
+      m_atree->Branch("e_ptiso30",&e_ptiso30);
+      m_atree->Branch("e_etiso20",&e_etiso20);
+      m_atree->Branch("e_ptiso20",&e_ptiso20);
+      m_atree->Branch("e_isoT",&e_isoTight);
+      m_atree->Branch("e_isoL",&e_isoLoose);
+      m_atree->Branch("e_isoVL",&e_isoVeryLoose);
+      m_atree->Branch("e_isoVLTO",&e_isoVeryLooseTrackOnly);
+      m_atree->Branch("e_isoG",&e_isoGradient);
+      m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
+      m_atree->Branch("e_id",&e_id);
+      m_atree->Branch("e_d0_sig",&e_d0_sig);  
+      m_atree->Branch("e_z0",&e_z0);      
 
-      output->tree()->Branch("eb_N",&eb_N,"eb_N/I", 10000);
-      output->tree()->Branch("eb_pt",&eb_pt);
-      output->tree()->Branch("eb_eta",&eb_eta);
-      output->tree()->Branch("eb_phi",&eb_phi);
+      m_atree->Branch("eb_N",&eb_N,"eb_N/I", 10000);
+      m_atree->Branch("eb_pt",&eb_pt);
+      m_atree->Branch("eb_eta",&eb_eta);
+      m_atree->Branch("eb_phi",&eb_phi);
 
-      output->tree()->Branch("e_trigger",&e_trigger);
+      m_atree->Branch("e_trigger",&e_trigger);
 
-      output->tree()->Branch("e_MT",&e_MT,"e_MT/F", 10000);
-      output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
-      output->tree()->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
-      output->tree()->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
-      output->tree()->Branch("e_M",&e_M,"e_M/F", 10000);
-      output->tree()->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
+      m_atree->Branch("e_MT",&e_MT,"e_MT/F", 10000);
+      m_atree->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
+      m_atree->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
+      m_atree->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
+      m_atree->Branch("e_M",&e_M,"e_M/F", 10000);
+      m_atree->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
 
       
       //muons
-      output->tree()->Branch("m_N",&m_N,"m_N/I",10000);
-      output->tree()->Branch("m_pt",&m_pt);
-      output->tree()->Branch("m_eta",&m_eta);
-      output->tree()->Branch("m_phi",&m_phi);      
-      output->tree()->Branch("m_type",&m_type);
-      output->tree()->Branch("m_origin",&m_origin);
-      output->tree()->Branch("m_etiso20",&m_etiso20);          
-      output->tree()->Branch("m_ptiso20",&m_ptiso20);          
-      output->tree()->Branch("m_etiso30",&m_etiso30);          
-      output->tree()->Branch("m_ptiso30",&m_ptiso30);          
-      output->tree()->Branch("m_isoTight",&m_isoTight);
-      output->tree()->Branch("m_isoLoose",&m_isoLoose);
-      output->tree()->Branch("m_isoVeryLoose",&m_isoVeryLoose);
-      output->tree()->Branch("m_isoVeryLooseTrackOnly",&m_isoVeryLooseTrackOnly);
-      output->tree()->Branch("m_isoGradient",&m_isoGradient);
-      output->tree()->Branch("m_isoGradientLoose",&m_isoGradientLoose);
+      m_atree->Branch("m_N",&m_N,"m_N/I",10000);
+      m_atree->Branch("m_pt",&m_pt);
+      m_atree->Branch("m_eta",&m_eta);
+      m_atree->Branch("m_phi",&m_phi);      
+      m_atree->Branch("m_type",&m_type);
+      m_atree->Branch("m_origin",&m_origin);
+      m_atree->Branch("m_etiso20",&m_etiso20);          
+      m_atree->Branch("m_ptiso20",&m_ptiso20);          
+      m_atree->Branch("m_etiso30",&m_etiso30);          
+      m_atree->Branch("m_ptiso30",&m_ptiso30);          
+      m_atree->Branch("m_isoTight",&m_isoTight);
+      m_atree->Branch("m_isoLoose",&m_isoLoose);
+      m_atree->Branch("m_isoVeryLoose",&m_isoVeryLoose);
+      m_atree->Branch("m_isoVeryLooseTrackOnly",&m_isoVeryLooseTrackOnly);
+      m_atree->Branch("m_isoGradient",&m_isoGradient);
+      m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
 
-      output->tree()->Branch("mb_N",&mb_N,"mb_N/I",10000);
-      output->tree()->Branch("mb_pt",&mb_pt);
-      output->tree()->Branch("mb_eta",&mb_eta);
-      output->tree()->Branch("mb_phi",&mb_phi);
+      m_atree->Branch("mb_N",&mb_N,"mb_N/I",10000);
+      m_atree->Branch("mb_pt",&mb_pt);
+      m_atree->Branch("mb_eta",&mb_eta);
+      m_atree->Branch("mb_phi",&mb_phi);
 
-      output->tree()->Branch("m_trigger",&m_trigger);
+      m_atree->Branch("m_trigger",&m_trigger);
 
-      output->tree()->Branch("m_M",&m_M,"m_M/F", 10000);                            
-      output->tree()->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
-      output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
-      output->tree()->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
-      output->tree()->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                            output->tree()->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
-      output->tree()->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
+      m_atree->Branch("m_M",&m_M,"m_M/F", 10000);                            
+      m_atree->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
+      m_atree->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
+      m_atree->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
+      m_atree->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                            m_atree->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
+      m_atree->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
 
 
       //jets
-      output->tree()->Branch("j_N"   ,&j_N   ,"j_N/I"   ,10000);
-      output->tree()->Branch("j_N30" ,&j_N30 ,"j_N30/I" ,10000);
-      output->tree()->Branch("j_N40" ,&j_N40 ,"j_N40/I" ,10000);
-      output->tree()->Branch("j_N50" ,&j_N50 ,"j_N50/I" ,10000);
-      output->tree()->Branch("j_N60" ,&j_N60 ,"j_N60/I" ,10000);
-      output->tree()->Branch("j_N80" ,&j_N80 ,"j_N80/I" ,10000);
+      m_atree->Branch("j_N"   ,&j_N   ,"j_N/I"   ,10000);
+      m_atree->Branch("j_N30" ,&j_N30 ,"j_N30/I" ,10000);
+      m_atree->Branch("j_N40" ,&j_N40 ,"j_N40/I" ,10000);
+      m_atree->Branch("j_N50" ,&j_N50 ,"j_N50/I" ,10000);
+      m_atree->Branch("j_N60" ,&j_N60 ,"j_N60/I" ,10000);
+      m_atree->Branch("j_N80" ,&j_N80 ,"j_N80/I" ,10000);
 
-      output->tree()->Branch("j_pt", &j_pt);
-      output->tree()->Branch("j_eta",&j_eta);
-      output->tree()->Branch("j_phi",&j_phi);
-      output->tree()->Branch("j_m",  &j_m);
+      m_atree->Branch("j_pt", &j_pt);
+      m_atree->Branch("j_eta",&j_eta);
+      m_atree->Branch("j_phi",&j_phi);
+      m_atree->Branch("j_m",  &j_m);
 
-      output->tree()->Branch("j_chf", &j_chf);
-      output->tree()->Branch("j_emf", &j_emf);
-      output->tree()->Branch("j_fsm", &j_fsm);
-      output->tree()->Branch("j_time",&j_time);
-      output->tree()->Branch("j_nTrk",&j_nTrk);
-      output->tree()->Branch("j_sumPtTrk",&j_sumPtTrk);
-      output->tree()->Branch("j_jvf",&j_jvf);
-      output->tree()->Branch("j_jvt",&j_jvt);
-      output->tree()->Branch("j_tflavor",&j_tflavor);
+      m_atree->Branch("j_chf", &j_chf);
+      m_atree->Branch("j_emf", &j_emf);
+      m_atree->Branch("j_fsm", &j_fsm);
+      m_atree->Branch("j_time",&j_time);
+      m_atree->Branch("j_nTrk",&j_nTrk);
+      m_atree->Branch("j_sumPtTrk",&j_sumPtTrk);
+      m_atree->Branch("j_jvf",&j_jvf);
+      m_atree->Branch("j_jvt",&j_jvt);
+      m_atree->Branch("j_tflavor",&j_tflavor);
 
-      output->tree()->Branch("j1_mT" ,&j1_mT);
-      output->tree()->Branch("j2_mT" ,&j2_mT);
-      output->tree()->Branch("j3_mT" ,&j3_mT);
-      output->tree()->Branch("j4_mT" ,&j4_mT);
+      m_atree->Branch("j1_mT" ,&j1_mT);
+      m_atree->Branch("j2_mT" ,&j2_mT);
+      m_atree->Branch("j3_mT" ,&j3_mT);
+      m_atree->Branch("j4_mT" ,&j4_mT);
 
-      output->tree()->Branch("JVF_min"  ,&JVF_min  ,"JVF_min/O"  ,10000);                           
+      m_atree->Branch("JVF_min"  ,&JVF_min  ,"JVF_min/O"  ,10000);                           
 
-      output->tree()->Branch("j_truth_N",&j_truth_N,"j_truth_N/I", 10000);
-      output->tree()->Branch("j_tau_N",&j_tau_N);
+      m_atree->Branch("j_truth_N",&j_truth_N,"j_truth_N/I", 10000);
+      m_atree->Branch("j_tau_N",&j_tau_N);
 
-      output->tree()->Branch("j_truth_pt1",&j_truth_pt1,"j_truth_pt1/F", 10000);
-      output->tree()->Branch("j_truth_eta1",&j_truth_eta1,"j_truth_eta1/F", 10000);
+      m_atree->Branch("j_truth_pt1",&j_truth_pt1,"j_truth_pt1/F", 10000);
+      m_atree->Branch("j_truth_eta1",&j_truth_eta1,"j_truth_eta1/F", 10000);
 
       //tile output
       if(dumpTile){
-	output->tree()->Branch("j_const_pt",&j_const_pt);
-	output->tree()->Branch("j_const_eta",&j_const_eta);
-	output->tree()->Branch("j_const_phi",&j_const_phi);
-	output->tree()->Branch("j_const_m",&j_const_m);
+	m_atree->Branch("j_const_pt",&j_const_pt);
+	m_atree->Branch("j_const_eta",&j_const_eta);
+	m_atree->Branch("j_const_phi",&j_const_phi);
+	m_atree->Branch("j_const_m",&j_const_m);
 
-	output->tree()->Branch("j1_cl_N",&j1_cl_N,"j1_cl_N/I",10000);
-	output->tree()->Branch("j1_cl_pt",&j1_cl_pt);
-	output->tree()->Branch("j1_cl_eta",&j1_cl_eta);
-	output->tree()->Branch("j1_cl_phi",&j1_cl_phi);
-	output->tree()->Branch("j1_cl_emf",&j1_cl_emf);
+	m_atree->Branch("j1_cl_N",&j1_cl_N,"j1_cl_N/I",10000);
+	m_atree->Branch("j1_cl_pt",&j1_cl_pt);
+	m_atree->Branch("j1_cl_eta",&j1_cl_eta);
+	m_atree->Branch("j1_cl_phi",&j1_cl_phi);
+	m_atree->Branch("j1_cl_emf",&j1_cl_emf);
 
-	output->tree()->Branch("j2_cl_N",&j2_cl_N,"j2_cl_N/I",10000);
-	output->tree()->Branch("j2_cl_pt",&j2_cl_pt);
-	output->tree()->Branch("j2_cl_eta",&j2_cl_eta);
-	output->tree()->Branch("j2_cl_phi",&j2_cl_phi);
-	output->tree()->Branch("j2_cl_emf",&j2_cl_emf);
+	m_atree->Branch("j2_cl_N",&j2_cl_N,"j2_cl_N/I",10000);
+	m_atree->Branch("j2_cl_pt",&j2_cl_pt);
+	m_atree->Branch("j2_cl_eta",&j2_cl_eta);
+	m_atree->Branch("j2_cl_phi",&j2_cl_phi);
+	m_atree->Branch("j2_cl_emf",&j2_cl_emf);
       }
 
       //btagging
-      output->tree()->Branch("bj_N",&bj_N,"bj_N/I", 10000);
-      output->tree()->Branch("bj_Ne80",&bj_Ne80,"bj_Ne80/I", 10000);
-      output->tree()->Branch("btag_weight_total",&btag_weight_total,"btag_weight_total/F", 10000);
-      output->tree()->Branch("btag_weight_total_80eff",&btag_weight_total_80eff,"btag_weight_total_80eff/F", 10000);
+      m_atree->Branch("bj_N",&bj_N,"bj_N/I", 10000);
+      m_atree->Branch("bj_Ne80",&bj_Ne80,"bj_Ne80/I", 10000);
+      m_atree->Branch("btag_weight_total",&btag_weight_total,"btag_weight_total/F", 10000);
+      m_atree->Branch("btag_weight_total_80eff",&btag_weight_total_80eff,"btag_weight_total_80eff/F", 10000);
 
-      output->tree()->Branch("j_tag_MV1",&j_tag_MV1);
-      output->tree()->Branch("j_tag_MV2c20",&j_tag_MV2c20);
+      m_atree->Branch("j_tag_MV1",&j_tag_MV1);
+      m_atree->Branch("j_tag_MV2c20",&j_tag_MV2c20);
 
-      output->tree()->Branch("bj_Nt70",&bj_Nt70,"bj_Nt70/I", 10000);
-      output->tree()->Branch("bj_Nt77",&bj_Nt77,"bj_Nt77/I", 10000);
-      output->tree()->Branch("bj_Nt80",&bj_Nt80,"bj_Nt80/I", 10000);
+      m_atree->Branch("bj_Nt70",&bj_Nt70,"bj_Nt70/I", 10000);
+      m_atree->Branch("bj_Nt77",&bj_Nt77,"bj_Nt77/I", 10000);
+      m_atree->Branch("bj_Nt80",&bj_Nt80,"bj_Nt80/I", 10000);
 
-      output->tree()->Branch("j_btruth_70",&j_btruth_70);
-      output->tree()->Branch("j_btruth_77",&j_btruth_77);
-      output->tree()->Branch("j_btruth_80",&j_btruth_80);
+      m_atree->Branch("j_btruth_70",&j_btruth_70);
+      m_atree->Branch("j_btruth_77",&j_btruth_77);
+      m_atree->Branch("j_btruth_80",&j_btruth_80);
       
       //met 
-      output->tree()->Branch("met",&met);
-      output->tree()->Branch("met_phi",&met_phi);
+      m_atree->Branch("met",&met);
+      m_atree->Branch("met_phi",&met_phi);
 
-      output->tree()->Branch("met_cst",&met_cst,"met_cst/f", 10000);
-      output->tree()->Branch("met_tst",&met_tst,"met_tst/f", 10000);
+      m_atree->Branch("met_cst",&met_cst,"met_cst/f", 10000);
+      m_atree->Branch("met_tst",&met_tst,"met_tst/f", 10000);
       
-      output->tree()->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
+      m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
 
       //met recoil system
-      output->tree()->Branch("rmet_par", &rmet_par);
-      output->tree()->Branch("rmet_norm", &rmet_norm);
-      output->tree()->Branch("rmet_par_mod", &rmet_par_mod);
-      output->tree()->Branch("rmet_norm_mod", &rmet_norm_mod);
-      output->tree()->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
+      m_atree->Branch("rmet_par", &rmet_par);
+      m_atree->Branch("rmet_norm", &rmet_norm);
+      m_atree->Branch("rmet_par_mod", &rmet_par_mod);
+      m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
+      m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
 
       //(transv. thrust and sphericity
-      output->tree()->Branch("tr_spher",&tr_spher); 
-      output->tree()->Branch("tr_thrust",&tr_thrust); 
+      m_atree->Branch("tr_spher",&tr_spher); 
+      m_atree->Branch("tr_thrust",&tr_thrust); 
 
       //event variables
       //dphi
-      output->tree()->Branch("dPhi_met_j1",&dPhi_met_j1);
-      output->tree()->Branch("dPhi_met_j2",&dPhi_met_j2);
-      output->tree()->Branch("dPhi_met_j3",&dPhi_met_j3);
-      output->tree()->Branch("dPhi_met_j4",&dPhi_met_j4);
-      output->tree()->Branch("dPhi_met_mettrk",&dPhi_met_mettrk,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
-      output->tree()->Branch("dPhi_min",&dPhi_min);
-      output->tree()->Branch("dPhi_min_alljets",&dPhi_min_alljets);
+      m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
+      m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
+      m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
+      m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
+      m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
+      m_atree->Branch("dPhi_min",&dPhi_min);
+      m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
 
-      output->tree()->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
-      output->tree()->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
-      output->tree()->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
-      output->tree()->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
+      m_atree->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
+      m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
+      m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
+      m_atree->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
 
       //dR
-      output->tree()->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
-      output->tree()->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
-      output->tree()->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
+      m_atree->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
+      m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
+      m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
 
-      output->tree()->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
-      output->tree()->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
-      output->tree()->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
-      output->tree()->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
-      output->tree()->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
-      output->tree()->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
+      m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
+      m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
+      m_atree->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
+      m_atree->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
+      m_atree->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
+      m_atree->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
 
       //dEta
-      output->tree()->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
+      m_atree->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
 
       //Mbl_min  (for single top CR)
-      output->tree()->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
-      output->tree()->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
+      m_atree->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
+      m_atree->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
       
-      output->tree()->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
-      output->tree()->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
-      output->tree()->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
-      output->tree()->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
-      output->tree()->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
-      output->tree()->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
+      m_atree->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
+      m_atree->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
+      m_atree->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
+      m_atree->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
+      m_atree->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
+      m_atree->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
 
 
       //MTs
-      output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met);
-      output->tree()->Branch("MT_bcl_met",&MT_bcl_met);
-      output->tree()->Branch("MT_bfar_met",&MT_bfar_met);
-      output->tree()->Branch("MT_lcl_met",&MT_lcl_met);
-      output->tree()->Branch("MT_jsoft_met",&MT_jsoft_met);
+      m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
+      m_atree->Branch("MT_bcl_met",&MT_bcl_met);
+      m_atree->Branch("MT_bfar_met",&MT_bfar_met);
+      m_atree->Branch("MT_lcl_met",&MT_lcl_met);
+      m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
 
       //Misc
-      output->tree()->Branch("mjj",&mjj,"mjj/F", 10000);  
-      output->tree()->Branch("mbb",&mbb,"mbb/F", 10000);         
+      m_atree->Branch("mjj",&mjj,"mjj/F", 10000);  
+      m_atree->Branch("mbb",&mbb,"mbb/F", 10000);         
       
-      output->tree()->Branch("mct",&mct,"mct/F", 10000);    
-      output->tree()->Branch("mct_corr",&mct_corr);    
-      output->tree()->Branch("meff",&meff);
-      output->tree()->Branch("HT",&HT,"HT/F", 10000);    
-      output->tree()->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
+      m_atree->Branch("mct",&mct,"mct/F", 10000);    
+      m_atree->Branch("mct_corr",&mct_corr);    
+      m_atree->Branch("meff",&meff);
+      m_atree->Branch("HT",&HT,"HT/F", 10000);    
+      m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
       
       //Razor
-      output->tree()->Branch("MR",&MR,"MR/F", 10000);
-      output->tree()->Branch("MTR",&MTR);
-      output->tree()->Branch("R",&R);
+      m_atree->Branch("MR",&MR,"MR/F", 10000);
+      m_atree->Branch("MTR",&MTR);
+      m_atree->Branch("R",&R);
             
-      output->tree()->Branch("shatR",&shatR);
-      output->tree()->Branch("gaminvR",&gaminvR);
-      output->tree()->Branch("mdeltaR",&mdeltaR);
-      output->tree()->Branch("cosptR",&cosptR);
+      m_atree->Branch("shatR",&shatR);
+      m_atree->Branch("gaminvR",&gaminvR);
+      m_atree->Branch("mdeltaR",&mdeltaR);
+      m_atree->Branch("cosptR",&cosptR);
       
       //Z candidate 
-      output->tree()->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
-      output->tree()->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
-      output->tree()->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
-      output->tree()->Branch("Z_m",&Z_m,"Z_m/F", 10000);
-      output->tree()->Branch("lep3_MT",&lep3_MT);
-      output->tree()->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+      m_atree->Branch("lep3_MT",&lep3_MT);
+      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
 
 
       //top reconstruction
-      output->tree()->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
-      output->tree()->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
-      output->tree()->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
+      m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
+      m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
+      m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
       //fat jets 
-      output->tree()->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
-      output->tree()->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
-      output->tree()->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
-      output->tree()->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
-      output->tree()->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
-      output->tree()->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
-      output->tree()->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
-      output->tree()->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
-      output->tree()->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
-      output->tree()->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
+      m_atree->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
+      m_atree->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
+      m_atree->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
+      m_atree->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
+      m_atree->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
+      m_atree->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
+      m_atree->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
+      m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
+      m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
+      m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
       
       //Extended trigger info
       if(doTrigExt){
 
-	output->tree()->Branch("trig_l1_ex",               &trig_l1_ex 		              ,"trig_l1_ex/F"); 		            
-	output->tree()->Branch("trig_l1_ey", 		   &trig_l1_ey 		    	      ,"trig_l1_ey/F"); 		    
-	output->tree()->Branch("trig_l1_et", 		   &trig_l1_et 		    	      ,"trig_l1_et/F"); 		    
-	output->tree()->Branch("trig_l1_sumet", 	   &trig_l1_sumet 	   	      ,"trig_l1_sumet/F"); 		    
-	output->tree()->Branch("trig_l1_phi",		   &trig_l1_phi		    	      ,"trig_l1_phi/F");		    
+	m_atree->Branch("trig_l1_ex",               &trig_l1_ex 		              ,"trig_l1_ex/F"); 		            
+	m_atree->Branch("trig_l1_ey", 		   &trig_l1_ey 		    	      ,"trig_l1_ey/F"); 		    
+	m_atree->Branch("trig_l1_et", 		   &trig_l1_et 		    	      ,"trig_l1_et/F"); 		    
+	m_atree->Branch("trig_l1_sumet", 	   &trig_l1_sumet 	   	      ,"trig_l1_sumet/F"); 		    
+	m_atree->Branch("trig_l1_phi",		   &trig_l1_phi		    	      ,"trig_l1_phi/F");		    
 
-	output->tree()->Branch("trig_hlt_EFJetEtSum_ex",                   &trig_hlt_EFJetEtSum_ex 		              ,"trig_hlt_EFJetEtSum_ex/F"); 		            
-	output->tree()->Branch("trig_hlt_EFJetEtSum_ey", 		   &trig_hlt_EFJetEtSum_ey 		    	      ,"trig_hlt_EFJetEtSum_ey/F"); 		    
-	output->tree()->Branch("trig_hlt_EFJetEtSum_et", 		   &trig_hlt_EFJetEtSum_et 		    	      ,"trig_hlt_EFJetEtSum_et/F"); 		    
-	output->tree()->Branch("trig_hlt_EFJetEtSum_sumet", 		   &trig_hlt_EFJetEtSum_sumet 		    	      ,"trig_hlt_EFJetEtSum_sumet/F"); 		    
-	output->tree()->Branch("trig_hlt_EFJetEtSum_phi",		   &trig_hlt_EFJetEtSum_phi		    	      ,"trig_hlt_EFJetEtSum_phi/F");		    
+	m_atree->Branch("trig_hlt_EFJetEtSum_ex",                   &trig_hlt_EFJetEtSum_ex 		              ,"trig_hlt_EFJetEtSum_ex/F"); 		            
+	m_atree->Branch("trig_hlt_EFJetEtSum_ey", 		   &trig_hlt_EFJetEtSum_ey 		    	      ,"trig_hlt_EFJetEtSum_ey/F"); 		    
+	m_atree->Branch("trig_hlt_EFJetEtSum_et", 		   &trig_hlt_EFJetEtSum_et 		    	      ,"trig_hlt_EFJetEtSum_et/F"); 		    
+	m_atree->Branch("trig_hlt_EFJetEtSum_sumet", 		   &trig_hlt_EFJetEtSum_sumet 		    	      ,"trig_hlt_EFJetEtSum_sumet/F"); 		    
+	m_atree->Branch("trig_hlt_EFJetEtSum_phi",		   &trig_hlt_EFJetEtSum_phi		    	      ,"trig_hlt_EFJetEtSum_phi/F");		    
 									   					    	      					    
-	output->tree()->Branch("trig_hlt_T2MissingET_ex", 		   &trig_hlt_T2MissingET_ex 		    	      ,"trig_hlt_T2MissingET_ex/F"); 		    
-	output->tree()->Branch("trig_hlt_T2MissingET_ey", 		   &trig_hlt_T2MissingET_ey 		    	      ,"trig_hlt_T2MissingET_ey/F"); 		    
-	output->tree()->Branch("trig_hlt_T2MissingET_et", 		   &trig_hlt_T2MissingET_et 		    	      ,"trig_hlt_T2MissingET_et/F"); 		    
-	output->tree()->Branch("trig_hlt_T2MissingET_sumet", 		   &trig_hlt_T2MissingET_sumet 		    	      ,"trig_hlt_T2MissingET_sumet/F"); 		    
-	output->tree()->Branch("trig_hlt_T2MissingET_phi",		   &trig_hlt_T2MissingET_phi		      ,"trig_hlt_T2MissingET_phi/F");		    
+	m_atree->Branch("trig_hlt_T2MissingET_ex", 		   &trig_hlt_T2MissingET_ex 		    	      ,"trig_hlt_T2MissingET_ex/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_ey", 		   &trig_hlt_T2MissingET_ey 		    	      ,"trig_hlt_T2MissingET_ey/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_et", 		   &trig_hlt_T2MissingET_et 		    	      ,"trig_hlt_T2MissingET_et/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_sumet", 		   &trig_hlt_T2MissingET_sumet 		    	      ,"trig_hlt_T2MissingET_sumet/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_phi",		   &trig_hlt_T2MissingET_phi		      ,"trig_hlt_T2MissingET_phi/F");		    
 
-	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex/F"); 		    
-	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey/F"); 		    
-	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et/F"); 		    
-	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet/F"); 		    
-	output->tree()->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi",	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi/F");		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi",	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi/F");		    
 									   					    	      					    
-	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_ex", 	   &trig_hlt_TrigL2MissingET_FEB_ex 		      ,"trig_hlt_TrigL2MissingET_FEB_ex/F"); 		    
-	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_ey", 	   &trig_hlt_TrigL2MissingET_FEB_ey 		      ,"trig_hlt_TrigL2MissingET_FEB_ey/F"); 		    
-	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_et", 	   &trig_hlt_TrigL2MissingET_FEB_et 		      ,"trig_hlt_TrigL2MissingET_FEB_et/F"); 		    
-	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_sumet", 	   &trig_hlt_TrigL2MissingET_FEB_sumet 	    	      ,"trig_hlt_TrigL2MissingET_FEB_sumet/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigL2MissingET_FEB_phi",	   &trig_hlt_TrigL2MissingET_FEB_phi	    	      ,"trig_hlt_TrigL2MissingET_FEB_phi/F");	    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ex", 	   &trig_hlt_TrigL2MissingET_FEB_ex 		      ,"trig_hlt_TrigL2MissingET_FEB_ex/F"); 		    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ey", 	   &trig_hlt_TrigL2MissingET_FEB_ey 		      ,"trig_hlt_TrigL2MissingET_FEB_ey/F"); 		    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_et", 	   &trig_hlt_TrigL2MissingET_FEB_et 		      ,"trig_hlt_TrigL2MissingET_FEB_et/F"); 		    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_sumet", 	   &trig_hlt_TrigL2MissingET_FEB_sumet 	    	      ,"trig_hlt_TrigL2MissingET_FEB_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_phi",	   &trig_hlt_TrigL2MissingET_FEB_phi	    	      ,"trig_hlt_TrigL2MissingET_FEB_phi/F");	    
 									   					    	      					    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_ex", 		   &trig_hlt_TrigEFMissingET_ex 		      ,"trig_hlt_TrigEFMissingET_ex/F"); 		    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_ey", 		   &trig_hlt_TrigEFMissingET_ey 		      ,"trig_hlt_TrigEFMissingET_ey/F"); 		    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_et", 		   &trig_hlt_TrigEFMissingET_et 		      ,"trig_hlt_TrigEFMissingET_et/F"); 		    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_sumet", 	   &trig_hlt_TrigEFMissingET_sumet 	    	      ,"trig_hlt_TrigEFMissingET_sumet/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_phi",   	   &trig_hlt_TrigEFMissingET_phi	    	      ,"trig_hlt_TrigEFMissingET_phi/F");	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_ex", 		   &trig_hlt_TrigEFMissingET_ex 		      ,"trig_hlt_TrigEFMissingET_ex/F"); 		    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_ey", 		   &trig_hlt_TrigEFMissingET_ey 		      ,"trig_hlt_TrigEFMissingET_ey/F"); 		    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_et", 		   &trig_hlt_TrigEFMissingET_et 		      ,"trig_hlt_TrigEFMissingET_et/F"); 		    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_sumet", 	   &trig_hlt_TrigEFMissingET_sumet 	    	      ,"trig_hlt_TrigEFMissingET_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_phi",   	   &trig_hlt_TrigEFMissingET_phi	    	      ,"trig_hlt_TrigEFMissingET_phi/F");	    
 									   					    	      					    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_ex", 	   &trig_hlt_TrigEFMissingET_FEB_ex 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ex/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_ey", 	   &trig_hlt_TrigEFMissingET_FEB_ey 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ey/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_et", 	   &trig_hlt_TrigEFMissingET_FEB_et 	    	      ,"trig_hlt_TrigEFMissingET_FEB_et/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_sumet", 	   &trig_hlt_TrigEFMissingET_FEB_sumet 	    	      ,"trig_hlt_TrigEFMissingET_FEB_sumet/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_FEB_phi",	   &trig_hlt_TrigEFMissingET_FEB_phi	              ,"trig_hlt_TrigEFMissingET_FEB_phi/F");	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ex", 	   &trig_hlt_TrigEFMissingET_FEB_ex 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ex/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ey", 	   &trig_hlt_TrigEFMissingET_FEB_ey 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ey/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_et", 	   &trig_hlt_TrigEFMissingET_FEB_et 	    	      ,"trig_hlt_TrigEFMissingET_FEB_et/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_sumet", 	   &trig_hlt_TrigEFMissingET_FEB_sumet 	    	      ,"trig_hlt_TrigEFMissingET_FEB_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_phi",	   &trig_hlt_TrigEFMissingET_FEB_phi	              ,"trig_hlt_TrigEFMissingET_FEB_phi/F");	    
 
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_ex", 	   &trig_hlt_TrigEFMissingET_mht_ex 	    	      ,"trig_hlt_TrigEFMissingET_mht_ex/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_ey", 	   &trig_hlt_TrigEFMissingET_mht_ey 	    	      ,"trig_hlt_TrigEFMissingET_mht_ey/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_et", 	   &trig_hlt_TrigEFMissingET_mht_et 	    	      ,"trig_hlt_TrigEFMissingET_mht_et/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_sumet", 	   &trig_hlt_TrigEFMissingET_mht_sumet 	    	      ,"trig_hlt_TrigEFMissingET_mht_sumet/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_mht_phi",	   &trig_hlt_TrigEFMissingET_mht_phi	              ,"trig_hlt_TrigEFMissingET_mht_phi/F");	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ex", 	   &trig_hlt_TrigEFMissingET_mht_ex 	    	      ,"trig_hlt_TrigEFMissingET_mht_ex/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ey", 	   &trig_hlt_TrigEFMissingET_mht_ey 	    	      ,"trig_hlt_TrigEFMissingET_mht_ey/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_et", 	   &trig_hlt_TrigEFMissingET_mht_et 	    	      ,"trig_hlt_TrigEFMissingET_mht_et/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_sumet", 	   &trig_hlt_TrigEFMissingET_mht_sumet 	    	      ,"trig_hlt_TrigEFMissingET_mht_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_phi",	   &trig_hlt_TrigEFMissingET_mht_phi	              ,"trig_hlt_TrigEFMissingET_mht_phi/F");	    
 									   					    	      					    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_ex", 	   &trig_hlt_TrigEFMissingET_topocl_ex 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ex/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_ey", 	   &trig_hlt_TrigEFMissingET_topocl_ey 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ey/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_et", 	   &trig_hlt_TrigEFMissingET_topocl_et 	    	      ,"trig_hlt_TrigEFMissingET_topocl_et/F"); 	    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_sumet",    &trig_hlt_TrigEFMissingET_topocl_sumet     	      ,"trig_hlt_TrigEFMissingET_topocl_sumet/F");     
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_phi",      &trig_hlt_TrigEFMissingET_topocl_phi   	      ,"trig_hlt_TrigEFMissingET_topocl_phi/F");   
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ex", 	   &trig_hlt_TrigEFMissingET_topocl_ex 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ex/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ey", 	   &trig_hlt_TrigEFMissingET_topocl_ey 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ey/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_et", 	   &trig_hlt_TrigEFMissingET_topocl_et 	    	      ,"trig_hlt_TrigEFMissingET_topocl_et/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_sumet",    &trig_hlt_TrigEFMissingET_topocl_sumet     	      ,"trig_hlt_TrigEFMissingET_topocl_sumet/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_phi",      &trig_hlt_TrigEFMissingET_topocl_phi   	      ,"trig_hlt_TrigEFMissingET_topocl_phi/F");   
 									   					    	      					    
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ex",    &trig_hlt_TrigEFMissingET_topocl_PS_ex     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ex/F");     
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ey",	   &trig_hlt_TrigEFMissingET_topocl_PS_ey     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ey/F");     
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_et",    &trig_hlt_TrigEFMissingET_topocl_PS_et     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_et/F");     
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_sumet", &trig_hlt_TrigEFMissingET_topocl_PS_sumet  	      ,"trig_hlt_TrigEFMissingET_topocl_PS_sumet/F");  
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PS_phi",   &trig_hlt_TrigEFMissingET_topocl_PS_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PS_phi/F");
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ex",    &trig_hlt_TrigEFMissingET_topocl_PS_ex     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ex/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ey",	   &trig_hlt_TrigEFMissingET_topocl_PS_ey     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ey/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_et",    &trig_hlt_TrigEFMissingET_topocl_PS_et     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_et/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_sumet", &trig_hlt_TrigEFMissingET_topocl_PS_sumet  	      ,"trig_hlt_TrigEFMissingET_topocl_PS_sumet/F");  
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_phi",   &trig_hlt_TrigEFMissingET_topocl_PS_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PS_phi/F");
 
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ex" ,    &trig_hlt_TrigEFMissingET_topocl_PUC_ex          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ex/F");     
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ey",     &trig_hlt_TrigEFMissingET_topocl_PUC_ey          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ey/F");     
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_et",     &trig_hlt_TrigEFMissingET_topocl_PUC_et          ,"trig_hlt_TrigEFMissingET_topocl_PUC_et/F");     
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_sumet",  &trig_hlt_TrigEFMissingET_topocl_PUC_sumet       ,"trig_hlt_TrigEFMissingET_topocl_PUC_sumet/F");  
-	output->tree()->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_phi",    &trig_hlt_TrigEFMissingET_topocl_PUC_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PUC_phi/F");
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ex" ,    &trig_hlt_TrigEFMissingET_topocl_PUC_ex          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ex/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ey",     &trig_hlt_TrigEFMissingET_topocl_PUC_ey          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ey/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_et",     &trig_hlt_TrigEFMissingET_topocl_PUC_et          ,"trig_hlt_TrigEFMissingET_topocl_PUC_et/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_sumet",  &trig_hlt_TrigEFMissingET_topocl_PUC_sumet       ,"trig_hlt_TrigEFMissingET_topocl_PUC_sumet/F");  
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_phi",    &trig_hlt_TrigEFMissingET_topocl_PUC_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PUC_phi/F");
       }
     }
     else if(doPUTree){
@@ -668,16 +668,22 @@ void chorizo :: bookTree(){
 
 EL::StatusCode chorizo :: histInitialize ()
 {
-  //Info("histInitialize()", "HERE");
+  Info("histInitialize()", "HERE");
 
   gErrorIgnoreLevel = this->errIgnoreLevel;
 
-  if (!outputName.empty()){
-    output = EL::getNTupleSvc (wk(), outputName);
-  } 
-  else{
-    output = 0;
-  }
+  // if (!outputName.empty()){
+  //   output = EL::getNTupleSvc (wk(), outputName);
+  // } 
+  // else{
+  //   output = 0;
+  // }
+
+  out_TFile = (TFile*) wk()->getOutputFile ("output");
+  m_atree = new TTree ("AnalysisTree", "analysis output tree");
+  m_atree->SetDirectory (out_TFile);
+
+  out_TDir  = (TDirectory*) wk()->getOutputFile ("output");
 
   //Book the output Tree
   bookTree();
@@ -694,8 +700,6 @@ EL::StatusCode chorizo :: histInitialize ()
   
   meta_nsim=0.; 
   meta_nwsim=0.;
-
-  out_TDir = (TDirectory*) wk()->getOutputFile ("output");
 
 
   //JopOption
@@ -2116,7 +2120,7 @@ EL::StatusCode chorizo :: loop ()
   //EventList
   if(m_eventList.size()){
     if( !inEventList(RunNumber, EventNumber) ){
-      output->setFilterPassed (false);    
+      //      output->setFilterPassed (false);    
       return nextEvent();
     } 
   }
@@ -2143,7 +2147,7 @@ EL::StatusCode chorizo :: loop ()
 
     pileup_w = acc_PUweight(*eventInfo);
     
-    output->setFilterPassed ();
+    //    output->setFilterPassed ();
     return nextEvent();
   }
   
@@ -2327,7 +2331,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection1 for QCD jet smearing data (GRL on data) [time saver]
   if( this->isQCD && !this->isGRL){
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent(); //skip event
   }
 
@@ -2345,7 +2349,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
-       output->setFilterPassed(false);
+    //       output->setFilterPassed(false);
        return nextEvent();
   }
 
@@ -2419,7 +2423,7 @@ EL::StatusCode chorizo :: loop ()
   CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut ) ); //'baseline' and 'bad' decoration
   
   xAOD::Jet jet;
-  for( const auto& jet_itr : *jets_sc){
+  for( const auto& jet_itr : *jets_sc ){
     
 #ifdef TILETEST
     if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
@@ -3019,7 +3023,7 @@ EL::StatusCode chorizo :: loop ()
 	j_truth_eta1 = (*tjet_itr)->eta();
       }
       if ( (*tjet_itr)->pt() < 10000. ) continue;
-      
+     
       if ( (*tjet_itr)->pt() > 20000. )
 	jb_truth_N++;
       if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) j_truth_N++;
@@ -4095,7 +4099,7 @@ EL::StatusCode chorizo :: loop ()
 
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
   if ( this->isQCD  && ! isQCDSeedEvent(0., 0., QCD_METSig) ){ //FIX !! ( met, sumet, QCD_METSig) ){
-       output->setFilterPassed(false);
+    //       output->setFilterPassed(false);
        return nextEvent();
   }
 
@@ -4119,7 +4123,8 @@ EL::StatusCode chorizo :: loop ()
   if(myfile.is_open())
     myfile.close();
 
-  output->setFilterPassed (true);
+  //  output->setFilterPassed (true);
+  m_atree->Fill();
   return nextEvent(); //SUCCESS + cleaning
 }
 

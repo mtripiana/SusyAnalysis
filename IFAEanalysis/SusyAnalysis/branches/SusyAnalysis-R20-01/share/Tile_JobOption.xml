@@ -46,7 +46,7 @@
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
       <doBjetOR>true</doBjetOR>
-      <doPhotons>true</doPhotons>
+      <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
     <Truth>
@@ -76,11 +76,11 @@
     </TrackVeto>
 
     <Booking>
-      <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
-      <ElSignal>5</ElSignal>   <!-- number of signal electrons to be saved -->
-      <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
-      <MuSignal>5</MuSignal> <!-- number of signal muons to be saved -->
-      <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
+      <ElBase>2</ElBase>       <!-- number of (non-signal) baseline electrons to be saved -->
+      <ElSignal>2</ElSignal>   <!-- number of signal electrons to be saved -->
+      <MuBase>2</MuBase>       <!-- number of (non-signal) baseline muons to be saved -->
+      <MuSignal>2</MuSignal>   <!-- number of signal muons to be saved -->
+      <PhSignal>1</PhSignal>   <!-- number of signal photons to be saved -->
       <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
 
@@ -142,7 +142,6 @@
       <Path name="BtagCalib">SUSYTools/</Path>
       <dPhiMin>0.4</dPhiMin>
       <JVFMin>0.5</JVFMin>
-
 
       <!--- For the c/b-tagger -->
       <!--      <Tagger>IP3DSV1</Tagger> -->

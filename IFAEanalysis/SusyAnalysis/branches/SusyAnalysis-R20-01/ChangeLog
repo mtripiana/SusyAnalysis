@@ -1,4 +1,7 @@
 2014-06-23 Martin <tripiana@cern.ch>
+	* Add listGRL.sh script to list, print and copy the latest GRLs from afs/.
+
+2014-06-23 Martin <tripiana@cern.ch>
 	* Change back to fix size booking for all objects (dummy values by default) .  e.g. the 'meaningful' j_* block goes up to j_N . The rest is filled with DUMMYDN.
 
 2014-06-23 Martin <tripiana@cern.ch>

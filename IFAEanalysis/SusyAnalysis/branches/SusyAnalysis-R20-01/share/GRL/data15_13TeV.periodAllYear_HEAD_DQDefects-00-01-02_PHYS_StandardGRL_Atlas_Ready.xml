@@ -9,7 +9,7 @@
 <Metadata Name="ARQEquivalentQuery">find run data15_13TeV.periodAllYear and dq PHYS_StandardGRL_Atlas_Ready DEFECTS#HEAD g</Metadata>
 <Metadata Name="Query">Period: data15_13TeV.AllYear; Defect: PHYS_StandardGRL_Atlas_Ready; Defect tag: HEAD; Ignoring None</Metadata>
 <Metadata Name="RQTSVNVersion">DQDefects-00-01-02</Metadata>
-<Metadata Name="RunList">266904,266919,267073,267152,267162,267167</Metadata>
+<Metadata Name="RunList">266904,266919,267073,267152,267162,267167,267638</Metadata>
 <LumiBlockCollection>
 <Run>266904</Run>
 <LBRange Start="267" End="294"/>
@@ -33,12 +33,55 @@
 </LumiBlockCollection>
 <LumiBlockCollection>
 <Run>267162</Run>
-<LBRange Start="648" End="1015"/>
+<LBRange Start="648" End="648"/>
+<LBRange Start="650" End="653"/>
+<LBRange Start="655" End="661"/>
+<LBRange Start="663" End="670"/>
+<LBRange Start="672" End="677"/>
+<LBRange Start="679" End="686"/>
+<LBRange Start="688" End="695"/>
+<LBRange Start="697" End="703"/>
+<LBRange Start="705" End="725"/>
+<LBRange Start="727" End="737"/>
+<LBRange Start="739" End="739"/>
+<LBRange Start="741" End="743"/>
+<LBRange Start="745" End="752"/>
+<LBRange Start="754" End="781"/>
+<LBRange Start="783" End="809"/>
+<LBRange Start="811" End="819"/>
+<LBRange Start="821" End="826"/>
+<LBRange Start="829" End="848"/>
+<LBRange Start="852" End="859"/>
+<LBRange Start="861" End="869"/>
+<LBRange Start="871" End="873"/>
+<LBRange Start="876" End="885"/>
+<LBRange Start="887" End="892"/>
+<LBRange Start="894" End="900"/>
+<LBRange Start="902" End="994"/>
+<LBRange Start="997" End="1011"/>
+<LBRange Start="1013" End="1015"/>
 </LumiBlockCollection>
 <LumiBlockCollection>
 <Run>267167</Run>
-<LBRange Start="96" End="444"/>
+<LBRange Start="96" End="169"/>
+<LBRange Start="171" End="174"/>
+<LBRange Start="178" End="183"/>
+<LBRange Start="185" End="186"/>
+<LBRange Start="188" End="194"/>
+<LBRange Start="196" End="197"/>
+<LBRange Start="199" End="209"/>
+<LBRange Start="211" End="231"/>
+<LBRange Start="233" End="268"/>
+<LBRange Start="270" End="336"/>
+<LBRange Start="338" End="350"/>
+<LBRange Start="352" End="353"/>
+<LBRange Start="355" End="403"/>
+<LBRange Start="405" End="444"/>
 <LBRange Start="446" End="447"/>
+</LumiBlockCollection>
+<LumiBlockCollection>
+<Run>267638</Run>
+<LBRange Start="307" End="949"/>
 </LumiBlockCollection>
 </NamedLumiRange>
 </LumiRangeCollection>

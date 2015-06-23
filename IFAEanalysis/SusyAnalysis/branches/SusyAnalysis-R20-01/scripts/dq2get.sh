@@ -75,6 +75,7 @@ do
     echo "----------------------------------------------------------------------------"
     
     if [ -z "$VAR" ]; then
+
 	echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"*_output.root/ > tmp_dq2ls.txt"
 	dq2-ls "user."$GRIDUSER".*"$tag"*_output.root/" >> tmp_dq2ls.txt
 	
@@ -103,7 +104,7 @@ do
 
         #create temporal directory
         #    tmpDir=`mktemp -d`
-	tmpDir=$DIRECTORY"/tmp.tmp/"
+	tmpDir=$DIRECTORY"/"$sampleName".tmp/"
 	mkdir -p $tmpDir
 	
 	echo "   Downloading: "$s

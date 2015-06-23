@@ -258,6 +258,9 @@ public:
 private:
   xAOD::TEvent *m_event;  //!
 
+  TTree*  m_atree; //!
+  TFile*  out_TFile; //! 
+
   TTree*  m_MetaData; //!
 
   EvtList m_eventList; //!
