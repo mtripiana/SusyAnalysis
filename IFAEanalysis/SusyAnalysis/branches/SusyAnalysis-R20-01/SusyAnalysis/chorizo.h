@@ -901,11 +901,13 @@ private:
   VFloat j_const_phi;
   VFloat j_const_m;
 
+  int    j1_cl_N;
   VFloat j1_cl_pt;
   VFloat j1_cl_eta;
   VFloat j1_cl_phi;
   VFloat j1_cl_emf;
 
+  int    j2_cl_N;
   VFloat j2_cl_pt;
   VFloat j2_cl_eta;
   VFloat j2_cl_phi;

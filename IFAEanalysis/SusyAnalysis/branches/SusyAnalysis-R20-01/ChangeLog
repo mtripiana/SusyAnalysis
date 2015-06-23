@@ -1,7 +1,10 @@
 2014-06-23 Martin <tripiana@cern.ch>
+	* Change back to fix size booking for all objects (dummy values by default) .  e.g. the 'meaningful' j_* block goes up to j_N . The rest is filled with DUMMYDN.
+
+2014-06-23 Martin <tripiana@cern.ch>
 	* Add more jet variables needed for TileCal studies, upon jO request (TileDump=true)
 	* Add Tile_JobOption.xml
-	
+
 2014-06-19 Martin <tripiana@cern.ch>
 	* Fix running on primary xAOD
 

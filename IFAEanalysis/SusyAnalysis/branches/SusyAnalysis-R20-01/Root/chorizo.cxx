@@ -445,11 +445,13 @@ void chorizo :: bookTree(){
 	output->tree()->Branch("j_const_phi",&j_const_phi);
 	output->tree()->Branch("j_const_m",&j_const_m);
 
+	output->tree()->Branch("j1_cl_N",&j1_cl_N,"j1_cl_N/I",10000);
 	output->tree()->Branch("j1_cl_pt",&j1_cl_pt);
 	output->tree()->Branch("j1_cl_eta",&j1_cl_eta);
 	output->tree()->Branch("j1_cl_phi",&j1_cl_phi);
 	output->tree()->Branch("j1_cl_emf",&j1_cl_emf);
 
+	output->tree()->Branch("j2_cl_N",&j2_cl_N,"j2_cl_N/I",10000);
 	output->tree()->Branch("j2_cl_pt",&j2_cl_pt);
 	output->tree()->Branch("j2_cl_eta",&j2_cl_eta);
 	output->tree()->Branch("j2_cl_phi",&j2_cl_phi);
@@ -1093,11 +1095,13 @@ void chorizo :: InitVars()
     j_const_phi.clear();
     j_const_m.clear();
 
+    j1_cl_N = 0;
     j1_cl_pt.clear();
     j1_cl_eta.clear();
     j1_cl_phi.clear();
     j1_cl_emf.clear();
 
+    j2_cl_N = 0;
     j2_cl_pt.clear();
     j2_cl_eta.clear();
     j2_cl_phi.clear();
@@ -4947,73 +4951,82 @@ EL::StatusCode chorizo :: loop_truth()
 //Fill lepton data members
 void chorizo :: dumpLeptons(){
     
+  bool fill=false;
+
   //--- Dump Electrons
   //-baseline
-  for(unsigned int iel = 0; iel < TMath::Min((int)electronCandidates.size(), BookElBase); iel++){
+  //  for(unsigned int iel = 0; iel < TMath::Min((int)electronCandidates.size(), BookElBase); iel++){
+  for(unsigned int iel = 0; iel < BookElBase; iel++){
     
-    eb_pt.push_back( electronCandidates.at(iel).Pt() );
-    eb_eta.push_back( electronCandidates.at(iel).Eta() );
-    eb_phi.push_back( electronCandidates.at(iel).Phi() );
+    fill = (iel < electronCandidates.size() );
+    eb_pt.push_back( fill ? electronCandidates.at(iel).Pt() : DUMMYDN );
+    eb_eta.push_back( fill ? electronCandidates.at(iel).Eta() : DUMMYDN );
+    eb_phi.push_back( fill ? electronCandidates.at(iel).Phi() : DUMMYDN );
   }
 
   //-signal
-  for(unsigned int iel = 0; iel < TMath::Min((int)recoElectrons.size(), BookElSignal); iel++){
+  //  for(unsigned int iel = 0; iel < TMath::Min((int)recoElectrons.size(), BookElSignal); iel++){
+  for(unsigned int iel = 0; iel < BookElSignal; iel++){
     
-    e_pt.push_back( recoElectrons.at(iel).Pt() );
-    e_eta.push_back( recoElectrons.at(iel).Eta() );
-    e_phi.push_back( recoElectrons.at(iel).Phi() );
-    e_type.push_back( recoElectrons.at(iel).type );   
-    e_origin.push_back( recoElectrons.at(iel).origin );        
-    e_etiso30.push_back( recoElectrons.at(iel).etcone30 );
-    e_ptiso30.push_back( recoElectrons.at(iel).ptcone30 );
-    e_etiso20.push_back( recoElectrons.at(iel).etcone20 );
-    e_ptiso20.push_back( recoElectrons.at(iel).ptcone20 );
-    e_isoTight.push_back( recoElectrons.at(iel).isoTight );
-    e_isoLoose.push_back( recoElectrons.at(iel).isoLoose );
-    e_isoVeryLoose.push_back( recoElectrons.at(iel).isoVeryLoose );
-    e_isoVeryLooseTrackOnly.push_back( recoElectrons.at(iel).isoVeryLooseTrackOnly );
-    e_isoGradient.push_back( recoElectrons.at(iel).isoGradient );
-    e_isoGradientLoose.push_back( recoElectrons.at(iel).isoGradientLoose );
-    e_id.push_back(  recoElectrons.at(iel).id );
-    e_d0_sig.push_back( recoElectrons.at(iel).d0_sig );
-    e_z0.push_back( recoElectrons.at(iel).z0 );
-    e_trigger.push_back( (int)recoElectrons.at(iel).isTrigMatch);
+    fill = (iel < recoElectrons.size() );
+    e_pt.push_back( fill ?  recoElectrons.at(iel).Pt()  : DUMMYDN );
+    e_eta.push_back( fill ?  recoElectrons.at(iel).Eta()  : DUMMYDN );
+    e_phi.push_back( fill ?  recoElectrons.at(iel).Phi()  : DUMMYDN );
+    e_type.push_back( fill ?  recoElectrons.at(iel).type  : DUMMYDN );   
+    e_origin.push_back( fill ?  recoElectrons.at(iel).origin  : DUMMYDN );        
+    e_etiso30.push_back( fill ?  recoElectrons.at(iel).etcone30  : DUMMYDN );
+    e_ptiso30.push_back( fill ?  recoElectrons.at(iel).ptcone30  : DUMMYDN );
+    e_etiso20.push_back( fill ?  recoElectrons.at(iel).etcone20  : DUMMYDN );
+    e_ptiso20.push_back( fill ?  recoElectrons.at(iel).ptcone20  : DUMMYDN );
+    e_isoTight.push_back( fill ?  recoElectrons.at(iel).isoTight  : DUMMYDN );
+    e_isoLoose.push_back( fill ?  recoElectrons.at(iel).isoLoose  : DUMMYDN );
+    e_isoVeryLoose.push_back( fill ?  recoElectrons.at(iel).isoVeryLoose  : DUMMYDN );
+    e_isoVeryLooseTrackOnly.push_back( fill ?  recoElectrons.at(iel).isoVeryLooseTrackOnly  : DUMMYDN );
+    e_isoGradient.push_back( fill ?  recoElectrons.at(iel).isoGradient  : DUMMYDN );
+    e_isoGradientLoose.push_back( fill ?  recoElectrons.at(iel).isoGradientLoose  : DUMMYDN );
+    e_id.push_back( fill ?   recoElectrons.at(iel).id  : DUMMYDN );
+    e_d0_sig.push_back( fill ?  recoElectrons.at(iel).d0_sig  : DUMMYDN );
+    e_z0.push_back( fill ?  recoElectrons.at(iel).z0  : DUMMYDN );
+    e_trigger.push_back( fill ?  (int)recoElectrons.at(iel).isTrigMatch : DUMMYDN );
   }
-    
-  if (truthElectrons.size()>0){
-    e_truth_pt = truthElectrons.at(0).Pt();
-    e_truth_eta = truthElectrons.at(0).Eta();
-    e_truth_phi = truthElectrons.at(0).Phi();
-  }  
-
+  
+  e_truth_pt  = (truthElectrons.size()>0) ? truthElectrons.at(0).Pt()  : DUMMYDN;
+  e_truth_eta = (truthElectrons.size()>0) ? truthElectrons.at(0).Eta() : DUMMYDN;
+  e_truth_phi = (truthElectrons.size()>0) ? truthElectrons.at(0).Phi() : DUMMYDN;
+  
+  
   //--- Dump Muons 
   //-baseline
-  for(unsigned int imu = 0; imu < TMath::Min((int)muonCandidates.size(), BookMuBase); imu++){
+  //for(unsigned int imu = 0; imu < TMath::Min((int)muonCandidates.size(), BookMuBase); imu++){
+  for(unsigned int imu = 0; imu < BookMuBase; imu++){
     
-    mb_pt.push_back( muonCandidates.at(imu).Pt() );
-    mb_eta.push_back( muonCandidates.at(imu).Eta() );
-    mb_phi.push_back( muonCandidates.at(imu).Phi() );
+    fill = (imu < muonCandidates.size());
+    mb_pt.push_back(  fill ? muonCandidates.at(imu).Pt()  : DUMMYDN );
+    mb_eta.push_back( fill ? muonCandidates.at(imu).Eta() : DUMMYDN );
+    mb_phi.push_back( fill ? muonCandidates.at(imu).Phi() : DUMMYDN );
   }
   
   //-signal
-  for(unsigned int imu = 0; imu < TMath::Min((int)recoMuons.size(), BookMuSignal); imu++){
-    
-    m_pt.push_back( recoMuons.at(imu).Pt() );
-    m_eta.push_back( recoMuons.at(imu).Eta() );
-    m_phi.push_back( recoMuons.at(imu).Phi() );
-    m_type.push_back( recoMuons.at(imu).type ); 
-    m_origin.push_back( recoMuons.at(imu).origin );        
-    m_etiso20.push_back( recoMuons.at(imu).etcone20 );
-    m_ptiso20.push_back( recoMuons.at(imu).ptcone20 );
-    m_etiso30.push_back( recoMuons.at(imu).etcone30 );
-    m_ptiso30.push_back( recoMuons.at(imu).ptcone30 );
-    m_isoTight.push_back( recoMuons.at(imu).isoTight );
-    m_isoLoose.push_back( recoMuons.at(imu).isoLoose );
-    m_isoVeryLoose.push_back( recoMuons.at(imu).isoVeryLoose );
-    m_isoVeryLooseTrackOnly.push_back( recoMuons.at(imu).isoVeryLooseTrackOnly );
-    m_isoGradient.push_back( recoMuons.at(imu).isoGradient );
-    m_isoGradientLoose.push_back( recoMuons.at(imu).isoGradientLoose );
-    m_trigger.push_back( (int)recoMuons.at(imu).isTrigMatch );
+  //  for(unsigned int imu = 0; imu < TMath::Min((int)recoMuons.size(), BookMuSignal); imu++){
+  for(unsigned int imu = 0; imu < BookMuSignal; imu++){
+
+    fill = (imu < recoMuons.size());    
+    m_pt.push_back( fill ?  recoMuons.at(imu).Pt()  : DUMMYDN );
+    m_eta.push_back( fill ?  recoMuons.at(imu).Eta()  : DUMMYDN );
+    m_phi.push_back( fill ?  recoMuons.at(imu).Phi()  : DUMMYDN );
+    m_type.push_back( fill ?  recoMuons.at(imu).type  : DUMMYDN ); 
+    m_origin.push_back( fill ?  recoMuons.at(imu).origin  : DUMMYDN );        
+    m_etiso20.push_back( fill ?  recoMuons.at(imu).etcone20  : DUMMYDN );
+    m_ptiso20.push_back( fill ?  recoMuons.at(imu).ptcone20  : DUMMYDN );
+    m_etiso30.push_back( fill ?  recoMuons.at(imu).etcone30  : DUMMYDN );
+    m_ptiso30.push_back( fill ?  recoMuons.at(imu).ptcone30  : DUMMYDN );
+    m_isoTight.push_back( fill ?  recoMuons.at(imu).isoTight  : DUMMYDN );
+    m_isoLoose.push_back( fill ?  recoMuons.at(imu).isoLoose  : DUMMYDN );
+    m_isoVeryLoose.push_back( fill ?  recoMuons.at(imu).isoVeryLoose  : DUMMYDN );
+    m_isoVeryLooseTrackOnly.push_back( fill ?  recoMuons.at(imu).isoVeryLooseTrackOnly  : DUMMYDN );
+    m_isoGradient.push_back( fill ?  recoMuons.at(imu).isoGradient  : DUMMYDN );
+    m_isoGradientLoose.push_back( fill ?  recoMuons.at(imu).isoGradientLoose  : DUMMYDN );
+    m_trigger.push_back( fill ?  (int)recoMuons.at(imu).isTrigMatch  : DUMMYDN );
   }
   
 }
@@ -5022,74 +5035,103 @@ void chorizo :: dumpLeptons(){
 //Fill photon data members
 void chorizo :: dumpPhotons(){
 
-  //-signal
-  for(unsigned int iph = 0; iph < TMath::Min((int)recoPhotons.size(), BookPhSignal); iph++){
+  bool fill=false;
 
-    ph_pt.push_back( recoPhotons.at(iph).Pt() );
-    ph_eta.push_back( recoPhotons.at(iph).Eta() );
-    ph_phi.push_back( recoPhotons.at(iph).Phi() );
-    ph_etiso30.push_back( recoPhotons.at(iph).etcone30 );
-    ph_ptiso30.push_back( recoPhotons.at(iph).ptcone30 );
-    ph_tight.push_back( (int)recoPhotons.at(iph).isTight );
-    ph_type.push_back( recoPhotons.at(iph).type );
-    ph_origin.push_back( recoPhotons.at(iph).origin );
+  //-signal
+  //  for(unsigned int iph = 0; iph < TMath::Min((int)recoPhotons.size(), BookPhSignal); iph++){
+  for(unsigned int iph = 0; iph < BookPhSignal; iph++){
+
+    fill = (iph < recoPhotons.size());
+    ph_pt.push_back( fill ?  recoPhotons.at(iph).Pt()  : DUMMYDN );
+    ph_eta.push_back( fill ?  recoPhotons.at(iph).Eta()  : DUMMYDN );
+    ph_phi.push_back( fill ?  recoPhotons.at(iph).Phi()  : DUMMYDN );
+    ph_etiso30.push_back( fill ?  recoPhotons.at(iph).etcone30  : DUMMYDN );
+    ph_ptiso30.push_back( fill ?  recoPhotons.at(iph).ptcone30  : DUMMYDN );
+    ph_tight.push_back( fill ?  (int)recoPhotons.at(iph).isTight  : DUMMYDN );
+    ph_type.push_back( fill ?  recoPhotons.at(iph).type  : DUMMYDN );
+    ph_origin.push_back( fill ?  recoPhotons.at(iph).origin  : DUMMYDN );
   }
 }
 
 //Fill jet data members 
 void chorizo :: dumpJets(){
 
+  bool fill=false;
+
   //--- Dump Jets 
   //-signal
-  for(unsigned int ijet = 0; ijet < TMath::Min((int)recoJets.size(), BookJetSignal); ijet++){
+  //  for(unsigned int ijet = 0; ijet < TMath::Min((int)recoJets.size(), BookJetSignal); ijet++){
+  for(unsigned int ijet = 0; ijet < BookJetSignal; ijet++){
 
-    j_pt.push_back( recoJets.at(ijet).Pt() );
-    j_eta.push_back( recoJets.at(ijet).Eta() );
-    j_phi.push_back( recoJets.at(ijet).Phi() );
-    j_m.push_back( recoJets.at(ijet).M() );
+    fill = (ijet < recoJets.size());
 
-    j_tag_MV1.push_back( recoJets.at(ijet).MV1 );
-    j_tag_MV2c20.push_back( recoJets.at(ijet).MV2c20 );
+    j_pt.push_back(  fill ?  recoJets.at(ijet).Pt()  : DUMMYDN );
+    j_eta.push_back( fill ?  recoJets.at(ijet).Eta() : DUMMYDN );
+    j_phi.push_back( fill ?  recoJets.at(ijet).Phi() : DUMMYDN );
+    j_m.push_back(   fill ?  recoJets.at(ijet).M()   : DUMMYDN );
+
+    j_tag_MV1.push_back( fill ?  recoJets.at(ijet).MV1  : DUMMYDN );
+    j_tag_MV2c20.push_back( fill ?  recoJets.at(ijet).MV2c20  : DUMMYDN );
     
-    j_btruth_70.push_back( (int) recoJets.at(ijet).isbjet_t70 );
-    j_btruth_77.push_back( (int) recoJets.at(ijet).isbjet_t77 );
-    j_btruth_80.push_back( (int) recoJets.at(ijet).isbjet_t80 );
+    j_btruth_70.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t70  : DUMMYDN );
+    j_btruth_77.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t77  : DUMMYDN );
+    j_btruth_80.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t80  : DUMMYDN ); 
 
-    j_chf.push_back( recoJets.at(ijet).chf );
-    j_emf.push_back( recoJets.at(ijet).emf );
-    j_fsm.push_back( recoJets.at(ijet).fsm );
-    j_time.push_back( recoJets.at(ijet).time );
-    j_jvf.push_back( recoJets.at(ijet).jvf );
-    j_jvt.push_back( recoJets.at(ijet).jvt );
-    j_tflavor.push_back( recoJets.at(ijet).FlavorTruth );
-    j_nTrk.push_back( recoJets.at(ijet).nTrk );
-    j_sumPtTrk.push_back( recoJets.at(ijet).sumPtTrk );
+    j_chf.push_back( fill  ?  recoJets.at(ijet).chf  : DUMMYDN );
+    j_emf.push_back( fill  ?  recoJets.at(ijet).emf  : DUMMYDN );
+    j_fsm.push_back( fill  ?  recoJets.at(ijet).fsm  : DUMMYDN );
+    j_time.push_back( fill ?  recoJets.at(ijet).time : DUMMYDN );
+    j_jvf.push_back( fill  ?  recoJets.at(ijet).jvf  : DUMMYDN );
+    j_jvt.push_back( fill  ?  recoJets.at(ijet).jvt  : DUMMYDN );
+    j_tflavor.push_back( fill ?  recoJets.at(ijet).FlavorTruth  : DUMMYDN );
+    j_nTrk.push_back( fill ?  recoJets.at(ijet).nTrk  : DUMMYDN );
+    j_sumPtTrk.push_back( fill ?  recoJets.at(ijet).sumPtTrk  : DUMMYDN );
 
     if(dumpTile){
-      j_const_pt.push_back( recoJets.at(ijet).p4const.Pt() );
-      j_const_eta.push_back( recoJets.at(ijet).p4const.Eta() );
-      j_const_phi.push_back( recoJets.at(ijet).p4const.Phi() );
-      j_const_m.push_back( recoJets.at(ijet).p4const.M() );
+      j_const_pt.push_back(  fill ?  recoJets.at(ijet).p4const.Pt()  : DUMMYDN );
+      j_const_eta.push_back( fill ?  recoJets.at(ijet).p4const.Eta() : DUMMYDN );
+      j_const_phi.push_back( fill ?  recoJets.at(ijet).p4const.Phi() : DUMMYDN );
+      j_const_m.push_back(   fill ?  recoJets.at(ijet).p4const.M()   : DUMMYDN );
       
-      if(ijet==0){
-	for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
-	  j1_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
-	  j1_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
-	  j1_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
-	  j1_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+      if(ijet==0 ){
+	if(fill){
+	  j1_cl_N = recoJets.at(ijet).clusters.size();
+	  for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
+	    j1_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
+	    j1_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
+	    j1_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
+	    j1_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+	  }
+	}
+	else{
+	  j1_cl_N = DUMMYDN;
+	  j1_cl_pt.push_back(  DUMMYDN );
+	  j1_cl_eta.push_back( DUMMYDN );
+	  j1_cl_phi.push_back( DUMMYDN );
+	  j1_cl_emf.push_back( DUMMYDN );
 	}
       }
       else if(ijet==1){
-	for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
-	  j1_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
-	  j1_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
-	  j1_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
-	  j1_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+	if(fill){
+	  j2_cl_N = recoJets.at(ijet).clusters.size();
+	  for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
+	    j2_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
+	    j2_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
+	    j2_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
+	    j2_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+	  }
+	}
+	else{
+	  j2_cl_N = DUMMYDN;
+	  j2_cl_pt.push_back(  DUMMYDN );
+	  j2_cl_eta.push_back( DUMMYDN );
+	  j2_cl_phi.push_back( DUMMYDN );
+	  j2_cl_emf.push_back( DUMMYDN );
 	}
       }
     }
   }
-
+  
 } //end filling jet data members
 
 
