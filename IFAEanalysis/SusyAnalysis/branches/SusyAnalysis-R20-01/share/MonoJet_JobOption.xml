@@ -8,6 +8,7 @@
     <Mode name="GeneratePileupFiles">false</Mode>
     <Mode name="DoCutFlow">true</Mode>
     <Mode name="StopTL">false</Mode>    
+    <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
     <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>

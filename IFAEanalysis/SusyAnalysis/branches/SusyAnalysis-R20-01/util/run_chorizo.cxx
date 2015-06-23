@@ -570,6 +570,7 @@ int main( int argc, char* argv[] ) {
     alg->doPUTree   = false;         //get it from the XML!!
     alg->genPUfile  = generatePUfile;
     alg->doTrigExt  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Trigger$SaveExtended"); //save extended trigger information
+    alg->dumpTile   = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");
 
     alg->syst_CP    = syst_CP;      // Systematics
     alg->syst_CPstr = syst_CP.name();

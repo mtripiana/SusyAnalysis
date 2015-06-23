@@ -208,6 +208,7 @@ public:
   bool doFlowTree; 
   bool genPUfile;
   bool doTrigExt;
+  bool dumpTile; 
 
   CP::SystematicSet syst_CP; //!
   TString syst_CPstr;
@@ -498,7 +499,8 @@ private:
   bool doCutFlow; //! 
   bool isStopTL; //!  
   bool m_skim; //! 
-  
+
+
   TString GRLxmlFile; //!
   bool    applyPURW;
   TString PURW_Folder; //!
@@ -892,6 +894,22 @@ private:
   VInt   j_btruth_70;
   VInt   j_btruth_77;
   VInt   j_btruth_80;
+
+  //- for Tile studies
+  VFloat j_const_pt;
+  VFloat j_const_eta;
+  VFloat j_const_phi;
+  VFloat j_const_m;
+
+  VFloat j1_cl_pt;
+  VFloat j1_cl_eta;
+  VFloat j1_cl_phi;
+  VFloat j1_cl_emf;
+
+  VFloat j2_cl_pt;
+  VFloat j2_cl_eta;
+  VFloat j2_cl_phi;
+  VFloat j2_cl_emf;
 
   //- Btagging
   int   bj_N;

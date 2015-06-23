@@ -73,8 +73,31 @@ void Particle::PrintInfo(){
   cout<<endl;
 }
 
+
+// Default constructor for Cluster
+Cluster::Cluster(){
+  gev=false; //4mom in GeV?
+  emf = 0.;
+}
+
+Cluster::~Cluster(){}
+
+TLorentzVector Cluster::GetVector() const{
+  return TLorentzVector(*this);
+}
+
+void Cluster::SetVector(TLorentzVector vec, bool inGeV){ //inGeV=true if it is already in GeV!
+  if(inGeV)
+    this->SetPtEtaPhiE(vec.Pt(), vec.Eta(), vec.Phi(), vec.E());
+  else
+    this->SetPtEtaPhiE(vec.Pt()*0.001, vec.Eta(), vec.Phi(), vec.E()*0.001);
+
+  this->gev=true;
+}
+
 // Default constructor for Jet
 Jet::Jet(){
+  p4const = TLorentzVector();
   isbjet = false;
   MV1 = -1;
   MV2c20 = -1;
@@ -118,6 +141,7 @@ Jet::Jet(){
   isbjet_t70=false;
   isbjet_t77=false;
   isbjet_t80=false;
+  clusters.clear();
 }
 
 Jet::~Jet(){}

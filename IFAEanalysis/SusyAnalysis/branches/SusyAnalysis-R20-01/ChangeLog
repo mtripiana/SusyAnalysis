@@ -1,3 +1,7 @@
+2014-06-23 Martin <tripiana@cern.ch>
+	* Add more jet variables needed for TileCal studies, upon jO request (TileDump=true)
+	* Add Tile_JobOption.xml
+	
 2014-06-19 Martin <tripiana@cern.ch>
 	* Fix running on primary xAOD
 

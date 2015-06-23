@@ -15,6 +15,7 @@
 #pragma link C++ namespace Particles;
 #pragma link C++ class chorizo+;
 #pragma link C++ class Particles::Particle+;
+#pragma link C++ class Particles::Cluster+;
 #pragma link C++ class Particles::Jet+;
 #pragma link C++ class Particles::MET+;
 #endif

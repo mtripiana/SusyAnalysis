@@ -14,10 +14,12 @@ using namespace std;
 
 namespace Particles{
 
-class Particle : public TLorentzVector {
+  class Particle : public TLorentzVector {
   public:
     Particle();
     ~Particle();
+
+    TLorentzVector p4const;
 
     int    index;
     bool   gev;
@@ -64,9 +66,23 @@ class Particle : public TLorentzVector {
 
     ClassDef(Particle,1);
 
-};
+  };
 
-class Jet : public Particle {
+  class Cluster : public TLorentzVector {
+  public:
+    Cluster();
+    ~Cluster();
+   
+    bool   gev;
+    float  emf;
+
+    TLorentzVector GetVector() const;
+    void SetVector(TLorentzVector vec, bool inGeV = false);
+
+    ClassDef(Cluster,1);    
+  };
+  
+  class Jet : public Particle {
   public:
     Jet();
     ~Jet();
@@ -110,6 +126,7 @@ class Jet : public Particle {
     bool                    isbjet_t70;
     bool                    isbjet_t77;
     bool                    isbjet_t80;
+    std::vector<Cluster>    clusters;
 
     bool isTauJet(float metphi, TString Tagger="MV1");
     bool isBTagged(TString Tagger, float op);
@@ -118,9 +135,9 @@ class Jet : public Particle {
     float getBweight(TString Tagger);
     void PrintInfo();
     ClassDef(Jet,1);
-};
+  };
 
-class MET : public TVector2{
+  class MET : public TVector2{
   public:
     MET();
     ~MET();
@@ -162,7 +179,7 @@ class MET : public TVector2{
 
     ClassDef(MET,1);
 
-};
+  };
 
 }
 

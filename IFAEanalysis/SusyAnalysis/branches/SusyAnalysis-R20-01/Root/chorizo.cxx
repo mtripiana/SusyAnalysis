@@ -438,6 +438,23 @@ void chorizo :: bookTree(){
       output->tree()->Branch("j_truth_pt1",&j_truth_pt1,"j_truth_pt1/F", 10000);
       output->tree()->Branch("j_truth_eta1",&j_truth_eta1,"j_truth_eta1/F", 10000);
 
+      //tile output
+      if(dumpTile){
+	output->tree()->Branch("j_const_pt",&j_const_pt);
+	output->tree()->Branch("j_const_eta",&j_const_eta);
+	output->tree()->Branch("j_const_phi",&j_const_phi);
+	output->tree()->Branch("j_const_m",&j_const_m);
+
+	output->tree()->Branch("j1_cl_pt",&j1_cl_pt);
+	output->tree()->Branch("j1_cl_eta",&j1_cl_eta);
+	output->tree()->Branch("j1_cl_phi",&j1_cl_phi);
+	output->tree()->Branch("j1_cl_emf",&j1_cl_emf);
+
+	output->tree()->Branch("j2_cl_pt",&j2_cl_pt);
+	output->tree()->Branch("j2_cl_eta",&j2_cl_eta);
+	output->tree()->Branch("j2_cl_phi",&j2_cl_phi);
+	output->tree()->Branch("j2_cl_emf",&j2_cl_emf);
+      }
 
       //btagging
       output->tree()->Branch("bj_N",&bj_N,"bj_N/I", 10000);
@@ -1070,6 +1087,22 @@ void chorizo :: InitVars()
   j_tag_MV1.clear();
   j_tag_MV2c20.clear();
 
+  if(dumpTile){
+    j_const_pt.clear();
+    j_const_eta.clear();
+    j_const_phi.clear();
+    j_const_m.clear();
+
+    j1_cl_pt.clear();
+    j1_cl_eta.clear();
+    j1_cl_phi.clear();
+    j1_cl_emf.clear();
+
+    j2_cl_pt.clear();
+    j2_cl_eta.clear();
+    j2_cl_phi.clear();
+    j2_cl_emf.clear();
+  };
                                                
   //- Btagging                                 
   bj_N = 0;                               
@@ -1319,7 +1352,7 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  Info("changeInput()", "HERE");
+  //  Info("changeInput()", "HERE");
 
   m_event = wk()->xaodEvent();   
 
@@ -1329,8 +1362,6 @@ EL::StatusCode chorizo :: changeInput (bool firstFile)
   
   isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
   
-  Info("changeInput()", "After EvtInfo");
-
   //--- Load xs_section, kfactors, etc...
   loadMetaData();
 
@@ -1353,6 +1384,7 @@ void chorizo :: ReadXML(){
   
   isStopTL = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
   m_skim   = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming");  
+  dumpTile = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");  
 
   Info(whereAmI, Form(" - PDF reweighting") );
   doPDFrw = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
@@ -2770,7 +2802,14 @@ EL::StatusCode chorizo :: loop ()
     
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
-    
+
+    TLorentzVector p4c;
+    p4c.SetPtEtaPhiE( (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).pt()*0.001,
+		      (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).eta(),
+		      (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).phi(),
+		      (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).e()*0.001 );
+    recoJet.p4const = p4c;
+
     //--- Flavor-tagging    
     //from SUSYTools (based on MV1 (70%) at the moment!)
     recoJet.isbjet = dec_bjet(**jet_itr);
@@ -2868,6 +2907,26 @@ EL::StatusCode chorizo :: loop ()
 
     recoJet.Pt_up = recoJet.Pt();
     recoJet.Pt_down = recoJet.Pt();
+
+    if(dumpTile){
+
+      //TopoClusters constituents 
+      xAOD::JetConstituentVector vec = (*jet_itr)->getConstituents();                                                                                                                                                                                                   
+      xAOD::JetConstituentVector::iterator it = vec.begin();                                                                                                                                                                                                           
+      xAOD::JetConstituentVector::iterator itE = vec.end();                                                                                                                                                                                                        
+      for( ; it != itE; it++){                                               
+	Cluster cl;
+	cl.SetVector( getTLV( &(**it) ) );
+                                                                                                                                                                                           
+	double eEM0 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(0);                                                                                                                                                      
+	double eEM1 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(1);                                                                                                                                                           
+	double eEM2 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(2);                                                                                                                                                           
+	double eEM3 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(3);                                                                                                                                                           
+
+	cl.emf = ((*it)->pt()>0. ? (eEM0+eEM1+eEM2+eEM3)/(*it)->e() : 0.);
+	recoJet.clusters.push_back(cl);
+      }
+    }
 
     //** ANDREA
     //    recoJet.ptraw = dec_ptraw(**jet_itr);
@@ -5005,6 +5064,30 @@ void chorizo :: dumpJets(){
     j_tflavor.push_back( recoJets.at(ijet).FlavorTruth );
     j_nTrk.push_back( recoJets.at(ijet).nTrk );
     j_sumPtTrk.push_back( recoJets.at(ijet).sumPtTrk );
+
+    if(dumpTile){
+      j_const_pt.push_back( recoJets.at(ijet).p4const.Pt() );
+      j_const_eta.push_back( recoJets.at(ijet).p4const.Eta() );
+      j_const_phi.push_back( recoJets.at(ijet).p4const.Phi() );
+      j_const_m.push_back( recoJets.at(ijet).p4const.M() );
+      
+      if(ijet==0){
+	for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
+	  j1_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
+	  j1_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
+	  j1_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
+	  j1_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+	}
+      }
+      else if(ijet==1){
+	for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
+	  j1_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
+	  j1_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
+	  j1_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
+	  j1_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+	}
+      }
+    }
   }
 
 } //end filling jet data members
