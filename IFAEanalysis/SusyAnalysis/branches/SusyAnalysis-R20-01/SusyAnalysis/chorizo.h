@@ -262,6 +262,7 @@ private:
   TFile*  out_TFile; //! 
 
   TTree*  m_MetaData; //!
+  TTree*  m_ctree; //!
 
   EvtList m_eventList; //!
 

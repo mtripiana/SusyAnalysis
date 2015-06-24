@@ -832,8 +832,22 @@ CutflowInfo chorizo :: getNinfo(){
       sinfo.weight2SumDx = DxAODEventsCBK->sumOfEventWeightsSquared();
     }
   }
+  else{
+    try{
+      m_ctree = dynamic_cast<TTree*> (wk()->inputFile()->Get("CollectionTree"));;
+      sinfo.nEvents      = m_ctree->GetEntries();
+      sinfo.weightSum    = sinfo.nEvents;
+      sinfo.weight2Sum   = sinfo.nEvents*sinfo.nEvents;
+      sinfo.nEventsDx    = sinfo.nEvents;
+      sinfo.weightSumDx  = sinfo.nEvents;
+      sinfo.weight2SumDx = sinfo.nEvents*sinfo.nEvents;
+    }
+    catch(...){
+      // pass
+    }
+  }
   return sinfo;
-
+  
 }
 
 bool chorizo :: isDerived(){
@@ -1806,8 +1820,8 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_jsmear->setProperty("GaussianCoreSmearingType", gsmtype) );
   CHECK( tool_jsmear->setProperty("ShiftMeanType",mstype) );
   CHECK( tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing) );
-  CHECK( tool_jsmear->setProperty("PtCutValue",QCD_JetsPtPreselection) );
-  CHECK( tool_jsmear->setProperty("EtaCutValue",QCD_JetsEtaPreselection) );
+  //  CHECK( tool_jsmear->setProperty("PtCutValue",QCD_JetsPtPreselection) );
+  //  CHECK( tool_jsmear->setProperty("EtaCutValue",QCD_JetsEtaPreselection) );
   CHECK( tool_jsmear->initialize() );
 
   TFile* bVetoJetFile = new TFile(maindir+"/JetSmearing/"+QCD_bvetoFileMap);

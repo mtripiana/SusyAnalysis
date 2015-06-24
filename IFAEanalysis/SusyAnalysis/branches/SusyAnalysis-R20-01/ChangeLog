@@ -1,3 +1,6 @@
+2014-06-24 Martin <tripiana@cern.ch>
+	* Fix cutflow histograms for primary xAODs
+
 2014-06-23 Martin <tripiana@cern.ch>
 	* Add listGRL.sh script to list, print and copy the latest GRLs from afs/.
 
