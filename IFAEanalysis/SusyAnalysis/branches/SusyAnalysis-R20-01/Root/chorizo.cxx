@@ -176,7 +176,7 @@ chorizo :: chorizo ()
 
 EL::StatusCode chorizo :: setupJob (EL::Job& job)
 {
-  //Info("setupJob()", "HERE");
+  Info("setupJob()", "HERE");
 
   job.useXAOD();
 
@@ -209,6 +209,7 @@ void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, flo
 }
 
 void chorizo :: bookTree(){
+  Info("bookTree()", "HERE");  
 
   //add the branches to be saved
   if (output){
@@ -688,6 +689,8 @@ EL::StatusCode chorizo :: histInitialize ()
   //Book the output Tree
   bookTree();
 
+  cout << "AFTER BOOK TREE"  << endl;
+
   //Load event list (if provided)
   loadEventList();
 
@@ -770,13 +773,14 @@ EL::StatusCode chorizo :: histInitialize ()
       syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr)));
     }
   }
-  
+
+  cout << "LEAVING HISTINIT" << endl;  
   return EL::StatusCode::SUCCESS;
 }
 
 CutflowInfo chorizo :: getNinfo(){
 
-  //Info("getNinfo()", "HERE");
+  Info("getNinfo()", "HERE");
 
   CutflowInfo sinfo = {};
 
@@ -888,6 +892,8 @@ bool chorizo :: inEventList(UInt_t run, UInt_t event){
 
 void chorizo :: InitVars()
 {
+  Info("InitVars()", "HERE");
+ 
   //Initialize ntuple variables
 
   //- Event info
@@ -1335,7 +1341,7 @@ void chorizo :: InitVars()
 
 EL::StatusCode chorizo :: fileExecute ()
 {
-  //  Info("fileExecute()", "HERE");
+  Info("fileExecute()", "HERE");
 
   //--- Get sum of weights and initial numbers of events
   // get the MetaData tree once a new file is opened, with
@@ -1374,7 +1380,7 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  //  Info("changeInput()", "HERE");
+  Info("changeInput()", "HERE");
 
   m_event = wk()->xaodEvent();   
 
@@ -2042,7 +2048,7 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
-  //  Info("execute()", "HERE");
+  Info("execute()", "HERE");
 
   if(this->isTruth) //truth derivations
     return loop_truth();
@@ -2053,7 +2059,7 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  //  Info("loop()", "HERE");
+  Info("loop()", "HERE");
   
 #ifdef PROFCODE
   if(m_eventCounter!=0)
@@ -2837,9 +2843,9 @@ EL::StatusCode chorizo :: loop ()
     recoJet.isbjet = dec_bjet(**jet_itr);
 
     if(isMC){
-      tool_btag_truth1->setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta()))); //set a unique seed for each jet                                                             
-      tool_btag_truth2->setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
-      tool_btag_truth3->setRandomSeed(int( 1e5 + 5 * fabs((*jet_itr)->eta())));
+      tool_btag_truth1->setRandomSeed(int( 1e5 + 5000 * fabs((*jet_itr)->eta()))); //set a unique seed for each jet                                                             
+      tool_btag_truth2->setRandomSeed(int( 1e5 + 5000 * fabs((*jet_itr)->eta())));
+      tool_btag_truth3->setRandomSeed(int( 1e5 + 5000 * fabs((*jet_itr)->eta())));
 
       recoJet.isbjet_t70 = tool_btag_truth1->performTruthTagging(*jet_itr);
       recoJet.isbjet_t77 = tool_btag_truth2->performTruthTagging(*jet_itr);
