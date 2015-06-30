@@ -543,12 +543,11 @@ int main( int argc, char* argv[] ) {
     
     //Add NtupleSvc
     std::string osname="output";
-
     EL::OutputStream output  (osname);
     job.outputAdd (output);
-    // EL::NTupleSvc *ntuple = new EL::NTupleSvc (osname);
-    // ntuple->treeName("AnalysisTree");
-    // job.algsAdd (ntuple);
+    EL::NTupleSvc *ntuple = new EL::NTupleSvc (osname);
+    ntuple->treeName("AnalysisTree");
+    job.algsAdd (ntuple);
     
     chorizo *alg = new chorizo();
     
@@ -620,13 +619,13 @@ int main( int argc, char* argv[] ) {
     //submit the job
     if(runLocal){ //local mode 
       Ddriver.submit( job, tmpdir );
-      
+
       // ProofDriver.numWorkers = 4;
       // ProofDriver.submit( job, tmpdir );
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
-      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.0.22 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.3.16 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }
@@ -636,19 +635,8 @@ int main( int argc, char* argv[] ) {
       std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%.%in:name[3]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
-      //      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
-      //      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
-
       sh.setMetaString ("nc_grid_filter", "*.root*");
  
-      // sh.setMetaDouble (EL::Job::optGridNJobs, 1); //TEST //TAKE OUT!!
-      // sh.setMetaDouble (EL::Job::optGridNFilesPerJob, 1); //TEST //TAKE OUT!!
-
-      // Pdriver.options()->setString("nc_rootVer", "5.34.22");'
-
-      // Pdriver.options()->setString("nc_rootVer", "6.02.05");
-      // Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
-
       Pdriver.submitOnly( job, tmpdir );
 
       std::cout << "\n" << bold("Submitted!") << std::endl;

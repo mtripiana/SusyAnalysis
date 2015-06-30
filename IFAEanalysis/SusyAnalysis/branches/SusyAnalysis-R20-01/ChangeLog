@@ -1,7 +1,17 @@
+2014-06-30 Martin <tripiana@cern.ch>
+	* Move to SUSYTools-00-06-13 @ Base,2.3.15a
+	* Add scripts/packages.txt
+	* Fix merging in tmp/
+
+2014-06-25 Martin <tripiana@cern.ch>
+	* Move to SUSYTools-00-06-12 @ Base,2.3.15
+	* Remove unused tools/packages.
+
 2014-06-24 Martin <tripiana@cern.ch>
 	* Fix cutflow histograms for primary xAODs
 	* Fix truth btagging seeds
-	
+	* Update to PileupReweighting-00-03-04
+
 2014-06-23 Martin <tripiana@cern.ch>
 	* Add listGRL.sh script to list, print and copy the latest GRLs from afs/.
 

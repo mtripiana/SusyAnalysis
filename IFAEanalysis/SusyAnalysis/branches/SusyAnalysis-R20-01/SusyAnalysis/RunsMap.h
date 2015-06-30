@@ -76,25 +76,48 @@ std::vector<TString> RunsMap::getPatterns(TString runname){
 void RunsMap::LoadMap(){
 
 
+// DATA
+m_map["2015_data_267073"] = rlist( Rpair(267073, "data15_13TeV.00267073.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+m_map["2015_data_267367"] = rlist( Rpair(267367, "data15_13TeV.00267367.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+m_map["2015_data_267358"] = rlist( Rpair(267358, "data15_13TeV.00267358.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+m_map["2015_data_267638"] = rlist( Rpair(267638, "data15_13TeV.00267638.physics_Main.merge.DAOD_SUSY1.r6818_p2358_p2361/"));
+m_map["2015_data_267359"] = rlist( Rpair(267359, "data15_13TeV.00267359.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+m_map["2015_data_267069"] = rlist( Rpair(267069, "data15_13TeV.00267069.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+m_map["2015_data_267599"] = rlist( Rpair(267599, "data15_13TeV.00267599.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+m_map["2015_data_266904"] = rlist( Rpair(266904, "data15_13TeV.00266904.physics_Main.merge.DAOD_SUSY1.r6847_p2358_p2361/"));
+m_map["2015_data_267167"] = rlist( Rpair(267167, "data15_13TeV.00267167.physics_Main.merge.DAOD_SUSY1.f594_m1441_p2361/"));
+m_map["2015_data_267162"] = rlist( Rpair(267162, "data15_13TeV.00267162.physics_Main.merge.DAOD_SUSY1.f594_m1441_p2361/"));
+m_map["2015_data_266919"] = rlist( Rpair(266919, "data15_13TeV.00266919.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+m_map["2015_data_267360"] = rlist( Rpair(267360, "data15_13TeV.00267360.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+m_map["2015_data_267385"] = rlist( Rpair(267385, "data15_13TeV.00267385.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+m_map["2015_data_266904"] = rlist( Rpair(266904, "data15_13TeV.00266904.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+m_map["2015_data_267639"] = rlist( Rpair(267639, "data15_13TeV.00267639.physics_Main.merge.DAOD_SUSY1.r6818_p2358_p2361/"));
+m_map["2015_data_267152"] = rlist( Rpair(267152, "data15_13TeV.00267152.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+
+
+
+
+
+m_map["Week1_data_A1"] = rlist( Rpair(266904, "data15_13TeV.periodA1.physics_Main.PhysCont.AOD.t0pro17_v02/"));
+
   //======================================================================================================================
   //                                                 Grid sbottom analysis
   //======================================================================================================================
+m_map["13TeV_Sbottom_800_1"] = rlist( Rpair(406003, "/nfs/at3/scratch/sfracchia/SUSY/signal_MC15_800_1/"));
+m_map["13TeV_Sbottom_800_1_cutflow"] = rlist( Rpair(387063, "/nfs/at3/scratch/sfracchia/SUSY/signal_MC15_800_1_cutflow/"));
 
 
 // Dijet
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10"] = rlist( Rpair(361010, "mc15_13TeV.361010.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W"] = rlist( Rpair(361020, "mc15_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W"] = rlist( Rpair(361021, "mc15_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W"] = rlist( Rpair(361022, "mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W"] = rlist( Rpair(361023, "mc15_13TeV.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W"] = rlist( Rpair(361024, "mc15_13TeV.361024.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W"] = rlist( Rpair(361025, "mc15_13TeV.361025.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W.merge.AOD.e3668_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W"] = rlist( Rpair(361026, "mc15_13TeV.361026.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W.merge.AOD.e3569_s2608_s2183_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W"] = rlist( Rpair(361027, "mc15_13TeV.361027.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W.merge.AOD.e3668_s2608_s2183_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W"] = rlist( Rpair(361028, "mc15_13TeV.361028.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W"] = rlist( Rpair(361029, "mc15_13TeV.361029.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10W"] = rlist( Rpair(361030, "mc15_13TeV.361030.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ10W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
-m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ11W"] = rlist( Rpair(361031, "mc15_13TeV.361031.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ11W.merge.AOD.e3569_s2576_s2132_r6630_r6264/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W"] = rlist( Rpair(361020, "mc15_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.merge.DAOD_SUSY1.e3569_s2576_s2132_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W"] = rlist( Rpair(361021, "mc15_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.merge.DAOD_SUSY1.e3569_s2576_s2132_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W"] = rlist( Rpair(361022, "mc15_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.merge.DAOD_SUSY1.e3668_s2576_s2132_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W"] = rlist( Rpair(361023, "mc15_13TeV.361023.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ3W.merge.DAOD_SUSY1.e3668_s2576_s2132_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W"] = rlist( Rpair(361024, "mc15_13TeV.361024.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ4W.merge.DAOD_SUSY1.e3668_s2576_s2132_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W"] = rlist( Rpair(361025, "mc15_13TeV.361025.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ5W.merge.DAOD_SUSY1.e3668_s2576_s2132_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W"] = rlist( Rpair(361026, "mc15_13TeV.361026.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ6W.merge.DAOD_SUSY1.e3569_s2608_s2183_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W"] = rlist( Rpair(361027, "mc15_13TeV.361027.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ7W.merge.DAOD_SUSY1.e3668_s2608_s2183_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W"] = rlist( Rpair(361028, "mc15_13TeV.361028.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ8W.merge.DAOD_SUSY1.e3569_s2576_s2132_r6630_r6264_p2353/"));
+m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W"] = rlist( Rpair(361029, "mc15_13TeV.361029.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ9W.merge.DAOD_SUSY1.e3569_s2576_s2132_r6630_r6264_p2353/"));
 
 
 // Gamma + jets
@@ -117,6 +140,7 @@ m_map["13TeV_Sherpa_CT10_SinglePhotonPt1000_2000_CVetoBVeto"] = rlist( Rpair(361
 m_map["13TeV_Sherpa_CT10_SinglePhotonPt1000_2000_CFilterBVeto"] = rlist( Rpair(361055, "mc15_13TeV.361055.Sherpa_CT10_SinglePhotonPt1000_2000_CFilterBVeto.merge.DAOD_SUSY1.e3587_s2608_s2183_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_SinglePhotonPt1000_2000_BFilter"] = rlist( Rpair(361056, "mc15_13TeV.361056.Sherpa_CT10_SinglePhotonPt1000_2000_BFilter.merge.DAOD_SUSY1.e3587_s2608_s2183_r6630_r6264_p2353/"));
 
+
 // Diboson
 m_map["13TeV_Sherpa_CT10_WqqZll"] = rlist( Rpair(361084, "mc15_13TeV.361084.Sherpa_CT10_WqqZll.merge.DAOD_SUSY1.e3836_s2608_s2183_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_WqqZvv"] = rlist( Rpair(361085, "mc15_13TeV.361085.Sherpa_CT10_WqqZvv.merge.DAOD_SUSY1.e3836_s2608_s2183_r6630_r6264_p2353/"));
@@ -131,10 +155,6 @@ m_map["13TeV_PowhegPythia8EvtGen_AZNLOCTEQ6L1_Wminustaunu"] = rlist( Rpair(36110
 m_map["13TeV_PowhegPythia8EvtGen_AZNLOCTEQ6L1_Zee"] = rlist( Rpair(361106, "mc15_13TeV.361106.PowhegPythia8EvtGen_AZNLOCTEQ6L1_Zee.merge.AOD.e3601_s2576_s2132_r6630_r6264/"));
 m_map["13TeV_PowhegPythia8EvtGen_AZNLOCTEQ6L1_Zmumu"] = rlist( Rpair(361107, "mc15_13TeV.361107.PowhegPythia8EvtGen_AZNLOCTEQ6L1_Zmumu.merge.AOD.e3601_s2576_s2132_r6630_r6264/"));
 m_map["13TeV_PowhegPythia8EvtGen_AZNLOCTEQ6L1_Ztautau"] = rlist( Rpair(361108, "mc15_13TeV.361108.PowhegPythia8EvtGen_AZNLOCTEQ6L1_Ztautau.merge.AOD.e3601_s2576_s2132_r6630_r6264/"));
-
-
-
-
 
 
 // Sherpa V+jets
@@ -158,6 +178,7 @@ m_map["13TeV_Sherpa_CT10_Zmumu_Pt70_140_BFilter"] = rlist( Rpair(361401, "mc15_1
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt140_280_CFilterBVeto"] = rlist( Rpair(361403, "mc15_13TeV.361403.Sherpa_CT10_Zmumu_Pt140_280_CFilterBVeto.merge.DAOD_SUSY1.e3651_s2586_s2174_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt140_280_BFilter"] = rlist( Rpair(361404, "mc15_13TeV.361404.Sherpa_CT10_Zmumu_Pt140_280_BFilter.merge.DAOD_SUSY1.e3651_s2586_s2174_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt280_500_CFilterBVeto"] = rlist( Rpair(361406, "mc15_13TeV.361406.Sherpa_CT10_Zmumu_Pt280_500_CFilterBVeto.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
+m_map["13TeV_Sherpa_CT10_Zmumu_Pt280_500_BFilter"] = rlist( Rpair(361407, "mc15_13TeV.361407.Sherpa_CT10_Zmumu_Pt280_500_BFilter.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt500_700_CVetoBVeto"] = rlist( Rpair(361408, "mc15_13TeV.361408.Sherpa_CT10_Zmumu_Pt500_700_CVetoBVeto.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt500_700_CFilterBVeto"] = rlist( Rpair(361409, "mc15_13TeV.361409.Sherpa_CT10_Zmumu_Pt500_700_CFilterBVeto.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt500_700_BFilter"] = rlist( Rpair(361410, "mc15_13TeV.361410.Sherpa_CT10_Zmumu_Pt500_700_BFilter.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
@@ -183,9 +204,8 @@ m_map["13TeV_Sherpa_CT10_Znunu_Pt500_700_BFilter"] = rlist( Rpair(361458, "mc15_
 m_map["13TeV_Sherpa_CT10_Znunu_Pt700_1000_CVetoBVeto"] = rlist( Rpair(361459, "mc15_13TeV.361459.Sherpa_CT10_Znunu_Pt700_1000_CVetoBVeto.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_Znunu_Pt700_1000_BFilter"] = rlist( Rpair(361461, "mc15_13TeV.361461.Sherpa_CT10_Znunu_Pt700_1000_BFilter.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
 m_map["13TeV_Sherpa_CT10_Znunu_Pt1000_2000_CVetoBVeto"] = rlist( Rpair(361462, "mc15_13TeV.361462.Sherpa_CT10_Znunu_Pt1000_2000_CVetoBVeto.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
-m_map["13TeV_Sherpa_CT10_Znunu_Pt1000_2000_BFilter"] = rlist( Rpair(361464, "mc15_13TeV.361464.Sherpa_CT10_Znunu_Pt1000_2000_BFilter.merge.DAOD_SUSY1.e3741_s2608_s2183_r6630_r6264_p2353/"));
 
-
+m_map["13TeV_Sherpa_CT10_Znunu_Pt1000_2000_BFilter"] = rlist( Rpair(361464, "mc15_13TeV.361464.Sherpa_CT10_Znunu_Pt1000_2000_BFilter.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Wmunu_Pt280_500_BFilter"] = rlist( Rpair(361335, "mc15_13TeV.361335.Sherpa_CT10_Wmunu_Pt280_500_BFilter.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Wmunu_Pt700_1000_CFilterBVeto"] = rlist( Rpair(361340, "mc15_13TeV.361340.Sherpa_CT10_Wmunu_Pt700_1000_CFilterBVeto.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Wmunu_Pt700_1000_BFilter"] = rlist( Rpair(361341, "mc15_13TeV.361341.Sherpa_CT10_Wmunu_Pt700_1000_BFilter.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
@@ -197,7 +217,6 @@ m_map["13TeV_Sherpa_CT10_Wmunu_Pt2000_E_CMS_BFilter"] = rlist( Rpair(361347, "mc
 m_map["13TeV_Sherpa_CT10_Zee_Pt2000_E_CMS_CVetoBVeto"] = rlist( Rpair(361393, "mc15_13TeV.361393.Sherpa_CT10_Zee_Pt2000_E_CMS_CVetoBVeto.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt0_70_CVetoBVeto"] = rlist( Rpair(361396, "mc15_13TeV.361396.Sherpa_CT10_Zmumu_Pt0_70_CVetoBVeto.merge.AOD.e3651_s2586_s2174_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt0_70_BFilter"] = rlist( Rpair(361398, "mc15_13TeV.361398.Sherpa_CT10_Zmumu_Pt0_70_BFilter.merge.AOD.e3651_s2586_s2174_r6630_r6264/"));
-m_map["13TeV_Sherpa_CT10_Zmumu_Pt280_500_BFilter"] = rlist( Rpair(361407, "mc15_13TeV.361407.Sherpa_CT10_Zmumu_Pt280_500_BFilter.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt1000_2000_CFilterBVeto"] = rlist( Rpair(361415, "mc15_13TeV.361415.Sherpa_CT10_Zmumu_Pt1000_2000_CFilterBVeto.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt2000_E_CMS_CVetoBVeto"] = rlist( Rpair(361417, "mc15_13TeV.361417.Sherpa_CT10_Zmumu_Pt2000_E_CMS_CVetoBVeto.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
 m_map["13TeV_Sherpa_CT10_Zmumu_Pt2000_E_CMS_CFilterBVeto"] = rlist( Rpair(361418, "mc15_13TeV.361418.Sherpa_CT10_Zmumu_Pt2000_E_CMS_CFilterBVeto.merge.AOD.e3741_s2608_s2183_r6630_r6264/"));
@@ -281,6 +300,7 @@ m_map["13TeV_Sherpa_CT10_Znunu_Pt1000_2000_BFilter"] = rlist( Rpair(361464, "mc1
 
 // ttbar
 m_map["13TEV_PowhegPythia_P2012_ttbar_hdamp172p5_nonallhad"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY1.e3698_s2608_s2183_r6630_r6264_p2353/"));
+m_map["13TEV_ttbar_local"] = rlist( Rpair(410000, "/nfs/at3/scratch2/tripiana/xAOD/ttbar/SUSY1_new/"));
 
 // single top
 m_map["13TEV_PowhegPythia_P2012_singletop_tchan_lept_top"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY1.e3824_s2608_s2183_r6630_r6264_p2353/"));

@@ -162,15 +162,23 @@ bool Jet::isBTagged(TString Tagger, float op){
 bool Jet::isBTagged_70eff(TString Tagger){ 
   //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
   if      (Tagger=="MV1")              return (this->MV1 > 0.7892); //70% b eff  
-  else if (Tagger=="MV2c20")           return (this->MV2c20 > 0.0314 ); //70% b eff  
+  else if (Tagger=="MV2c20")           return (this->MV2c20 > -0.0436 ); //70% b eff  
   else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > 1.85); //70% b eff 
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
+bool Jet::isBTagged_77eff(TString Tagger){ 
+  
+  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.4434); //80% b eff  
+  else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
+  return false;
+}
+
+
 bool Jet::isBTagged_80eff(TString Tagger){ 
   if      (Tagger=="MV1")              return (this->MV1 > 0.3511); //80% b eff  
-  else if (Tagger=="MV2c20")           return (this->MV2c20 > -0.5517); //80% b eff  
+  else if (Tagger=="MV2c20")           return (this->MV2c20 > -0.5911); //80% b eff  
   else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > -0.70); //80% b eff 
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;

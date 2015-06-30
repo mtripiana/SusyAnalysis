@@ -19,7 +19,6 @@ void JoinSplittedFiles(TString fileName){
   //--- Add splitted files into a file with the preffix joined.
   cout<<Form("Adding file %s", fileName.Data())<<endl;
   chainJoin->Add(fileName);
-  cout << chainJoin->GetEntries() << endl;
   for(int count=1; count<fileCounter; count++){
     cout<<Form("Adding file %s_%d.root", preffix.Data(), count)<<endl;
     chainJoin->Add(Form("%s_%d.root", preffix.Data(), count));
@@ -42,7 +41,9 @@ void JoinSplittedFiles(TString fileName){
 
 void MergeFiles(std::vector<TString> files, TString outfile){
   
-  TFileMerger m;
+  TFileMerger m(false);
+  m.OutputFile(outfile);
+
   for(auto& s : files)
     m.AddFile(s);
 
@@ -51,14 +52,13 @@ void MergeFiles(std::vector<TString> files, TString outfile){
   m.AddObjectNames("jOption");
   m.AddObjectNames("METmap");
 
-  m.OutputFile(outfile);
   m.Merge();
 }
 
 
 void MergeSplittedFiles(TString fileName){
 
-  TFileMerger m;
+  //  TFileMerger m(false);
   
   TString preffix = fileName(0,fileName.Sizeof()-6);
 
@@ -71,7 +71,7 @@ void MergeSplittedFiles(TString fileName){
     doesItNotExist = gSystem->GetPathInfo(Form("%s_%d.root", preffix.Data(), fileCounter), buf);
   }
   
-  //--- Add splitted files into a file with the preffix joined.                                                                                                                                                                                                                
+  //--- Add splitted files into a file with the preffix joined.  
   std::vector<TString> files; files.clear();
   cout<<Form("Adding file %s", fileName.Data())<<endl;
   files.push_back(fileName);
@@ -85,13 +85,13 @@ void MergeSplittedFiles(TString fileName){
   cout<<"\nAdded all splitted files into " << Form("%s_joined.root", preffix.Data())<<endl;
   
   
-  //--- Delete the files that have been already merged to the joined root file                                                                                                                                                                                                
+  //--- Delete the files that have been already merged to the joined root file 
   gROOT->ProcessLine(Form(".!rm %s", Form("%s", fileName.Data())));
   for(int count=1; count<fileCounter; count++){
     gROOT->ProcessLine(Form(".!rm %s", Form("%s_%d.root", preffix.Data(), count)));
   }
   
-  //--- Change the name of the joined file to the final name.                                                                                                                                                                                                                 
+  //--- Change the name of the joined file to the final name.  
   gROOT->ProcessLine(Form(".!mv %s %s", Form("%s_joined.root", preffix.Data()), Form("%s.root", preffix.Data())));
 }
 
@@ -129,8 +129,11 @@ void addAverageWeight(TString fileName){
 
   float average_w=1.;
   float w=1.;
+  float average_w_noPU=1.;
+  float w_noPU=1.;  
 
   TBranch *b_w = t3-> Branch("w",&w,"w/F");
+  TBranch *b_w_noPU = t3-> Branch("w_noPU",&w_noPU,"w_noPU/F");  
 
   TBranch *b_MC_w;
   TBranch *b_pileup_w;
@@ -142,6 +145,7 @@ void addAverageWeight(TString fileName){
   t3->SetBranchAddress("pileup_w", &pileup_w_loc, &b_pileup_w);
 
   Float_t TotalEvents = 0.;
+  Float_t TotalEvents_noPU = 0.;  
   Int_t nentries = (Int_t)t3->GetEntries();
 
   for (Int_t i = 0; i < nentries; i++){
@@ -149,16 +153,21 @@ void addAverageWeight(TString fileName){
     b_pileup_w->GetEntry(i);
 
     TotalEvents += MC_w_loc*pileup_w_loc; //--- It's done independently for each NPx (so same FileWeight), and the luminosity is global. 
-
+    TotalEvents_noPU += MC_w_loc; //--- It's done independently for each NPx (so same FileWeight), and the luminosity is global. 
   }
 
   cout<<"Total events: "<<TotalEvents<<endl;
+  cout<<"Total events (noPU): "<<TotalEvents_noPU<<endl;
   
   average_w = TotalEvents/nentries;
   w = fabs(average_w) > 0.0 ? 1./average_w : 1.;
 
+  average_w_noPU = TotalEvents_noPU/nentries;
+  w_noPU = fabs(average_w_noPU) > 0.0 ? 1./average_w_noPU : 1.;  
+
   for (Int_t i = 0; i < nentries; i++){
     b_w->Fill();
+    b_w_noPU->Fill();    
   }  
   
   t3->Write("",TObject::kOverwrite);
@@ -300,7 +309,7 @@ void addAntiWeightToTree(TString fileName, bool isData){
     if(m_N_loc>0) {h_m_SF_loc->Fill(m_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
     if(ph_N_loc>0) {h_ph_SF_loc->Fill(ph_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
   }
-  e_SF_mean = h_e_SF_loc->GetMean(); //--- Both have w, so it cancels.                                                                                                               
+  e_SF_mean = h_e_SF_loc->GetMean(); //--- Both have w, so it cancels.                                      
   m_SF_mean = h_m_SF_loc->GetMean();
   ph_SF_mean = h_ph_SF_loc->GetMean();
 
@@ -308,7 +317,7 @@ void addAntiWeightToTree(TString fileName, bool isData){
   h_m_SF_loc->Delete();
   h_ph_SF_loc->Delete();
 
-  if(e_SF_mean==0.) { e_SF_mean=1.;} //--- Just in case                                                                                                                              
+  if(e_SF_mean==0.) { e_SF_mean=1.;} //--- Just in case                                        
   if(m_SF_mean==0.) { m_SF_mean=1.;}
   if(ph_SF_mean==0.) { ph_SF_mean=1.;}
 
@@ -326,7 +335,7 @@ void addAntiWeightToTree(TString fileName, bool isData){
     ph_antiSF = 1 + (1-ph_SF_mean)*((Float_t)EventsWithPhoton/((Float_t)TotalEvents-(Float_t)EventsWithPhoton));
 
     if((e_antiSF < -1000 || e_antiSF > 1000) || (TotalEvents-EventsWithElec==0)) {
-      e_antiSF=1; //--- To avoid nan or inf                                                                                                                                          
+      e_antiSF=1; //--- To avoid nan or inf              
       std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
     if((m_antiSF < -1000 || m_antiSF > 1000) || (TotalEvents-EventsWithMuon==0)) {

@@ -10,14 +10,13 @@
     <Mode name="StopTL">false</Mode>    
     <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
-    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
-    <!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
-    <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
+    <Path name="RootFilesFolder">/nfs/at3/scratch2/tripiana/anafiles/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/tripiana/anafiles/colfiles/</Path>
+    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodA_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
       <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
-      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
+      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_266904-267639.root</Path>
     </Pileup>
 
     <LeptonEfficiency>
@@ -55,7 +54,8 @@
     
     <Trigger>
       <SaveExtended>false</SaveExtended>
-      <chains>HLT_xe.*</chains>
+      <!--      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM.*,L1_MU.*,L1_J.*,L1_EM12,L1_MU10,L1_J50,L1_J12,L1_J15</chains>-->
+      <chains>L1_MBTS_1_1,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,L1_MBTS_1,L1_MBTS_2</chains>
     </Trigger>
 
     <Vertex>
@@ -135,18 +135,13 @@
       <PreselEtaCut>10</PreselEtaCut>
       <RecoPtCut>35000.</RecoPtCut>
       <RecoEtaCut>2.8</RecoEtaCut>
+      <RecoJVTCut>0.64</RecoJVTCut>
 
       <JESNPset>1</JESNPset>
 
-      <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
-      <Path name="BtagCalib">SUSYTools/</Path>
-      <dPhiMin>0.4</dPhiMin>
-      <JVFMin>0.5</JVFMin>
-
-
       <!--- For the c/b-tagger -->
       <!--      <Tagger>IP3DSV1</Tagger> -->
-      <!--      <TaggerOpPoint>1_85</TaggerOpPoint> -->
+      <!--      <Tagge2rOpPoint>1_85</TaggerOpPoint> -->
       <!--      <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
 
       <!--      <Tagger>MV1</Tagger> -->
@@ -155,8 +150,8 @@
       <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
 
       <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
+      <TaggerOpPoint>-0.4434</TaggerOpPoint> --> <!-- 77% -->
+      <TaggerOpPoint2>-0.5911</TaggerOpPoint2> --> <!-- 80% -->
 
       <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->  <!-- remove? -->
     </Jet>

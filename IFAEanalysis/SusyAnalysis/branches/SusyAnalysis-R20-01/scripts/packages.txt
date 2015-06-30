@@ -1,0 +1,17 @@
+# SUSYTOOLS
+atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-06-13
+# extra packages
+atlasoff/PhysicsAnalysis/TileID/TileTripReader/trunk
+atlasoff/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-28 
+atlasoff/Trigger/TrigAnalysis/TrigEgammaMatchingTool/tags/TrigEgammaMatchingTool-00-00-05
+atlasoff/Trigger/TrigAnalysis/TrigMuonMatching/tags/TrigMuonMatching-00-00-07
+# FastJet
+#
+atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet
+# PdfReweighting package
+atlasoff/AsgExternal/Asg_Lhapdf/trunk Asg_Lhapdf
+# JetSmearing (It will come...)
+atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-01-00-08
+# HistFitter
+#
+atlasphys/Physics/SUSY/Analyses/HistFitter/tags/HistFitter-00-00-46 HistFitter

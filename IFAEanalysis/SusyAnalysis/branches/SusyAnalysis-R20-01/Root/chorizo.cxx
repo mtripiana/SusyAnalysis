@@ -1,6 +1,7 @@
 #define  chorizo_cxx
 #include <EventLoop/Job.h>
 #include <EventLoop/Worker.h>
+#include "EventLoop/OutputStream.h"
 #include "SampleHandler/MetaFields.h"
 #include <SusyAnalysis/chorizo.h>
 #include <SusyAnalysis/chorizoEDM.h>
@@ -9,8 +10,6 @@
 #include <fstream>
 #include <EventLoop/StatusCode.h>
 
-//Isolation tool
-#include "ElectronIsolationSelection/IsolationSelectionTool.h"
 
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
@@ -34,6 +33,9 @@
 //CutBookkeeping
 #include "xAODCutFlow/CutBookkeeper.h"
 #include "xAODCutFlow/CutBookkeeperContainer.h"
+
+//BTagging SF
+#include "xAODBTaggingEfficiency/BTaggingEfficiencyTool.h"
 
 //TeV unit (w.r.t MeV)
 #ifndef TEV
@@ -82,6 +84,9 @@ static SG::AuxElement::Decorator<char> dec_bjet("bjet");
 static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
 static SG::AuxElement::Decorator<char> dec_final("final");
 
+static SG::AuxElement::Accessor<float>  acc_jvt("Jvt");
+static SG::AuxElement::ConstAccessor<float> cacc_jvt("Jvt");
+
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
 static SG::AuxElement::Accessor<float> acc_etcone20("topoetcone20");
@@ -106,9 +111,6 @@ chorizo :: chorizo ()
     tool_trigconfig(0), 
     tool_trig_match_el(0),
     tool_trig_match_mu(0),
-    //    tool_jetlabel(0), 
-    tool_jvf(0), 
-    tool_jvt(0), 
     tool_jClean(0), 
     tool_tileTrip(0), 
     tool_or(0), 
@@ -176,13 +178,13 @@ chorizo :: chorizo ()
 
 EL::StatusCode chorizo :: setupJob (EL::Job& job)
 {
-  Info("setupJob()", "HERE");
+  //  Info("setupJob()", "HERE");
 
   job.useXAOD();
 
   // let's initialize the algorithm to use the xAODRootAccess package
   xAOD::Init( "chorizo" ).ignore(); // call before opening first file
-
+  
   xAOD::TReturnCode::enableFailure();
   StatusCode::enableFailure();
   CP::SystematicCode::enableFailure();
@@ -209,7 +211,7 @@ void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, flo
 }
 
 void chorizo :: bookTree(){
-  Info("bookTree()", "HERE");  
+  //  Info("bookTree()", "HERE");  
 
   //add the branches to be saved
   if (output){
@@ -431,8 +433,6 @@ void chorizo :: bookTree(){
       m_atree->Branch("j3_mT" ,&j3_mT);
       m_atree->Branch("j4_mT" ,&j4_mT);
 
-      m_atree->Branch("JVF_min"  ,&JVF_min  ,"JVF_min/O"  ,10000);                           
-
       m_atree->Branch("j_truth_N",&j_truth_N,"j_truth_N/I", 10000);
       m_atree->Branch("j_tau_N",&j_tau_N);
 
@@ -505,7 +505,8 @@ void chorizo :: bookTree(){
       m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
       m_atree->Branch("dPhi_min",&dPhi_min);
       m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
-
+      m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
+  
       m_atree->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
       m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
       m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
@@ -661,15 +662,16 @@ void chorizo :: bookTree(){
       }
     }
     else if(doPUTree){
-    
+      
     }
   }
-
+  
 }
+
 
 EL::StatusCode chorizo :: histInitialize ()
 {
-  Info("histInitialize()", "HERE");
+  //  Info("histInitialize()", "HERE");
 
   gErrorIgnoreLevel = this->errIgnoreLevel;
 
@@ -688,8 +690,6 @@ EL::StatusCode chorizo :: histInitialize ()
 
   //Book the output Tree
   bookTree();
-
-  cout << "AFTER BOOK TREE"  << endl;
 
   //Load event list (if provided)
   loadEventList();
@@ -774,19 +774,21 @@ EL::StatusCode chorizo :: histInitialize ()
     }
   }
 
-  cout << "LEAVING HISTINIT" << endl;  
   return EL::StatusCode::SUCCESS;
 }
 
+
 CutflowInfo chorizo :: getNinfo(){
 
-  Info("getNinfo()", "HERE");
+  //  Info("getNinfo()", "HERE");
 
   CutflowInfo sinfo = {};
+  
+  m_event = wk()->xaodEvent();   
 
   if(m_isderived){
 
-    m_event = wk()->xaodEvent();   
+    //    m_event = wk()->xaodEvent();   
 
     const xAOD::CutBookkeeperContainer* incompleteCBC = nullptr;
     if(!m_event->retrieveMetaInput(incompleteCBC, "IncompleteCutBookkeepers").isSuccess()){
@@ -804,13 +806,14 @@ CutflowInfo chorizo :: getNinfo(){
       Error( APP_NAME, "Failed to retrieve CutBookkeepers from MetaData! Exiting.");
       return sinfo;
     }
-    
+
     // First, let's find the smallest cycle number,
     // i.e., the original first processing step/cycle
     int minCycle = 10000;
     for ( auto cbk : *completeCBC ) {
       if ( ! cbk->name().empty()  && minCycle > cbk->cycle() ){ minCycle = cbk->cycle(); }
     }
+
     // Now, let's actually find the right one that contains all the needed info...
     const xAOD::CutBookkeeper* allEventsCBK=0;
     const xAOD::CutBookkeeper* DxAODEventsCBK=0;
@@ -892,7 +895,7 @@ bool chorizo :: inEventList(UInt_t run, UInt_t event){
 
 void chorizo :: InitVars()
 {
-  Info("InitVars()", "HERE");
+  //  Info("InitVars()", "HERE");
  
   //Initialize ntuple variables
 
@@ -1095,8 +1098,6 @@ void chorizo :: InitVars()
 
   j_tau_N.clear();
 
-  JVF_min=false;
-
   j_pt.clear();                
   j_eta.clear();               
   j_phi.clear();               
@@ -1178,6 +1179,7 @@ void chorizo :: InitVars()
   dPhi_b1_b2 = DUMMYDN;                          
   dPhi_min.clear();
   dPhi_min_alljets.clear();
+  dPhi_min_4jets.clear();  
   dR_j1_j2 = DUMMYDN;                            
   dR_j1_j3 = DUMMYDN;                            
   dR_j2_j3 = DUMMYDN;                            
@@ -1341,7 +1343,7 @@ void chorizo :: InitVars()
 
 EL::StatusCode chorizo :: fileExecute ()
 {
-  Info("fileExecute()", "HERE");
+  //  Info("fileExecute()", "HERE");
 
   //--- Get sum of weights and initial numbers of events
   // get the MetaData tree once a new file is opened, with
@@ -1380,7 +1382,7 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  Info("changeInput()", "HERE");
+  //  Info("changeInput()", "HERE");
 
   m_event = wk()->xaodEvent();   
 
@@ -1397,6 +1399,7 @@ EL::StatusCode chorizo :: changeInput (bool firstFile)
 }
 
 void chorizo :: ReadXML(){
+  //  Info("ReadXML()", "HERE");
 
   const char* whereAmI = "chorizo::ReadXML()";
   Info(whereAmI, "--- Read XML options ---");
@@ -1530,8 +1533,6 @@ void chorizo :: ReadXML(){
   
   Info(whereAmI, Form(" - Jets") );
   JetCollection=TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
-  Jet_BtagEnv      = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagEnv").c_str());
-  Jet_BtagCalib    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagCalib").c_str());
   Jet_Tagger       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
   Jet_TaggerOp     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint").c_str());
   Jet_TaggerOp2    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint2").c_str());      
@@ -1541,6 +1542,7 @@ void chorizo :: ReadXML(){
   Jet_PreselEtaCut = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselEtaCut");
   Jet_RecoPtCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoPtCut");
   Jet_RecoEtaCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoEtaCut");
+  Jet_RecoJVTCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoJVTCut");
   
   Info(whereAmI, Form(" - Etmiss") );
   METCollection        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Etmiss$Collection").c_str());
@@ -1617,7 +1619,7 @@ void chorizo :: ReadXML(){
 
 EL::StatusCode chorizo :: initialize ()
 {
-  Info("initialize()", "HERE");
+  //  Info("initialize()", "HERE");
 
   //Start Clock
   watch.Start();
@@ -1630,30 +1632,19 @@ EL::StatusCode chorizo :: initialize ()
   //Read XML options
   ReadXML();
 
-
-  //initialize lepton isolation 
-  elIsoArgs = new ST::IsSignalElectronExpCutArgs();
-  muIsoArgs = new ST::IsSignalMuonExpCutArgs();
-
-  elIsoArgs->etcut(El_PreselPtCut);
-  //  elIsoArgs->id_isocut(?);   //default 0.16 
-  //  elIsoArgs->calo_isocut(?); //default 0.18 
-  //  elIsoArgs->d0sigcut(?);    //default 5. 
-  //  elIsoArgs->z0cut(?);       //default 0.4
-  //  elIsoArgs->pt_isoMax(?);   //default 0
-
-  muIsoArgs->ptcut(Mu_PreselPtCut);
-  //  muIsoArgs->id_isocut(?);   //default 0.12 
-  //  muIsoArgs->calo_isocut(?); //default 0.12 
-  //  muIsoArgs->d0sigcut(?);    //default 3. 
-  //  muIsoArgs->z0cut(?);       //default 0.4
-  //  muIsoArgs->pt_isoMax(?);   //default 0
-
-    
   //Initialize event counter
   m_eventCounter=0;
   m_metwarnCounter=0;
   m_pdfwarnCounter=0;
+
+
+  //--- Create the output tree
+  // out_TFile = (TFile*) wk()->getOutputFile ("output");
+  // m_atree = new TTree ("AnalysisTree", "analysis output tree");
+  // m_atree->SetDirectory (out_TFile);
+
+  //Book the output Tree
+  bookTree();
 
   //Initialize variables
   InitVars();
@@ -1663,14 +1654,14 @@ EL::StatusCode chorizo :: initialize ()
     //--- Trigger Decision
     // The configuration tool.
     if(!tool_trigconfig)
-      tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
+      tool_trigconfig = new TrigConf::xAODConfigTool ("MYxAODConfigTool");
     CHECK( tool_trigconfig->initialize() ); 
     
     ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
     
     // The decision tool  
     if(!tool_trigdec)
-      tool_trigdec = new Trig::TrigDecisionTool("TrigDecTool");
+      tool_trigdec = new Trig::TrigDecisionTool("MYTrigDecTool");
     CHECK( tool_trigdec->setProperty("ConfigTool",configHandle) );
     CHECK( tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision") );
     //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
@@ -1719,36 +1710,41 @@ EL::StatusCode chorizo :: initialize ()
     else if(JetCollection.Contains("EMTopo"))
       CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::EMTopo ));
     
-    if(El_isoWP!="None"){      
-      CHECK( tool_st->setProperty("IsoWP",El_isoWP) );  //only one tool for it !! need to expand to el/mu splitting! 
-    }
-    else{
-      CP::IsolationSelectionTool *IsoToolDummy = new CP::IsolationSelectionTool( "IsoTool" );
-      CHECK( IsoToolDummy->setProperty("m_doPhotonCaloIsolation", false) );
-      CHECK( IsoToolDummy->setProperty("m_doPhotonTrackIsolation", false) );
-      CHECK( IsoToolDummy->setProperty("m_doElectronCaloIsolation", false) );
-      CHECK( IsoToolDummy->setProperty("m_doElectronTrackIsolation", false) );
-      CHECK( IsoToolDummy->setProperty("m_doMuonCaloIsolation", false) );
-      CHECK( IsoToolDummy->setProperty("m_doMuonTrackIsolation", false) );
-      CHECK( IsoToolDummy->initialize() );
+    // if(El_isoWP!="None"){      
+    //   CHECK( tool_st->setProperty("IsoWP",El_isoWP) );  //only one tool for it !! need to expand to el/mu splitting! 
+    // }
+    // else{
+    //   CP::IsolationSelectionTool *IsoToolDummy = new CP::IsolationSelectionTool( "IsoTool" );
+    //   CHECK( IsoToolDummy->setProperty("m_doPhotonCaloIsolation", false) );
+    //   CHECK( IsoToolDummy->setProperty("m_doPhotonTrackIsolation", false) );
+    //   CHECK( IsoToolDummy->setProperty("m_doElectronCaloIsolation", false) );
+    //   CHECK( IsoToolDummy->setProperty("m_doElectronTrackIsolation", false) );
+    //   CHECK( IsoToolDummy->setProperty("m_doMuonCaloIsolation", false) );
+    //   CHECK( IsoToolDummy->setProperty("m_doMuonTrackIsolation", false) );
+    //   CHECK( IsoToolDummy->initialize() );
 
-      CHECK( tool_st->setProperty("IsolationSelectionTool",IsoToolDummy) );  //only one tool for it !! need to expand to el/mu splitting! 
-    }
+    //   CHECK( tool_st->setProperty("IsolationSelectionTool",IsoToolDummy) );  //only one tool for it !! need to expand to el/mu splitting! 
+    // }
 
     CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
     CHECK( tool_st->setProperty("EleId",El_ID) ); 
-    int imuid = xAOD::Muon::VeryLoose;
-    if(Mu_ID=="Loose") imuid = xAOD::Muon::Loose; 
-    else if(Mu_ID=="Medium") imuid = xAOD::Muon::Medium; 
-    else if(Mu_ID=="Tight") imuid = xAOD::Muon::Tight; 
-    CHECK( tool_st->setProperty("MuId",imuid) );
+    CHECK( tool_st->setProperty("EleIsoWP",El_isoWP) ); 
+
+    if(Mu_ID=="Loose")       CHECK( tool_st->setProperty("MuId", xAOD::Muon::Loose));
+    else if(Mu_ID=="Medium") CHECK( tool_st->setProperty("MuId", xAOD::Muon::Medium));
+    else if(Mu_ID=="Tight")  CHECK( tool_st->setProperty("MuId", xAOD::Muon::Tight));
+    else                     CHECK( tool_st->setProperty("MuId", xAOD::Muon::VeryLoose));
+
+    CHECK( tool_st->setProperty("MuIsoWP",Mu_isoWP) ); 
+
     CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
+    CHECK( tool_st->setProperty("PhotonIsoWP",Ph_isoWP) );
     
     // Set to true for DxAOD, false for primary xAOD
     CHECK(tool_st->setProperty("DoJetAreaCalib",m_isderived) );
     // Set to false if not doing JetAreaCalib
     CHECK(tool_st->setProperty("DoJetGSCCalib",m_isderived) );
-    // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                            
+    // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                   
     CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) );
     
     // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
@@ -1839,27 +1835,39 @@ EL::StatusCode chorizo :: initialize ()
   //--- Isolation tools
   // Setup standard working point for photons, electrons and muons
   iso_1 = new CP::IsolationSelectionTool("iso_1");
-  CHECK( iso_1->setProperty("WorkingPoint","Tight") );
+  CHECK( iso_1->setProperty("ElectronWP","GradientLoose") );
+  CHECK( iso_1->setProperty("MuonWP","GradientLoose") );
+  CHECK( iso_1->setProperty("PhotonWP","GradientLoose") );
   CHECK( iso_1->initialize() );
 
   iso_2 = new CP::IsolationSelectionTool("iso_2");
-  CHECK( iso_2->setProperty("WorkingPoint","Loose") );
+  CHECK( iso_2->setProperty("ElectronWP","GradientLoose") );
+  CHECK( iso_2->setProperty("MuonWP","GradientLoose") );
+  CHECK( iso_2->setProperty("PhotonWP","GradientLoose") );
   CHECK( iso_2->initialize() );
 
   iso_3 = new CP::IsolationSelectionTool("iso_3");
-  CHECK( iso_3->setProperty("WorkingPoint","VeryLoose") );
+  CHECK( iso_3->setProperty("ElectronWP","GradientLoose") );
+  CHECK( iso_3->setProperty("MuonWP","GradientLoose") );
+  CHECK( iso_3->setProperty("PhotonWP","GradientLoose") );
   CHECK( iso_3->initialize() );
 
   iso_4 = new CP::IsolationSelectionTool("iso_4");
-  CHECK( iso_4->setProperty("WorkingPoint","VeryLooseTrackOnly") );
+  CHECK( iso_4->setProperty("ElectronWP","GradientLoose") );
+  CHECK( iso_4->setProperty("MuonWP","GradientLoose") );
+  CHECK( iso_4->setProperty("PhotonWP","GradientLoose") );
   CHECK( iso_4->initialize() );
 
   iso_5 = new CP::IsolationSelectionTool("iso_5");
-  CHECK( iso_5->setProperty("WorkingPoint","Gradient") );
+  CHECK( iso_5->setProperty("ElectronWP","GradientLoose") );
+  CHECK( iso_5->setProperty("MuonWP","GradientLoose") );
+  CHECK( iso_5->setProperty("PhotonWP","GradientLoose") );
   CHECK( iso_5->initialize() );
 
   iso_6 = new CP::IsolationSelectionTool("iso_6");
-  CHECK( iso_6->setProperty("WorkingPoint","GradientLoose") );
+  CHECK( iso_6->setProperty("ElectronWP","GradientLoose") );
+  CHECK( iso_6->setProperty("MuonWP","GradientLoose") );
+  CHECK( iso_6->setProperty("PhotonWP","GradientLoose") );
   CHECK( iso_6->initialize() );
 
 
@@ -1875,7 +1883,7 @@ EL::StatusCode chorizo :: initialize ()
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
   }
   tool_purw = new CP::PileupReweightingTool(purw_name.Data());
-  CHECK( tool_purw->setProperty("Input","EventInfo") );
+  //  CHECK( tool_purw->setProperty("Input","EventInfo") );
   if (this->isMC){
     if(genPUfile && !doPUTree){ //--- Generate the pileup root files
       //      tool_purw->setProperty("UsePeriodConfig","MC14");
@@ -1888,7 +1896,8 @@ EL::StatusCode chorizo :: initialize ()
       //--- read the dataset number from the TTree
       Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
 
-      TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+      //TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+      TString prwfile=PURW_Folder+"410000.prw.root";      
       prwFiles.push_back(prwfile.Data());
       CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
       CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
@@ -1930,16 +1939,6 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_jettile->setProperty("DeadModules",dead_modules) );
   CHECK( tool_jettile->initializeTool(tool_tileTrip) );
 #endif 
-
-  //--- JVF uncertainty
-  tool_jvf = new JVFUncertaintyTool();
-  tool_jvf->UseGeV(true);
-
-  //--- JetVertexTool
-  tool_jvt = new JetVertexTaggerTool("JetVertexTaggerTool");
-  CHECK( tool_jvt->setProperty("JVTFileName",maindir+"JetMomentTools/JVTlikelihood_20140805.root") );
-  CHECK( tool_jvt->initialize() );
-
 
   
   //--- PDF reweighting
@@ -2030,6 +2029,9 @@ void chorizo :: loadMetaData(){
 }
 
 EL::StatusCode chorizo :: nextEvent(){
+  
+  //  Info("nextEvent()", "HERE");
+
   //*** clean event (store, pointers, etc...) before leaving successfully... ***
   
   // Clear View container
@@ -2048,7 +2050,7 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
-  Info("execute()", "HERE");
+  //  Info("execute()", "HERE");
 
   if(this->isTruth) //truth derivations
     return loop_truth();
@@ -2059,7 +2061,7 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  Info("loop()", "HERE");
+  //  Info("loop()", "HERE");
   
 #ifdef PROFCODE
   if(m_eventCounter!=0)
@@ -2140,7 +2142,7 @@ EL::StatusCode chorizo :: loop ()
   //EventList
   if(m_eventList.size()){
     if( !inEventList(RunNumber, EventNumber) ){
-      //      output->setFilterPassed (false);    
+      output->setFilterPassed (false);    
       return nextEvent();
     } 
   }
@@ -2153,7 +2155,7 @@ EL::StatusCode chorizo :: loop ()
 
   //PURW
   if(isMC && applyPURW)
-    tool_purw->apply(eventInfo);  //it does already the filling in 'ConfigMode'
+    CHECK( tool_purw->apply(*eventInfo) );  //it does already the filling in 'ConfigMode'
 
   //--- Generate Pileup file??
   if (genPUfile && isMC){
@@ -2167,7 +2169,7 @@ EL::StatusCode chorizo :: loop ()
 
     pileup_w = acc_PUweight(*eventInfo);
     
-    //    output->setFilterPassed ();
+    output->setFilterPassed ();
     return nextEvent();
   }
   
@@ -2351,7 +2353,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection1 for QCD jet smearing data (GRL on data) [time saver]
   if( this->isQCD && !this->isGRL){
-    //    output->setFilterPassed(false);
+    output->setFilterPassed(false);
     return nextEvent(); //skip event
   }
 
@@ -2369,8 +2371,8 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
-    //       output->setFilterPassed(false);
-       return nextEvent();
+    output->setFilterPassed(false);
+    return nextEvent();
   }
 
   //--- add Trigger requirement to preselection (if not pseudo-data)
@@ -2392,14 +2394,13 @@ EL::StatusCode chorizo :: loop ()
 
   for(const auto& el_itr : *electrons_sc){
 
-    //decorate electron with final pt requirements ('final')
-    elIsoArgs->_etcut = El_RecoPtCut;
-    tool_st->IsSignalElectronExp( (*el_itr), *elIsoArgs);
-    dec_final(*el_itr) = dec_signal(*el_itr);
-
     //decorate electron with baseline pt requirements ('signal')
-    elIsoArgs->_etcut = El_PreselPtCut;
-    tool_st->IsSignalElectronExp( (*el_itr), *elIsoArgs);
+    tool_st->IsSignalElectron( (*el_itr), El_PreselPtCut);
+    
+    //decorate electron with final pt requirements ('final')
+    if( (*el_itr).p4().Perp2() > El_RecoPtCut * El_RecoPtCut )
+      dec_final(*el_itr) = dec_signal(*el_itr);
+    
   }
 
   //--- Get Muons
@@ -2407,15 +2408,14 @@ EL::StatusCode chorizo :: loop ()
   xAOD::ShallowAuxContainer* muons_scaux(0);
   CHECK( tool_st->GetMuons(muons_sc, muons_scaux, false, Mu_PreselPtCut, Mu_PreselEtaCut ) ); //'baseline' decoration
   for(const auto& mu_itr : *muons_sc){
-    
+        
     //decorate muon with final pt requirements ('final')
-    muIsoArgs->_ptcut = Mu_RecoPtCut;
-    tool_st->IsSignalMuonExp( *mu_itr, *muIsoArgs);  //'signal' decoration.
-    dec_final(*mu_itr) = dec_signal(*mu_itr);
-    
+    tool_st->IsSignalMuon( *mu_itr, Mu_PreselPtCut);  //'signal' decoration.
+
     //decorate muon with final pt requirements ('final')
-    muIsoArgs->_ptcut = Mu_PreselPtCut;
-    tool_st->IsSignalMuonExp( *mu_itr, *muIsoArgs);  //'signal' decoration.
+    if( (*mu_itr).p4().Perp2() > Mu_RecoPtCut * Mu_RecoPtCut )
+      dec_final(*mu_itr) = dec_signal(*mu_itr); 
+
   }
 
   //--- Get Photons
@@ -2425,14 +2425,13 @@ EL::StatusCode chorizo :: loop ()
 
   for(const auto& ph_itr : *photons_sc){ 
 
-    //decorate photon with final pt requirements ('final')
-    //    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut, phIsoType);
-    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut);
-    dec_final(*ph_itr) = dec_signal(*ph_itr);
-
     //decorate photon with baseline pt requirements ('signal')
-    //    tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut, phIsoType);
     tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
+
+    //decorate photon with final pt requirements ('final')
+    if( (*ph_itr).pt() > Ph_RecoPtCut )
+      dec_final(*ph_itr) = dec_signal(*ph_itr);
+
   }
 
   //--- Get Jets
@@ -2440,15 +2439,15 @@ EL::StatusCode chorizo :: loop ()
 
   xAOD::JetContainer* jets_sc(0);
   xAOD::ShallowAuxContainer* jets_scaux(0);
-  CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut ) ); //'baseline' and 'bad' decoration
+  CHECK( tool_st->GetJets(jets_sc, jets_scaux) ); //'baseline' and 'bad' decoration
   
   xAOD::Jet jet;
   for( const auto& jet_itr : *jets_sc ){
     
-#ifdef TILETEST
-    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
-      Error("loop()", "Failed to apply JetTileCorrection!");
-#endif
+//#ifdef TILETEST
+//    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
+//      Error("loop()", "Failed to apply JetTileCorrection!");
+//#endif
 
     //** Bjet decoration 
     if (fabs((*jet_itr).eta()) < 2.5){
@@ -2815,19 +2814,17 @@ EL::StatusCode chorizo :: loop ()
   for( ; jet_itr != jet_end; ++jet_itr ){
     
     if( doOR && !dec_passOR(**jet_itr) ) continue;
+    bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
 
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
 
-    if( dec_badjet(**jet_itr) ) continue; //just book good jets!
+    //if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue; // COMMENT THIS
 
-    if( !dec_baseline(**jet_itr)) continue;
-
-    if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue;
+    if( !isgoodjet ) continue; //just book good jets!
 
     m_goodJets->push_back (*jet_itr);
 
-    
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
 
@@ -2913,16 +2910,8 @@ EL::StatusCode chorizo :: loop ()
     (*jet_itr)->getAttribute(xAOD::JetAttribute::NumTrkPt500, ntrk_vec); //NumTrkPt1000? CHECK_ME
     recoJet.nTrk = (ntrk_vec.size() ? ntrk_vec[0] : 0); // assume the 0th vertex is the primary one (in GeV)
     
-    //JVF
-    float jvfsum = 0;
-    std::vector<float> v_jvf = (*jet_itr)->getAttribute< std::vector<float> >(xAOD::JetAttribute::JVF);
-    for(unsigned int ii=0; ii < v_jvf.size()-1; ++ii)
-      jvfsum += v_jvf[ii];
-    recoJet.jvf = (v_jvf.size() ? v_jvf[0] : 0.);
-
     //JVT
-    recoJet.jvt = tool_jvt->updateJvt(**jet_itr, "Jvt", "JetPileupScaleMomentum");
-
+    recoJet.jvt = acc_jvt(**jet_itr);
 
     (*jet_itr)->getAttribute(xAOD::JetAttribute::EMFrac, recoJet.emf);
     (*jet_itr)->getAttribute(xAOD::JetAttribute::Timing, recoJet.time);
@@ -3029,7 +3018,6 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //Get truth jets vectors
-  std::vector<TLorentzVector> truthJetsJVF;
   if(isMC){
     xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
     xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
@@ -3048,10 +3036,6 @@ EL::StatusCode chorizo :: loop ()
 	jb_truth_N++;
       if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) j_truth_N++;
 
-      TLorentzVector truthJet;
-      truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 
-      
-      truthJetsJVF.push_back( truthJet );
     }
   }
   
@@ -3066,43 +3050,10 @@ EL::StatusCode chorizo :: loop ()
 
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
 
-    if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue;
-    if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue;
+    //if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
+    //if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue; // comment
     
-    //--- jvf cut   //CHECK_ME
-    // if (jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta()) < 2.4) {
-
-    //   float jvfCut = 0.5;
-      
-    //   if(isMC){
-    // 	bool isPileUp = tool_jvf->isPileUpJet(jetCandidates.at(iJet).GetVector(), truthJetsJVF);
-    // 	//--- Check if the RecoJet is a muon. If so, isPileUp=false !
-    // 	if (isPileUp && (syst_JVF==JvfUncErr::JvfUncHigh || syst_JVF==JvfUncErr::JvfUncLow) ){
-    // 	  TLorentzVector truthMuon(0, 0, 0, 0);
-    // 	  truthP_itr = m_truthP->begin();
-    // 	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	    
-    // 	    if ( ! isHard( (*truthP_itr) ) ) continue; //CHECK_ME
-    // 	    if ( ! isMuon( (*truthP_itr) ) ) continue;
-    // 	    fillTLV(truthMuon, (*truthP_itr));
-    // 	    if ( truthMuon.DeltaR(jetCandidates.at(iJet))<0.2 ) {
-    // 	      isPileUp = false;
-    // 	      break;
-    // 	    }
-    // 	  }
-    // 	}
-	
-    // 	if (syst_JVF==JvfUncErr::JvfUncHigh) jvfCut = tool_jvf->getJVFcut(0.5, isPileUp, jetCandidates.at(iJet).Pt(), jetCandidates.at(iJet).Eta(), true );
-    // 	else if (syst_JVF==JvfUncErr::JvfUncLow) jvfCut = tool_jvf->getJVFcut(0.5, isPileUp, jetCandidates.at(iJet).Pt(), jetCandidates.at(iJet).Eta(), false );
-    //   }
-      
-    //   // if ( jetCandidates.at(iJet).jvf < jvfCut) {  //MARTIN PUT THIS BACK!!
-    //   // 	JVF_min = false;
-    //   // 	continue;          
-    //   // }
-    // }
-
-    if ( jetCandidates.at(iJet).isBTagged_70eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
+    if ( jetCandidates.at(iJet).isBTagged_77eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter++;
     if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter_80eff++;	
@@ -3521,7 +3472,7 @@ EL::StatusCode chorizo :: loop ()
     //some extra variables
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
-    auto dphi_min_4jets_tmp=-1.;
+    auto dphi_min_4j_tmp=-1.;
     auto dphi_min_tmp=-1.;
     int ibcl=-1;  //closest bjet to met
     int ibfar=-1; //most faraway bjet from met
@@ -3548,8 +3499,8 @@ EL::StatusCode chorizo :: loop ()
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
 	dphi_min_tmp = dphi_jm;
 
-      if( ijet < 4 && (dphi_min_4jets_tmp < 0 || dphi_min_4jets_tmp > dphi_jm) ) //closest jet to met (4-leading only)
-	dphi_min_4jets_tmp = dphi_jm;
+      if( ijet < 4 && (dphi_min_4j_tmp < 0 || dphi_min_4j_tmp > dphi_jm) ) //closest jet to met (4-leading only)
+	dphi_min_4j_tmp = dphi_jm;
 
       //--- look for min MT(jet,MET)
       float mt_jm = Calc_MT( jet, mk.second );
@@ -3557,8 +3508,10 @@ EL::StatusCode chorizo :: loop ()
 	min_mt_jm = mt_jm;
       }
             
+
+ 
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_70eff(Jet_Tagger) ){
+      if( jet.isBTagged_77eff(Jet_Tagger) ){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -3581,7 +3534,7 @@ EL::StatusCode chorizo :: loop ()
       ijet++;
     }
     dPhi_min_alljets.push_back(dphi_min_allj_tmp);
-    dPhi_min_4jets.push_back(dphi_min_4jets_tmp);    
+    dPhi_min_4jets.push_back(dphi_min_4j_tmp);    
     dPhi_min.push_back(dphi_min_tmp);
 
     if( min_mt_jm==999999. )
@@ -3834,7 +3787,7 @@ EL::StatusCode chorizo :: loop ()
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_70eff(Jet_Tagger) && recoJets.at(1).isBTagged_70eff(Jet_Tagger) )
+    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) )
       mbb = mjj;
   }
 
@@ -3851,7 +3804,7 @@ EL::StatusCode chorizo :: loop ()
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged_70eff(Jet_Tagger) ){
+    if( jet.isBTagged_77eff(Jet_Tagger) ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -4119,8 +4072,8 @@ EL::StatusCode chorizo :: loop ()
 
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
   if ( this->isQCD  && ! isQCDSeedEvent(0., 0., QCD_METSig) ){ //FIX !! ( met, sumet, QCD_METSig) ){
-    //       output->setFilterPassed(false);
-       return nextEvent();
+    output->setFilterPassed(false);
+    return nextEvent();
   }
 
 
@@ -4143,7 +4096,7 @@ EL::StatusCode chorizo :: loop ()
   if(myfile.is_open())
     myfile.close();
 
-  //  output->setFilterPassed (true);
+  //output->setFilterPassed (true);
   m_atree->Fill();
   return nextEvent(); //SUCCESS + cleaning
 }
@@ -4398,7 +4351,6 @@ EL::StatusCode chorizo :: loop_truth()
     
     //emulate btagging efficiency! (70% here)
     float bprob = gRandom->Rndm(1);
-    cout << "bprob = " << bprob << endl;
     if(recoJet.FlavorTruth==5){
       if(bprob<0.7){
  	recoJet.FlavorTruth = 5;
@@ -4442,7 +4394,7 @@ EL::StatusCode chorizo :: loop_truth()
     // cout << "label = " << label << "   ,   pdg = " << recoJet.FlavorTruth << endl;
     //
     
-    recoJet.isbjet = recoJet.isBTagged_70eff("Truth");
+    recoJet.isbjet = recoJet.isBTagged_77eff("Truth");
     
     jetCandidates.push_back(recoJet);
     
@@ -4643,6 +4595,7 @@ EL::StatusCode chorizo :: loop_truth()
 
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
+    auto dphi_min_4j_tmp=-1.;    
     auto dphi_min_tmp=-1.;
     int ibcl=-1;  //closest bjet to met
     int ibfar=-1; //most faraway bjet from met
@@ -4668,6 +4621,8 @@ EL::StatusCode chorizo :: loop_truth()
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
 	dphi_min_tmp = dphi_jm;
 
+      if( ijet < 4 && (dphi_min_4j_tmp < 0 || dphi_min_4j_tmp > dphi_jm) ) //closest jet to met (3-leading only)
+	dphi_min_4j_tmp = dphi_jm;
 
       //--- look for min MT(jet,MET)
       float mt_jm = Calc_MT( jet, mk.second );
@@ -4677,7 +4632,7 @@ EL::StatusCode chorizo :: loop_truth()
       
       
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_70eff(Jet_Tagger) ){
+      if( jet.isBTagged_77eff(Jet_Tagger) ){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -4700,6 +4655,7 @@ EL::StatusCode chorizo :: loop_truth()
       ijet++;
     }
     dPhi_min_alljets.push_back(dphi_min_allj_tmp);
+    dPhi_min_4jets.push_back(dphi_min_4j_tmp);    
     dPhi_min.push_back(dphi_min_tmp);
 
     if( min_mt_jm==999999. )
@@ -4814,7 +4770,7 @@ EL::StatusCode chorizo :: loop_truth()
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_70eff(Jet_Tagger) && recoJets.at(1).isBTagged_70eff(Jet_Tagger) )
+    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) )
       mbb = mjj;
   }
 
@@ -4832,7 +4788,7 @@ EL::StatusCode chorizo :: loop_truth()
   auto ijet=0;
   for( auto jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged_70eff(Jet_Tagger) ){
+    if( jet.isBTagged_77eff(Jet_Tagger) ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -5163,19 +5119,17 @@ void chorizo :: dumpJets(){
 
 EL::StatusCode chorizo :: postExecute ()
 {
+  //  Info("postExecute()","HERE");
   return EL::StatusCode::SUCCESS;
 }
 
 
 EL::StatusCode chorizo :: finalize ()
 {
-  //  Info("finalize()","HERE");
+  //Info("finalize()","HERE");
 
   h_presel_flow->Fill(0.5, meta_nsim);
   h_presel_wflow->Fill(0.5, meta_nwsim);
-
-  delete elIsoArgs;
-  delete muIsoArgs;
 
   //VIEW containers
   if(m_goodJets)
@@ -5236,7 +5190,7 @@ EL::StatusCode chorizo :: finalize ()
     delete iso_6;
     iso_6=0;
   }
-  
+
   //PURW
   if(tool_purw){
     if(genPUfile)
@@ -5246,19 +5200,28 @@ EL::StatusCode chorizo :: finalize ()
     tool_purw=0;
   }
 
+  //SUSYTools
+  if( tool_st ){
+    delete tool_st;
+    tool_st = 0;
+  }
+
   //Trigger
   if(tool_trigdec){
     delete tool_trigdec;
     tool_trigdec=0;
   }
+
   if(tool_trigconfig){
     delete tool_trigconfig;
     tool_trigconfig=0;
   }
+
   if(tool_trig_match_el){
     delete tool_trig_match_el;
     tool_trig_match_el=0;
   }
+
   if(tool_trig_match_mu){
     delete tool_trig_match_mu;
     tool_trig_match_mu=0;
@@ -5285,25 +5248,6 @@ EL::StatusCode chorizo :: finalize ()
   }
 #endif 
 
-
-  //jet jvf
-  if( tool_jvf ) {
-    delete tool_jvf;
-    tool_jvf = 0;
-  }
-
-  //jet jvt
-  if( tool_jvt ) {
-    delete tool_jvt;
-    tool_jvt = 0;
-  }
-
-  //jet label
-  // if( tool_jetlabel ) {
-  //   delete tool_jetlabel;
-  //   tool_jetlabel = 0;
-  // }
-
   //jet smearing
   if( tool_jsmear ) {
     delete tool_jsmear;
@@ -5314,12 +5258,6 @@ EL::StatusCode chorizo :: finalize ()
   if( tool_mct ) {
     delete tool_mct;
     tool_mct = 0;
-  }
-
-  //SUSYTools
-  if( tool_st ){
-    delete tool_st;
-    tool_st = 0;
   }
 
   //Stop clock
@@ -5338,6 +5276,7 @@ EL::StatusCode chorizo :: finalize ()
   xAOD::IOStats::instance().stats().printSmartSlimmingBranchList();
 #endif
 
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -5345,7 +5284,7 @@ EL::StatusCode chorizo :: finalize ()
 
 EL::StatusCode chorizo :: histFinalize ()
 {
-
+  //  Info("histFinalize()","HERE");
   return EL::StatusCode::SUCCESS;
 }
 

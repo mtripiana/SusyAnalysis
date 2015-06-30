@@ -12,7 +12,6 @@
 #include <EventLoopAlgs/NTupleSvc.h>
 //#include <EventLoopAlgs/AlgSelect.h>
 #include "SampleHandler/MetaFields.h"
-#include "ElectronIsolationSelection/IsolationSelectionTool.h"
 
 // Root includes
 #include <TH1.h>
@@ -49,12 +48,10 @@
 #include "SusyAnalysis/TMctLib.h"
 #include "SusyAnalysis/mctlib.h"
 
-#include "JVFUncertaintyTool/JVFUncertaintyTool.h"
-#include "JetMomentTools/JetVertexTaggerTool.h"
-
 #include "fastjet/ClusterSequence.hh"
 #include "TileTripReader/TTileTripReader.h"
 #include "BTagEfficiencyReader/BTagEfficiencyReader.h"
+#include "IsolationSelection/IsolationSelectionTool.h"
 
 //For trigger test
 //#define TILETEST
@@ -284,12 +281,6 @@ private:
   std::map<MetDef, TVector2> metmap; //!
 #endif // not __CINT__
   std::string smetmap=""; //!
-
-  //  Analysis::JetQuarkLabel* tool_jetlabel; //!
-
-  //  DataPeriod     tool_DPeriod; //!
-  JVFUncertaintyTool* tool_jvf; //!
-  JetVertexTaggerTool* tool_jvt; //!
 
   JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
@@ -584,15 +575,12 @@ private:
 
   //jets
   TString JetCollection; //!
-  TString Jet_BtagEnv; //! 
-  TString Jet_BtagCalib; //!
   float Jet_PreselPtCut; //!
   float Jet_PreselEtaCut; //!
   float Jet_RecoPtCut; //!
   float Jet_RecoEtaCut; //!
-  /* float Jet_ORElPt; //! */
-  /* float Jet_ORMuPt; //! */
-  bool Jet_DoOR; //! 
+  float Jet_RecoJVTCut; //!
+  bool  Jet_DoOR; //! 
   TString Jet_Tagger; //!
   TString Jet_TaggerOp; //!
   TString Jet_TaggerOp2;   //!
@@ -872,8 +860,6 @@ private:
   int   j_N80;
 
   std::vector<int> j_tau_N;
-
-  bool  JVF_min;
 
   int   jb_truth_N; //baseline truth jets
   int   j_truth_N;  //signal truth jets

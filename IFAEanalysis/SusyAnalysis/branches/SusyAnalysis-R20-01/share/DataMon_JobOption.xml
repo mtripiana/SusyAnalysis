@@ -12,8 +12,7 @@
     <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch2/tripiana/anafiles/</Path>
     <Path name="PartialRootFilesFolder">/tmp/</Path>
-    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_HEAD_DQDefects-00-01-02_PHYS_StandardGRL_Atlas_Ready.xml</Path>
-    <!--    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_comm_13TeV.periodD2_PHYS_StandardGRL_All_Good.xml</Path> -->
+    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>
     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
       <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
@@ -135,14 +134,9 @@
       <PreselEtaCut>10</PreselEtaCut>
       <RecoPtCut>20000.</RecoPtCut>
       <RecoEtaCut>2.8</RecoEtaCut>
+      <RecoJVTCut>-999</RecoJVTCut>
 
       <JESNPset>1</JESNPset>
-
-      <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
-      <Path name="BtagCalib">SUSYTools/</Path>
-      <dPhiMin>0.4</dPhiMin>
-      <JVFMin>0.5</JVFMin>
-
 
       <!--- For the c/b-tagger -->
       <!--      <Tagger>IP3DSV1</Tagger> -->
