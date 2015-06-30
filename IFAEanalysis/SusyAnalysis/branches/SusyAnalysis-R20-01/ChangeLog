@@ -1,4 +1,7 @@
 2014-06-30 Martin <tripiana@cern.ch>
+	* Add -y option to run with Proof-lite driver  (some work on meta-data still needed. Only available in local run mode for now.)
+
+2014-06-30 Martin <tripiana@cern.ch>
 	* Move to SUSYTools-00-06-13 @ Base,2.3.15a
 	* Add scripts/packages.txt
 	* Fix merging in tmp/

@@ -61,6 +61,7 @@ void usage(){
   cout << "       -b            : run in batch            " << endl;
   cout << "       -p            : run on the grid (prun)        " << endl;
   cout << "       -g            : run on the grid (ganga)        " << endl;
+  cout << "       -y            : run using proof-lite " << endl;
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
@@ -198,6 +199,7 @@ int main( int argc, char* argv[] ) {
 
   std::vector<TString> args,opts;
   bool runLocal = true;
+  bool runProof = false;
   bool runBatch = false;
   bool runPrun  = false;
   bool runGrid  = false;
@@ -242,6 +244,9 @@ int main( int argc, char* argv[] ) {
   for( unsigned int iop=0; iop < opts.size(); iop++){
     if (opts[iop] == "l"){ //run locally
       runLocal = true;
+    }
+    if (opts[iop] == "y"){ //run using proof-lite
+      runProof = true;
     }
     else if (opts[iop] == "b"){ //run in batch mode
       runBatch = true;

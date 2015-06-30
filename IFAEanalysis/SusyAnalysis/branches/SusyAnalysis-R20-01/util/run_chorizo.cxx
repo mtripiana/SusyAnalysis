@@ -222,6 +222,7 @@ int main( int argc, char* argv[] ) {
   
   std::vector<TString> args,opts;
   bool runLocal = true;
+  bool runProof = false;
   bool runBatch = false;
   bool runGrid  = false;
   bool runPrun  = false;
@@ -272,6 +273,9 @@ int main( int argc, char* argv[] ) {
   for( unsigned int iop=0; iop < opts.size(); iop++){
     if (opts[iop] == "l"){ //run locally
       runLocal = true;
+    }
+    else if (opts[iop] == "y"){ //run with ProofLite
+      runProof = true;
     }
     else if (opts[iop] == "b"){ //run in batch mode
       runBatch = true;
@@ -336,6 +340,7 @@ int main( int argc, char* argv[] ) {
     runGrid=false;
     runBatch=false;
     runPrun=false;
+    runProof=false;
     runLocal=true;
     cout << bold(red("\n Ups! "));
     cout << "Running mode forced to 'local' when printing systematics list.\n" << endl;
@@ -371,7 +376,7 @@ int main( int argc, char* argv[] ) {
 
 
   // Set up the job for xAOD access:
-  xAOD::Init().ignore();
+  //  xAOD::Init().ignore();
 
   // Read some config options
   std::string maindir = getenv("ROOTCOREBIN");
@@ -618,10 +623,13 @@ int main( int argc, char* argv[] ) {
         
     //submit the job
     if(runLocal){ //local mode 
-      Ddriver.submit( job, tmpdir );
-
-      // ProofDriver.numWorkers = 4;
-      // ProofDriver.submit( job, tmpdir );
+      if(runProof){
+	//ProofDriver.numWorkers = 4;
+	ProofDriver.submit( job, tmpdir );
+      }
+      else{
+	Ddriver.submit( job, tmpdir );
+      }
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
