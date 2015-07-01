@@ -2142,7 +2142,7 @@ EL::StatusCode chorizo :: loop ()
   //EventList
   if(m_eventList.size()){
     if( !inEventList(RunNumber, EventNumber) ){
-      output->setFilterPassed (false);    
+      //      output->setFilterPassed (false);    
       return nextEvent();
     } 
   }
@@ -2169,7 +2169,7 @@ EL::StatusCode chorizo :: loop ()
 
     pileup_w = acc_PUweight(*eventInfo);
     
-    output->setFilterPassed();
+    //    output->setFilterPassed();
     return nextEvent();
   }
   
@@ -2353,7 +2353,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection1 for QCD jet smearing data (GRL on data) [time saver]
   if( this->isQCD && !this->isGRL){
-    output->setFilterPassed(false);
+    //output->setFilterPassed(false);
     return nextEvent(); //skip event
   }
 
@@ -2371,7 +2371,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent();
   }
 
@@ -4072,7 +4072,7 @@ EL::StatusCode chorizo :: loop ()
 
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
   if ( this->isQCD  && ! isQCDSeedEvent(0., 0., QCD_METSig) ){ //FIX !! ( met, sumet, QCD_METSig) ){
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent();
   }
 
@@ -4097,7 +4097,6 @@ EL::StatusCode chorizo :: loop ()
     myfile.close();
 
   //output->setFilterPassed (true);
-  output->setFilterPassed (false);
   m_atree->Fill();
   return nextEvent(); //SUCCESS + cleaning
 }
@@ -4926,7 +4925,7 @@ EL::StatusCode chorizo :: loop_truth()
   this->dumpJets();
 
 
-  output->setFilterPassed (true);
+  //  output->setFilterPassed (true);
   return nextEvent(); //SUCCESS + cleaning
 }
 
