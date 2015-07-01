@@ -1644,7 +1644,7 @@ EL::StatusCode chorizo :: initialize ()
   // m_atree->SetDirectory (out_TFile);
 
   //Book the output Tree
-  bookTree();
+  //bookTree();
 
   //Initialize variables
   InitVars();
@@ -2169,7 +2169,7 @@ EL::StatusCode chorizo :: loop ()
 
     pileup_w = acc_PUweight(*eventInfo);
     
-    output->setFilterPassed ();
+    output->setFilterPassed();
     return nextEvent();
   }
   
@@ -4097,6 +4097,7 @@ EL::StatusCode chorizo :: loop ()
     myfile.close();
 
   //output->setFilterPassed (true);
+  output->setFilterPassed (false);
   m_atree->Fill();
   return nextEvent(); //SUCCESS + cleaning
 }
