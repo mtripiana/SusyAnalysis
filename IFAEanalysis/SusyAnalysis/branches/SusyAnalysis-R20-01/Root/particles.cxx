@@ -186,10 +186,11 @@ bool Jet::isBTagged_80eff(TString Tagger){
 
 bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
 
+  //if (deltaPhi(this->Phi(), metphi) > min_dphi_tau) return false;
   if (this->isBTagged_70eff(Tagger)) return false;
   if (this->nTrk >= 5) return false;
-  if (deltaPhi(this->Phi(), metphi)>0.2) return false;
-
+  if (deltaPhi(this->Phi(), metphi)>=TMath::Pi()/5.) return false; //CHANGED BEFORE 0.2
+  if (fabs(this->Eta())>2.5) return false;                               //CHANGED BEFORE NOTHING
   return true;
 }
 

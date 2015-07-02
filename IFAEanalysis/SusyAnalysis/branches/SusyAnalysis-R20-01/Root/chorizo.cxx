@@ -322,8 +322,8 @@ void chorizo :: bookTree(){
       m_atree->Branch("ph_pt",&ph_pt);
       m_atree->Branch("ph_eta",&ph_eta);
       m_atree->Branch("ph_phi",&ph_phi);
-      m_atree->Branch("ph_etiso30",&ph_etiso30);
-      m_atree->Branch("ph_ptiso30",&ph_ptiso30);
+      //m_atree->Branch("ph_etiso30",&ph_etiso30);
+      //m_atree->Branch("ph_ptiso30",&ph_ptiso30);
       m_atree->Branch("ph_tight",&ph_tight);
       m_atree->Branch("ph_type",&ph_type);
       m_atree->Branch("ph_origin",&ph_origin);
@@ -343,10 +343,10 @@ void chorizo :: bookTree(){
       m_atree->Branch("e_phi",&e_phi);
       m_atree->Branch("e_type",&e_type);
       m_atree->Branch("e_origin",&e_origin);            
-      m_atree->Branch("e_etiso30",&e_etiso30);
-      m_atree->Branch("e_ptiso30",&e_ptiso30);
-      m_atree->Branch("e_etiso20",&e_etiso20);
-      m_atree->Branch("e_ptiso20",&e_ptiso20);
+      //m_atree->Branch("e_etiso30",&e_etiso30);
+      //m_atree->Branch("e_ptiso30",&e_ptiso30);
+      //m_atree->Branch("e_etiso20",&e_etiso20);
+      //m_atree->Branch("e_ptiso20",&e_ptiso20);
       m_atree->Branch("e_isoT",&e_isoTight);
       m_atree->Branch("e_isoL",&e_isoLoose);
       m_atree->Branch("e_isoVL",&e_isoVeryLoose);
@@ -379,10 +379,10 @@ void chorizo :: bookTree(){
       m_atree->Branch("m_phi",&m_phi);      
       m_atree->Branch("m_type",&m_type);
       m_atree->Branch("m_origin",&m_origin);
-      m_atree->Branch("m_etiso20",&m_etiso20);          
-      m_atree->Branch("m_ptiso20",&m_ptiso20);          
-      m_atree->Branch("m_etiso30",&m_etiso30);          
-      m_atree->Branch("m_ptiso30",&m_ptiso30);          
+      //m_atree->Branch("m_etiso20",&m_etiso20);          
+      //m_atree->Branch("m_ptiso20",&m_ptiso20);          
+      //m_atree->Branch("m_etiso30",&m_etiso30);          
+      //m_atree->Branch("m_ptiso30",&m_ptiso30);          
       m_atree->Branch("m_isoTight",&m_isoTight);
       m_atree->Branch("m_isoLoose",&m_isoLoose);
       m_atree->Branch("m_isoVeryLoose",&m_isoVeryLoose);
@@ -465,7 +465,7 @@ void chorizo :: bookTree(){
       m_atree->Branch("btag_weight_total",&btag_weight_total,"btag_weight_total/F", 10000);
       m_atree->Branch("btag_weight_total_80eff",&btag_weight_total_80eff,"btag_weight_total_80eff/F", 10000);
 
-      m_atree->Branch("j_tag_MV1",&j_tag_MV1);
+      //m_atree->Branch("j_tag_MV1",&j_tag_MV1);
       m_atree->Branch("j_tag_MV2c20",&j_tag_MV2c20);
 
       m_atree->Branch("bj_Nt70",&bj_Nt70,"bj_Nt70/I", 10000);
@@ -483,18 +483,18 @@ void chorizo :: bookTree(){
       m_atree->Branch("met_cst",&met_cst,"met_cst/f", 10000);
       m_atree->Branch("met_tst",&met_tst,"met_tst/f", 10000);
       
-      m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
+      //m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
 
       //met recoil system
-      m_atree->Branch("rmet_par", &rmet_par);
-      m_atree->Branch("rmet_norm", &rmet_norm);
-      m_atree->Branch("rmet_par_mod", &rmet_par_mod);
-      m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
-      m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
+      //m_atree->Branch("rmet_par", &rmet_par);
+      //m_atree->Branch("rmet_norm", &rmet_norm);
+      //m_atree->Branch("rmet_par_mod", &rmet_par_mod);
+      //m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
+      //m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
 
       //(transv. thrust and sphericity
-      m_atree->Branch("tr_spher",&tr_spher); 
-      m_atree->Branch("tr_thrust",&tr_thrust); 
+      //m_atree->Branch("tr_spher",&tr_spher); 
+      //m_atree->Branch("tr_thrust",&tr_thrust); 
 
       //event variables
       //dphi
@@ -502,7 +502,7 @@ void chorizo :: bookTree(){
       m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
       m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
       m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
-      m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
+      m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
       m_atree->Branch("dPhi_min",&dPhi_min);
       m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
       m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
@@ -517,12 +517,12 @@ void chorizo :: bookTree(){
       m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
       m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
 
-      m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
-      m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
-      m_atree->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
-      m_atree->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
-      m_atree->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
-      m_atree->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
+//       m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
+//       m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
+//       m_atree->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
+//       m_atree->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
+//       m_atree->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
+//       m_atree->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
 
       //dEta
       m_atree->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
@@ -554,25 +554,25 @@ void chorizo :: bookTree(){
       m_atree->Branch("mct_corr",&mct_corr);    
       m_atree->Branch("meff",&meff);
       m_atree->Branch("HT",&HT,"HT/F", 10000);    
-      m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
-      
-      //Razor
-      m_atree->Branch("MR",&MR,"MR/F", 10000);
-      m_atree->Branch("MTR",&MTR);
-      m_atree->Branch("R",&R);
-            
-      m_atree->Branch("shatR",&shatR);
-      m_atree->Branch("gaminvR",&gaminvR);
-      m_atree->Branch("mdeltaR",&mdeltaR);
-      m_atree->Branch("cosptR",&cosptR);
+//       m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
+//       
+//       //Razor
+//       m_atree->Branch("MR",&MR,"MR/F", 10000);
+//       m_atree->Branch("MTR",&MTR);
+//       m_atree->Branch("R",&R);
+//             
+//       m_atree->Branch("shatR",&shatR);
+//       m_atree->Branch("gaminvR",&gaminvR);
+//       m_atree->Branch("mdeltaR",&mdeltaR);
+//       m_atree->Branch("cosptR",&cosptR);
       
       //Z candidate 
-      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
-      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
-      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
-      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
-      m_atree->Branch("lep3_MT",&lep3_MT);
-      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+//      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+//      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+//      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+//      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+//      m_atree->Branch("lep3_MT",&lep3_MT);
+//      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
 
 
       //top reconstruction
@@ -1172,7 +1172,7 @@ void chorizo :: InitVars()
   dPhi_met_j2.clear(); 
   dPhi_met_j3.clear(); 
   dPhi_met_j4.clear(); 
-  dPhi_met_mettrk = DUMMYDN;                     
+  dPhi_met_mettrk.clear();                     
   dPhi_j1_j2 = DUMMYDN;                          
   dPhi_j1_j3 = DUMMYDN;                          
   dPhi_j2_j3 = DUMMYDN;                          
@@ -2142,7 +2142,7 @@ EL::StatusCode chorizo :: loop ()
   //EventList
   if(m_eventList.size()){
     if( !inEventList(RunNumber, EventNumber) ){
-      //      output->setFilterPassed (false);    
+      output->setFilterPassed (false);    
       return nextEvent();
     } 
   }
@@ -2169,7 +2169,7 @@ EL::StatusCode chorizo :: loop ()
 
     pileup_w = acc_PUweight(*eventInfo);
     
-    //    output->setFilterPassed();
+    output->setFilterPassed ();
     return nextEvent();
   }
   
@@ -2353,7 +2353,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection1 for QCD jet smearing data (GRL on data) [time saver]
   if( this->isQCD && !this->isGRL){
-    //output->setFilterPassed(false);
+    output->setFilterPassed(false);
     return nextEvent(); //skip event
   }
 
@@ -2371,7 +2371,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
-    //    output->setFilterPassed(false);
+    output->setFilterPassed(false);
     return nextEvent();
   }
 
@@ -3058,9 +3058,9 @@ EL::StatusCode chorizo :: loop ()
     if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
       bjet_counter_80eff++;	
     
-    if( jetCandidates.at(iJet).isbjet_t70 ) bj_Nt70++;
-    if( jetCandidates.at(iJet).isbjet_t77 ) bj_Nt77++;
-    if( jetCandidates.at(iJet).isbjet_t80 ) bj_Nt80++;
+    if( jetCandidates.at(iJet).isbjet_t70  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt70++;
+    if( jetCandidates.at(iJet).isbjet_t77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt77++;
+    if( jetCandidates.at(iJet).isbjet_t80  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt80++;
 
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
     
@@ -3136,11 +3136,13 @@ EL::StatusCode chorizo :: loop ()
 
   if(!m_isderived){
     CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") ); //not in MC15??
-    CHECK( m_event->retrieve( cmet_track, "MET_Track") );
     mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-    mtrack = (*cmet_track)["PVTrack"];
-    // mtrack = (*cmet_track)["Track"];
   }
+
+    CHECK( m_event->retrieve( cmet_track, "MET_Track") );    
+    mtrack = (*cmet_track)["PVTrack_vx0"];
+    // mtrack = (*cmet_track)["Track"];
+
   
   
   //** Met components
@@ -3212,7 +3214,7 @@ EL::StatusCode chorizo :: loop ()
   
   //- Track met
   if(mtrack){
-    cout << "checking MET track" << endl;
+    //cout << "checking MET track" << endl;
     TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
     met_obj.SetVector(v_met_trk, "met_trk");
   }
@@ -3468,6 +3470,8 @@ EL::StatusCode chorizo :: loop ()
     tr_thrust.push_back( Calc_Thrust(thrust_jets) );
 
     thrust_jets.pop_back(); //remove met from jet vectors
+    
+    dPhi_met_mettrk.push_back( deltaPhi( metmap[MetDef::Track].Phi(), mk.second.Phi()) );	
 
     //some extra variables
     auto ntaujs =0;
@@ -3546,7 +3550,6 @@ EL::StatusCode chorizo :: loop ()
     MT_bfar_met.push_back( (ibfar >= 0 ? Calc_MT( recoJets.at(ibfar), mk.second ) : 0.) );
     MT_lcl_met.push_back( (ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), mk.second ) : 0.) );
     MT_jsoft_met.push_back( (recoJets.size() > 0 ? Calc_MT( recoJets.back(), mk.second ) : 0.) ); //it assumes jets are pt ordered!
-
 
     //dphi(jet_i, met+j) ,  MT(j_i, met_j)
     if (j_N>0){
@@ -3660,7 +3663,7 @@ EL::StatusCode chorizo :: loop ()
   }
   
   //- dPhi & dR
-  dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
+  //dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
   
   if (j_N>0){
 
@@ -3799,12 +3802,12 @@ EL::StatusCode chorizo :: loop ()
   int ibtop2=-1;
   int iblead1=-1;
   int iblead2=-1;
-  float maxbw1=0;
-  float maxbw2=0;
+  float maxbw1=-99;
+  float maxbw2=-99;
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged_77eff(Jet_Tagger) ){
+    if( jet.isBTagged_77eff(Jet_Tagger) && fabs(jet.Eta())<2.5){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -3827,8 +3830,8 @@ EL::StatusCode chorizo :: loop ()
       }
 
       ijet++;
+ 
   }
-
   RecoHadTops(ibtop1, ibtop2);
 
   //dPhi_b1_b2  
@@ -4072,7 +4075,7 @@ EL::StatusCode chorizo :: loop ()
 
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
   if ( this->isQCD  && ! isQCDSeedEvent(0., 0., QCD_METSig) ){ //FIX !! ( met, sumet, QCD_METSig) ){
-    //    output->setFilterPassed(false);
+    output->setFilterPassed(false);
     return nextEvent();
   }
 
@@ -4575,7 +4578,9 @@ EL::StatusCode chorizo :: loop_truth()
 
     met.push_back(mk.second.Mod());
     met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
-  
+    
+    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(), mk.second.Phi())); 
+    
     //Recoiling system against MET (prebooking)
     rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) ); //leading jet only
     rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
@@ -4714,7 +4719,7 @@ EL::StatusCode chorizo :: loop_truth()
   }
   
   //- dPhi & dR
-  dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
+  //dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
   
   if (j_N>0){
 
@@ -4812,7 +4817,7 @@ EL::StatusCode chorizo :: loop_truth()
 
       ijet++;
   }
-  RecoHadTops(ibtop1, ibtop2);
+  //RecoHadTops(ibtop1, ibtop2);
 
 
   //dPhi_b1_b2  
@@ -5126,7 +5131,7 @@ EL::StatusCode chorizo :: postExecute ()
 
 EL::StatusCode chorizo :: finalize ()
 {
-  //Info("finalize()","HERE");
+  Info("finalize()","HERE");
 
   h_presel_flow->Fill(0.5, meta_nsim);
   h_presel_wflow->Fill(0.5, meta_nwsim);
@@ -5284,7 +5289,7 @@ EL::StatusCode chorizo :: finalize ()
 
 EL::StatusCode chorizo :: histFinalize ()
 {
-  //  Info("histFinalize()","HERE");
+  Info("histFinalize()","HERE");
   return EL::StatusCode::SUCCESS;
 }
 
@@ -6312,111 +6317,126 @@ float chorizo :: TopTransvMass(){
 
 }
 
-void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
+void chorizo :: RecoHadTops(int ibtop1, int ibtop2){     
 
-  //==== Hadronic top reconstruction ====
-  // DRmin implemented as in https://cds.cern.ch/record/1570992/files/ATL-COM-PHYS-2013-1092.pdf
-  // 1- select two highest btag-weights bjets
-  // 2- two closest light jets --> W1_had --> add closest bjet from before --> t1_had
-  // 3- next two closest light jets --> W2_had --> add remaining bjet from before --> t2_had
-  //
-  // Update: by default the leading good electron and/or muon are added 'as' jets. Although no effect is obviously expected 
-  //         in the SRs (since we apply lepton veto), it is needed for the 1-lepton CR afterwards.
-  //         This way we avoid doubling the number of variables.
-  //
-  
-  //add leading leptons to jet collection
-  Particles::Jet ElJet, MuJet;
-  bool eladded=false;
-  bool muadded=false;
-  if(recoElectrons.size()>0){
-    ElJet.SetVector( recoElectrons.at(0).GetVector());
-    recoJets.push_back(ElJet);
-    eladded=true;
-  }
-  if(recoMuons.size()>0){
-    MuJet.SetVector( recoMuons.at(0).GetVector());
-    recoJets.push_back(MuJet);
-    muadded=true;
-  }
 
-  if(ibtop1<0 || ibtop2<0 || (recoJets.size()<4)){ //at least two bjets and 4 jets  (to build at least the first top)
-    m_top_had1=-1;
-    m_top_had2=-1;
-    return;
-  }
-    
-  int W1j1 = -1;
-  int W1j2 = -1;
-  int W1dr = 999.;
-  int W2j1 = -1;
-  int W2j2 = -1;
-  int W2dr = 999.;
-  //       tuple<int, int, float> Whad1(-1, -1, 999.);  //requires C++0x
-  //       tuple<int, int, float> Whad2(-1, -1, 999.);
+      int Wjet1, Wjet2;
+     
+      int Wjet3, Wjet4;
 
-  for(int ij1=0; ij1 < j_N; ij1++){
-    if(ij1==ibtop1  || ij1==ibtop2) continue; //skip btags
-    for(int ij2=ij1+1; ij2 < j_N; ij2++){
-      if(ij2==ibtop1  || ij2==ibtop2) continue; //skip btags
-      float locdr = recoJets.at(ij1).DeltaR( recoJets.at(ij2).GetVector() );
+      int bjet1 = -1;
 
-      if(locdr < W1dr){
-	if(W1dr<999 && ij1!=W1j1 && ij1!=W1j2 && ij2!=W1j1 && ij2!=W1j2){
-	  W2j1 = W1j1;
-	  W2j2 = W1j2;
-	  W2dr = W1dr;
-	}
-	W1j1 = ij1;
-	W1j2 = ij2;
-	W1dr = locdr;
-      }
-      else if(locdr < W2dr &&
-	      ij1 != W1j1 &&
-	      ij1 != W1j2 &&
-	      ij2 != W1j1 &&
-	      ij2 != W1j2 ){
-	W2j1 = ij1;
-	W2j2 = ij2;
-	W2dr = locdr;
-      }
-    }
-  }
+      int bjet2 = -1;
       
-  //top1 mass
-  bool b1used=false;
-  if(W1j1>=0 && W1j2>=0){
-    TLorentzVector vW1 = (recoJets.at(W1j1).GetVector() + recoJets.at(W1j2).GetVector());
-    if( vW1.DeltaR( recoJets.at(ibtop1).GetVector()) < vW1.DeltaR(recoJets.at(ibtop2).GetVector() ) ){
-      m_top_had1 = ( vW1 + recoJets.at(ibtop1).GetVector() ).M();
-      b1used=true;
-    }
-    else{
-      m_top_had1 = ( vW1 + recoJets.at(ibtop2).GetVector() ).M();
-    }
-  }
-  else{
-    m_top_had1 = -1;
-  }
-  
-  //top2 mass
-  if(W2j1>=0 && W2j2>=0){
-    TLorentzVector vW2 = (recoJets.at(W2j1).GetVector() + recoJets.at(W2j2).GetVector());
-    if( !b1used ) //I think it is enough!
-      m_top_had2 = ( vW2 + recoJets.at(ibtop1).GetVector() ).M();
-    else 
-      m_top_had2 = ( vW2 + recoJets.at(ibtop2).GetVector() ).M();
-  }
-  else{
-    m_top_had2 = -1;
-  }
+//   //add leading leptons to jet collection
+   Particles::Jet ElJet, MuJet;
+   bool eladded=false;
+   bool muadded=false;
+   if(recoElectrons.size()>0){
+     ElJet.SetVector( recoElectrons.at(0).GetVector());
+     recoJets.push_back(ElJet);
+     eladded=true;
+   }
+   if(recoMuons.size()>0){
+     MuJet.SetVector( recoMuons.at(0).GetVector());
+     recoJets.push_back(MuJet);
+     muadded=true;
+   }
+      if (bj_N>=2 && recoJets.size()>=6)
+    	{
 
-  //recover original jet vector
-  if(eladded)
-    recoJets.pop_back();
-  if(muadded)
-    recoJets.pop_back();
-};
+    	  Wjet1=Wjet2=-1;
+    	 
+    	  double mindr = 1000.;
+
+    	  for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+    	    for (unsigned int j = i+1 ; j < recoJets.size() ; j++)
+    	      {
+	        if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){
+    		double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+
+    		if (curr_dr<mindr)
+    		  {
+    		    Wjet1 = i;
+    		    Wjet2 = j;
+    		    mindr = curr_dr;
+    		  }
+		  }
+    	      }
+	    }
+    	  mindr = 1000.;
+    	  TLorentzVector W1candidate = recoJets.at(Wjet1).GetVector()+recoJets.at(Wjet2).GetVector();
+
+
+
+    	  for (unsigned int i = 0 ; i < recoJets.size() ; i++)
+    	    {
+	      if(i==ibtop1 || i==ibtop2 ){	      
+    	      double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W1candidate);
+    	     
+    	      if (curr_dr<mindr)
+    		{
+    		  bjet1 = i;
+    		  mindr = curr_dr;
+    		}
+		}
+    	    }
+    	  TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
+
+
+    	  Wjet3=Wjet4=-1;
+
+    	  mindr = 1000.;
+
+    	  for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+    	    for (unsigned int j = i+1 ; j < recoJets.size() ; j++){
+	    
+	      if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){	    
+    	      if ((int)i!=Wjet1 && (int)i!=Wjet2 && (int)j!=Wjet1 && (int)j!=Wjet2)
+    		{
+    		  double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+
+    		  if (curr_dr<mindr)
+    		    {
+    		      Wjet3 = i;
+    		      Wjet4 = j;
+    		      mindr = curr_dr;
+    		    }
+    		}
+                }
+		
+	}	
+	}	
+    	  mindr = 1000.;
+
+    	  TLorentzVector W2candidate = recoJets.at(Wjet3).GetVector()+recoJets.at(Wjet4).GetVector();
+
+	  for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	    if ((int)i!=bjet1 && ((int)i==ibtop1 || (int)i==ibtop2))
+	      {
+		double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W2candidate);
+
+   
+		if (curr_dr<mindr)
+		  {
+		    bjet2 = i;
+		    mindr = curr_dr;
+		  }
+	      }
+          }
+	  TLorentzVector top2candidate = recoJets.at(bjet2).GetVector()+W2candidate;
+ 
+	  m_top_had1 = top1candidate.M();
+	  m_top_had2 = top2candidate.M();
+
+}
+   //recover original jet vector
+   if(eladded)
+     recoJets.pop_back();
+   if(muadded)
+     recoJets.pop_back();
+ 
+}
 
 
 std::vector<TLorentzVector> chorizo :: getFatJets(double R, double fcut) {

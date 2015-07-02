@@ -105,7 +105,9 @@ m_map["Week1_data_A1"] = rlist( Rpair(266904, "data15_13TeV.periodA1.physics_Mai
   //======================================================================================================================
 m_map["13TeV_Sbottom_800_1"] = rlist( Rpair(406003, "/nfs/at3/scratch/sfracchia/SUSY/signal_MC15_800_1/"));
 m_map["13TeV_Sbottom_800_1_cutflow"] = rlist( Rpair(387063, "/nfs/at3/scratch/sfracchia/SUSY/signal_MC15_800_1_cutflow/"));
+m_map["13TeV_Stop_800_1_cutflow"] = rlist( Rpair(387198, "/nfs/at3/scratch/sfracchia/SUSY/signal_stop_cutflow/"));
 
+m_map["test_ttbar_martin"] = rlist( Rpair(410000, "/nfs/atlas-data07/tripiana/xAOD/ttbar/xAOD/"));
 
 // Dijet
 m_map["13TeV_Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W"] = rlist( Rpair(361020, "mc15_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.merge.DAOD_SUSY1.e3569_s2576_s2132_r6630_r6264_p2353/"));

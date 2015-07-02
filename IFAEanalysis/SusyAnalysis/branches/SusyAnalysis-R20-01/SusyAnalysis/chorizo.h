@@ -946,7 +946,7 @@ private:
   VFloat dPhi_met_j2;
   VFloat dPhi_met_j3;
   VFloat dPhi_met_j4;
-  float dPhi_met_mettrk;
+  VFloat dPhi_met_mettrk;
   float dPhi_j1_j2;
   float dPhi_j1_j3;
   float dPhi_j2_j3;

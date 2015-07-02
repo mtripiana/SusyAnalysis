@@ -623,13 +623,10 @@ int main( int argc, char* argv[] ) {
         
     //submit the job
     if(runLocal){ //local mode 
-      if(runProof){
-	//ProofDriver.numWorkers = 4;
-	ProofDriver.submit( job, tmpdir );
-      }
-      else{
-	Ddriver.submit( job, tmpdir );
-      }
+      Ddriver.submit( job, tmpdir );
+      cout << "OUT OF DRIVER!" << endl;
+      // ProofDriver.numWorkers = 4;
+      // ProofDriver.submit( job, tmpdir );
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
