@@ -2142,7 +2142,7 @@ EL::StatusCode chorizo :: loop ()
   //EventList
   if(m_eventList.size()){
     if( !inEventList(RunNumber, EventNumber) ){
-      output->setFilterPassed (false);    
+      //      output->setFilterPassed (false);    
       return nextEvent();
     } 
   }
@@ -2169,7 +2169,7 @@ EL::StatusCode chorizo :: loop ()
 
     pileup_w = acc_PUweight(*eventInfo);
     
-    output->setFilterPassed ();
+    //    output->setFilterPassed ();
     return nextEvent();
   }
   
@@ -2353,7 +2353,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection1 for QCD jet smearing data (GRL on data) [time saver]
   if( this->isQCD && !this->isGRL){
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent(); //skip event
   }
 
@@ -2371,7 +2371,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent();
   }
 
@@ -4075,7 +4075,7 @@ EL::StatusCode chorizo :: loop ()
 
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
   if ( this->isQCD  && ! isQCDSeedEvent(0., 0., QCD_METSig) ){ //FIX !! ( met, sumet, QCD_METSig) ){
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent();
   }
 
@@ -6319,122 +6319,131 @@ float chorizo :: TopTransvMass(){
 
 void chorizo :: RecoHadTops(int ibtop1, int ibtop2){     
 
+  //==== Hadronic top reconstruction ====
+  // DRmin implemented as in https://cds.cern.ch/record/1570992/files/ATL-COM-PHYS-2013-1092.pdf
+  // 1- select two highest btag-weights bjets
+  // 2- two closest light jets --> W1_had --> add closest bjet from before --> t1_had
+  // 3- next two closest light jets --> W2_had --> add remaining bjet from before --> t2_had
+  //
+  // Update: by default the leading good electron and/or muon are added 'as' jets. Although no effect is obviously expected 
+  //         in the SRs (since we apply lepton veto), it is needed for the 1-lepton CR afterwards.
+  //         This way we avoid doubling the number of variables.
+  //
+  
+  int Wjet1, Wjet2;
+  int Wjet3, Wjet4;
+  int bjet1 = -1;
+  int bjet2 = -1;
+  
+  //add leading leptons to jet collection
+  Particles::Jet ElJet, MuJet;
+  bool eladded=false;
+  bool muadded=false;
+  if(recoElectrons.size()>0){
+    ElJet.SetVector( recoElectrons.at(0).GetVector());
+    recoJets.push_back(ElJet);
+    eladded=true;
+  }
+  if(recoMuons.size()>0){
+    MuJet.SetVector( recoMuons.at(0).GetVector());
+    recoJets.push_back(MuJet);
+    muadded=true;
+  }
+  if (bj_N>=2 && recoJets.size()>=6)
+    {
+       
+      Wjet1=Wjet2=-1;
+       
+      double mindr = 1000.;
+       
+      for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	for (unsigned int j = i+1 ; j < recoJets.size() ; j++)
+	  {
+	    if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){
+	      double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
 
-      int Wjet1, Wjet2;
-     
-      int Wjet3, Wjet4;
-
-      int bjet1 = -1;
-
-      int bjet2 = -1;
-      
-//   //add leading leptons to jet collection
-   Particles::Jet ElJet, MuJet;
-   bool eladded=false;
-   bool muadded=false;
-   if(recoElectrons.size()>0){
-     ElJet.SetVector( recoElectrons.at(0).GetVector());
-     recoJets.push_back(ElJet);
-     eladded=true;
-   }
-   if(recoMuons.size()>0){
-     MuJet.SetVector( recoMuons.at(0).GetVector());
-     recoJets.push_back(MuJet);
-     muadded=true;
-   }
-      if (bj_N>=2 && recoJets.size()>=6)
-    	{
-
-    	  Wjet1=Wjet2=-1;
-    	 
-    	  double mindr = 1000.;
-
-    	  for (unsigned int i = 0 ; i < recoJets.size() ; i++){
-    	    for (unsigned int j = i+1 ; j < recoJets.size() ; j++)
-    	      {
-	        if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){
-    		double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
-
-    		if (curr_dr<mindr)
-    		  {
-    		    Wjet1 = i;
-    		    Wjet2 = j;
-    		    mindr = curr_dr;
-    		  }
-		  }
-    	      }
-	    }
-    	  mindr = 1000.;
-    	  TLorentzVector W1candidate = recoJets.at(Wjet1).GetVector()+recoJets.at(Wjet2).GetVector();
-
-
-
-    	  for (unsigned int i = 0 ; i < recoJets.size() ; i++)
-    	    {
-	      if(i==ibtop1 || i==ibtop2 ){	      
-    	      double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W1candidate);
-    	     
-    	      if (curr_dr<mindr)
-    		{
-    		  bjet1 = i;
-    		  mindr = curr_dr;
-    		}
+	      if (curr_dr<mindr)
+		{
+		  Wjet1 = i;
+		  Wjet2 = j;
+		  mindr = curr_dr;
 		}
-    	    }
-    	  TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
+	    }
+	  }
+      }
+      mindr = 1000.;
 
+      //book first W
+      TLorentzVector W1candidate = recoJets.at(Wjet1).GetVector()+recoJets.at(Wjet2).GetVector();
 
-    	  Wjet3=Wjet4=-1;
-
-    	  mindr = 1000.;
-
-    	  for (unsigned int i = 0 ; i < recoJets.size() ; i++){
-    	    for (unsigned int j = i+1 ; j < recoJets.size() ; j++){
-	    
-	      if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){	    
-    	      if ((int)i!=Wjet1 && (int)i!=Wjet2 && (int)j!=Wjet1 && (int)j!=Wjet2)
-    		{
-    		  double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
-
-    		  if (curr_dr<mindr)
-    		    {
-    		      Wjet3 = i;
-    		      Wjet4 = j;
-    		      mindr = curr_dr;
-    		    }
-    		}
-                }
-		
-	}	
-	}	
-    	  mindr = 1000.;
-
-    	  TLorentzVector W2candidate = recoJets.at(Wjet3).GetVector()+recoJets.at(Wjet4).GetVector();
-
-	  for (unsigned int i = 0 ; i < recoJets.size() ; i++){
-	    if ((int)i!=bjet1 && ((int)i==ibtop1 || (int)i==ibtop2))
+      for (unsigned int i = 0 ; i < recoJets.size() ; i++)
+	{
+	  if(i==ibtop1 || i==ibtop2 ){	      
+	    double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W1candidate);
+    	     
+	    if (curr_dr<mindr)
 	      {
-		double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W2candidate);
+		bjet1 = i;
+		mindr = curr_dr;
+	      }
+	  }
+	}
 
-   
+      //book first top
+      TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
+
+
+      Wjet3=Wjet4=-1;
+      mindr = 1000.;
+      for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	for (unsigned int j = i+1 ; j < recoJets.size() ; j++){
+	    
+	  if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){	    
+	    if ((int)i!=Wjet1 && (int)i!=Wjet2 && (int)j!=Wjet1 && (int)j!=Wjet2)
+	      {
+		double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+
 		if (curr_dr<mindr)
 		  {
-		    bjet2 = i;
+		    Wjet3 = i;
+		    Wjet4 = j;
 		    mindr = curr_dr;
 		  }
 	      }
-          }
-	  TLorentzVector top2candidate = recoJets.at(bjet2).GetVector()+W2candidate;
- 
-	  m_top_had1 = top1candidate.M();
-	  m_top_had2 = top2candidate.M();
+	  }
+		
+	}	
+      }	
+      mindr = 1000.;
 
-}
-   //recover original jet vector
-   if(eladded)
-     recoJets.pop_back();
-   if(muadded)
-     recoJets.pop_back();
+      //book second W
+      TLorentzVector W2candidate = recoJets.at(Wjet3).GetVector()+recoJets.at(Wjet4).GetVector();
+
+      for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	if ((int)i!=bjet1 && ((int)i==ibtop1 || (int)i==ibtop2))
+	  {
+	    double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W2candidate);
+	    	    
+	    if (curr_dr<mindr)
+	      {
+		bjet2 = i;
+		mindr = curr_dr;
+	      }
+	  }
+      }
+
+      //book second top
+      TLorentzVector top2candidate = recoJets.at(bjet2).GetVector()+W2candidate;
+ 
+      m_top_had1 = top1candidate.M();
+      m_top_had2 = top2candidate.M();
+    }
+
+  //recover original jet vector
+  if(eladded)
+    recoJets.pop_back();
+  if(muadded)
+    recoJets.pop_back();
  
 }
 

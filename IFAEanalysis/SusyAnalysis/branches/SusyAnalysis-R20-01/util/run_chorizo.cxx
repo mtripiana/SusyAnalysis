@@ -61,6 +61,7 @@ void usage(){
   cout << "       -b            : run in batch            " << endl;
   cout << "       -p            : run on the grid (prun)        " << endl;
   cout << "       -g            : run on the grid (ganga)        " << endl;
+  cout << "       -y            : run using proof-lite " << endl;
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
@@ -623,10 +624,13 @@ int main( int argc, char* argv[] ) {
         
     //submit the job
     if(runLocal){ //local mode 
-      Ddriver.submit( job, tmpdir );
-      cout << "OUT OF DRIVER!" << endl;
-      // ProofDriver.numWorkers = 4;
-      // ProofDriver.submit( job, tmpdir );
+      if(runProof){
+	//ProofDriver.numWorkers = 4;
+	ProofDriver.submit( job, tmpdir );
+      }
+      else{
+	Ddriver.submit( job, tmpdir );
+      }
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
@@ -704,9 +708,6 @@ int main( int argc, char* argv[] ) {
       } 
       else {
 	tadd(mergeList, weights, FinalPath+"/"+mergedName, isData);
-	
-	//clean ROOTMERGE leftovers  (investigate a bit more anyways...)
-	system("ls -lrt1 /tmp/ROOTMERGE* | grep $USER | rev | cut -d' ' -f 1 | rev | while read i; do rm -rf $i; done");
       }
     }
 

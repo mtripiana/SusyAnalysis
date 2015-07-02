@@ -553,9 +553,6 @@ int main( int argc, char* argv[] ) {
 	} 
 	else {
 	  tadd(tmp_mergeList, weights, FinalPath+"/"+mergedName, isData);
-
-	  //clean ROOTMERGE leftovers  (investigate a bit more anyways...)
-	  system("ls -lrt1 /tmp/ROOTMERGE* | grep $USER | rev | cut -d' ' -f 1 | rev | while read i; do rm -rf $i; done");
 	}
       }
     }//end of syst loop
