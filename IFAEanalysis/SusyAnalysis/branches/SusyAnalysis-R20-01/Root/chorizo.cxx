@@ -3498,7 +3498,7 @@ EL::StatusCode chorizo :: loop ()
       float dphi_jm = deltaPhi( jet.Phi(), mk.second.Phi() );
       
       if(dphi_min_allj_tmp < 0 || dphi_min_allj_tmp > deltaPhi(jet.Phi(), mk.second.Phi()) ) //closest jet to met (all)
-	dphi_min_allj_tmp = deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
+	dphi_min_allj_tmp = dphi_jm; //deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
       
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
 	dphi_min_tmp = dphi_jm;
@@ -4621,7 +4621,7 @@ EL::StatusCode chorizo :: loop_truth()
       float dphi_jm = deltaPhi( jet.Phi(), mk.second.Phi() );
       
       if(dphi_min_allj_tmp < 0 || dphi_min_allj_tmp > deltaPhi(jet.Phi(), mk.second.Phi()) ) //closest jet to met (all)
-	dphi_min_allj_tmp = deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
+	dphi_min_allj_tmp =  dphi_jm;   //deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
       
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
 	dphi_min_tmp = dphi_jm;
