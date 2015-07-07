@@ -1,84 +1,87 @@
-2014-07-01 Martin <tripiana@cern.ch>
+2015-07-07 Cora <cora.fischer@cern.ch>
+	* fixed calculation of dPhi_min_alljets
+	
+2015-07-01 Martin <tripiana@cern.ch>
 	* Fix bookTree() duplication
 
-2014-06-30 Martin <tripiana@cern.ch>
+2015-06-30 Martin <tripiana@cern.ch>
 	* Add -y option to run with Proof-lite driver  (some work on meta-data still needed. Only available in local run mode for now.)
 
-2014-06-30 Martin <tripiana@cern.ch>
+2015-06-30 Martin <tripiana@cern.ch>
 	* Move to SUSYTools-00-06-13 @ Base,2.3.15a
 	* Add scripts/packages.txt
 	* Fix merging in tmp/
 
-2014-06-25 Martin <tripiana@cern.ch>
+2015-06-25 Martin <tripiana@cern.ch>
 	* Move to SUSYTools-00-06-12 @ Base,2.3.15
 	* Remove unused tools/packages.
 
-2014-06-24 Martin <tripiana@cern.ch>
+2015-06-24 Martin <tripiana@cern.ch>
 	* Fix cutflow histograms for primary xAODs
 	* Fix truth btagging seeds
 	* Update to PileupReweighting-00-03-04
 
-2014-06-23 Martin <tripiana@cern.ch>
+2015-06-23 Martin <tripiana@cern.ch>
 	* Add listGRL.sh script to list, print and copy the latest GRLs from afs/.
 
-2014-06-23 Martin <tripiana@cern.ch>
+2015-06-23 Martin <tripiana@cern.ch>
 	* Change back to fix size booking for all objects (dummy values by default) .  e.g. the 'meaningful' j_* block goes up to j_N . The rest is filled with DUMMYDN.
 
-2014-06-23 Martin <tripiana@cern.ch>
+2015-06-23 Martin <tripiana@cern.ch>
 	* Add more jet variables needed for TileCal studies, upon jO request (TileDump=true)
 	* Add Tile_JobOption.xml
 
-2014-06-19 Martin <tripiana@cern.ch>
+2015-06-19 Martin <tripiana@cern.ch>
 	* Fix running on primary xAOD
 
-2014-06-18 Martin <tripiana@cern.ch>
+2015-06-18 Martin <tripiana@cern.ch>
 	* Add autoremoval of ROOTMERGE files after tadd* calls
 
-2014-06-17 Martin <tripiana@cern.ch>
+2015-06-17 Martin <tripiana@cern.ch>
 	* Fix metadata filling
 
-2014-06-16 Martin <tripiana@cern.ch>
+2015-06-16 Martin <tripiana@cern.ch>
 	* New dq2get.sh to handle metadata merging + new input options (to overcome RunsMap coding).
 
-2014-06-12 Martin <tripiana@cern.ch>
+2015-06-12 Martin <tripiana@cern.ch>
 	* Fix tadd handling of empty files
 
-2014-06-10 Martin <tripiana@cern.ch>
+2015-06-10 Martin <tripiana@cern.ch>
         * Move to 06-10@Base,2.3.14
 	* Add JVT
 
-2014-06-09 Martin <tripiana@cern.ch>
+2015-06-09 Martin <tripiana@cern.ch>
 	* New -c option can be used also for grid submission (i.e. no need to add the sample to RunsMap.h)
 
-2014-06-09 Martin <tripiana@cern.ch>
+2015-06-09 Martin <tripiana@cern.ch>
 	* Fix grid running
 	* Add cutflow histos (to be filled properly yet)
 
-2014-06-05 Martin <tripiana@cern.ch>
+2015-06-05 Martin <tripiana@cern.ch>
 	* Fix passPreselection flag (Trigger is out again).
 
-2014-06-03 Martin <tripiana@cern.ch>
+2015-06-03 Martin <tripiana@cern.ch>
 	* Fix bug when running on the grid
 	* Fix is_data metadata
 	* Add link to bigpanda task after grid submission  (Cmd+double-click to open it in MAC)
 
-2014-06-02 Martin <tripiana@cern.ch>
+2015-06-02 Martin <tripiana@cern.ch>
 	* Move to Base,2.3.13
 
 2015-06-02 Cora <cora.fischer@cern.ch>
 	* included sumET variables (again)
 	* fix in chorizo.cxx: add isMC flag to avoid data samples from crashing (performTruthTagging function)
 
-2014-05-29 Martin <tripiana@cern.ch>
+2015-05-29 Martin <tripiana@cern.ch>
 	* Add new variables (j_N30, bcid)
 	* Add flat btag eff variables
 	* Fix nVertex
 
-2014-05-29 Martin <tripiana@cern.ch>
+2015-05-29 Martin <tripiana@cern.ch>
 	* Fix CutBookkeeper access (nsim + nwsim)
 	* Fix -v tag for local running mode
 
-2014-05-27 Martin <tripiana@cern.ch>
+2015-05-27 Martin <tripiana@cern.ch>
 	* Fix histo writing in output file
 
 2014-05-24 Martin <tripiana@cern.ch>
