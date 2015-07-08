@@ -1,6 +1,9 @@
+2015-07-08 Martin <tripiana@cern.ch>
+	* Fix isolation. Now you can specify a 'None' WP for leptons and photons.
+
 2015-07-07 Cora <cora.fischer@cern.ch>
 	* fixed calculation of dPhi_min_alljets
-	
+
 2015-07-01 Martin <tripiana@cern.ch>
 	* Fix bookTree() duplication
 

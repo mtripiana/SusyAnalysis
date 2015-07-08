@@ -2,9 +2,9 @@
 
 void generate_qsub_files(){
 
-  TString croot = gSystem->GetFromPipe("readlink -f $ANALYSISCODE");
+  TString croot = gSystem->GetFromPipe("readlink -f $ROOTCOREBIN");
 
-  gSystem->mkdir(croot+"/SusyAnalysis/scripts/qsubFiles/");
+  gSystem->mkdir(croot+"/../SusyAnalysis/scripts/qsubFiles/");
 
   //** this is needed in ROOT5                                                                                                     
   // gSystem->Exec("rm -f AutoDict_RunsMap*");
@@ -16,6 +16,6 @@ void generate_qsub_files(){
   samples = loc_map.getKeys();
   for(unsigned int s=0; s < samples.size(); s++){
     cout << "Generating script for sample (" << s << "/" << samples.size() << ")= " << samples[s] << endl; 
-    gSystem->Exec(croot+"/SusyAnalysis/scripts/MakeQsubFile.sh "+samples[s]);
+    gSystem->Exec(croot+"/../SusyAnalysis/scripts/MakeQsubFile.sh "+samples[s]);
   }
 }

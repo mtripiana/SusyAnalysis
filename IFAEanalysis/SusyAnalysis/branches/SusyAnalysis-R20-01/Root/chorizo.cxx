@@ -77,6 +77,7 @@ ClassImp(chorizo)
 //decorators and accessors
 static SG::AuxElement::Decorator<char> dec_baseline("baseline");
 static SG::AuxElement::Decorator<char> dec_signal("signal");
+static SG::AuxElement::Decorator<char> dec_isol("isol");
 static SG::AuxElement::Decorator<char> dec_passOR("passOR");
 static SG::AuxElement::Decorator<char> dec_failOR("overlaps");
 static SG::AuxElement::Decorator<char> dec_badjet("bad");
@@ -1710,21 +1711,19 @@ EL::StatusCode chorizo :: initialize ()
     else if(JetCollection.Contains("EMTopo"))
       CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::EMTopo ));
     
-    // if(El_isoWP!="None"){      
-    //   CHECK( tool_st->setProperty("IsoWP",El_isoWP) );  //only one tool for it !! need to expand to el/mu splitting! 
-    // }
-    // else{
-    //   CP::IsolationSelectionTool *IsoToolDummy = new CP::IsolationSelectionTool( "IsoTool" );
-    //   CHECK( IsoToolDummy->setProperty("m_doPhotonCaloIsolation", false) );
-    //   CHECK( IsoToolDummy->setProperty("m_doPhotonTrackIsolation", false) );
-    //   CHECK( IsoToolDummy->setProperty("m_doElectronCaloIsolation", false) );
-    //   CHECK( IsoToolDummy->setProperty("m_doElectronTrackIsolation", false) );
-    //   CHECK( IsoToolDummy->setProperty("m_doMuonCaloIsolation", false) );
-    //   CHECK( IsoToolDummy->setProperty("m_doMuonTrackIsolation", false) );
-    //   CHECK( IsoToolDummy->initialize() );
-
-    //   CHECK( tool_st->setProperty("IsolationSelectionTool",IsoToolDummy) );  //only one tool for it !! need to expand to el/mu splitting! 
-    // }
+    //redefine isolation WPs (if needed)
+    if(El_isoWP=="None"){      
+      El_isoWP = "LooseTrackOnly";
+      noElIso = true;
+    }
+    if(Mu_isoWP=="None"){      
+      Mu_isoWP = "LooseTrackOnly";
+      noMuIso = true;
+    }
+    if(Ph_isoWP=="None"){      
+      Ph_isoWP = "LooseTrackOnly";
+      noPhIso = true;
+    }
 
     CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
     CHECK( tool_st->setProperty("EleId",El_ID) ); 
@@ -2071,7 +2070,6 @@ EL::StatusCode chorizo :: loop ()
   ofstream myfile; //produces a text file with event information
   string ocfile; 
   if (doCutFlow){
-    //    ocfile = (gSystem->Getenv("ANALYSISCODE") ? string(gSystem->Getenv("ANALYSISCODE")) : ".")+"/cutflow.txt"; //this works too
     ocfile = string(gSystem->Getenv("ROOTCOREBIN"))+"/cutflow.txt";
     myfile.open (ocfile.c_str(), ios::app);
   }
@@ -2394,6 +2392,9 @@ EL::StatusCode chorizo :: loop ()
 
   for(const auto& el_itr : *electrons_sc){
 
+    //redefine iso decoration if needed
+    if(noElIso) dec_isol(*el_itr) = true;
+
     //decorate electron with baseline pt requirements ('signal')
     tool_st->IsSignalElectron( (*el_itr), El_PreselPtCut);
     
@@ -2409,6 +2410,9 @@ EL::StatusCode chorizo :: loop ()
   CHECK( tool_st->GetMuons(muons_sc, muons_scaux, false, Mu_PreselPtCut, Mu_PreselEtaCut ) ); //'baseline' decoration
   for(const auto& mu_itr : *muons_sc){
         
+    //redefine iso decoration if needed
+    if(noMuIso) dec_isol(*mu_itr) = true;
+
     //decorate muon with final pt requirements ('final')
     tool_st->IsSignalMuon( *mu_itr, Mu_PreselPtCut);  //'signal' decoration.
 
@@ -2424,6 +2428,9 @@ EL::StatusCode chorizo :: loop ()
   CHECK( tool_st->GetPhotons(photons_sc, photons_scaux, false, Ph_PreselPtCut, Ph_PreselEtaCut ) ); //'baseline' decoration
 
   for(const auto& ph_itr : *photons_sc){ 
+
+    //redefine iso decoration if needed
+    if(noPhIso) dec_isol(*ph_itr) = true;
 
     //decorate photon with baseline pt requirements ('signal')
     tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);

@@ -7,9 +7,9 @@
 export name=$1
 shift 1
 
-WDIR=`readlink -f $ANALYSISCODE`                                                                                                                                                                
-rm -rf $WDIR/SusyAnalysis/scripts/qsubFiles/${name}.sub
-cat >> $WDIR/SusyAnalysis/scripts/qsubFiles/${name}.sub << EOF
+WDIR=`readlink -f $ROOTCOREBIN`                                                                                                                                                                
+rm -rf $WDIR/../SusyAnalysis/scripts/qsubFiles/${name}.sub
+cat >> $WDIR/../SusyAnalysis/scripts/qsubFiles/${name}.sub << EOF
 
 if [ -z "\$1" ]
     then
@@ -53,11 +53,11 @@ cd \$MYTMPDIR
 
 \$ANALYSISCODE/SusyAnalysis/scripts/RunCode.sh ${name} \$syst \$joption
 
-cd \$ANALYSISCODE
+cd \$ROOTCOREBIN/../
 rm -rf \$MYTMPDIR
 
 EOF
 
-chmod +x ${WDIR}/SusyAnalysis/scripts/qsubFiles/${name}.sub
+chmod +x ${WDIR}/../SusyAnalysis/scripts/qsubFiles/${name}.sub
 
 

@@ -560,6 +560,11 @@ private:
   bool Ph_idSF; //!
   bool Ph_triggerSF; //!  
 
+  //isolation
+  bool noElIso=false;
+  bool noMuIso=false;
+  bool noPhIso=false;
+
   //Booking options
   int BookElBase;
   int BookElSignal;

@@ -317,7 +317,7 @@ int main( int argc, char* argv[] ) {
   //(temporary?) Wrapper to run on the batch .   Until we get the TorqueDriver working...
   if(runBatch){
     for(unsigned int isp=0; isp < samples.size(); isp++){
-      gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/submit_batch.sh "+queue+" "+syst_str+" "+jOption+" "+samples[isp]);
+      gSystem->Exec("source $ROOTCOREBIN/../SusyAnalysis/scripts/submit_batch.sh "+queue+" "+syst_str+" "+jOption+" "+samples[isp]);
     }
     return 0;
   }
@@ -334,14 +334,13 @@ int main( int argc, char* argv[] ) {
     cout << bold(red("\n Ups! "));
     cout << "You need to setup a few things first!" << endl;
     cout << " Please do: " << endl;
-    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh   \n" << endl;
+    cout << "\n   source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up.sh   \n" << endl;
     cout << "\n ...but ok! this time I'll try to do it for you...  :) \n" << endl;
-    gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh");
+    gSystem->Exec("source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up_pwin.sh");
   }
 
 
   //*** Read some input options
-  //  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
   std::string maindir = getenv("ROOTCOREBIN");
 
   std::string xmlPath=maindir+"/data/SusyAnalysis/"+jOption+"_JobOption.xml";

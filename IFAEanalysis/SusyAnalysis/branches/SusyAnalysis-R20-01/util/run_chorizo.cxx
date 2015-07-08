@@ -634,7 +634,7 @@ int main( int argc, char* argv[] ) {
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
-      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.3.16 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ROOTCOREBIN/../rcSetup.sh Base,2.3.16 || exit $?; source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }
