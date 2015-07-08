@@ -355,8 +355,8 @@ void chorizo :: bookTree(){
       m_atree->Branch("e_isoG",&e_isoGradient);
       m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
       m_atree->Branch("e_id",&e_id);
-      m_atree->Branch("e_d0_sig",&e_d0_sig);  
-      m_atree->Branch("e_z0",&e_z0);      
+      //m_atree->Branch("e_d0_sig",&e_d0_sig);  
+      //m_atree->Branch("e_z0",&e_z0);      
 
       m_atree->Branch("eb_N",&eb_N,"eb_N/I", 10000);
       m_atree->Branch("eb_pt",&eb_pt);
@@ -402,7 +402,8 @@ void chorizo :: bookTree(){
       m_atree->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
       m_atree->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
       m_atree->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
-      m_atree->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                            m_atree->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
+      m_atree->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                            
+      m_atree->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
       m_atree->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
 
 
@@ -499,24 +500,24 @@ void chorizo :: bookTree(){
 
       //event variables
       //dphi
-      m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
-      m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
-      m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
-      m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
+      //m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
+      //m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
+      //m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
+      //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
       m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
       m_atree->Branch("dPhi_min",&dPhi_min);
       m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
       m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
   
       m_atree->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
-      m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
-      m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
-      m_atree->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
+      //m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
+      //m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
+      //m_atree->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
 
       //dR
       m_atree->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
-      m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
-      m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
+      //m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
+      //m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
 
 //       m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
 //       m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
@@ -1895,8 +1896,12 @@ EL::StatusCode chorizo :: initialize ()
       //--- read the dataset number from the TTree
       Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
 
-      //TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
-      TString prwfile=PURW_Folder+"410000.prw.root";      
+      TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+      std::cout << "PRW file: " << prwfile << std::endl;
+      //TString prwfile=PURW_Folder+"410000.prw.root";      
+      std::ifstream test_prwfile(prwfile);
+      
+      if (test_prwfile.good()) {
       prwFiles.push_back(prwfile.Data());
       CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
       CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
@@ -1909,14 +1914,17 @@ EL::StatusCode chorizo :: initialize ()
       CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
       CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
       CHECK( tool_purw->initialize() );
+     } 
     }
+    
+    
   }
 
   
   //--- GRL
   tool_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
   std::vector<std::string> grlist;
-  grlist.push_back((maindir + GRLxmlFile).Data());
+  grlist.push_back((maindir +"/../../SusyAnalysis/share/GRL/"+ GRLxmlFile).Data());
   CHECK( tool_grl->setProperty( "GoodRunsListVec", grlist) );
   CHECK( tool_grl->setProperty("PassThrough", false) );
   CHECK( tool_grl->initialize() );
@@ -2165,7 +2173,7 @@ EL::StatusCode chorizo :: loop ()
     if (!doPUTree)         
       return nextEvent();
 
-    pileup_w = acc_PUweight(*eventInfo);
+    if (isMC) pileup_w = acc_PUweight(*eventInfo);
     
     //    output->setFilterPassed ();
     return nextEvent();
@@ -2232,7 +2240,7 @@ EL::StatusCode chorizo :: loop ()
 
     //---pileup weight 
     if(applyPURW)
-      pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
+      if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
 
     //--- For histograms : combine all the weights in a single variable //CHECK_ME
     if (!doAnaTree) 
@@ -2397,6 +2405,7 @@ EL::StatusCode chorizo :: loop ()
 
     //decorate electron with baseline pt requirements ('signal')
     tool_st->IsSignalElectron( (*el_itr), El_PreselPtCut);
+    //tool_st->IsSignalElectron( (*el_itr));    
     
     //decorate electron with final pt requirements ('final')
     if( (*el_itr).p4().Perp2() > El_RecoPtCut * El_RecoPtCut )
@@ -2415,6 +2424,7 @@ EL::StatusCode chorizo :: loop ()
 
     //decorate muon with final pt requirements ('final')
     tool_st->IsSignalMuon( *mu_itr, Mu_PreselPtCut);  //'signal' decoration.
+    //tool_st->IsSignalMuon( *mu_itr);  //'signal' decoration.
 
     //decorate muon with final pt requirements ('final')
     if( (*mu_itr).p4().Perp2() > Mu_RecoPtCut * Mu_RecoPtCut )
@@ -2434,6 +2444,7 @@ EL::StatusCode chorizo :: loop ()
 
     //decorate photon with baseline pt requirements ('signal')
     tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
+    //tool_st->IsSignalPhoton( (*ph_itr));    
 
     //decorate photon with final pt requirements ('final')
     if( (*ph_itr).pt() > Ph_RecoPtCut )
@@ -2580,7 +2591,7 @@ EL::StatusCode chorizo :: loop ()
     }
     
     //save signal electrons
-    if( dec_final(*el_itr) ){
+    if( dec_signal(*el_itr) ){
       recoElectrons.push_back(recoElectron);
       e_N++;
       IsElectron=true;
@@ -2716,7 +2727,7 @@ EL::StatusCode chorizo :: loop ()
     }
     
     //save signal muons
-    if( dec_final(*mu_itr) ){ 
+    if( dec_signal(*mu_itr) ){ 
       recoMuons.push_back(recoMuon);
       m_N++;
       IsMuon = true;
@@ -2795,7 +2806,7 @@ EL::StatusCode chorizo :: loop ()
       photonCandidates.push_back(recoPhoton);
 
       //save signal electrons
-      if( dec_final(*ph_itr) ){
+      if( dec_signal(*ph_itr) ){
 	recoPhotons.push_back(recoPhoton);
 	ph_N++;
 	if(this->isMC){
@@ -2826,7 +2837,9 @@ EL::StatusCode chorizo :: loop ()
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
 
-    //if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue; // COMMENT THIS
+    if(isStopTL) {
+      if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue; 
+    }
 
     if( !isgoodjet ) continue; //just book good jets!
 
@@ -3069,7 +3082,7 @@ EL::StatusCode chorizo :: loop ()
     if( jetCandidates.at(iJet).isbjet_t77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt77++;
     if( jetCandidates.at(iJet).isbjet_t80  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt80++;
 
-    recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
+    //recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
     
     //count high pt jet multiplicity
     if(jetCandidates.at(iJet).Pt()>30.){
@@ -3088,6 +3101,11 @@ EL::StatusCode chorizo :: loop ()
       }
     }
 
+    if (isStopTL){
+      if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
+    }
+    recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
+    
     if (doCutFlow){
       myfile << "signal jet: \n";      
       myfile << "pt: "  << jetCandidates.at(iJet).Pt() << " \n"; 
@@ -3146,7 +3164,7 @@ EL::StatusCode chorizo :: loop ()
     mtopo  = (*cmet_lhtopo)["LocHadTopo"];
   }
 
-    CHECK( m_event->retrieve( cmet_track, "MET_Track") );    
+    CHECK( m_event->retrieve( cmet_track, "MET_Track") );
     mtrack = (*cmet_track)["PVTrack_vx0"];
     // mtrack = (*cmet_track)["Track"];
 
@@ -3281,18 +3299,18 @@ EL::StatusCode chorizo :: loop ()
   met_obj.SetVector(v_met_muinv_TST_vmu, "met_tst_vmu_mucorr", true); //already in GeV
   
   //--- Met with photons as invisible 
-  TVector2 v_met_phinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
-  TVector2 v_met_phinv_ST_vmu = met_obj.GetVector("met_vmu"); //== met_ST (GeV)   
+  TVector2 v_met_phinv_ST = met_obj.GetVector("met_tst_imu"); //== met_ST (GeV) 
+  TVector2 v_met_phinv_ST_vmu = met_obj.GetVector("met_tst_vmu"); //== met_ST (GeV)   
  
   TLorentzVector vphs(0.,0.,0.,0.);
   for (unsigned int iPh=0; iPh < recoPhotons.size(); iPh++){ 
     vphs += recoPhotons.at(iPh).GetVector();
   }
-  v_met_phinv_ST.Set( v_met_phinv_ST.Px() + vphs.Px(), v_met_phinv_ST.Py() + vphs.Py() );
-  v_met_phinv_ST_vmu.Set( v_met_phinv_ST_vmu.Px() + vphs.Px(), v_met_phinv_ST_vmu.Py() + vphs.Py() );  
+  v_met_phinv_ST.Set( v_met_phinv_ST.Px() + vphs.Px(), v_met_phinv_ST.Py() + vphs.Py() ); //met TST photon corrected
+  v_met_phinv_ST_vmu.Set( v_met_phinv_ST_vmu.Px() + vphs.Px(), v_met_phinv_ST_vmu.Py() + vphs.Py() );  //met TST photon corrected
 
-  met_obj.SetVector(v_met_phinv_ST, "met_phcorr_imu", true); //already in GeV    
-  met_obj.SetVector(v_met_phinv_ST_vmu, "met_phcorr_vmu", true); //already in GeV  
+  met_obj.SetVector(v_met_phinv_ST, "met_imu_phcorr", true); //already in GeV    
+  met_obj.SetVector(v_met_phinv_ST_vmu, "met_vmu_phcorr", true); //already in GeV  
   
   
   // truth met
