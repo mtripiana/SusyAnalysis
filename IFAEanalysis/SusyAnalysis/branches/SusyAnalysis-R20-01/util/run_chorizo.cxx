@@ -551,9 +551,9 @@ int main( int argc, char* argv[] ) {
     std::string osname="output";
     EL::OutputStream output  (osname);
     job.outputAdd (output);
-    EL::NTupleSvc *ntuple = new EL::NTupleSvc (osname);
-    ntuple->treeName("AnalysisTree");
-    job.algsAdd (ntuple);
+    //EL::NTupleSvc *ntuple = new EL::NTupleSvc (osname);
+    //ntuple->treeName("AnalysisTree");
+    //job.algsAdd (ntuple);
     
     chorizo *alg = new chorizo();
     
