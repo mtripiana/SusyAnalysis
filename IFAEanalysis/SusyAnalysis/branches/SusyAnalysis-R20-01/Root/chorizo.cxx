@@ -122,7 +122,6 @@ chorizo :: chorizo ()
     iso_3(0),
     iso_4(0),
     iso_5(0),
-    iso_6(0),
     tool_btag(0), 
     tool_btag2(0),
     tool_btag_truth1(0),
@@ -163,6 +162,7 @@ chorizo :: chorizo ()
   printMuon=false;
 
   genPUfile = false;
+  isPUfile = false;
 
   syst_CP  = CP::SystematicSet();
   syst_CPstr = "";
@@ -328,6 +328,10 @@ void chorizo :: bookTree(){
       m_atree->Branch("ph_tight",&ph_tight);
       m_atree->Branch("ph_type",&ph_type);
       m_atree->Branch("ph_origin",&ph_origin);
+      m_atree->Branch("ph_Cone20",&ph_Cone20);      
+      m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
+      m_atree->Branch("ph_Cone40",&ph_Cone40);      
+      
 
       m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
       m_atree->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
@@ -350,8 +354,7 @@ void chorizo :: bookTree(){
       //m_atree->Branch("e_ptiso20",&e_ptiso20);
       m_atree->Branch("e_isoT",&e_isoTight);
       m_atree->Branch("e_isoL",&e_isoLoose);
-      m_atree->Branch("e_isoVL",&e_isoVeryLoose);
-      m_atree->Branch("e_isoVLTO",&e_isoVeryLooseTrackOnly);
+      m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
       m_atree->Branch("e_isoG",&e_isoGradient);
       m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
       m_atree->Branch("e_id",&e_id);
@@ -386,8 +389,7 @@ void chorizo :: bookTree(){
       //m_atree->Branch("m_ptiso30",&m_ptiso30);          
       m_atree->Branch("m_isoTight",&m_isoTight);
       m_atree->Branch("m_isoLoose",&m_isoLoose);
-      m_atree->Branch("m_isoVeryLoose",&m_isoVeryLoose);
-      m_atree->Branch("m_isoVeryLooseTrackOnly",&m_isoVeryLooseTrackOnly);
+      m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
       m_atree->Branch("m_isoGradient",&m_isoGradient);
       m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
 
@@ -1009,8 +1011,7 @@ void chorizo :: InitVars()
   e_etiso20.clear();
   e_isoTight.clear();
   e_isoLoose.clear();
-  e_isoVeryLoose.clear();
-  e_isoVeryLooseTrackOnly.clear();
+  e_isoLooseTrackOnly.clear();
   e_isoGradient.clear();
   e_isoGradientLoose.clear();
   e_id.clear();
@@ -1045,7 +1046,10 @@ void chorizo :: InitVars()
   ph_tight.clear();           
   ph_type.clear();
   ph_origin.clear();
-
+  ph_Cone20.clear();
+  ph_Cone40CaloOnly.clear();  
+  ph_Cone40.clear();  
+  
   //- Muon info
   m_N = 0;
   m_pt.clear(); 
@@ -1059,8 +1063,7 @@ void chorizo :: InitVars()
   m_etiso20.clear(); 
   m_isoTight.clear();
   m_isoLoose.clear();
-  m_isoVeryLoose.clear();
-  m_isoVeryLooseTrackOnly.clear();
+  m_isoLooseTrackOnly.clear();
   m_isoGradient.clear();
   m_isoGradientLoose.clear();
 
@@ -1837,38 +1840,34 @@ EL::StatusCode chorizo :: initialize ()
   iso_1 = new CP::IsolationSelectionTool("iso_1");
   CHECK( iso_1->setProperty("ElectronWP","GradientLoose") );
   CHECK( iso_1->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_1->setProperty("PhotonWP","GradientLoose") );
+  CHECK( iso_1->setProperty("PhotonWP","Cone20") );
   CHECK( iso_1->initialize() );
 
   iso_2 = new CP::IsolationSelectionTool("iso_2");
-  CHECK( iso_2->setProperty("ElectronWP","GradientLoose") );
-  CHECK( iso_2->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_2->setProperty("PhotonWP","GradientLoose") );
+  CHECK( iso_2->setProperty("ElectronWP","Loose") );
+  CHECK( iso_2->setProperty("MuonWP","Loose") );
+  CHECK( iso_2->setProperty("PhotonWP","Cone40CaloOnly") );
   CHECK( iso_2->initialize() );
 
   iso_3 = new CP::IsolationSelectionTool("iso_3");
-  CHECK( iso_3->setProperty("ElectronWP","GradientLoose") );
-  CHECK( iso_3->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_3->setProperty("PhotonWP","GradientLoose") );
+  CHECK( iso_3->setProperty("ElectronWP","LooseTrackOnly") );
+  CHECK( iso_3->setProperty("MuonWP","LooseTrackOnly") );
+  CHECK( iso_3->setProperty("PhotonWP","Cone40") );
   CHECK( iso_3->initialize() );
 
   iso_4 = new CP::IsolationSelectionTool("iso_4");
-  CHECK( iso_4->setProperty("ElectronWP","GradientLoose") );
-  CHECK( iso_4->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_4->setProperty("PhotonWP","GradientLoose") );
+  CHECK( iso_4->setProperty("ElectronWP","Gradient") );
+  CHECK( iso_4->setProperty("MuonWP","Gradient") );
+  //CHECK( iso_4->setProperty("PhotonWP","Cone20") );
   CHECK( iso_4->initialize() );
 
   iso_5 = new CP::IsolationSelectionTool("iso_5");
-  CHECK( iso_5->setProperty("ElectronWP","GradientLoose") );
-  CHECK( iso_5->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_5->setProperty("PhotonWP","GradientLoose") );
+  CHECK( iso_5->setProperty("ElectronWP","Tight") );
+  CHECK( iso_5->setProperty("MuonWP","Tight") );
+  //CHECK( iso_5->setProperty("PhotonWP","Cone20") );
   CHECK( iso_5->initialize() );
 
-  iso_6 = new CP::IsolationSelectionTool("iso_6");
-  CHECK( iso_6->setProperty("ElectronWP","GradientLoose") );
-  CHECK( iso_6->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_6->setProperty("PhotonWP","GradientLoose") );
-  CHECK( iso_6->initialize() );
+
 
 
 
@@ -1902,6 +1901,7 @@ EL::StatusCode chorizo :: initialize ()
       std::ifstream test_prwfile(prwfile);
       
       if (test_prwfile.good()) {
+      isPUfile=true;
       prwFiles.push_back(prwfile.Data());
       CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
       CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
@@ -1970,7 +1970,7 @@ EL::StatusCode chorizo :: initialize ()
   // initialize and configure the jet cleaning tool
   tool_jClean = new JetCleaningTool("JetCleaning");
   //  tool_jClean->msg().setLevel( MSG::DEBUG ); 
-  CHECK( tool_jClean->setProperty( "CutLevel", "MediumBad") );
+  CHECK( tool_jClean->setProperty( "CutLevel", "LooseBad") );
   CHECK( tool_jClean->initialize() );
   
                           
@@ -2006,7 +2006,7 @@ void chorizo :: printSystList(){
     case ST::SystObjType::Muon     : affectedType = "MUON";     break;
     case ST::SystObjType::Tau      : affectedType = "TAU";      break;
     case ST::SystObjType::BTag     : affectedType = "BTAG";     break;
-    case ST::SystObjType::MET      : affectedType = "MET";      break;
+    case ST::SystObjType::MET_TST      : affectedType = "MET_TST";      break;
     }
     
     cout <<  sys.name() << "    : affects " << ( sysInfo.affectsWeights ? "weights " : "" ) << ( sysInfo.affectsKinematics ? "kinematics " : "" ) << "  for " << affectedType << endl;
@@ -2173,8 +2173,8 @@ EL::StatusCode chorizo :: loop ()
     if (!doPUTree)         
       return nextEvent();
 
-    if (isMC) pileup_w = acc_PUweight(*eventInfo);
-    
+    //if (isMC) pileup_w = acc_PUweight(*eventInfo);
+    if (isMC && applyPURW && isPUfile) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);    
     //    output->setFilterPassed ();
     return nextEvent();
   }
@@ -2240,7 +2240,7 @@ EL::StatusCode chorizo :: loop ()
 
     //---pileup weight 
     if(applyPURW)
-      if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
+      if (isMC && isPUfile) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
 
     //--- For histograms : combine all the weights in a single variable //CHECK_ME
     if (!doAnaTree) 
@@ -2529,12 +2529,11 @@ EL::StatusCode chorizo :: loop ()
     recoElectron.ptcone30 = acc_ptcone30(*el_itr) * 0.001;
     recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
     
-    if(iso_1->accept(*el_itr)) recoElectron.isoTight = 1.0;
+    if(iso_1->accept(*el_itr)) recoElectron.isoGradientLoose = 1.0;
     if(iso_2->accept(*el_itr)) recoElectron.isoLoose = 1.0;
-    if(iso_3->accept(*el_itr)) recoElectron.isoVeryLoose = 1.0;
-    if(iso_4->accept(*el_itr)) recoElectron.isoVeryLooseTrackOnly = 1.0;
-    if(iso_5->accept(*el_itr)) recoElectron.isoGradient= 1.0;
-    if(iso_6->accept(*el_itr)) recoElectron.isoGradientLoose = 1.0;
+    if(iso_3->accept(*el_itr)) recoElectron.isoLooseTrackOnly = 1.0;
+    if(iso_4->accept(*el_itr)) recoElectron.isoGradient= 1.0;
+    if(iso_5->accept(*el_itr)) recoElectron.isoTight = 1.0;
 
     (*el_itr).passSelection(recoElectron.isTight, "Tight");
     
@@ -2675,12 +2674,11 @@ EL::StatusCode chorizo :: loop ()
     recoMuon.charge   = (float) (*mu_itr).charge();
     //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
 
-    if(iso_1->accept(*mu_itr)) recoMuon.isoTight = 1.0;
+    if(iso_1->accept(*mu_itr)) recoMuon.isoGradientLoose = 1.0;
     if(iso_2->accept(*mu_itr)) recoMuon.isoLoose = 1.0;
-    if(iso_3->accept(*mu_itr)) recoMuon.isoVeryLoose = 1.0;
-    if(iso_4->accept(*mu_itr)) recoMuon.isoVeryLooseTrackOnly = 1.0;
-    if(iso_5->accept(*mu_itr)) recoMuon.isoGradient= 1.0;
-    if(iso_6->accept(*mu_itr)) recoMuon.isoGradientLoose = 1.0;
+    if(iso_3->accept(*mu_itr)) recoMuon.isoLooseTrackOnly = 1.0;
+    if(iso_4->accept(*mu_itr)) recoMuon.isoGradient= 1.0;
+    if(iso_5->accept(*mu_itr)) recoMuon.isoTight = 1.0;
 
     recoMuon.type   = xAOD::TruthHelpers::getParticleTruthType( *mu_itr );
     recoMuon.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *mu_itr );
@@ -2771,6 +2769,11 @@ EL::StatusCode chorizo :: loop ()
       recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
       recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
       (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
+
+    if(iso_1->accept(*ph_itr)) recoPhoton.isoCone20 = 1.0;
+    if(iso_2->accept(*ph_itr)) recoPhoton.isoCone40CaloOnly = 1.0;
+    if(iso_3->accept(*ph_itr)) recoPhoton.isoCone40= 1.0;
+
 
       recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
       recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
@@ -3162,12 +3165,12 @@ EL::StatusCode chorizo :: loop ()
   if(!m_isderived){
     CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") ); //not in MC15??
     mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-  }
+  
 
     CHECK( m_event->retrieve( cmet_track, "MET_Track") );
     mtrack = (*cmet_track)["PVTrack_vx0"];
     // mtrack = (*cmet_track)["Track"];
-
+  }
   
   
   //** Met components
@@ -3540,7 +3543,7 @@ EL::StatusCode chorizo :: loop ()
 
  
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_77eff(Jet_Tagger) ){
+      if( jet.isBTagged_77eff(Jet_Tagger) && fabs(jet.Eta())<2.5){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -3815,7 +3818,7 @@ EL::StatusCode chorizo :: loop ()
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) )
+    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
       mbb = mjj;
   }
 
@@ -4662,7 +4665,7 @@ EL::StatusCode chorizo :: loop_truth()
       
       
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_77eff(Jet_Tagger) ){
+      if( jet.isBTagged_77eff(Jet_Tagger) && fabs(jet.Eta())<2.5){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -4800,7 +4803,7 @@ EL::StatusCode chorizo :: loop_truth()
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) )
+    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
       mbb = mjj;
   }
 
@@ -4818,7 +4821,7 @@ EL::StatusCode chorizo :: loop_truth()
   auto ijet=0;
   for( auto jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged_77eff(Jet_Tagger) ){
+    if( jet.isBTagged_77eff(Jet_Tagger) && fabs(jet.Eta())<2.5){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -4991,8 +4994,7 @@ void chorizo :: dumpLeptons(){
     e_ptiso20.push_back( fill ?  recoElectrons.at(iel).ptcone20  : DUMMYDN );
     e_isoTight.push_back( fill ?  recoElectrons.at(iel).isoTight  : DUMMYDN );
     e_isoLoose.push_back( fill ?  recoElectrons.at(iel).isoLoose  : DUMMYDN );
-    e_isoVeryLoose.push_back( fill ?  recoElectrons.at(iel).isoVeryLoose  : DUMMYDN );
-    e_isoVeryLooseTrackOnly.push_back( fill ?  recoElectrons.at(iel).isoVeryLooseTrackOnly  : DUMMYDN );
+    e_isoLooseTrackOnly.push_back( fill ?  recoElectrons.at(iel).isoLooseTrackOnly  : DUMMYDN );
     e_isoGradient.push_back( fill ?  recoElectrons.at(iel).isoGradient  : DUMMYDN );
     e_isoGradientLoose.push_back( fill ?  recoElectrons.at(iel).isoGradientLoose  : DUMMYDN );
     e_id.push_back( fill ?   recoElectrons.at(iel).id  : DUMMYDN );
@@ -5033,8 +5035,7 @@ void chorizo :: dumpLeptons(){
     m_ptiso30.push_back( fill ?  recoMuons.at(imu).ptcone30  : DUMMYDN );
     m_isoTight.push_back( fill ?  recoMuons.at(imu).isoTight  : DUMMYDN );
     m_isoLoose.push_back( fill ?  recoMuons.at(imu).isoLoose  : DUMMYDN );
-    m_isoVeryLoose.push_back( fill ?  recoMuons.at(imu).isoVeryLoose  : DUMMYDN );
-    m_isoVeryLooseTrackOnly.push_back( fill ?  recoMuons.at(imu).isoVeryLooseTrackOnly  : DUMMYDN );
+    m_isoLooseTrackOnly.push_back( fill ?  recoMuons.at(imu).isoLooseTrackOnly  : DUMMYDN );
     m_isoGradient.push_back( fill ?  recoMuons.at(imu).isoGradient  : DUMMYDN );
     m_isoGradientLoose.push_back( fill ?  recoMuons.at(imu).isoGradientLoose  : DUMMYDN );
     m_trigger.push_back( fill ?  (int)recoMuons.at(imu).isTrigMatch  : DUMMYDN );
@@ -5216,10 +5217,7 @@ EL::StatusCode chorizo :: finalize ()
     delete iso_5;
     iso_5=0;
   }
-  if(iso_6){
-    delete iso_6;
-    iso_6=0;
-  }
+
 
   //PURW
   if(tool_purw){
@@ -6416,24 +6414,23 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
 
       //book first top
       TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
-
-
-      Wjet3=Wjet4=-1;
-      mindr = 1000.;
-      for (unsigned int i = 0 ; i < recoJets.size() ; i++){
-	for (unsigned int j = i+1 ; j < recoJets.size() ; j++){
+     
+        Wjet3=Wjet4=-1;
+        mindr = 1000.;
+        for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	  for (unsigned int j = i+1 ; j < recoJets.size() ; j++){
 	    
-	  if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){	    
-	    if ((int)i!=Wjet1 && (int)i!=Wjet2 && (int)j!=Wjet1 && (int)j!=Wjet2)
-	      {
-		double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+	    if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){	    
+	      if ((int)i!=Wjet1 && (int)i!=Wjet2 && (int)j!=Wjet1 && (int)j!=Wjet2)
+	        {
+		  double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
 
-		if (curr_dr<mindr)
-		  {
-		    Wjet3 = i;
-		    Wjet4 = j;
-		    mindr = curr_dr;
-		  }
+		  if (curr_dr<mindr)
+		    {
+		      Wjet3 = i;
+		      Wjet4 = j;
+		      mindr = curr_dr;
+		    }
 	      }
 	  }
 		
@@ -6459,9 +6456,10 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
 
       //book second top
       TLorentzVector top2candidate = recoJets.at(bjet2).GetVector()+W2candidate;
- 
+            
       m_top_had1 = top1candidate.M();
       m_top_had2 = top2candidate.M();
+   
     }
 
   //recover original jet vector

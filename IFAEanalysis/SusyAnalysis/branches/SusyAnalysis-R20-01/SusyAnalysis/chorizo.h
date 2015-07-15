@@ -204,6 +204,7 @@ public:
   bool doPUTree; 
   bool doFlowTree; 
   bool genPUfile;
+  bool isPUfile;
   bool doTrigExt;
   bool dumpTile; 
 
@@ -312,7 +313,7 @@ private:
   CP::IsolationSelectionTool *iso_3; //!
   CP::IsolationSelectionTool *iso_4; //!
   CP::IsolationSelectionTool *iso_5; //!
-  CP::IsolationSelectionTool *iso_6; //!
+
 #endif // not __CINT__
 
   TMctLib* tool_mct; //!
@@ -767,7 +768,9 @@ private:
   VInt   ph_tight; 
   VInt   ph_type; 
   VInt   ph_origin; 
-
+  VFloat   ph_Cone20;
+  VFloat   ph_Cone40CaloOnly;  
+  VFloat   ph_Cone40;  
   //- Electron Info
   int    e_N;
   VFloat e_pt;
@@ -781,8 +784,7 @@ private:
   VFloat e_etiso20;
   VFloat e_isoTight;
   VFloat e_isoLoose;
-  VFloat e_isoVeryLoose;
-  VFloat e_isoVeryLooseTrackOnly;
+  VFloat e_isoLooseTrackOnly;
   VFloat e_isoGradient;
   VFloat e_isoGradientLoose;
   VInt   e_id; 
@@ -813,8 +815,7 @@ private:
   VFloat m_etiso30;
   VFloat m_isoTight;
   VFloat m_isoLoose;
-  VFloat m_isoVeryLoose;
-  VFloat m_isoVeryLooseTrackOnly;
+  VFloat m_isoLooseTrackOnly;
   VFloat m_isoGradient;
   VFloat m_isoGradientLoose;
 

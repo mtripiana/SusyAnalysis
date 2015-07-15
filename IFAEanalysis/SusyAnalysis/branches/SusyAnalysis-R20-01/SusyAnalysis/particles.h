@@ -35,10 +35,12 @@ namespace Particles{
     bool   isIsolated;
     float  isoTight;
     float  isoLoose;
-    float  isoVeryLoose;
-    float  isoVeryLooseTrackOnly;
+    float  isoLooseTrackOnly;
     float  isoGradient;
     float  isoGradientLoose;
+    float  isoCone20;
+    float  isoCone40CaloOnly;     
+    float  isoCone40;   
     float  ptcone20;
     float  etcone20;
     float  ptcone30;
