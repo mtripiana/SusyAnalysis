@@ -112,6 +112,7 @@ chorizo :: chorizo ()
     tool_trigconfig(0), 
     tool_trig_match_el(0),
     tool_trig_match_mu(0),
+    tool_trig_match_ph(0),    
     tool_jClean(0), 
     tool_tileTrip(0), 
     tool_or(0), 
@@ -336,6 +337,8 @@ void chorizo :: bookTree(){
       m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
       m_atree->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
       m_atree->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
+      
+      m_atree->Branch("ph_trigger",&ph_trigger);
 
       //electrons
       m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -506,6 +509,13 @@ void chorizo :: bookTree(){
       //m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
       //m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
       //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
+      
+      // Max bb-system
+      m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
+      m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
+      m_atree->Branch("min_dR_bb",&min_dR_bb); 
+      m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
+      
       m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
       m_atree->Branch("dPhi_min",&dPhi_min);
       m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
@@ -1050,6 +1060,8 @@ void chorizo :: InitVars()
   ph_Cone40CaloOnly.clear();  
   ph_Cone40.clear();  
   
+  ph_trigger.clear();
+  
   //- Muon info
   m_N = 0;
   m_pt.clear(); 
@@ -1160,6 +1172,11 @@ void chorizo :: InitVars()
   met_tst = DUMMYDN;
 
   met_lochadtopo = DUMMYDN;
+
+  index_min_dR_bb.clear();
+  index_min_dR_pt_bb.clear();  
+  min_dR_bb.clear();
+  min_dR_pt_bb.clear(); 
 
   //recoiling system
   rmet_par.clear();
@@ -1681,7 +1698,11 @@ EL::StatusCode chorizo :: initialize ()
       tool_trig_match_mu = new Trig::TrigMuonMatching("TrigMuonMatchingTool");
     CHECK( tool_trig_match_mu->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
     CHECK( tool_trig_match_mu->initialize());
-    
+   
+    if(!tool_trig_match_ph)    
+      tool_trig_match_ph = new Trig::TrigEgammaMatchingTool("TrigEgammaMatchingTool");
+    CHECK( tool_trig_match_ph->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
+    CHECK( tool_trig_match_ph->initialize());    
   }
 #endif
   
@@ -2777,7 +2798,19 @@ EL::StatusCode chorizo :: loop ()
 
       recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
       recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
-
+   
+      //trigger matching
+      std::vector<bool> ph_trig_pass;
+      for(const auto& t : PhTriggers){
+      if(t.substr(0, 4) == "HLT_"){ 
+	std::string tsub = t.substr(4);
+	ph_trig_pass.push_back( tool_trig_match_ph->matchHLT( ph_itr, tsub ));
+      }
+      else
+	ph_trig_pass.push_back( false ); //only check for HLT items at the moment
+     
+      recoPhoton.isTrigMatch |= ph_trig_pass.back();
+    }
       //get photon scale factors
       if(this->isMC){
 	//nominal
@@ -3861,6 +3894,37 @@ EL::StatusCode chorizo :: loop ()
  
   }
   RecoHadTops(ibtop1, ibtop2);
+
+  // ------ Max bb-system variables  
+  if (ibtop1!=-1 && ibtop2!=-1)
+  {
+    std::vector<unsigned int> leadB_index;
+    leadB_index.push_back(ibtop1);
+    leadB_index.push_back(ibtop2);  
+
+    std::vector<pair<unsigned int, double> > dR_Max;
+    std::vector<pair<unsigned int, double> > dR_pt_Max;
+    TLorentzVector refVector;  
+  
+    refVector = recoJets.at(ibtop1).GetVector() + recoJets.at(ibtop2).GetVector();           
+    dR_Max = GetOrderedJetIndexdR(refVector, leadB_index);
+    dR_pt_Max = GetOrderedJetIndexAntiKtd(refVector, leadB_index);      
+
+    for (unsigned int i=0; i<dR_Max.size(); i++)
+    {
+	  index_min_dR_bb.push_back(dR_Max.at(i).first);
+	  min_dR_bb.push_back(dR_Max.at(i).second);
+	  
+    } 
+
+    for (unsigned int i=0; i<dR_pt_Max.size(); i++)
+    {
+	  index_min_dR_pt_bb.push_back(dR_pt_Max.at(i).first);
+	  min_dR_pt_bb.push_back(dR_pt_Max.at(i).second);
+    }   
+  }
+  // -----------------------------  
+
 
   //dPhi_b1_b2  
   dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
@@ -5062,6 +5126,8 @@ void chorizo :: dumpPhotons(){
     ph_tight.push_back( fill ?  (int)recoPhotons.at(iph).isTight  : DUMMYDN );
     ph_type.push_back( fill ?  recoPhotons.at(iph).type  : DUMMYDN );
     ph_origin.push_back( fill ?  recoPhotons.at(iph).origin  : DUMMYDN );
+    ph_trigger.push_back( fill ?  (int)recoPhotons.at(iph).isTrigMatch  : DUMMYDN );
+   
   }
 }
 
@@ -5254,7 +5320,10 @@ EL::StatusCode chorizo :: finalize ()
     delete tool_trig_match_mu;
     tool_trig_match_mu=0;
   }
-
+  if(tool_trig_match_ph){
+    delete tool_trig_match_ph;
+    tool_trig_match_ph=0;
+  }
 
   //GRL
   if( tool_grl ) {
@@ -7262,6 +7331,108 @@ TLorentzVector chorizo :: getTLV( xAODPart* p, bool inGeV ){
 
   return v;
 }
+
+
+template<class T, class V> bool SortBySecond(std::pair<T, V> pair1, std::pair<T, V> pair2)
+{
+	return pair1.second < pair2.second;
+}
+
+
+/// <summary>
+/// Gets the jet incidices ordered by delta R to the refVector.
+/// </summary>
+/// <param name="lcJetReader">The lcJetReader.</param>
+/// <param name="refVector">The reference vector.</param>
+/// <param name="skipIndices">The indices to skip.</param>
+/// <returns>vector of pairs (JetIndex, dR) to the refVector</returns>
+std::vector<pair<unsigned int, double> > chorizo :: GetOrderedJetIndexdR(TLorentzVector refVector, std::vector<unsigned int> skipIndices)
+{
+	std::vector<pair<unsigned int, double> > jetIndexdRPairVector;
+        for (unsigned int jetIndex = 0 ; jetIndex < recoJets.size() ; jetIndex++)
+	//for (size_t jetIndex = 0; jetIndex < lcJetReader.NJets(); jetIndex++)
+	{
+		if (find(skipIndices.begin(), skipIndices.end(), jetIndex) != skipIndices.end())
+		{
+			//Found the index in skip list, skipping.
+			continue;
+		}
+		
+		TLorentzVector jet;
+		jet.SetPtEtaPhiM(
+			recoJets.at(jetIndex).Pt(),
+			recoJets.at(jetIndex).Eta(),
+			recoJets.at(jetIndex).Phi(),
+			recoJets.at(jetIndex).M()
+			);
+
+		jetIndexdRPairVector.push_back(make_pair(jetIndex, refVector.DeltaR(jet)));		
+	}
+
+	sort(jetIndexdRPairVector.begin(), jetIndexdRPairVector.end(), SortBySecond<unsigned int, double>);
+
+	return jetIndexdRPairVector;
+}
+
+/// <summary>
+/// Gets the jet incidices ordered by delta R/pT to the refVector.
+/// </summary>
+/// <param name="lcJetReader">The lcJetReader.</param>
+/// <param name="refVector">The reference vector.</param>
+/// <param name="skipIndices">The indices to skip.</param>
+/// <returns>vector of pairs (JetIndex, dR) to the refVector</returns>
+std::vector<pair<unsigned int, double> > chorizo :: GetOrderedJetIndexAntiKtd(TLorentzVector refVector, std::vector<unsigned int> skipIndices)
+{
+
+     enum dAlgorithm
+     { 
+	JETPT,
+	REFPT,
+	MAXJETBBPT,
+     };
+        
+	dAlgorithm d_algorithm;
+        	
+	std::vector<pair<unsigned int, double> > jetIndexdRPairVector;
+        for (unsigned int jetIndex = 0 ; jetIndex < recoJets.size() ; jetIndex++)
+	//for (size_t jetIndex = 0; jetIndex < lcJetReader.NJets(); jetIndex++)
+	{
+		if (find(skipIndices.begin(), skipIndices.end(), jetIndex) != skipIndices.end())
+		{
+			//Found the index in skip list, skipping.
+			continue;
+		}
+		TLorentzVector jet;
+		jet.SetPtEtaPhiM(
+			recoJets.at(jetIndex).Pt(),
+			recoJets.at(jetIndex).Eta(),
+			recoJets.at(jetIndex).Phi(),
+			recoJets.at(jetIndex).M()
+			);
+
+		double d;
+		switch (d_algorithm)
+		{
+			case JETPT:
+				d = refVector.DeltaR(jet)/recoJets.at(jetIndex).Pt();
+				break;
+			case REFPT:
+				d = refVector.DeltaR(jet)/refVector.Pt();
+				break;
+			case MAXJETBBPT:
+			default:
+				d = refVector.DeltaR(jet)/max(recoJets.at(jetIndex).Pt(), refVector.Pt());
+				break;
+		}
+		jetIndexdRPairVector.push_back(make_pair(jetIndex, d));
+	}
+
+	sort(jetIndexdRPairVector.begin(), jetIndexdRPairVector.end(), SortBySecond<unsigned int, double>);
+
+	return jetIndexdRPairVector;
+}
+
+
 
 EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, std::vector<Particle> muonCandidates){
   

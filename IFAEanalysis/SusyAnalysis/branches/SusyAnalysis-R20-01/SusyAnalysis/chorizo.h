@@ -291,6 +291,7 @@ private:
 
   Trig::TrigEgammaMatchingTool* tool_trig_match_el; //!
   Trig::TrigMuonMatching* tool_trig_match_mu; //!
+  Trig::TrigEgammaMatchingTool* tool_trig_match_ph; //! 
    
 #ifndef __CINT__  
   OverlapRemovalTool* tool_or; //!
@@ -400,7 +401,9 @@ private:
   virtual void  RecoHadTops(int ibtop1, int ibtop2);
   virtual std::vector<TLorentzVector> getFatJets(double R, double fcut=-1);
 
-  virtual void  findBparton(); 
+  virtual void  findBparton();
+  virtual std::vector<pair<unsigned int, double> > GetOrderedJetIndexdR(TLorentzVector refVector, std::vector<unsigned int> skipIndices);
+  virtual std::vector<pair<unsigned int, double> > GetOrderedJetIndexAntiKtd(TLorentzVector refVector, std::vector<unsigned int> skipIndices);
 
   //for JetSmearing
   virtual bool  isQCDSeedEvent(float, float, float);
@@ -768,6 +771,7 @@ private:
   VInt   ph_tight; 
   VInt   ph_type; 
   VInt   ph_origin; 
+  VInt   ph_trigger;
   VFloat   ph_Cone20;
   VFloat   ph_Cone40CaloOnly;  
   VFloat   ph_Cone40;  
@@ -825,6 +829,13 @@ private:
   VFloat mb_phi;
 
   VInt   m_trigger; 
+
+  // Max bb-system  
+  VInt index_min_dR_bb;
+  VInt index_min_dR_pt_bb;  
+  VFloat min_dR_bb;
+  VFloat min_dR_pt_bb;  
+  
 
   //- 'boson' properties
   float e_M;
