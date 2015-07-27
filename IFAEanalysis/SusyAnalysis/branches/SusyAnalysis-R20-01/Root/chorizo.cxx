@@ -920,7 +920,7 @@ void chorizo :: InitVars()
   bcid = 0;
   procID = 0;
   averageIntPerXing = 0;
-
+ 
   //- Data Quality (event is good by default! (i.e. MC))
   isGRL = true; 
   isFakeMet = false;                 
@@ -1800,18 +1800,18 @@ EL::StatusCode chorizo :: initialize ()
   
   
   //--- B-tagging
-  tool_btag  = new BTaggingEfficiencyTool("BTag70");
+  tool_btag  = new BTaggingEfficiencyTool("BTag77");
   CHECK( tool_btag->setProperty("TaggerName",          Jet_Tagger.Data()) );
   CHECK( tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data()) );
   CHECK( tool_btag->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) ); 
-  CHECK( tool_btag->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );
+  CHECK( tool_btag->setProperty("ScaleFactorFileName",maindir+"/../../SUSYTools/data/2015-PreRecomm-13TeV-MC12-CDI_July15-v1.root") );
   CHECK( tool_btag->initialize() );
    
   tool_btag2  = new BTaggingEfficiencyTool("BTag80");
   CHECK( tool_btag2->setProperty("TaggerName",          Jet_Tagger.Data()) );
   CHECK( tool_btag2->setProperty("OperatingPoint",      Jet_TaggerOp2.Data()) );
   CHECK( tool_btag2->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) ); 
-  CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );
+  CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"/../../SUSYTools/data/2015-PreRecomm-13TeV-MC12-CDI_July15-v1.root") );
   CHECK( tool_btag2->initialize() );
    
   tool_btag_truth1 = new BTagEfficiencyReader();
@@ -1896,8 +1896,8 @@ EL::StatusCode chorizo :: initialize ()
   // trick: path in the tool name so it gets saved to the desired place
   //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
   TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
-  if(PURW_Folder.IsWhitespace())
-    PURW_Folder = maindir + "/../../SusyAnalysis/share/PURW/";
+  //if(PURW_Folder.IsWhitespace())
+  PURW_Folder = maindir + "/SusyAnalysis/PURW/";
 
   if(this->isMC && genPUfile){ 
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
@@ -1925,17 +1925,38 @@ EL::StatusCode chorizo :: initialize ()
       isPUfile=true;
       prwFiles.push_back(prwfile.Data());
       CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
-      CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
+      //CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
       if (this->syst_PU == pileupErr::PileupLow)        
-	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.05) );
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./0.96) );
       else if(this->syst_PU == pileupErr::PileupHigh) 
-	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.13) );
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.04) );
       
       lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
       CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
       CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
       CHECK( tool_purw->initialize() );
      } 
+     
+      else {
+      isPUfile=false;
+      prwfile=PURW_Folder+"410000.prw.root";
+      prwFiles.push_back(prwfile.Data());
+      CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
+      CHECK( tool_purw->setProperty("DefaultChannel",410000) );      
+      
+      //CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
+      if (this->syst_PU == pileupErr::PileupLow)        
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./0.96) );
+      else if(this->syst_PU == pileupErr::PileupHigh) 
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.04) );
+      
+      lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
+      CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
+      CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
+      CHECK( tool_purw->initialize() );
+     }      
+     
+     
     }
     
     
@@ -2179,10 +2200,10 @@ EL::StatusCode chorizo :: loop ()
   lb = eventInfo->lumiBlock();
   bcid = eventInfo->bcid();
   averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
-
+   
   //PURW
-  if(isMC && applyPURW)
-    CHECK( tool_purw->apply(*eventInfo) );  //it does already the filling in 'ConfigMode'
+ // if(isMC && applyPURW)
+ //   CHECK( tool_purw->apply(*eventInfo) );  //it does already the filling in 'ConfigMode'
 
   //--- Generate Pileup file??
   if (genPUfile && isMC){
@@ -2195,8 +2216,10 @@ EL::StatusCode chorizo :: loop ()
       return nextEvent();
 
     //if (isMC) pileup_w = acc_PUweight(*eventInfo);
-    if (isMC && applyPURW && isPUfile) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);    
+    if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(222500, 410000, averageIntPerXing);    
+    //if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);      
     //    output->setFilterPassed ();
+    //if (!isMC) averageIntPerXing = tool_purw->GetLumiBlockMu(RunNumber,lb);
     return nextEvent();
   }
   
@@ -2261,8 +2284,8 @@ EL::StatusCode chorizo :: loop ()
 
     //---pileup weight 
     if(applyPURW)
-      if (isMC && isPUfile) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
-
+      //if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
+      if (isMC) pileup_w = tool_purw->GetCombinedWeight(222510.5, 410000, averageIntPerXing);
     //--- For histograms : combine all the weights in a single variable //CHECK_ME
     if (!doAnaTree) 
       w *= (MC_w*pileup_w);     
@@ -3167,8 +3190,8 @@ EL::StatusCode chorizo :: loop ()
   //** btagging weights
   if(isMC){
     btag_weight_total       = tool_st->BtagSF(m_goodJets);
-    //    btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
-    btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2); //CHECK! not to trust for now
+    //btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
+    //btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2); //CHECK! not to trust for now
   }
   
   //the list of jets to smear for qcd are not the jet-candidates!

@@ -13,11 +13,11 @@
     <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path>
     <Path name="PartialRootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/CollateralRootFiles/</Path>
     <!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
-    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
+    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v63-pro18-01_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
     <Pileup>
       <Mode name="ApplyPileupReweighting">true</Mode>
-      <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/sfracchia/SUSY/pileup/</Path>  <!-- leave it empty to use default location -->
-      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_267638-267639.root</Path>
+      <Path name="PileupReweightingConfigFolder">""</Path>  <!-- leave it empty to use default location -->
+      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_267073-271595.root</Path>
     </Pileup>
 
     <LeptonEfficiency>

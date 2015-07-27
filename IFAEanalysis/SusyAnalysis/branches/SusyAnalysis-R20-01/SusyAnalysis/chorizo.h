@@ -692,7 +692,7 @@ private:
   UInt_t  procID;
   UInt_t  mc_channel_number;//!
   float   averageIntPerXing;
-
+  
   //- Weights  
   float   w;
   float   w_average;
