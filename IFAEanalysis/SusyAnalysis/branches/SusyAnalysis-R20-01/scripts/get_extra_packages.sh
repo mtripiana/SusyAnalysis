@@ -6,7 +6,7 @@
 
 cd $ROOTCOREBIN/..
 
-# Extra tags needed for Base,2.3.16
+# Extra tags needed for Analysis,2.3.21
 rc checkout $ROOTCOREBIN/../SusyAnalysis/scripts/packages.txt 
 
 

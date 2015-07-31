@@ -1237,6 +1237,8 @@ m_map["13TEV_PowhegPythia_P2012_singletop_Wt_dilepton_antitop"] = rlist( Rpair(4
   m_map["CF_Zee"] =  rlist( Rpair(167750, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zee/"));
   m_map["CF_Zmumu"] =  rlist( Rpair(167754, "/nfs/at3/scratch/tripiana/xAOD/mc14/Kerim/Zmumu/"));
 
+  m_map["ttbar_SUSY7_test"] = rlist( Rpair(410000,"/nfs/at3/scratch/sfracchia/SUSY/ttbar_SUSY7_test/"));
+
   //Test truth
   m_map["TestTruth19"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/rel19/"));
   m_map["TestTruth20"] = rlist( Rpair(202266, "/nfs/at3/scratch/tripiana/xAOD/truth/sbottom/rel20/"));

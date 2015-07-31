@@ -53,6 +53,8 @@
 #include "BTagEfficiencyReader/BTagEfficiencyReader.h"
 #include "IsolationSelection/IsolationSelectionTool.h"
 
+#include "xAODBTaggingEfficiency/BTaggingSelectionTool.h"
+
 //For trigger test
 //#define TILETEST
 #ifdef TILETEST
@@ -301,6 +303,10 @@ private:
   GoodRunsListSelectionTool *tool_grl; //!
 
   LHAPDF::PDF* m_PDF; //!
+
+  BTaggingSelectionTool *tool_bsel70; //! //new btagging selector tool
+  BTaggingSelectionTool *tool_bsel77; //! //new btagging selector tool
+  BTaggingSelectionTool *tool_bsel85; //! //new btagging selector tool
 
   BTaggingEfficiencyTool* tool_btag;  //! //70%op
   BTaggingEfficiencyTool* tool_btag2; //! //80%op
@@ -901,6 +907,9 @@ private:
   VInt   j_btruth_70;
   VInt   j_btruth_77;
   VInt   j_btruth_80;
+  VInt   j_bflat_70;
+  VInt   j_bflat_77;
+  VInt   j_bflat_85;
 
   //- for Tile studies
   VFloat j_const_pt;

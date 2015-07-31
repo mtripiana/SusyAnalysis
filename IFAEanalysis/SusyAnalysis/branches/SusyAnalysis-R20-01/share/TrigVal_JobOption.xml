@@ -54,7 +54,7 @@
     
     <Trigger>
       <SaveExtended>false</SaveExtended>
-      <chains>HLT_xe.*</chains>
+      <chains>HLT_.*</chains>
     </Trigger>
 
     <Vertex>

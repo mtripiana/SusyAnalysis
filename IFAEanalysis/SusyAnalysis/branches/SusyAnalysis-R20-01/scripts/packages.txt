@@ -1,10 +1,15 @@
 # SUSYTOOLS
-atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/tags/SUSYTools-00-06-13
+#
 # extra packages
 atlasoff/PhysicsAnalysis/TileID/TileTripReader/trunk
-atlasoff/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-28 
+#atlasoff/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-28 
 atlasoff/Trigger/TrigAnalysis/TrigEgammaMatchingTool/tags/TrigEgammaMatchingTool-00-00-05
 atlasoff/Trigger/TrigAnalysis/TrigMuonMatching/tags/TrigMuonMatching-00-00-07
+atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/xAODBTaggingEfficiency/tags/xAODBTaggingEfficiency-00-00-18
+atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/CDIFiles/tags/CDIFiles-00-00-04
+atlasoff/Event/xAOD/xAODMissingET/tags/xAODMissingET-00-01-25
+atlasoff/Reconstruction/MET/METInterface/tags/METInterface-00-01-12
+atlasoff/Reconstruction/MET/METUtilities/tags/METUtilities-00-01-45
 # FastJet
 #
 atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet

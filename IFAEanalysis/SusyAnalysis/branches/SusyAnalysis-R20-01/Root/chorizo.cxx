@@ -123,6 +123,9 @@ chorizo :: chorizo ()
     iso_3(0),
     iso_4(0),
     iso_5(0),
+    tool_bsel70(0), 
+    tool_bsel77(0), 
+    tool_bsel85(0), 
     tool_btag(0), 
     tool_btag2(0),
     tool_btag_truth1(0),
@@ -482,6 +485,10 @@ void chorizo :: bookTree(){
       m_atree->Branch("j_btruth_70",&j_btruth_70);
       m_atree->Branch("j_btruth_77",&j_btruth_77);
       m_atree->Branch("j_btruth_80",&j_btruth_80);
+
+      m_atree->Branch("j_bflat_70",&j_bflat_70);
+      m_atree->Branch("j_bflat_77",&j_bflat_77);
+      m_atree->Branch("j_bflat_85",&j_bflat_85);
       
       //met 
       m_atree->Branch("met",&met);
@@ -1164,6 +1171,10 @@ void chorizo :: InitVars()
   j_btruth_77.clear();
   j_btruth_80.clear();
 
+  j_bflat_70.clear();
+  j_bflat_77.clear();
+  j_bflat_85.clear();
+
   //met 
   met.clear();
   met_phi.clear();
@@ -1800,6 +1811,36 @@ EL::StatusCode chorizo :: initialize ()
   
   
   //--- B-tagging
+  tool_bsel70 = new BTaggingSelectionTool("BTagSelEMTopoJets");
+  CHECK( tool_bsel70->setProperty("MaxEta",2.5) );
+  CHECK( tool_bsel70->setProperty("MinPt",20000.) );
+  CHECK( tool_bsel70->setProperty("FlvTagCutDefinitionsFileName","xAODBTaggingEfficiency/cutprofiles_14072015.root") );
+  CHECK( tool_bsel70->setProperty("TaggerName","MV2c20") );
+  // CHECK( tool_bsel70->setProperty("OperatingPoint","-0.0436") );
+  CHECK( tool_bsel70->setProperty("OperatingPoint","FlatBEff_70") );
+  CHECK( tool_bsel70->setProperty("JetAuthor","AntiKt4EMTopoJets") );
+  CHECK( tool_bsel70->initialize() );
+
+  tool_bsel77 = new BTaggingSelectionTool("BTagSelEMTopoJets");
+  CHECK( tool_bsel77->setProperty("MaxEta",2.5) );
+  CHECK( tool_bsel77->setProperty("MinPt",20000.) );
+  CHECK( tool_bsel77->setProperty("FlvTagCutDefinitionsFileName","xAODBTaggingEfficiency/cutprofiles_14072015.root") );
+  CHECK( tool_bsel77->setProperty("TaggerName","MV2c20") );
+  // CHECK( tool_bsel77->setProperty("OperatingPoint","-0.0436") );
+  CHECK( tool_bsel77->setProperty("OperatingPoint","FlatBEff_77") );
+  CHECK( tool_bsel77->setProperty("JetAuthor","AntiKt4EMTopoJets") );
+  CHECK( tool_bsel77->initialize() );
+
+  tool_bsel85 = new BTaggingSelectionTool("BTagSelEMTopoJets");
+  CHECK( tool_bsel85->setProperty("MaxEta",2.5) );
+  CHECK( tool_bsel85->setProperty("MinPt",20000.) );
+  CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName","xAODBTaggingEfficiency/cutprofiles_14072015.root") );
+  CHECK( tool_bsel85->setProperty("TaggerName","MV2c20") );
+  // CHECK( tool_bsel85->setProperty("OperatingPoint","-0.0436") );
+  CHECK( tool_bsel85->setProperty("OperatingPoint","FlatBEff_85") );
+  CHECK( tool_bsel85->setProperty("JetAuthor","AntiKt4EMTopoJets") );
+  CHECK( tool_bsel85->initialize() );
+
   tool_btag  = new BTaggingEfficiencyTool("BTag77");
   CHECK( tool_btag->setProperty("TaggerName",          Jet_Tagger.Data()) );
   CHECK( tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data()) );
@@ -2731,7 +2772,7 @@ EL::StatusCode chorizo :: loop ()
     std::vector<bool> mu_trig_pass;
     for(const auto& t : MuTriggers){
       if(t.substr(0, 4) == "HLT_"){ 
-	std::string tsub = t.substr(4);
+	std::string tsub = t;
 	mu_trig_pass.push_back( tool_trig_match_mu->match( mu_itr, tsub ));
       }
       else
@@ -2891,6 +2932,7 @@ EL::StatusCode chorizo :: loop ()
   for( ; jet_itr != jet_end; ++jet_itr ){
     
     if( doOR && !dec_passOR(**jet_itr) ) continue;
+
     bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
 
     //flag event if bad jet is found
@@ -2927,6 +2969,11 @@ EL::StatusCode chorizo :: loop ()
       recoJet.isbjet_t77 = tool_btag_truth2->performTruthTagging(*jet_itr);
       recoJet.isbjet_t80 = tool_btag_truth3->performTruthTagging(*jet_itr);
     }
+
+    //new flat b-tagging eff
+    recoJet.isbjet_fb70 = tool_bsel70->accept(*jet_itr);
+    recoJet.isbjet_fb77 = tool_bsel77->accept(*jet_itr);
+    recoJet.isbjet_fb85 = tool_bsel85->accept(*jet_itr);
 
     int local_truth_flavor=0;         //for bjets ID
     if ( this->isMC ){
@@ -5177,6 +5224,10 @@ void chorizo :: dumpJets(){
     j_btruth_70.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t70  : DUMMYDN );
     j_btruth_77.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t77  : DUMMYDN );
     j_btruth_80.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t80  : DUMMYDN ); 
+
+    j_bflat_70.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb70  : DUMMYDN );
+    j_bflat_77.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb77  : DUMMYDN );
+    j_bflat_85.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb85  : DUMMYDN ); 
 
     j_chf.push_back( fill  ?  recoJets.at(ijet).chf  : DUMMYDN );
     j_emf.push_back( fill  ?  recoJets.at(ijet).emf  : DUMMYDN );

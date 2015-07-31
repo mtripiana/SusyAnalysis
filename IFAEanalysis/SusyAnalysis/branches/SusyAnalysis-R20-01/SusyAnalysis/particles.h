@@ -128,6 +128,9 @@ namespace Particles{
     bool                    isbjet_t70;
     bool                    isbjet_t77;
     bool                    isbjet_t80;
+    bool                    isbjet_fb70;
+    bool                    isbjet_fb77;
+    bool                    isbjet_fb85;
     std::vector<Cluster>    clusters;
 
     bool isTauJet(float metphi, TString Tagger="MV1");

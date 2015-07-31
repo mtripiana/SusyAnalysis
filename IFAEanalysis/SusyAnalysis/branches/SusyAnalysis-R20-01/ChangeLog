@@ -1,3 +1,7 @@
+2015-07-31 Martin <tripiana@cern.ch>
+	* Fix TriMuonMatching
+	* Add new flat eff. btagging (j_bflat_70,j_bflat_77,j_bflat_85)
+
 2015-07-08 Martin <tripiana@cern.ch>
 	* Fix isolation. Now you can specify a 'None' WP for leptons and photons.
 
