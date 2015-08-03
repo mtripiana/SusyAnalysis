@@ -55,6 +55,8 @@
 
 #include "xAODBTaggingEfficiency/BTaggingSelectionTool.h"
 
+#include "MCTruthClassifier/MCTruthClassifier.h"
+
 //For trigger test
 //#define TILETEST
 #ifdef TILETEST
@@ -165,8 +167,8 @@ enum ZDecayMode{
 };
 
 //MET flavours
-const string sMetDef[] = {"InvMu", "VisMu", "InvMuECorr", "VisMuECorr", "VisMuMuCorr", "InvMuPhCorr", "VisMuPhCorr", "Track", "InvMuRef", "VisMuRef", "InvMuTST", "VisMuTST", "InvMuTSTECorr", "VisMuTSTECorr", "VisMuTSTMuCorr", "InvMuTruth", "VisMuTruth", "locHadTopo"};
-enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPhCorr, VisMuPhCorr, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTSTECorr, VisMuTSTECorr, VisMuTSTMuCorr, InvMuTruth, VisMuTruth, locHadTopo, N};
+const string sMetDef[] = {"InvMu", "VisMu", "InvMuECorr", "VisMuECorr", "VisMuMuCorr", "InvMuPhCorr", "VisMuPhCorr", "Track", "InvMuRef", "VisMuRef", "InvMuTST", "VisMuTST", "InvMuTSTECorr", "VisMuTSTECorr", "VisMuTSTMuCorr", "InvMuTruth", "VisMuTruth", "locHadTopo", "METFilter"};
+enum class MetDef {InvMu, VisMu, InvMuECorr, VisMuECorr, VisMuMuCorr, InvMuPhCorr, VisMuPhCorr, Track, InvMuRef, VisMuRef, InvMuTST, VisMuTST, InvMuTSTECorr, VisMuTSTECorr, VisMuTSTMuCorr, InvMuTruth, VisMuTruth, locHadTopo, METFilter, N};
 
 class chorizo : public EL::Algorithm
 {
@@ -325,6 +327,8 @@ private:
 
   TMctLib* tool_mct; //!
 
+  MCTruthClassifier *tool_mcc; //!
+
   SUSY::JetMCSmearingTool* tool_jsmear; //!
 
   //Testing new TileCal correction tool!
@@ -399,6 +403,8 @@ private:
   virtual float Calc_Sphericity(std::vector<TLorentzVector> pvectors,
 				bool IsTransverseSphericity=false);
   
+  virtual double Calc_TruthNuMET();
+
   virtual double epsilon(double x);
   virtual double thrustService(TVector2 &n, std::vector<TVector2> &obj);
   virtual double Calc_Thrust(std::vector<TLorentzVector> pvectors);
@@ -955,6 +961,7 @@ private:
   float sumET_truth_vmu;
 
   float  met_lochadtopo;
+  float  met_top;
 
   //recoiling system
   VFloat rmet_par;  //parallel

@@ -109,6 +109,8 @@ m_map["13TeV_Sbottom_800_1_cutflow"] = rlist( Rpair(387063, "/nfs/at3/scratch/sf
 m_map["13TeV_Stop_800_1_cutflow"] = rlist( Rpair(387198, "/nfs/at3/scratch/sfracchia/SUSY/signal_stop_cutflow/"));
 m_map["ttbar_cutflow"] = rlist( Rpair(387198, "/nfs/at3/scratch/sfracchia/SUSY/ttbar_cutflow/"));
 
+ m_map["ttbar_SUSY5"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY5.e3698_s2608_s2183_r6630_r6264_p2375/"));
+
 m_map["test_ttbar_martin"] = rlist( Rpair(410000, "/nfs/at3/scratch2/tripiana/xAOD/ttbar/SUSY1_new/"));
 
 
@@ -1219,6 +1221,74 @@ m_map["13TEV_PowhegPythia_P2012_singletop_Wt_dilepton_antitop"] = rlist( Rpair(4
   m_map["Ztautau167804_13TeVgrid"] = rlist( Rpair(167804, "mc14_13TeV.167804.Sherpa_CT10_ZtautauMassiveCBPt70_140_CFilterBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
   //  m_map["Ztautau167805_13TeVgrid"] = rlist( Rpair(167805, "mc14_13TeV.167805.Sherpa_CT10_ZtautauMassiveCBPt70_140_CVetoBVeto.merge.AOD.e2798_s1982_s2008_r5787_r5853/"));
   m_map["Ztautau167805_13TeVgrid"] = rlist( Rpair(167805, "mc14_13TeV.167805.Sherpa_CT10_ZtautauMassiveCBPt70_140_CVetoBVeto.merge.DAOD_SUSY1.e2798_s1982_s2008_r5787_r5853_p1816/"));
+
+
+  //*** NEW DM SAMPLES (SUSY7) **
+  //SCALAR  : dq2-ls mc15_13TeV.*BBscalar*SUSY7*/ | sort  
+  m_map["DM_BBscalar_p20_c1"] = rlist( Rpair(303137, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p20_c1/")); 		
+  m_map["DM_BBscalar_p50_c1"] = rlist( Rpair(303138, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p50_c1/")); 		
+  m_map["DM_BBscalar_p100_c1"] = rlist( Rpair(303139, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p100_c1/"));		
+  m_map["DM_BBscalar_p200_c1"] = rlist( Rpair(303140, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p200_c1/"));		
+  m_map["DM_BBscalar_p300_c1"] = rlist( Rpair(303141, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p300_c1/"));		
+  m_map["DM_BBscalar_p500_c1"] = rlist( Rpair(303142, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p500_c1/"));		
+  m_map["DM_BBscalar_p1000_c1"] = rlist( Rpair(303143, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p1000_c1/"));		
+  m_map["DM_BBscalar_p5000_c1"] = rlist( Rpair(303144, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p5000_c1/"));		
+  m_map["DM_BBscalar_p10_c1000"] = rlist( Rpair(303145, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p10_c1000/"));		
+  m_map["DM_BBscalar_p1000_c1000"] = rlist( Rpair(303146, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p1000_c1000/"));	
+  m_map["DM_BBscalar_p5000_c1000"] = rlist( Rpair(303147, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p5000_c1000/"));	
+   m_map["DM_BBscalar_p10_c10"] = rlist( Rpair(303148, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p10_c10/"));		
+   m_map["DM_BBscalar_p15_c10"] = rlist( Rpair(303149, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p15_c10/"));		
+   m_map["DM_BBscalar_p50_c10"] = rlist( Rpair(303150, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p50_c10/"));		
+   m_map["DM_BBscalar_p100_c10"] = rlist( Rpair(303151, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p100_c10/"));		
+   m_map["DM_BBscalar_p10_c50"] = rlist( Rpair(303152, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p10_c50/"));		
+   m_map["DM_BBscalar_p50_c50"] = rlist( Rpair(303153, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p50_c50/"));		
+   m_map["DM_BBscalar_p95_c50"] = rlist( Rpair(303154, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p95_c50/"));		
+   m_map["DM_BBscalar_p200_c50"] = rlist( Rpair(303155, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p200_c50/"));		
+   m_map["DM_BBscalar_p300_c50"] = rlist( Rpair(303156, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p300_c50/"));		
+   m_map["DM_BBscalar_p10_c500"] = rlist( Rpair(303157, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p10_c500/"));		
+   m_map["DM_BBscalar_p500_c500"] = rlist( Rpair(303158, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p500_c500/"));		
+   m_map["DM_BBscalar_p995_c500"] = rlist( Rpair(303159, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p995_c500/"));		
+   m_map["DM_BBscalar_p10_c150"] = rlist( Rpair(303160, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p10_c150/"));		
+   m_map["DM_BBscalar_p200_c150"] = rlist( Rpair(303161, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p200_c150/"));		
+   m_map["DM_BBscalar_p295_c150"] = rlist( Rpair(303162, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p295_c150/"));		
+   m_map["DM_BBscalar_p500_c150"] = rlist( Rpair(303163, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p500_c150/"));		
+   m_map["DM_BBscalar_p5000_c150"] = rlist( Rpair(303164, "/nfs/atlas-data07/tripiana/xAOD/DMbb/scalar/p5000_c150/"));       
+
+   //PSEUDO  : dq2-ls mc15_13TeV.*BBpseudo*SUSY7*/ | sort
+   m_map["DM_BBpseudo_p100_c1"] = rlist( Rpair(303168, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p100_c1/"));	 
+   m_map["DM_BBpseudo_p200_c1"] = rlist( Rpair(303169,"/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p200_c1/"));	 
+   m_map["DM_BBpseudo_p300_c1"] = rlist( Rpair(303170, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p300_c1/"));	 
+   m_map["DM_BBpseudo_p500_c1"] = rlist( Rpair(303171, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p500_c1/"));	 
+   m_map["DM_BBpseudo_p1000_c1"] = rlist( Rpair(303172, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p1000_c1/"));	 
+   m_map["DM_BBpseudo_p5000_c1"] = rlist( Rpair(303173, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p5000_c1/"));	 
+   m_map["DM_BBpseudo_p10_c1000"] = rlist( Rpair(303174, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p10_c1000/"));	 
+   m_map["DM_BBpseudo_p1000_c1000"] = rlist( Rpair(303175, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p1000_c1000/")); 
+   m_map["DM_BBpseudo_p5000_c1000"] = rlist( Rpair(303176, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p5000_c1000/")); 
+   m_map["DM_BBpseudo_p10_c10"] = rlist( Rpair(303177, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p10_c10/"));	 
+   m_map["DM_BBpseudo_p15_c10"] = rlist( Rpair(303178, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p15_c10/"));	 
+   m_map["DM_BBpseudo_p50_c10"] = rlist( Rpair(303179, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p50_c10/"));	 
+   m_map["DM_BBpseudo_p100_c10"] = rlist( Rpair(303180, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p100_c10/"));	 
+   m_map["DM_BBpseudo_p10_c50"] = rlist( Rpair(303181, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p10_c50/"));	 
+   m_map["DM_BBpseudo_p50_c50"] = rlist( Rpair(303182, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p50_c50/"));	 
+   m_map["DM_BBpseudo_p95_c50"] = rlist( Rpair(303183, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p95_c50/"));	 
+   m_map["DM_BBpseudo_p300_c50"] = rlist( Rpair(303185, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p300_c50/"));	 
+   m_map["DM_BBpseudo_p10_c500"] = rlist( Rpair(303186, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p10_c500/"));	 
+   m_map["DM_BBpseudo_p500_c500"] = rlist( Rpair(303187, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p500_c500/"));	 
+   m_map["DM_BBpseudo_p995_c500"] = rlist( Rpair(303188, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p995_c500/"));	 
+   m_map["DM_BBpseudo_p10_c150"] = rlist( Rpair(303189, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p10_c150/"));	 
+   m_map["DM_BBpseudo_p200_c150"] = rlist( Rpair(303190, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p200_c150/"));	 
+   m_map["DM_BBpseudo_p295_c150"] = rlist( Rpair(303191, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p295_c150/"));	 
+   m_map["DM_BBpseudo_p500_c150"] = rlist( Rpair(303192, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p500_c150/"));	 
+   m_map["DM_BBpseudo_p5000_c150"] = rlist( Rpair(303193, "/nfs/atlas-data07/tripiana/xAOD/DMbb/pseudo/p5000_c150/"));  
+   
+   
+   //fullsim
+   m_map["DM_BBscalar_p95_c50_FS"] = rlist( Rpair(303154, "/nfs/atlas-data07/tripiana/xAOD/DMbb/fullsim/scalar/p95_c50/"));		
+   m_map["DM_BBpseudo_p95_c50_FS"] = rlist( Rpair(303183, "/nfs/atlas-data07/tripiana/xAOD/DMbb/fullsim/pseudo/p95_c50/"));	 
+   m_map["DM_BBpseudo_p5000_c1_FS"] = rlist( Rpair(303173, "/nfs/atlas-data07/tripiana/xAOD/DMbb/fullsim/pseudo/p5000_c1/"));	 
+   
+  //***
+
 
   //======================================================================================================================
   //                                                 Local afs/nfs tests

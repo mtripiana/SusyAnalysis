@@ -131,6 +131,7 @@ chorizo :: chorizo ()
     tool_btag_truth1(0),
     tool_btag_truth2(0),
     tool_btag_truth3(0),
+    tool_mcc(0),
     tool_jsmear(0),
 #ifdef TILETEST
     tool_jettile(0),
@@ -498,6 +499,7 @@ void chorizo :: bookTree(){
       m_atree->Branch("met_tst",&met_tst,"met_tst/f", 10000);
       
       //m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
+      m_atree->Branch("met_top", &met_top, "met_top/F", 10000);
 
       //met recoil system
       //m_atree->Branch("rmet_par", &rmet_par);
@@ -862,7 +864,7 @@ CutflowInfo chorizo :: getNinfo(){
   }
   else{
     try{
-      m_ctree = dynamic_cast<TTree*> (wk()->inputFile()->Get("CollectionTree"));;
+      m_ctree = dynamic_cast<TTree*> (wk()->inputFile()->Get("CollectionTree"));
       sinfo.nEvents      = m_ctree->GetEntries();
       sinfo.weightSum    = sinfo.nEvents;
       sinfo.weight2Sum   = sinfo.nEvents*sinfo.nEvents;
@@ -1183,6 +1185,7 @@ void chorizo :: InitVars()
   met_tst = DUMMYDN;
 
   met_lochadtopo = DUMMYDN;
+  met_top = DUMMYDN;
 
   index_min_dR_bb.clear();
   index_min_dR_pt_bb.clear();  
@@ -1814,7 +1817,7 @@ EL::StatusCode chorizo :: initialize ()
   tool_bsel70 = new BTaggingSelectionTool("BTagSelEMTopoJets");
   CHECK( tool_bsel70->setProperty("MaxEta",2.5) );
   CHECK( tool_bsel70->setProperty("MinPt",20000.) );
-  CHECK( tool_bsel70->setProperty("FlvTagCutDefinitionsFileName","xAODBTaggingEfficiency/cutprofiles_14072015.root") );
+  CHECK( tool_bsel70->setProperty("FlvTagCutDefinitionsFileName",maindir+"/xAODBTaggingEfficiency/cutprofiles_14072015.root") );
   CHECK( tool_bsel70->setProperty("TaggerName","MV2c20") );
   // CHECK( tool_bsel70->setProperty("OperatingPoint","-0.0436") );
   CHECK( tool_bsel70->setProperty("OperatingPoint","FlatBEff_70") );
@@ -1824,7 +1827,7 @@ EL::StatusCode chorizo :: initialize ()
   tool_bsel77 = new BTaggingSelectionTool("BTagSelEMTopoJets");
   CHECK( tool_bsel77->setProperty("MaxEta",2.5) );
   CHECK( tool_bsel77->setProperty("MinPt",20000.) );
-  CHECK( tool_bsel77->setProperty("FlvTagCutDefinitionsFileName","xAODBTaggingEfficiency/cutprofiles_14072015.root") );
+  CHECK( tool_bsel77->setProperty("FlvTagCutDefinitionsFileName",maindir+"/xAODBTaggingEfficiency/cutprofiles_14072015.root") );
   CHECK( tool_bsel77->setProperty("TaggerName","MV2c20") );
   // CHECK( tool_bsel77->setProperty("OperatingPoint","-0.0436") );
   CHECK( tool_bsel77->setProperty("OperatingPoint","FlatBEff_77") );
@@ -1834,25 +1837,27 @@ EL::StatusCode chorizo :: initialize ()
   tool_bsel85 = new BTaggingSelectionTool("BTagSelEMTopoJets");
   CHECK( tool_bsel85->setProperty("MaxEta",2.5) );
   CHECK( tool_bsel85->setProperty("MinPt",20000.) );
-  CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName","xAODBTaggingEfficiency/cutprofiles_14072015.root") );
+  CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName",maindir+"/xAODBTaggingEfficiency/cutprofiles_14072015.root") );
   CHECK( tool_bsel85->setProperty("TaggerName","MV2c20") );
   // CHECK( tool_bsel85->setProperty("OperatingPoint","-0.0436") );
   CHECK( tool_bsel85->setProperty("OperatingPoint","FlatBEff_85") );
   CHECK( tool_bsel85->setProperty("JetAuthor","AntiKt4EMTopoJets") );
   CHECK( tool_bsel85->initialize() );
 
+  TString BTagPath = gSystem->ExpandPathName("$ROOTCOREBIN/../SUSYTools/data/2015-PreRecomm-13TeV-MC12-CDI_July17-v1.root");
+
   tool_btag  = new BTaggingEfficiencyTool("BTag77");
   CHECK( tool_btag->setProperty("TaggerName",          Jet_Tagger.Data()) );
   CHECK( tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data()) );
   CHECK( tool_btag->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) ); 
-  CHECK( tool_btag->setProperty("ScaleFactorFileName",maindir+"/../../SUSYTools/data/2015-PreRecomm-13TeV-MC12-CDI_July15-v1.root") );
+  CHECK( tool_btag->setProperty("ScaleFactorFileName", BTagPath.Data()) );
   CHECK( tool_btag->initialize() );
    
   tool_btag2  = new BTaggingEfficiencyTool("BTag80");
   CHECK( tool_btag2->setProperty("TaggerName",          Jet_Tagger.Data()) );
   CHECK( tool_btag2->setProperty("OperatingPoint",      Jet_TaggerOp2.Data()) );
   CHECK( tool_btag2->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) ); 
-  CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"/../../SUSYTools/data/2015-PreRecomm-13TeV-MC12-CDI_July15-v1.root") );
+  CHECK( tool_btag2->setProperty("ScaleFactorFileName", BTagPath.Data()) );
   CHECK( tool_btag2->initialize() );
    
   tool_btag_truth1 = new BTagEfficiencyReader();
@@ -1861,6 +1866,12 @@ EL::StatusCode chorizo :: initialize ()
   tool_btag_truth1->Initialize("FlatBEff", "1D", "MV2c20", "70");
   tool_btag_truth2->Initialize("FlatBEff", "1D", "MV2c20", "77");
   tool_btag_truth3->Initialize("FlatBEff", "1D", "MV2c20", "80");
+
+  //--- MCTruthClassifier
+  if (isMC){    
+    tool_mcc = new MCTruthClassifier("MCTruthClassifier");
+    CHECK( tool_mcc->initialize() );
+  }
 
   //--- truth jet labeling
   // tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
@@ -3737,8 +3748,15 @@ EL::StatusCode chorizo :: loop ()
 
   }//end of met flavor loop
 
+  //MET LocHadTopo
   if(mtopo)
     met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
+
+  //Truth Filter MET (all neutrinos from top)
+  UInt_t MET_ids[] = {410000, 410013, 410014}; //nominal   //filtered : 407012, 407019, 407021;
+  if ( count(MET_ids, MET_ids+84, this->mc_channel_number) ){
+    met_top = Calc_TruthNuMET();
+  }
 
   //--- Track Veto
   //init vars
@@ -5425,6 +5443,12 @@ EL::StatusCode chorizo :: finalize ()
     tool_jsmear = 0;
   }
 
+  //MCTruthClassifier
+  if( tool_mcc ) {
+    delete tool_mcc;
+    tool_mcc = 0;
+  }
+  
   //mct corrected
   if( tool_mct ) {
     delete tool_mct;
@@ -5575,11 +5599,23 @@ bool chorizo :: passMCor(){
   if (!this->isMC) //it only obviously applies to MC
     return true;
 
+  //--- to take into account new MET filtered samples  (don't apply it by default (yet))
+  // UInt_t MET_ids[] = {410000, 410013, 410014};   //filtered : 407012, 407019, 407021;
+  // if ( count(MET_ids, MET_ids+84, this->mc_channel_number) ){
+    
+  //   double nuMET = Calc_TruthNuMET();
+  //   if( nuMET.Pt() > 200000. ) //nominal samples
+  //     return false;
+  //   else
+  //     return true;
+  // }
+
+
+  double cutting_var=0.;
   //to loop over  
   xAOD::TruthParticleContainer::const_iterator truthP_itr;
   xAOD::TruthParticleContainer::const_iterator truthP_end;
   
-  double cutting_var=0.;
   if (this->mc_channel_number>=156803 && this->mc_channel_number<=156828){ //Znunu AlpGen
 
     //truth particles loop                                                              
@@ -6460,6 +6496,48 @@ float chorizo :: Calc_mct_corr(Particle p1, Particle p2, TVector2 met){
   return mct_corr;
 };
 
+
+double chorizo :: Calc_TruthNuMET(){
+
+  TLorentzVector nuMET;
+  for(const xAOD::TruthParticle* tp1 : *m_truthP) {
+    if (!tp1->isNeutrino()) continue;
+      
+      std::pair<MCTruthPartClassifier::ParticleType,MCTruthPartClassifier::ParticleOrigin> res;
+      res = tool_mcc->particleTruthClassifier(tp1);
+      MCTruthPartClassifier::ParticleOrigin iPartOrig = res.second;
+      
+      switch (iPartOrig) {
+      case MCTruthPartClassifier::PhotonConv:
+      case MCTruthPartClassifier::DalitzDec:
+      case MCTruthPartClassifier::ElMagProc:
+      case MCTruthPartClassifier::Mu:  
+      case MCTruthPartClassifier::TauLep:  
+      case MCTruthPartClassifier::LightMeson:  
+      case MCTruthPartClassifier::StrangeMeson:  
+      case MCTruthPartClassifier::CharmedMeson:
+      case MCTruthPartClassifier::BottomMeson:
+      case MCTruthPartClassifier::CCbarMeson:
+      case MCTruthPartClassifier::JPsi:
+      case MCTruthPartClassifier::BBbarMeson:
+      case MCTruthPartClassifier::LightBaryon:
+      case MCTruthPartClassifier::StrangeBaryon:
+      case MCTruthPartClassifier::CharmedBaryon:
+      case MCTruthPartClassifier::BottomBaryon:
+      case MCTruthPartClassifier::PionDecay:
+      case MCTruthPartClassifier::KaonDecay:
+	
+      case MCTruthPartClassifier::NonDefined:
+	continue;
+      default:
+	break;
+      }
+      nuMET += tp1->p4();
+
+  }
+  return nuMET.Pt();
+
+}
 
 float chorizo :: TopTransvMass(){
 

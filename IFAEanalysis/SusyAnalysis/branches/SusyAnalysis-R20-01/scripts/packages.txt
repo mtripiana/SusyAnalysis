@@ -10,6 +10,7 @@ atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/CDIFiles/tags/C
 atlasoff/Event/xAOD/xAODMissingET/tags/xAODMissingET-00-01-25
 atlasoff/Reconstruction/MET/METInterface/tags/METInterface-00-01-12
 atlasoff/Reconstruction/MET/METUtilities/tags/METUtilities-00-01-45
+atlasoff/PhysicsAnalysis/MCTruthClassifier/tags/MCTruthClassifier-00-01-41
 # FastJet
 #
 atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet

@@ -1,3 +1,7 @@
+2015-08-02 Martin <tripiana@cern.ch>
+	* Add met_topo variable for OR needed for new MET filtered ttbar and Wt samples
+	* Add DM samples
+
 2015-07-31 Martin <tripiana@cern.ch>
 	* Fix TriMuonMatching
 	* Add new flat eff. btagging (j_bflat_70,j_bflat_77,j_bflat_85)
