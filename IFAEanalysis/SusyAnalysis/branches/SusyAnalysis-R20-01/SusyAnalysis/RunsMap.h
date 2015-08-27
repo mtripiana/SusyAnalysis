@@ -76,31 +76,51 @@ std::vector<TString> RunsMap::getPatterns(TString runname){
 void RunsMap::LoadMap(){
 
 
-// DATA
-m_map["2015_data_267073"] = rlist( Rpair(267073, "data15_13TeV.00267073.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
-m_map["2015_data_267367"] = rlist( Rpair(267367, "data15_13TeV.00267367.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
-m_map["2015_data_267358"] = rlist( Rpair(267358, "data15_13TeV.00267358.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
-m_map["2015_data_267638"] = rlist( Rpair(267638, "data15_13TeV.00267638.physics_Main.merge.DAOD_SUSY1.r6818_p2358_p2361/"));
-m_map["2015_data_267359"] = rlist( Rpair(267359, "data15_13TeV.00267359.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
-m_map["2015_data_267069"] = rlist( Rpair(267069, "data15_13TeV.00267069.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
-m_map["2015_data_267599"] = rlist( Rpair(267599, "data15_13TeV.00267599.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
-m_map["2015_data_266904"] = rlist( Rpair(266904, "data15_13TeV.00266904.physics_Main.merge.DAOD_SUSY1.r6847_p2358_p2361/"));
-m_map["2015_data_267167"] = rlist( Rpair(267167, "data15_13TeV.00267167.physics_Main.merge.DAOD_SUSY1.f594_m1441_p2361/"));
-m_map["2015_data_267162"] = rlist( Rpair(267162, "data15_13TeV.00267162.physics_Main.merge.DAOD_SUSY1.f594_m1441_p2361/"));
-m_map["2015_data_266919"] = rlist( Rpair(266919, "data15_13TeV.00266919.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
-m_map["2015_data_267360"] = rlist( Rpair(267360, "data15_13TeV.00267360.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
-m_map["2015_data_267385"] = rlist( Rpair(267385, "data15_13TeV.00267385.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
-m_map["2015_data_266904"] = rlist( Rpair(266904, "data15_13TeV.00266904.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
-m_map["2015_data_267639"] = rlist( Rpair(267639, "data15_13TeV.00267639.physics_Main.merge.DAOD_SUSY1.r6818_p2358_p2361/"));
-m_map["2015_data_267152"] = rlist( Rpair(267152, "data15_13TeV.00267152.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+  // DATA SUSY7
+  //50ns
+  m_map["data15_50ns_SUSY7_270806"] = rlist( Rpair(270806, "data15_13TeV.00270806.physics_Main.merge.DAOD_SUSY7.f611_m1463_p2375/"));
+  m_map["data15_50ns_SUSY7_270953"] = rlist( Rpair(270953, "data15_13TeV.00270953.physics_Main.merge.DAOD_SUSY7.f611_m1463_p2375/"));
+  m_map["data15_50ns_SUSY7_271048"] = rlist( Rpair(271048, "data15_13TeV.00271048.physics_Main.merge.DAOD_SUSY7.r6943_p2410_p2411/"));
+  m_map["data15_50ns_SUSY7_271298"] = rlist( Rpair(271298, "data15_13TeV.00271298.physics_Main.merge.DAOD_SUSY7.f611_m1463_p2375/"));
+  m_map["data15_50ns_SUSY7_271421"] = rlist( Rpair(271421, "data15_13TeV.00271421.physics_Main.merge.DAOD_SUSY7.r6943_p2410_p2411/"));
+  m_map["data15_50ns_SUSY7_271516"] = rlist( Rpair(271516, "data15_13TeV.00271516.physics_Main.merge.DAOD_SUSY7.r6943_p2410_p2411/"));
+  m_map["data15_50ns_SUSY7_271595"] = rlist( Rpair(271595, "data15_13TeV.00271595.physics_Main.merge.DAOD_SUSY7.f611_m1463_p2375/"));
+  m_map["data15_50ns_SUSY7_271744"] = rlist( Rpair(271744, "data15_13TeV.00271744.physics_Main.merge.DAOD_SUSY7.r6943_p2410_p2411/"));
 
-m_map["2015_data_267638_AOD"] = rlist( Rpair(267638, "data15_13TeV.00267638.physics_Main.merge.AOD.r6848_p2358/"));
-m_map["2015_data_267639_AOD"] = rlist( Rpair(267639, "data15_13TeV.00267639.physics_Main.merge.AOD.r6848_p2358/"));
+  //25ns (after GRL)
+  m_map["data15_25ns_SUSY7_276262"] = rlist( Rpair(276262, "data15_13TeV.00276262.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2411/"));
+  m_map["data15_25ns_SUSY7_276329"] = rlist( Rpair(276329, "data15_13TeV.00276329.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2411/"));
+  m_map["data15_25ns_SUSY7_276336"] = rlist( Rpair(276336, "data15_13TeV.00276336.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2411/"));
+  m_map["data15_25ns_SUSY7_276416"] = rlist( Rpair(276416, "data15_13TeV.00276416.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2411/"));
+  m_map["data15_25ns_SUSY7_276511"] = rlist( Rpair(276511, "data15_13TeV.00276511.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2411/"));
+  m_map["data15_25ns_SUSY7_276689"] = rlist( Rpair(276689, "data15_13TeV.00276689.physics_Main.merge.DAOD_SUSY7.f623_m1480_p2411/"));
+  m_map["data15_25ns_SUSY7_276778"] = rlist( Rpair(276778, "data15_13TeV.00276778.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2411/"));
 
-
-
-m_map["Week1_data_A1"] = rlist( Rpair(266904, "data15_13TeV.periodA1.physics_Main.PhysCont.AOD.t0pro17_v02/"));
-
+  
+  // DATA SUSY1
+  m_map["2015_data_267073"] = rlist( Rpair(267073, "data15_13TeV.00267073.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+  m_map["2015_data_267367"] = rlist( Rpair(267367, "data15_13TeV.00267367.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+  m_map["2015_data_267358"] = rlist( Rpair(267358, "data15_13TeV.00267358.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+  m_map["2015_data_267638"] = rlist( Rpair(267638, "data15_13TeV.00267638.physics_Main.merge.DAOD_SUSY1.r6818_p2358_p2361/"));
+  m_map["2015_data_267359"] = rlist( Rpair(267359, "data15_13TeV.00267359.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+  m_map["2015_data_267069"] = rlist( Rpair(267069, "data15_13TeV.00267069.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+  m_map["2015_data_267599"] = rlist( Rpair(267599, "data15_13TeV.00267599.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+  m_map["2015_data_266904"] = rlist( Rpair(266904, "data15_13TeV.00266904.physics_Main.merge.DAOD_SUSY1.r6847_p2358_p2361/"));
+  m_map["2015_data_267167"] = rlist( Rpair(267167, "data15_13TeV.00267167.physics_Main.merge.DAOD_SUSY1.f594_m1441_p2361/"));
+  m_map["2015_data_267162"] = rlist( Rpair(267162, "data15_13TeV.00267162.physics_Main.merge.DAOD_SUSY1.f594_m1441_p2361/"));
+  m_map["2015_data_266919"] = rlist( Rpair(266919, "data15_13TeV.00266919.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+  m_map["2015_data_267360"] = rlist( Rpair(267360, "data15_13TeV.00267360.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+  m_map["2015_data_267385"] = rlist( Rpair(267385, "data15_13TeV.00267385.physics_Main.merge.DAOD_SUSY1.f597_m1441_p2361/"));
+  m_map["2015_data_266904"] = rlist( Rpair(266904, "data15_13TeV.00266904.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+  m_map["2015_data_267639"] = rlist( Rpair(267639, "data15_13TeV.00267639.physics_Main.merge.DAOD_SUSY1.r6818_p2358_p2361/"));
+  m_map["2015_data_267152"] = rlist( Rpair(267152, "data15_13TeV.00267152.physics_Main.merge.DAOD_SUSY1.f594_m1435_p2361/"));
+  
+  m_map["2015_data_267638_AOD"] = rlist( Rpair(267638, "data15_13TeV.00267638.physics_Main.merge.AOD.r6848_p2358/"));
+  m_map["2015_data_267639_AOD"] = rlist( Rpair(267639, "data15_13TeV.00267639.physics_Main.merge.AOD.r6848_p2358/"));
+  
+  // Primary xAOD
+  m_map["Week1_data_A1"] = rlist( Rpair(266904, "data15_13TeV.periodA1.physics_Main.PhysCont.AOD.t0pro17_v02/"));
+  
   //======================================================================================================================
   //                                                 Grid sbottom analysis
   //======================================================================================================================

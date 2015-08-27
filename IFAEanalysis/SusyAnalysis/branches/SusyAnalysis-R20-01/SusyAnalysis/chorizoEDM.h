@@ -56,11 +56,10 @@ xAOD::TStore* m_store;
 xAOD::JetContainer* m_goodJets;
 xAOD::JetContainer* m_smdJets;
 
+xAOD::IParticleContainer* m_inv_el; //invisible electrons going into MET calculation
+xAOD::IParticleContainer* m_inv_mu; //invisible muons going into MET calculation
+xAOD::IParticleContainer* m_inv_ph; //invisible photons going into MET calculation
 
-/* const xAOD::JetContainer* m_jets; */
-/* const xAOD::ElectronContainer* m_electrons; */
-/* const xAOD::MuonContainer* m_muons; */
-/* const xAOD::PhotonContainer* m_photons; */
 
 const xAOD::JetContainer* m_truth_jets;
 

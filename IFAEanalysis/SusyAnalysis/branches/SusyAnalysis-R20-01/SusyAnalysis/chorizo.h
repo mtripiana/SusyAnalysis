@@ -605,7 +605,6 @@ private:
   TString Jet_Tagger; //!
   TString Jet_TaggerOp; //!
   TString Jet_TaggerOp2;   //!
-  TString Jet_Tagger_Collection; //!
 
   //met
   TString METCollection; //!
@@ -706,23 +705,23 @@ private:
   float   averageIntPerXing;
   
   //- Weights  
-  float   w;
-  float   w_average;
-  float   MC_w;
-  float   PDF_w;
-  float   pileup_w;
-  float   bosonVect_w;
-  float   Trigger_w;
-  float   Trigger_w_avg;
-  float   e_SF;
-  float   m_SF;
-  float   ph_SF;
-  float   e_SFu;
-  float   m_SFu;
-  float   ph_SFu;
-  float   e_SFd;
-  float   m_SFd;
-  float   ph_SFd;
+  double   w;
+  double   w_average;
+  double   MC_w;
+  float    PDF_w;
+  float    pileup_w;
+  float    bosonVect_w;
+  float    Trigger_w;
+  float    Trigger_w_avg;
+  float    e_SF;
+  float    m_SF;
+  float    ph_SF;
+  float    e_SFu;
+  float    m_SFu;
+  float    ph_SFu;
+  float    e_SFd;
+  float    m_SFd;
+  float    ph_SFd;
 
   //- ttbar reweighting
   float ttbar_weight;

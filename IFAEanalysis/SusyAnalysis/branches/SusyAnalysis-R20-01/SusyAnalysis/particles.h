@@ -19,8 +19,6 @@ namespace Particles{
     Particle();
     ~Particle();
 
-    TLorentzVector p4const;
-
     int    index;
     bool   gev;
     int    type;
@@ -88,6 +86,9 @@ namespace Particles{
   public:
     Jet();
     ~Jet();
+    TLorentzVector p4const;
+    float ptorig;
+
     bool                    isbjet; //--- as from SUSYTools (decoration)
     float                   MV1;
     float                   MV2c20;

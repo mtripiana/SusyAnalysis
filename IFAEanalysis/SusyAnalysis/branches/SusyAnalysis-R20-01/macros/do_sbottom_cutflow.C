@@ -37,11 +37,13 @@ std::vector<TString> getTokens(TString line, TString delim){
   return vtokens;
 }
 
-void do_sbottom_cutflow(TString sample=""){
+void do_sbottom_cutflow(TString sample="", bool isTruth=false){
   
+  N_in=-1;
+  N_last=-1;
+
   if(sample=="")
     sample = "/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/Nom_ttbar_cutflow.root";
-  //    sample = "/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/Nom_test_sbottom.root";
 
   //--- Config
   TString myvar   = "mct";
@@ -51,7 +53,12 @@ void do_sbottom_cutflow(TString sample=""){
   
   TString base    = weights+"*( 1 ";
 
-  TString trigItem = "HLT_xe80";
+  //--- Trigger
+  std::vector<TString> trigItemsSR;  // make OR of all these items!
+  trigItemsSR.push_back("HLT_xe80");
+
+  std::vector<TString> trigItemsCR;  // make OR of all these items!
+
 
   //load trigger map
   std::vector<TString> trigchains;                                                                                                                                                  
@@ -60,17 +67,53 @@ void do_sbottom_cutflow(TString sample=""){
 
   std::map<int,TString> trigmap{};
   auto ic=0;
-  int trig_idx=-1;
+  std::vector<int> trig_idxSR; trig_idxSR.clear();
+  std::vector<int> trig_idxCR; trig_idxCR.clear();
   for(const auto& s : trigchains){
-    if(trigItem == s) trig_idx = ic;
+
+    for(auto t : trigItemsSR)
+      if(t == s) trig_idxSR.push_back(ic);
+
+    for(auto t : trigItemsCR)
+      if(t == s) trig_idxCR.push_back(ic);
     
     trigmap[ic] = s;
     ic++;
   }
-  
-  TString trigCut = "";
-  if(trig_idx>=0) trigCut = Form(" && isTrigger[%d] ", trig_idx);
-  else cout << "** WARNING **   Trigger " << trigItem << " not found! Trigger won't be apply for now... " << endl;
+
+  //create trigger cut  
+  TString trigCutSR = "";
+  if(trigItemsSR.size() && trig_idxSR.size() == trigItemsSR.size()){
+    trigCutSR = Form(" && ( isTrigger[%d] ", trig_idxSR[0]);
+    for(unsigned int ic=1; ic < trig_idxSR.size(); ic++)
+      trigCutSR += Form(" || isTrigger[%d] ", trig_idxSR[ic]);
+    trigCutSR += ") ";
+  }
+  else cout << "** WARNING **   Trigger(s) not found! Trigger won't be apply in SR for now... " << endl;
+
+  TString trigCutCR = "";
+  if(trigItemsCR.size() && trig_idxCR.size() == trigItemsCR.size()){
+    trigCutCR = Form(" && ( isTrigger[%d] ", trig_idxCR[0]);
+    for(unsigned int ic=1; ic < trig_idxCR.size(); ic++)
+      trigCutCR += Form(" || isTrigger[%d] ", trig_idxCR[ic]);
+    trigCutCR += ") ";
+  }
+  else cout << "** WARNING **   Trigger(s) not found! Trigger won't be apply in CR for now... " << endl;
+ 
+  //SILVIA ?
+  // trigCut = " && (isTrigger[61] || isTrigger[62]) ";
+
+  if(isTruth){
+    trigCutSR="";
+    trigCutCR="";
+  }
+
+
+  //--- MET
+  TString metFlv = "11";   //VisMuTST
+  if(isTruth)
+    metFlv = "0";   //NonInt
+
 
   TChain *ch = new TChain("AnalysisTree");
   ch->Add(sample);
@@ -99,50 +142,51 @@ void do_sbottom_cutflow(TString sample=""){
   print(ch, "TileGood", myvar, base+" && isGRL && isLarGood && isTileGood)");  
   print(ch, "TileTrip", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip)");  
   print(ch, "CoreFlag", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag)");  
-  //print(ch, "Trigger", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCut+")");  //NO TRIGGER FOR NOW
-  print(ch, "Trigger", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]))");  //NO TRIGGER FOR NOW
-  
-  print(ch, "Vertex", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk)"); 
-  print(ch, "JetCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID)"); 
-  print(ch, "CosmicVeto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2)"); 
-  print(ch, "MuonCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon)"); 
+  print(ch, "Trigger", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+")");
+    
+  print(ch, "Vertex", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk)"); 
+  print(ch, "JetCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID)"); 
+  print(ch, "CosmicVeto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2)"); 
+  print(ch, "MuonCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon)"); 
   
   cout << "---SR----------------------------------------------------------------------------------------------------------------------------" << endl;
-  print(ch, "MET (loose)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100.)");  
-  print(ch, "1 < Njets < 5", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5)");  
+  print(ch, "MET (loose)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100.)");  
+  print(ch, "1 < Njets < 5", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5)");  
   
-  print(ch, "jpt1>50, |eta|<2.8", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50.)");  
-  print(ch, "jet veto (jpt4<50, |eta|<2.8)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50.)");  
-  print(ch, "2 bjets (MV2c20@77%)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2)");    
+  print(ch, "jpt1>50, |eta|<2.8", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50.)");  
+  print(ch, "jet veto (jpt4<50, |eta|<2.8)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50.)");  
+  print(ch, "2 bjets (MV2c20@77%)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2)");    
   
-  print(ch, "2 leading bjets (MV2c20@77%)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5)");    
+  print(ch, "leading bjet (MV2c20@77%)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && fabs(j_eta[0])<2.5)");    
 
-  print(ch, "min dPhi(jets,MET)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4)");    
+  //  print(ch, "2 leading bjets (MV2c20@77%)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && fabs(j_eta[0])<2.5 && ((j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[1])<2.5) || (j_tag_MV2c20[2]>-0.4434 && fabs(j_eta[2])<2.5)))");    
 
-  print(ch, "MET/meff", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25)");    
-  print(ch, "mct (loose)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && mct>150.)");    
-  print(ch, "lepton veto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0)");    
-  print(ch, "MET", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met[11]>250.)");    
-  print(ch, "Leading jet pt", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met[11]>250. && j_pt[0]>130.)");    
-  print(ch, "mbb", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met[11]>250. && j_pt[0]>130. && mjj>200.)");    
-  print(ch, "mct", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met[11]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met[11]>250. && j_pt[0]>130. && mjj>200. && mct>400.)");    
+  print(ch, "min dPhi(jets,MET)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4)");    
+
+  print(ch, "MET/meff", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25)");    
+  print(ch, "mct (loose)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && mct>150.)");    
+  print(ch, "lepton veto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0)");    
+  print(ch, "MET", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met["+metFlv+"]>250.)");    
+  print(ch, "Leading jet pt", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met["+metFlv+"]>250. && j_pt[0]>130.)");    
+  print(ch, "mbb", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met["+metFlv+"]>250. && j_pt[0]>130. && mjj>200.)");    
+  print(ch, "mct", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && fabs(j_eta[0])<2.5 && fabs(j_eta[1])<2.5 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && mct>150. && (eb_N+mb_N)==0 && met["+metFlv+"]>250. && j_pt[0]>130. && mjj>200. && mct>400.)");    
 
 
   cout << "---CR----------------------------------------------------------------------------------------------------------------------------" << endl;
-  print(ch, "1 lepton (e or mu)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0) || (e_N==0 && m_N==1)))"); 
-  print(ch, "pT lepton", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35.) || (e_N==0 && m_N==1 && m_pt[0]>26.)))"); 
-  print(ch, "MET 80", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35.) || (e_N==0 && m_N==1 && m_pt[0]>26.)) && met[11]>80.)"); 
-  print(ch, "MT", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80.)"); 
-  print(ch, "2,3,4 jets", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5)"); 
-  print(ch, "pt2", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50.)"); 
-  print(ch, "pt4", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50.)"); 
-  print(ch, "2 b-jets", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2)"); 
-  print(ch, "leading b-jets", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434)"); 
-  print(ch, "min dPhi", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets[11]>0.4)"); 
-  print(ch, "met/meff", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25)"); 
-  print(ch, "MET120", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && met[11]>120.)"); 
-  print(ch, "mbb", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && met[11]>120. && mbb>200.)"); 
-  print(ch, "mct", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && (isTrigger[61] || isTrigger[62]) && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met[11]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets[11]>0.4 && met[11]/(met[11]+j_pt[0]+j_pt[1])>0.25 && met[11]>120. && mbb>200. && mct>120.)"); 
+  print(ch, "1 lepton (e or mu)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0) || (e_N==0 && m_N==1)))"); 
+  print(ch, "pT lepton", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35.) || (e_N==0 && m_N==1 && m_pt[0]>26.)))"); 
+  print(ch, "MET 80", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35.) || (e_N==0 && m_N==1 && m_pt[0]>26.)) && met["+metFlv+"]>80.)"); 
+  print(ch, "MT", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80.)"); 
+  print(ch, "2,3,4 jets", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5)"); 
+  print(ch, "pt2", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50.)"); 
+  print(ch, "pt4", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50.)"); 
+  print(ch, "2 b-jets", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2)"); 
+  print(ch, "leading b-jets", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434)"); 
+  print(ch, "min dPhi", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4)"); 
+  print(ch, "met/meff", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25)"); 
+  print(ch, "MET120", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && met["+metFlv+"]>120.)"); 
+  print(ch, "mbb", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && met["+metFlv+"]>120. && mbb>200.)"); 
+  print(ch, "mct", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutCR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && ((e_N==1 && m_N==0 && e_pt[0]>35. && e_MT_tst_vmu>30. && e_MT_tst_vmu<100.) || (e_N==0 && m_N==1 && m_pt[0]>26. && m_MT_tst_vmu>30. && m_MT_tst_vmu<100.)) && met["+metFlv+"]>80. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && bj_N==2 && j_tag_MV2c20[0]>-0.4434 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25 && met["+metFlv+"]>120. && mbb>200. && mct>120.)"); 
 
 
 }

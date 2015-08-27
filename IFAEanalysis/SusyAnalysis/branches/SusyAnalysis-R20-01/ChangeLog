@@ -1,3 +1,20 @@
+2015-08-27 Martin <tripiana@cern.ch>
+	* Add multiple GRLs in jOption
+
+2015-08-21 Martin <tripiana@cern.ch>
+	* Fix truth code
+	* Fix met_top units
+	* Move to double precision for MC_w
+	* Update do_sbottom_cutflow
+	* Add GRL for 25ns
+
+2015-08-18 Martin <tripiana@cern.ch>
+	* Move to SUSY,2.3.23
+	* Remove obsolete Jet_Tagger_Collection att from jOptions
+
+2015-08-04 Martin <tripiana@cern.ch>
+	* Fix signal cross section reading (from SUSYTools now).
+
 2015-08-02 Martin <tripiana@cern.ch>
 	* Add met_topo variable for OR needed for new MET filtered ttbar and Wt samples
 	* Add DM samples

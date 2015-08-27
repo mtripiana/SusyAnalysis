@@ -6,14 +6,14 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">false</Mode>
+    <Mode name="DoCutFlow">true</Mode>
     <Mode name="StopTL">false</Mode>    
-    <Mode name="TileDump">true</Mode>    
+    <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
-    <Path name="RootFilesFolder">/nfs/at3/scratch2/tripiana/anafiles/</Path>
-    <Path name="PartialRootFilesFolder">/tmp/</Path>
-    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>
-    <Pileup>
+    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
+    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v63-pro18-01_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml,data15_13TeV.periodAllYear_DetStatus-v64-pro19_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path> <!-- - 50ns + 25ns -->
+     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
       <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
       <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
@@ -45,7 +45,7 @@
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
       <doBjetOR>true</doBjetOR>
-      <doPhotons>true</doPhotons>
+      <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
     <Truth>
@@ -53,8 +53,8 @@
     </Truth>
     
     <Trigger>
-      <SaveExtended>true</SaveExtended>
-      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM12,L1_MU10,L1_J50</chains> 
+      <SaveExtended>false</SaveExtended>
+      <chains>HLT_xe.*</chains>
     </Trigger>
 
     <Vertex>
@@ -76,9 +76,9 @@
 
     <Booking>
       <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
-      <ElSignal>5</ElSignal>   <!-- number of signal electrons to be saved -->
+      <ElSignal>2</ElSignal>   <!-- number of signal electrons to be saved -->
       <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
-      <MuSignal>5</MuSignal> <!-- number of signal muons to be saved -->
+      <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
       <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
       <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
@@ -89,8 +89,8 @@
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.47</RecoEtaCut>
 
-      <baseID>LooseLLH</baseID>
-      <ID>TightLLH</ID>
+      <baseID>LooseLH</baseID>
+      <ID>TightLH</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
@@ -119,7 +119,7 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>Cone20</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_g140_loose</triggers>
 
@@ -132,15 +132,15 @@
       <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
       <PreselPtCut>20000.</PreselPtCut>
       <PreselEtaCut>10</PreselEtaCut>
-      <RecoPtCut>20000.</RecoPtCut>
+      <RecoPtCut>35000.</RecoPtCut>
       <RecoEtaCut>2.8</RecoEtaCut>
-      <RecoJVTCut>-999</RecoJVTCut>
+      <RecoJVTCut>0.64</RecoJVTCut>
 
       <JESNPset>1</JESNPset>
 
       <!--- For the c/b-tagger -->
       <!--      <Tagger>IP3DSV1</Tagger> -->
-      <!--      <TaggerOpPoint>1_85</TaggerOpPoint> -->
+      <!--      <Tagge2rOpPoint>1_85</TaggerOpPoint> -->
       <!--      <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
 
       <!--      <Tagger>MV1</Tagger> -->
@@ -149,10 +149,10 @@
       <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
 
       <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
-
-      <TaggerCollection>AntiKt4TopoEMnoJVF</TaggerCollection> -->  <!-- remove? -->
+      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
+      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 80% -->
+      <!-- <TaggerOpPoint2>-0_7887</TaggerOpPoint2> --> <!-- 85% -->
+      
     </Jet>
 
     <Etmiss>

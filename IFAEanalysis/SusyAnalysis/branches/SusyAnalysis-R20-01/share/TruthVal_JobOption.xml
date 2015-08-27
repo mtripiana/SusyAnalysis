@@ -8,10 +8,11 @@
     <Mode name="GeneratePileupFiles">false</Mode>
     <Mode name="DoCutFlow">true</Mode>
     <Mode name="StopTL">false</Mode>    
+    <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
     <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
-    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>
+    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v63-pro18-01_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>
     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
       <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
@@ -40,7 +41,7 @@
   <ObjectDefinition>
 
     <OverlapRemoval>
-      <Enable>true</Enable>
+      <Enable>false</Enable>
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
       <doBjetOR>true</doBjetOR>
@@ -133,29 +134,13 @@
       <PreselEtaCut>10</PreselEtaCut>
       <RecoPtCut>20000.</RecoPtCut>
       <RecoEtaCut>2.8</RecoEtaCut>
+      <RecoJVTCut>0.64</RecoJVTCut>
 
       <JESNPset>1</JESNPset>
 
-      <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
-      <Path name="BtagCalib">SUSYTools/</Path>
-      <dPhiMin>0.4</dPhiMin>
-      <JVFMin>0.5</JVFMin>
-
-      <!--- For the c/b-tagger -->
-      <!--      <Tagger>IP3DSV1</Tagger> -->
-      <!--      <TaggerOpPoint>1_85</TaggerOpPoint> -->
-      <!--      <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
-
-      <!--      <Tagger>MV1</Tagger> -->
-      <!--      <TaggerOpPoint>0_7892</TaggerOpPoint> -->
-      <!--      <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
-      <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
-
       <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
-
-      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->  <!-- remove? -->
+      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
+      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 80% -->
     </Jet>
 
     <Etmiss>
@@ -168,7 +153,7 @@
       <Term name="doRefGamma">true</Term>
       <Term name="doRefTau">false</Term>
       <Term name="doRefJet">true</Term>
-      <Term name="doMuons">false</Term>
+      <Term name="doMuons">true</Term>
       <Term name="doSoftTerms">true</Term>
     </Etmiss>
 

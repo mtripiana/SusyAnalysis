@@ -150,10 +150,8 @@
       <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
 
       <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
-
-      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->  <!-- remove? -->
+      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
+      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 80% -->
     </Jet>
 
     <Etmiss>

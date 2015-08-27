@@ -507,9 +507,15 @@ int main( int argc, char* argv[] ) {
       (*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
     }                                                          
   }
+  TString projectName="mc15_13TeV";
+  if(s_ecm=="8") projectName="mc12_8TeV";
+  
   //  then override some meta-data from SUSYTools
-  if(!isData)
-    readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+  if(!isData){
+    // readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+    readSusyMetaDir(sh,Form("$ROOTCOREBIN/data/SUSYTools/%s", projectName.Data()));
+  }
+
   
   //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 

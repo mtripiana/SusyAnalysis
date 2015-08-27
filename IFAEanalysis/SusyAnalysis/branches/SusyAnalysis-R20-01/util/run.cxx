@@ -496,10 +496,14 @@ int main( int argc, char* argv[] ) {
 	  (*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
 	}                                                          
       }
-      //  then override some meta-data from SUSYTools
-      if(!isData)
-	readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+      TString projectName="mc15_13TeV";
+      if(s_ecm=="8") projectName="mc12_8TeV";
 
+      //  then override some meta-data from SUSYTools
+      if(!isData){
+	//readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+	readSusyMetaDir(sh,Form("$ROOTCOREBIN/data/SUSYTools/%s", projectName.Data()));
+      }
 
       if(!isData)
 	weights.push_back( getLumiWeight(sh.at(0)) );

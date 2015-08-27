@@ -138,7 +138,7 @@ void addAverageWeight(TString fileName){
   TBranch *b_MC_w;
   TBranch *b_pileup_w;
 
-  float MC_w_loc=1.;
+  double MC_w_loc=1.;
   float pileup_w_loc=1.;
 
   t3->SetBranchAddress("MC_w", &MC_w_loc, &b_MC_w);
@@ -242,7 +242,7 @@ void addAntiWeightToTree(TString fileName, bool isData){
   int   m_N_loc=0;
   int   ph_N_loc=0;
   float w_loc=1.;
-  float MC_w_loc=1.;
+  double MC_w_loc=1.;
   float pileup_w_loc=1.;
 
   t3->SetBranchAddress("e_SF", &e_SF_loc, &b_e_SF);
@@ -367,6 +367,19 @@ void addAntiWeightToTree(TString fileName, bool isData){
   f5->Close();
 }
 
+
+void hadd(std::vector< TString> filelist, TString outfile){
+
+  TString torun = "hadd -f "+outfile+" ";
+
+  for(auto file : filelist){
+    torun += file;
+    torun += "  ";
+  }
+  cout << "HADD command : " << torun.Data() << endl; 
+  system(torun.Data());
+
+}
 
 
 void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TString outfile, bool isData ){

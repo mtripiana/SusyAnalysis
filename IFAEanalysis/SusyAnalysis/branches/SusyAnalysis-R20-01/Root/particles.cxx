@@ -173,7 +173,7 @@ bool Jet::isBTagged_70eff(TString Tagger){
 
 bool Jet::isBTagged_77eff(TString Tagger){ 
   
-  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.4434); //80% b eff  
+  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.4434); //77% b eff  
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
