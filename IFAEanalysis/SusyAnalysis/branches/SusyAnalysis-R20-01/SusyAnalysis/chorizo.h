@@ -310,8 +310,9 @@ private:
   BTaggingSelectionTool *tool_bsel77; //! //new btagging selector tool
   BTaggingSelectionTool *tool_bsel85; //! //new btagging selector tool
 
-  BTaggingEfficiencyTool* tool_btag;  //! //70%op
-  BTaggingEfficiencyTool* tool_btag2; //! //80%op
+  BTaggingEfficiencyTool* tool_btag70;  //! //70%op
+  BTaggingEfficiencyTool* tool_btag77;  //! //77%op
+  BTaggingEfficiencyTool* tool_btag85;  //! //85%op  
 
   BTagEfficiencyReader* tool_btag_truth1; //!
   BTagEfficiencyReader* tool_btag_truth2; //!
@@ -603,8 +604,10 @@ private:
   float Jet_RecoJVTCut; //!
   bool  Jet_DoOR; //! 
   TString Jet_Tagger; //!
-  TString Jet_TaggerOp; //!
-  TString Jet_TaggerOp2;   //!
+  TString Jet_TaggerOp70;   //!
+  TString Jet_TaggerOp77;   //!
+  TString Jet_TaggerOp85;   //!  
+  TString Jet_TaggerCollection; //!
 
   //met
   TString METCollection; //!
@@ -722,6 +725,16 @@ private:
   float    e_SFd;
   float    m_SFd;
   float    ph_SFd;
+  float   eb_SF;
+  float   mb_SF;
+  float   phb_SF;
+  float   eb_SFu;
+  float   mb_SFu;
+  float   phb_SFu;
+  float   eb_SFd;
+  float   mb_SFd;
+  float   phb_SFd;
+
 
   //- ttbar reweighting
   float ttbar_weight;
@@ -911,7 +924,7 @@ private:
   VFloat j_tag_MV2c20;
   VInt   j_btruth_70;
   VInt   j_btruth_77;
-  VInt   j_btruth_80;
+  VInt   j_btruth_85;
   VInt   j_bflat_70;
   VInt   j_bflat_77;
   VInt   j_bflat_85;
@@ -935,14 +948,21 @@ private:
   VFloat j2_cl_emf;
 
   //- Btagging
-  int   bj_N;
-  int   bj_Ne80;
-  float btag_weight_total;
-  float btag_weight_total_80eff;
+  int   bj_N_77fc;
+  int   bj_N_70fc;
+  int   bj_N_85fc;  
+  float btag_weight_total_70fc;  
+  float btag_weight_total_77fc;
+  float btag_weight_total_85fc;
 
   int bj_Nt70;
   int bj_Nt77;
   int bj_Nt80;
+  
+  int bj_Nf70;
+  int bj_Nf77;
+  int bj_Nf85;  
+  
   
   //- MET
   VFloat met; 

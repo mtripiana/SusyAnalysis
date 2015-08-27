@@ -10,7 +10,6 @@
 #include <fstream>
 #include <EventLoop/StatusCode.h>
 
-
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
 
@@ -126,8 +125,9 @@ chorizo :: chorizo ()
     tool_bsel70(0), 
     tool_bsel77(0), 
     tool_bsel85(0), 
-    tool_btag(0), 
-    tool_btag2(0),
+    tool_btag70(0),    
+    tool_btag77(0), 
+    tool_btag85(0),
     tool_btag_truth1(0),
     tool_btag_truth2(0),
     tool_btag_truth3(0),
@@ -274,12 +274,23 @@ void chorizo :: bookTree(){
       m_atree->Branch ("e_SF", &e_SF,"e_SF/F");
       m_atree->Branch ("m_SF", &m_SF,"m_SF/F");
       m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
+      m_atree->Branch ("eb_SF", &eb_SF,"eb_SF/F");
+      m_atree->Branch ("mb_SF", &mb_SF,"mb_SF/F");
+      m_atree->Branch ("phb_SF", &phb_SF,"phb_SF/F");      
       m_atree->Branch ("e_SFu", &e_SFu,"e_SFu/F");
       m_atree->Branch ("m_SFu", &m_SFu,"m_SFu/F");
       m_atree->Branch ("ph_SFu", &ph_SFu,"ph_SFu/F");
       m_atree->Branch ("e_SFd", &e_SFd,"e_SFd/F");
       m_atree->Branch ("m_SFd", &m_SFd,"m_SFd/F");
       m_atree->Branch ("ph_SFd", &ph_SFd,"ph_SFd/F");
+      m_atree->Branch ("eb_SFu", &eb_SFu,"eb_SFu/F");
+      m_atree->Branch ("mb_SFu", &mb_SFu,"mb_SFu/F");
+      m_atree->Branch ("phb_SFu", &phb_SFu,"phb_SFu/F");
+      m_atree->Branch ("eb_SFd", &eb_SFd,"eb_SFd/F");
+      m_atree->Branch ("mb_SFd", &mb_SFd,"mb_SFd/F");
+      m_atree->Branch ("phb_SFd", &phb_SFd,"phb_SFd/F");      
+      
+      
 
       //boson 
       m_atree->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
@@ -471,10 +482,14 @@ void chorizo :: bookTree(){
       }
 
       //btagging
-      m_atree->Branch("bj_N",&bj_N,"bj_N/I", 10000);
-      m_atree->Branch("bj_Ne80",&bj_Ne80,"bj_Ne80/I", 10000);
-      m_atree->Branch("btag_weight_total",&btag_weight_total,"btag_weight_total/F", 10000);
-      m_atree->Branch("btag_weight_total_80eff",&btag_weight_total_80eff,"btag_weight_total_80eff/F", 10000);
+      m_atree->Branch("bj_N_70fc",&bj_N_70fc,"bj_N_70fc/I", 10000);
+      m_atree->Branch("bj_N_77fc",&bj_N_77fc,"bj_N_77fc/I", 10000);
+      m_atree->Branch("bj_N_85fc",&bj_N_85fc,"bj_N_85fc/I", 10000);
+     
+      m_atree->Branch("btag_weight_total_70fc",&btag_weight_total_70fc,"btag_weight_total_70fc/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc",&btag_weight_total_77fc,"btag_weight_total_77fc/F", 10000);
+      m_atree->Branch("btag_weight_total_85fc",&btag_weight_total_85fc,"btag_weight_total_85fc/F", 10000);
+
 
       //m_atree->Branch("j_tag_MV1",&j_tag_MV1);
       m_atree->Branch("j_tag_MV2c20",&j_tag_MV2c20);
@@ -485,8 +500,12 @@ void chorizo :: bookTree(){
 
       m_atree->Branch("j_btruth_70",&j_btruth_70);
       m_atree->Branch("j_btruth_77",&j_btruth_77);
-      m_atree->Branch("j_btruth_80",&j_btruth_80);
-
+      m_atree->Branch("j_btruth_85",&j_btruth_85);
+      
+      m_atree->Branch("bj_Nf70",&bj_Nf70,"bj_Nf70/I", 10000);
+      m_atree->Branch("bj_Nf77",&bj_Nf77,"bj_Nf77/I", 10000);
+      m_atree->Branch("bj_Nf85",&bj_Nf85,"bj_Nf85/I", 10000);
+      
       m_atree->Branch("j_bflat_70",&j_bflat_70);
       m_atree->Branch("j_bflat_77",&j_bflat_77);
       m_atree->Branch("j_bflat_85",&j_bflat_85);
@@ -514,8 +533,8 @@ void chorizo :: bookTree(){
 
       //event variables
       //dphi
-      //m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
-      //m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
+      m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
+      m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
       //m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
       //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
       
@@ -531,14 +550,14 @@ void chorizo :: bookTree(){
       m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
   
       m_atree->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
-      //m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
-      //m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
+      m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
+      m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
       //m_atree->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
 
       //dR
       m_atree->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
-      //m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
-      //m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
+      m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
+      m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
 
 //       m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
 //       m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
@@ -580,22 +599,22 @@ void chorizo :: bookTree(){
 //       m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
 //       
 //       //Razor
-//       m_atree->Branch("MR",&MR,"MR/F", 10000);
-//       m_atree->Branch("MTR",&MTR);
-//       m_atree->Branch("R",&R);
-//             
-//       m_atree->Branch("shatR",&shatR);
-//       m_atree->Branch("gaminvR",&gaminvR);
-//       m_atree->Branch("mdeltaR",&mdeltaR);
-//       m_atree->Branch("cosptR",&cosptR);
+      m_atree->Branch("MR",&MR,"MR/F", 10000);
+      m_atree->Branch("MTR",&MTR);
+      m_atree->Branch("R",&R);
+             
+      m_atree->Branch("shatR",&shatR);
+      m_atree->Branch("gaminvR",&gaminvR);
+      m_atree->Branch("mdeltaR",&mdeltaR);
+      m_atree->Branch("cosptR",&cosptR);
       
       //Z candidate 
-//      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
-//      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
-//      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
-//      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
-//      m_atree->Branch("lep3_MT",&lep3_MT);
-//      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+      m_atree->Branch("lep3_MT",&lep3_MT);
+      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
 
 
       //top reconstruction
@@ -943,7 +962,7 @@ void chorizo :: InitVars()
   isBadID = false;                   
   isMetCleaned = true; //CHECK_ME
   isTrigger.clear();
-  isVertexOk = true;                
+  isVertexOk = false;                
   isLarGood = true;                 
   isTileGood = true;                
   isTileTrip = false;                
@@ -965,12 +984,21 @@ void chorizo :: InitVars()
   e_SF = 1.;
   m_SF = 1.;
   ph_SF = 1.;
+  eb_SF = 1.;
+  mb_SF = 1.;
+  phb_SF = 1.;  
   e_SFu = 1.;
   m_SFu = 1.;
   ph_SFu = 1.;
   e_SFd = 1.;
   m_SFd = 1.;
   ph_SFd = 1.;
+  eb_SFu = 1.;
+  mb_SFu = 1.;
+  phb_SFu = 1.;
+  eb_SFd = 1.;
+  mb_SFd = 1.;
+  phb_SFd = 1.;
 
   //- Top    
   ttbar_weight = 1.;                  
@@ -1167,10 +1195,13 @@ void chorizo :: InitVars()
   };
                                                
   //- Btagging                                 
-  bj_N = 0;                               
-  bj_Ne80 = 0;                               
-  btag_weight_total = 1.;
-  btag_weight_total_80eff = 1.;
+  bj_N_70fc = 0;                               
+  bj_N_77fc = 0; 
+  bj_N_85fc = 0; 
+                                  
+  btag_weight_total_70fc = 1.;
+  btag_weight_total_77fc = 1.;
+  btag_weight_total_85fc = 1.;
 
   bj_Nt70 = 0;                               
   bj_Nt77 = 0;                               
@@ -1178,7 +1209,11 @@ void chorizo :: InitVars()
    
   j_btruth_70.clear();
   j_btruth_77.clear();
-  j_btruth_80.clear();
+  j_btruth_85.clear();
+  
+  bj_Nf70 = 0;                               
+  bj_Nf77 = 0;                               
+  bj_Nf85 = 0;   
 
   j_bflat_70.clear();
   j_bflat_77.clear();
@@ -1576,9 +1611,12 @@ void chorizo :: ReadXML(){
   
   Info(whereAmI, Form(" - Jets") );
   JetCollection=TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
-  Jet_Tagger       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
-  Jet_TaggerOp     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint").c_str());
-  Jet_TaggerOp2    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint2").c_str());      
+  Jet_Tagger        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
+  Jet_TaggerOp70    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint70").c_str());
+  Jet_TaggerOp85    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint85").c_str());      
+  Jet_TaggerOp77    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint77").c_str());      
+  Jet_TaggerCollection    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerCollection").c_str());      
+  
   
   Jet_PreselPtCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselPtCut");
   Jet_PreselEtaCut = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselEtaCut");
@@ -1852,30 +1890,41 @@ EL::StatusCode chorizo :: initialize ()
   //CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName",maindir+"/xAODBTaggingEfficiency/cutprofiles_14072015.root") );
   CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName", FlvTagCutFN) );
   CHECK( tool_bsel85->setProperty("TaggerName","MV2c20") );
-  // CHECK( tool_bsel85->setProperty("OperatingPoint","-0.0436") );
+  //CHECK( tool_bsel85->setProperty("OperatingPoint","-0.0436") );
   CHECK( tool_bsel85->setProperty("OperatingPoint","FlatBEff_85") );
   CHECK( tool_bsel85->setProperty("JetAuthor","AntiKt4EMTopoJets") );
   CHECK( tool_bsel85->initialize() );
 
-  //  TString BTagPath = gSystem->ExpandPathName("$ROOTCOREBIN/../SUSYTools/data/2015-PreRecomm-13TeV-MC12-CDI_July17-v1.root");
-  TString BTagSFPath = "xAODBTaggingEfficiency/13TeV/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root";
 
-  tool_btag  = new BTaggingEfficiencyTool("BTag77");
-  TString jetauthor = JetCollection+"Jets";
-  CHECK( tool_btag->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data()) );
-  CHECK( tool_btag->setProperty("JetAuthor",           jetauthor.Data()) );
-  CHECK( tool_btag->setProperty("ScaleFactorFileName", BTagSFPath.Data()) );
-  //  CHECK( tool_btag->setProperty("SystematicsStrategy", "Envelope") );
-  CHECK( tool_btag->initialize() );
-   
-  tool_btag2  = new BTaggingEfficiencyTool("BTag85");
-  CHECK( tool_btag2->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag2->setProperty("OperatingPoint",      Jet_TaggerOp2.Data()) );
-  CHECK( tool_btag2->setProperty("JetAuthor",           jetauthor.Data()) );
-  CHECK( tool_btag2->setProperty("ScaleFactorFileName", BTagSFPath.Data()) );
-  //  CHECK( tool_btag2->setProperty("SystematicsStrategy", "Envelope") );
-  CHECK( tool_btag2->initialize() );
+  TString BTagFile = maindir+"/SusyAnalysis/BTAG/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root";
+ 
+  tool_btag70 = new BTaggingEfficiencyTool("BTagSF_EMTopoJets");
+  CHECK( tool_btag70->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag70->setProperty("OperatingPoint",      Jet_TaggerOp70.Data()) );
+  CHECK( tool_btag70->setProperty("JetAuthor",           Jet_TaggerCollection.Data()) ); 
+  CHECK( tool_btag70->setProperty("ScaleFactorFileName", BTagFile.Data()) );
+  CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
+  CHECK( tool_btag70->initialize() ); 
+  tool_btag70->msg().setLevel( MSG::FATAL );  
+ 
+  tool_btag77 = new BTaggingEfficiencyTool("BTagSF_EMTopoJets");
+  CHECK( tool_btag77->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag77->setProperty("OperatingPoint",      Jet_TaggerOp77.Data()) );
+  CHECK( tool_btag77->setProperty("JetAuthor",           Jet_TaggerCollection.Data()) ); 
+  CHECK( tool_btag77->setProperty("ScaleFactorFileName", BTagFile.Data()) );
+  CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag77->initialize() );
+  tool_btag77->msg().setLevel( MSG::FATAL );  
+
+  tool_btag85 = new BTaggingEfficiencyTool("BTagSF_EMTopoJets");
+  CHECK( tool_btag85->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag85->setProperty("OperatingPoint",      Jet_TaggerOp85.Data()) );
+  CHECK( tool_btag85->setProperty("JetAuthor",           Jet_TaggerCollection.Data()) ); 
+  CHECK( tool_btag85->setProperty("ScaleFactorFileName", BTagFile.Data()) );
+  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag85->initialize() );
+  tool_btag85->msg().setLevel( MSG::FATAL );
+
    
   tool_btag_truth1 = new BTagEfficiencyReader();
   tool_btag_truth2 = new BTagEfficiencyReader();
@@ -2220,7 +2269,6 @@ EL::StatusCode chorizo :: loop ()
   }
 
   m_eventCounter++;
-
   //----------------------------
   // Event information
   //--------------------------- 
@@ -2292,7 +2340,6 @@ EL::StatusCode chorizo :: loop ()
   //PURW
   // if(isMC && applyPURW)
   //   CHECK( tool_purw->apply(*eventInfo) );  //it does already the filling in 'ConfigMode'
-
   //--- Generate Pileup file??
   if (genPUfile && isMC){
     if (RunNumber==0){
@@ -2302,15 +2349,13 @@ EL::StatusCode chorizo :: loop ()
     
     if (!doPUTree)         
       return nextEvent();
-
     //if (isMC) pileup_w = acc_PUweight(*eventInfo);
-    if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(222500, 410000, averageIntPerXing);    
-    //if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);      
+    //if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(222500, 410000, averageIntPerXing);    
+    if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);      
     //    output->setFilterPassed ();
     //if (!isMC) averageIntPerXing = tool_purw->GetLumiBlockMu(RunNumber,lb);
     return nextEvent();
   }
-  
   //--- Weights for MC
   if (isMC){
 
@@ -2372,14 +2417,13 @@ EL::StatusCode chorizo :: loop ()
 
     //---pileup weight 
     if(applyPURW)
-      //if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
-      if (isMC) pileup_w = tool_purw->GetCombinedWeight(222510.5, 410000, averageIntPerXing);
+       if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
+       //if (isMC) pileup_w = tool_purw->GetCombinedWeight(222510.5, 410000, averageIntPerXing);
     //--- For histograms : combine all the weights in a single variable //CHECK_ME
     if (!doAnaTree) 
       w *= (MC_w*pileup_w);     
 
   }
-  
   //--- Generator level uncertainites for Znunu+jet Sherpa 
   //    --> scaleVariationWeight
   this->w *= GetGeneratorUncertaintiesSherpa();
@@ -2393,7 +2437,8 @@ EL::StatusCode chorizo :: loop ()
   if(! passMCor() ){ //remove overlap among filtered samples
     //vetoed MC event! Just leave...
     return nextEvent();
-  }
+  }  
+    
 
   //------------------------ ttbar reweighting ---------------------------
   if (isMC) {
@@ -2428,6 +2473,7 @@ EL::StatusCode chorizo :: loop ()
     nVertex++;
   }
   //  this->isVertexOk = (nVertex > 0);
+
 
 
   //--- trigger debugging (check all MET triggers in menu)
@@ -2497,15 +2543,15 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Quality cuts applied only on data
   if (!this->isMC) {
-    this->isLarGood = (eventInfo->eventFlags(xAOD::EventInfo::LAr) != xAOD::EventInfo::Error);
-    this->isTileGood = (eventInfo->eventFlags(xAOD::EventInfo::Tile) != xAOD::EventInfo::Error);
+    this->isLarGood = (eventInfo->errorState(xAOD::EventInfo::LAr) != xAOD::EventInfo::Error);
+    this->isTileGood = (eventInfo->errorState(xAOD::EventInfo::Tile) != xAOD::EventInfo::Error);
     this->isTileTrip = !tool_tileTrip->checkEvent(RunNumber,  lb,  EventNumber); //--- Does not depend on the definition of the objects.
     this->isCoreFlag = !(eventInfo->eventFlags(xAOD::EventInfo::Core) & 0x40000);
   }
 
   //--- Preselection flag
   this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
-  
+ 
 
   //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
@@ -2583,7 +2629,6 @@ EL::StatusCode chorizo :: loop ()
       dec_final(*ph_itr) = dec_signal(*ph_itr);
 
   }
-
   //--- Get Jets
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
 
@@ -2610,7 +2655,6 @@ EL::StatusCode chorizo :: loop ()
       m_smdJets->push_back(jet_itr);
   }
 
-
   //--- Do overlap removal   
   if(doOR){
     if(doORphotons)
@@ -2621,20 +2665,19 @@ EL::StatusCode chorizo :: loop ()
 
   // Apply the overlap removal to all objects (dumb example)
   CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
-  
   //-- Pre-book baseline electrons (after OR)
   bool IsElectron = false; // any good not-overlapping electron in the event?
   int iEl = -1;
   for(const auto& el_itr : *electrons_sc ){
 
     iEl++;
-
     if(! dec_baseline(*el_itr)) continue;
-      
+    
     //define preselected electron                
     Particle recoElectron;
     recoElectron.SetVector( getTLV( &(*el_itr) ));
-    
+
+/*    
     if (doCutFlow){
       myfile << "baseline electron before OR: \n";      
       myfile << "pt: " << recoElectron.Pt() << " \n";    
@@ -2642,14 +2685,15 @@ EL::StatusCode chorizo :: loop ()
       myfile << "phi: " << recoElectron.Phi() << " \n"; 
     }    
     
+    */
     //TEST NEW OR tool
     if(dec_passOR(*el_itr) && dec_failOR(*el_itr)) 
       if(debug) Info("loop()"," Electron passed STor but not ORtool");
-    
     //book not-overlapping electrons
     if (! ((!doOR) || dec_passOR(*el_itr) )) continue;
 
     eb_N++;  //baseline electrons
+    
 
     recoElectron.index = iEl;
     recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
@@ -2675,7 +2719,6 @@ EL::StatusCode chorizo :: loop ()
 
     recoElectron.type   = xAOD::TruthHelpers::getParticleTruthType( *el_itr );
     recoElectron.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *el_itr );
-
     //trigger matching
     std::vector<bool> el_trig_pass;
     for(const auto& t : ElTriggers){
@@ -2715,6 +2758,11 @@ EL::StatusCode chorizo :: loop ()
       if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for default systematics");
       }
+      
+      eb_SF *= recoElectron.SF;
+      eb_SFu *= recoElectron.SFu;
+      eb_SFd *= recoElectron.SFd;
+     
     }
     
     //save signal electrons
@@ -2737,7 +2785,6 @@ EL::StatusCode chorizo :: loop ()
   //sort the electrons in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end()); //non-signal electrons
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end()); //signal electrons
-
 
   //-- Pre-book baseline muons (after OR)
   bool IsMuon = false; // any good not-overlapping muon in the event?
@@ -2768,13 +2815,13 @@ EL::StatusCode chorizo :: loop ()
 
     Particle recoMuon;
     recoMuon.SetVector( getTLV( &(*mu_itr) ));	
-    
+/*    
     if (doCutFlow){
       myfile << "baseline muon before OR: \n pt: " << recoMuon.Pt() << " \n eta: " << recoMuon.Eta() << 
       myfile << "passOR     : " << (((!doOR) || dec_passOR(*mu_itr)) ? 1 : 0 ) << "\n";
       myfile << "passSignal : " << (dec_signal(*mu_itr) ? 1 : 0 ) << "\n"; //save signal muons (after OR and no-cosmic already)      
     }
-
+*/
     if(doOR && !dec_passOR(*mu_itr)) continue; //pass OR    
 
     if(tool_st->IsCosmicMuon( *mu_itr )){  //'cosmic' decoration
@@ -2785,6 +2832,7 @@ EL::StatusCode chorizo :: loop ()
     if(!muonok) continue;
 
     mb_N++;
+   
 
     recoMuon.index = iMu;
     recoMuon.ptcone20 = acc_ptcone20(*mu_itr) * 0.001;
@@ -2850,6 +2898,11 @@ EL::StatusCode chorizo :: loop ()
       if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
 	Error("loop()", "Cannot configure SUSYTools for default systematics");
       }
+   
+      mb_SF *= recoMuon.SF;
+      mb_SFu *= recoMuon.SFu;
+      mb_SFd *= recoMuon.SFd;
+   
     }
     
     //save signal muons
@@ -2875,7 +2928,6 @@ EL::StatusCode chorizo :: loop ()
 
   this->isCosmic  = (nCosmicMuons>0);
   this->isBadMuon = (nBadMuons>0);
-
 
   //-- Pre-book baseline photons (after OR)
   std::vector<Particle> photonCandidates; //intermediate selection photons
@@ -2977,6 +3029,7 @@ EL::StatusCode chorizo :: loop ()
     if( doOR && !dec_passOR(**jet_itr) ) continue;
 
     bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
+    bool isbadjet = tool_st->IsBadJet( **jet_itr, Jet_RecoJVTCut); // Change preselEta to recoEta    
 
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
@@ -2987,7 +3040,7 @@ EL::StatusCode chorizo :: loop ()
 
     if( !isgoodjet ) continue; //just book good jets!
 
-    m_goodJets->push_back (*jet_itr);
+    if (fabs((*jet_itr)->eta()) <2.5) m_goodJets->push_back (*jet_itr);
 
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
@@ -3065,7 +3118,8 @@ EL::StatusCode chorizo :: loop ()
     // recoJet.SV1_pu = btag->SV1_pu(); 
 
     recoJet.FlavorTruth = local_truth_flavor;
-    recoJet.bTagOPw = Jet_TaggerOp;
+    recoJet.bTagOPw = Jet_TaggerOp77.Atof();
+
     
 
     //--- Get some other jet attributes
@@ -3093,7 +3147,7 @@ EL::StatusCode chorizo :: loop ()
 
     recoJet.Pt_up = recoJet.Pt();
     recoJet.Pt_down = recoJet.Pt();
-
+    
     if(dumpTile){
 
       //TopoClusters constituents 
@@ -3122,14 +3176,14 @@ EL::StatusCode chorizo :: loop ()
     // recoJet.TruthJet = Truth;
 
     jetCandidates.push_back(recoJet);
-    
+/*    
     if (doCutFlow){
       myfile << "baseline jet after OR: \n";      
       myfile << "pt: " <<  recoJet.Pt() << " \n"; 
       myfile << "eta: " << recoJet.Eta() << " \n";          
       myfile << "phi: " << recoJet.Phi() << " \n"; 
     }    
-
+*/
     if(this->printJet){
       std::cout << "Jet " << iJet << ":" << endl;
       recoJet.PrintInfo();
@@ -3139,7 +3193,7 @@ EL::StatusCode chorizo :: loop ()
 
   }  //jet loop
   
-  if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
+ // if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
     
   //sort the jet candidates in Pt
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
@@ -3214,22 +3268,30 @@ EL::StatusCode chorizo :: loop ()
   std::vector<float> calibJets_MV1;
   std::vector<int> calibJets_flavor;
 
-  int bjet_counter=0;
-  int bjet_counter_80eff=0;
+  int bjet_counter_70fc=0;
+  int bjet_counter_77fc=0;
+  int bjet_counter_85fc=0;
 
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
 
     //if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
     //if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue; // comment
     
-    if ( jetCandidates.at(iJet).isBTagged_77eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
-      bjet_counter++;
-    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
-      bjet_counter_80eff++;	
+    //if ( jetCandidates.at(iJet).isBTagged_70eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 )
+    if ( jetCandidates.at(iJet).isBTagged_70fc(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 )   
+      bjet_counter_70fc++;        
+    if ( jetCandidates.at(iJet).isBTagged_77fc(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
+      bjet_counter_77fc++;
+    if ( jetCandidates.at(iJet).isBTagged_85fc(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
+      bjet_counter_85fc++;	
     
     if( jetCandidates.at(iJet).isbjet_t70  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt70++;
     if( jetCandidates.at(iJet).isbjet_t77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt77++;
     if( jetCandidates.at(iJet).isbjet_t80  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt80++;
+    
+    if( jetCandidates.at(iJet).isbjet_fb70  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf70++;
+    if( jetCandidates.at(iJet).isbjet_fb77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf77++;
+    if( jetCandidates.at(iJet).isbjet_fb85  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf85++;    
 
     //recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
     
@@ -3254,7 +3316,7 @@ EL::StatusCode chorizo :: loop ()
       if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
     }
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
-    
+/*    
     if (doCutFlow){
       myfile << "signal jet: \n";      
       myfile << "pt: "  << jetCandidates.at(iJet).Pt() << " \n"; 
@@ -3262,7 +3324,7 @@ EL::StatusCode chorizo :: loop ()
       myfile << "phi: " << jetCandidates.at(iJet).Phi() << " \n"; 
     } 
 
-
+*/
     calibJets_pt.push_back(jetCandidates.at(iJet).Pt()*1000.);
     calibJets_eta.push_back( BtagEta( jetCandidates.at(iJet).Eta() ) ); //eta to be defined in [-2.5,2.5]
     calibJets_MV1.push_back(jetCandidates.at(iJet).MV1);
@@ -3271,17 +3333,19 @@ EL::StatusCode chorizo :: loop ()
   }//end of jets loop
 
   j_N  = recoJets.size();
-  bj_N = bjet_counter; 
-  bj_Ne80 = bjet_counter_80eff; 
+  bj_N_77fc = bjet_counter_77fc; 
+  bj_N_85fc = bjet_counter_85fc; 
+  bj_N_70fc = bjet_counter_70fc;   
   
-  if (doCutFlow) myfile << "n of signal jets: " << j_N << " \n"; 
-  if (doCutFlow) myfile << "n of signal b-jets: " << bj_N << " \n"; 
+  //if (doCutFlow) myfile << "n of signal jets: " << j_N << " \n"; 
+  //if (doCutFlow) myfile << "n of signal b-jets: " << bj_N << " \n"; 
 
   //** btagging weights
   if(isMC){
-    btag_weight_total       = tool_st->BtagSF(m_goodJets);
-    //btag_weight_total       = GetBtagSF(m_goodJets, tool_btag);
-    //btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2); //CHECK! not to trust for now
+    //btag_weight_total       = tool_st->BtagSF(m_goodJets);
+    btag_weight_total_70fc       = GetBtagSF(m_goodJets, tool_btag70);   
+    btag_weight_total_77fc       = GetBtagSF(m_goodJets, tool_btag77);
+    btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85); //CHECK! not to trust for now
   }
   
   //the list of jets to smear for qcd are not the jet-candidates!
@@ -3311,12 +3375,13 @@ EL::StatusCode chorizo :: loop ()
   if(!m_isderived){
     CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") ); //not in MC15??
     mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-  
+                  
 
     CHECK( m_event->retrieve( cmet_track, "MET_Track") );
     mtrack = (*cmet_track)["PVTrack_vx0"];
     // mtrack = (*cmet_track)["Track"];
-  }
+  }                 
+       
   
   
   //** Met components
@@ -3569,7 +3634,7 @@ EL::StatusCode chorizo :: loop ()
   //*** Event Skimming (if requested)
   if(m_skim){
     
-    bool SK_passBtagging = (bj_N>0);
+    bool SK_passBtagging = (bj_N_77fc>0);
     
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
 			  || metmap[::MetDef::VisMu].Mod() > 100. );
@@ -3732,7 +3797,7 @@ EL::StatusCode chorizo :: loop ()
 
  
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_77eff(Jet_Tagger) && fabs(jet.Eta())<2.5){
+      if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -3828,11 +3893,13 @@ EL::StatusCode chorizo :: loop ()
     met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
 
   //Truth Filter MET (all neutrinos from top)
-  UInt_t MET_ids[] = {410000, 410013, 410014, 407012, 407019, 407021}; //nominal   //filtered : 407012, 407019, 407021;
+
+  UInt_t MET_ids[] = {410000, 410013, 410014}; //, 407012, 407019, 407021}; //nominal   //filtered : 407012, 407019, 407021;
   if ( this->isMC && count(MET_ids, MET_ids+84, this->mc_channel_number) ){
     met_top = (float) Calc_TruthNuMET()*0.001;  // this cast is actually needed to reproduce what the filter does
-  }
 
+  }
+  
 
   //--- Track Veto
   //init vars
@@ -3876,7 +3943,6 @@ EL::StatusCode chorizo :: loop ()
     }
   } 
   //--- Some other event variables
-  
   //fill info for truth b-sb decay
   findBparton();  //FIX_ME  //needed?
   //*** otherwise t_b_*** variables are not filled !
@@ -4011,11 +4077,12 @@ EL::StatusCode chorizo :: loop ()
     }
   }
   
+
   
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
+    if( recoJets.at(0).isBTagged_77fc(Jet_Tagger) && recoJets.at(1).isBTagged_77fc(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
       mbb = mjj;
   }
 
@@ -4032,7 +4099,7 @@ EL::StatusCode chorizo :: loop ()
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged_77eff(Jet_Tagger) && fabs(jet.Eta())<2.5){
+    if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -4057,6 +4124,8 @@ EL::StatusCode chorizo :: loop ()
       ijet++;
  
   }
+
+  
   RecoHadTops(ibtop1, ibtop2);
 
   // ------ Max bb-system variables  
@@ -4131,7 +4200,6 @@ EL::StatusCode chorizo :: loop ()
     m_EM = inv_EM.M();
   }
   
-
   //--- Define the transverse mass e_MT - we recompute the MET with the electron in order to have the pt of the nu
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
@@ -4645,8 +4713,8 @@ EL::StatusCode chorizo :: loop_truth()
     }
     
     
-    recoJet.isbjet = recoJet.isBTagged_77eff("Truth");  //as I modified the truth flavor above already!
-    
+    recoJet.isbjet = recoJet.isBTagged_77fc("Truth");
+
     jetCandidates.push_back(recoJet);
     
     //apply signal cuts...
@@ -4654,8 +4722,9 @@ EL::StatusCode chorizo :: loop_truth()
     if ( fabs(recoJet.Eta()) > Jet_RecoEtaCut ) continue;
 
     if ( recoJet.isbjet ){
-      bj_N++;
-      bj_Ne80++;
+      bj_N_77fc++;
+      bj_N_85fc++;
+      bj_N_70fc++;      
     }
 
     //check for higher pt jet multiplicity
@@ -4885,7 +4954,7 @@ EL::StatusCode chorizo :: loop_truth()
       
       
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_77eff(Jet_Tagger) && fabs(jet.Eta())<2.5){
+      if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -5023,7 +5092,7 @@ EL::StatusCode chorizo :: loop_truth()
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_77eff(Jet_Tagger) && recoJets.at(1).isBTagged_77eff(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
+    if( recoJets.at(0).isBTagged_77fc(Jet_Tagger) && recoJets.at(1).isBTagged_77fc(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
       mbb = mjj;
   }
 
@@ -5041,7 +5110,8 @@ EL::StatusCode chorizo :: loop_truth()
   auto ijet=0;
   for( auto jet : recoJets ){  //jet loop
 
-    if( jet.isBTagged_77eff("Truth") && fabs(jet.Eta())<2.5){
+    if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
+
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -5310,7 +5380,7 @@ void chorizo :: dumpJets(){
     
     j_btruth_70.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t70  : DUMMYDN );
     j_btruth_77.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t77  : DUMMYDN );
-    j_btruth_80.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t80  : DUMMYDN ); 
+    j_btruth_85.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t80  : DUMMYDN ); 
 
     j_bflat_70.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb70  : DUMMYDN );
     j_bflat_77.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb77  : DUMMYDN );
@@ -5408,14 +5478,20 @@ EL::StatusCode chorizo :: finalize ()
   }
 
   //B-tagging
-  if(tool_btag){
-    delete tool_btag;
-    tool_btag=0;
+  if(tool_btag70){
+    delete tool_btag70;
+    tool_btag70=0;
   }
-  if(tool_btag2){
-    delete tool_btag2;
-    tool_btag2=0;
+  if(tool_btag77){
+    delete tool_btag77;
+    tool_btag77=0;
   }
+  if(tool_btag85){
+    delete tool_btag85;
+    tool_btag85=0;
+  }  
+  
+  
   if(tool_btag_truth1){
     delete tool_btag_truth1;
     tool_btag_truth1=0;
@@ -6353,37 +6429,60 @@ float chorizo :: GetAverageWeight(){
 float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool)
 {
   float totalSF = 1.;
-  
-  if (this->isMC && !this->isSignal) return totalSF;
-  
-  xAOD::JetContainer::const_iterator jet_itr = goodJets->begin();
-  xAOD::JetContainer::const_iterator jet_end = goodJets->end();
-  
-  for( ; jet_itr != jet_end; ++jet_itr ) {
-    
+  for ( const auto& jet : *goodJets ) {
+
     float sf = 1.;
-    
-    CP::CorrectionCode result;
-    
-    if ( dec_bjet(**jet_itr) )
-      {
-	result = btagTool->getScaleFactor(**jet_itr, sf);
-	
-	if (result != CP::CorrectionCode::Ok)
-	  Error("BTagSF", " Failed to retrieve eff SF for b-tagged jet!" );
+
+    if ( fabs(jet->eta()) > 2.5 ) {
+      ATH_MSG_VERBOSE( " Trying to retrieve b-tagging SF for jet with |eta|>2.5 (jet eta=" << jet->eta() << "), jet will be skipped");
+    } else if ( jet->pt() < 20e3 && jet->pt() < 1e6 ) {
+      ATH_MSG_VERBOSE( " Trying to retrieve b-tagging SF for jet with invalid pt (jet pt=" << jet->pt() << "), jet will be skipped");
+    } else {
+
+      CP::CorrectionCode result;
+      int truthlabel(-1);
+      if (!jet->getAttribute("ConeTruthLabelID", truthlabel)) {
+        ATH_MSG_ERROR("Failed to get jet truth label!");
       }
-    else
-      {
-	result = btagTool->getInefficiencyScaleFactor(**jet_itr, sf);
-	
-	if (result != CP::CorrectionCode::Ok)
-	  Error("BTagSF", " Failed to retrieve Ineff SF for b-tagged jet!" );
+      ATH_MSG_VERBOSE("This jet is " << (dec_bjet(*jet) ? "" : "not ") << "b-tagged.");
+      ATH_MSG_VERBOSE("This jet's truth label is " << truthlabel);
+
+      if ( dec_bjet(*jet) ) {
+        result = btagTool->getScaleFactor(*jet, sf);
+
+        switch (result) {
+        case CP::CorrectionCode::Error:
+          ATH_MSG_ERROR( " Failed to retrieve SF for jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        case CP::CorrectionCode::OutOfValidityRange:
+          ATH_MSG_VERBOSE( " No valid SF for jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        default:
+          ATH_MSG_VERBOSE( " Retrieve SF for b-tagged jet in SUSYTools_xAOD::BtagSF with value " << sf );
+        }
+      } else {
+
+        result = btagTool->getInefficiencyScaleFactor(*jet, sf);
+
+        switch (result) {
+        case CP::CorrectionCode::Error:
+          ATH_MSG_ERROR( " Failed to retrieve SF for non-b-tagged jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        case CP::CorrectionCode::OutOfValidityRange:
+          ATH_MSG_VERBOSE( " No valid inefficiency SF for non-b-tagged jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        default:
+          ATH_MSG_VERBOSE( " Retrieve SF for non-b-tagged jet in SUSYTools_xAOD::BtagSF with value " << sf );
+        }
       }
-    
+    }
+
+    //dec_effscalefact(*jet) = sf;
+
     totalSF *= sf;
-    
+
   }
-  
+
   return totalSF;
   
 }
@@ -6577,42 +6676,43 @@ double chorizo :: Calc_TruthNuMET(){
   TLorentzVector nuMET;
   for(const xAOD::TruthParticle* tp1 : *m_truthP) {
     if (!tp1->isNeutrino()) continue;
-      
-      std::pair<MCTruthPartClassifier::ParticleType,MCTruthPartClassifier::ParticleOrigin> res;
-      res = tool_mcc->particleTruthClassifier(tp1);
-      MCTruthPartClassifier::ParticleOrigin iPartOrig = res.second;
-      
-      switch (iPartOrig) {
-      case MCTruthPartClassifier::PhotonConv:
-      case MCTruthPartClassifier::DalitzDec:
-      case MCTruthPartClassifier::ElMagProc:
-      case MCTruthPartClassifier::Mu:  
-      case MCTruthPartClassifier::TauLep:  
-      case MCTruthPartClassifier::LightMeson:  
-      case MCTruthPartClassifier::StrangeMeson:  
-      case MCTruthPartClassifier::CharmedMeson:
-      case MCTruthPartClassifier::BottomMeson:
-      case MCTruthPartClassifier::CCbarMeson:
-      case MCTruthPartClassifier::JPsi:
-      case MCTruthPartClassifier::BBbarMeson:
-      case MCTruthPartClassifier::LightBaryon:
-      case MCTruthPartClassifier::StrangeBaryon:
-      case MCTruthPartClassifier::CharmedBaryon:
-      case MCTruthPartClassifier::BottomBaryon:
-      case MCTruthPartClassifier::PionDecay:
-      case MCTruthPartClassifier::KaonDecay:
-	
-      case MCTruthPartClassifier::NonDefined:
-	continue;
-      default:
-	break;
-      }
-      nuMET += tp1->p4();
+
+    std::pair<MCTruthPartClassifier::ParticleType,MCTruthPartClassifier::ParticleOrigin> res;
+    res = tool_mcc->particleTruthClassifier(tp1);
+    MCTruthPartClassifier::ParticleOrigin iPartOrig = res.second;
+
+    switch (iPartOrig) {
+    case MCTruthPartClassifier::PhotonConv:
+    case MCTruthPartClassifier::DalitzDec:
+    case MCTruthPartClassifier::ElMagProc:
+    case MCTruthPartClassifier::Mu:
+    case MCTruthPartClassifier::TauLep:
+    case MCTruthPartClassifier::LightMeson:
+    case MCTruthPartClassifier::StrangeMeson:
+    case MCTruthPartClassifier::CharmedMeson:
+    case MCTruthPartClassifier::BottomMeson:
+    case MCTruthPartClassifier::CCbarMeson:
+    case MCTruthPartClassifier::JPsi:
+    case MCTruthPartClassifier::BBbarMeson:
+    case MCTruthPartClassifier::LightBaryon:
+    case MCTruthPartClassifier::StrangeBaryon:
+    case MCTruthPartClassifier::CharmedBaryon:
+    case MCTruthPartClassifier::BottomBaryon:
+    case MCTruthPartClassifier::PionDecay:
+    case MCTruthPartClassifier::KaonDecay:
+
+    case MCTruthPartClassifier::NonDefined:
+      continue;
+    default:
+      break;
+    }
+    nuMET += tp1->p4();
 
   }
   return nuMET.Pt();
 
 }
+
 
 float chorizo :: TopTransvMass(){
 
@@ -6668,9 +6768,9 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
     recoJets.push_back(MuJet);
     muadded=true;
   }
-  if (bj_N>=2 && recoJets.size()>=6)
+  if (bj_N_77fc>=1 && recoJets.size()>=3)
     {
-       
+
       Wjet1=Wjet2=-1;
        
       double mindr = 1000.;
@@ -6678,7 +6778,9 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
       for (unsigned int i = 0 ; i < recoJets.size() ; i++){
 	for (unsigned int j = i+1 ; j < recoJets.size() ; j++)
 	  {
-	    if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){
+	    
+	   if(recoJets.size()==3){
+	    if(i!=ibtop1 && j!=ibtop1){
 	      double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
 
 	      if (curr_dr<mindr)
@@ -6688,6 +6790,20 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
 		  mindr = curr_dr;
 		}
 	    }
+	   } 
+	   else{
+	    if(i!=ibtop1 && j!=ibtop1 && i!=ibtop2 && j!=ibtop2){
+	      double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+
+	      if (curr_dr<mindr)
+		{
+		  Wjet1 = i;
+		  Wjet2 = j;
+		  mindr = curr_dr;
+		}
+	    }
+	   } 	    
+	    
 	  }
       }
       mindr = 1000.;
@@ -6710,7 +6826,9 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
 
       //book first top
       TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
-     
+      
+      if (bj_N_77fc>=2 && recoJets.size()>=6)
+      {     
         Wjet3=Wjet4=-1;
         mindr = 1000.;
         for (unsigned int i = 0 ; i < recoJets.size() ; i++){
@@ -6753,11 +6871,12 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
       //book second top
       TLorentzVector top2candidate = recoJets.at(bjet2).GetVector()+W2candidate;
             
-      m_top_had1 = top1candidate.M();
+      //m_top_had1 = top1candidate.M();
       m_top_had2 = top2candidate.M();
    
     }
-
+      m_top_had1 = top1candidate.M();    
+    }
   //recover original jet vector
   if(eladded)
     recoJets.pop_back();

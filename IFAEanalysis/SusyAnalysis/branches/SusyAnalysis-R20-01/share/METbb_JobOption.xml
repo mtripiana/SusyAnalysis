@@ -6,7 +6,7 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">true</Mode>
+    <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">false</Mode>    
     <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
@@ -149,10 +149,12 @@
       <!--      <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
       <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
 
-      <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 85% -->
-
+      <Tagger>MV2c20</Tagger> -->
+      <TaggerOpPoint70>-0_0436</TaggerOpPoint70> --> <!-- 70% -->
+      <TaggerOpPoint77>-0_4434</TaggerOpPoint77> --> <!-- 77% -->
+      <TaggerOpPoint85>-0_7887</TaggerOpPoint85> --> <!-- 85% -->
+      <TaggerCollection>AntiKt4EMTopoJets</TaggerCollection> -->
+            
     </Jet>
 
     <Etmiss>

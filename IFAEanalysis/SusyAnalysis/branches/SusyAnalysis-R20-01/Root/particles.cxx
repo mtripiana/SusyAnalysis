@@ -149,29 +149,16 @@ Jet::Jet(){
 
 Jet::~Jet(){}
 
-bool Jet::isBTagged(TString Tagger, float op){ 
-  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
-  if      (Tagger=="MV1")            return (this->MV1 > op);
-  else if (Tagger=="MV2c20")         return (this->MV2c20 > op);
-  else if (Tagger=="IP3DSV1")        return (this->SV1plusIP3D > op);
-  else if (Tagger=="Truth")          return (abs(this->FlavorTruth)==5);
-  // else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > op && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
-  // else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
- 
-  return false;
-}
 
 
-bool Jet::isBTagged_70eff(TString Tagger){ 
-  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
-  if      (Tagger=="MV1")              return (this->MV1 > 0.7892); //70% b eff  
-  else if (Tagger=="MV2c20")           return (this->MV2c20 > -0.0436 ); //70% b eff  
-  else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > 1.85); //70% b eff 
+bool Jet::isBTagged_70fc(TString Tagger){ 
+  
+  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.0436); //80% b eff  
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
-bool Jet::isBTagged_77eff(TString Tagger){ 
+bool Jet::isBTagged_77fc(TString Tagger){ 
   
   if (Tagger=="MV2c20")           return (this->MV2c20 > -0.4434); //77% b eff  
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
@@ -179,10 +166,10 @@ bool Jet::isBTagged_77eff(TString Tagger){
 }
 
 
-bool Jet::isBTagged_80eff(TString Tagger){ 
-  if      (Tagger=="MV1")              return (this->MV1 > 0.3511); //80% b eff  
-  else if (Tagger=="MV2c20")           return (this->MV2c20 > -0.5911); //80% b eff  
-  else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > -0.70); //80% b eff 
+bool Jet::isBTagged_85fc(TString Tagger){ 
+  //if      (Tagger=="MV1")              return (this->MV1 > 0.3511); //80% b eff  
+  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.7887); //85% b eff  
+  //else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > -0.70); //80% b eff 
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
@@ -190,7 +177,7 @@ bool Jet::isBTagged_80eff(TString Tagger){
 bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
 
   //if (deltaPhi(this->Phi(), metphi) > min_dphi_tau) return false;
-  if (this->isBTagged_77eff(Tagger)) return false;
+  if (this->isBTagged_77fc(Tagger)) return false;
   if (fabs(this->Eta())>=2.5) return false;      
   if (this->nTrk >= 5) return false;
   if (deltaPhi(metphi, this->Phi())>=TMath::Pi()/5.0) return false; //CHANGED BEFORE 0.2

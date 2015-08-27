@@ -136,9 +136,9 @@ namespace Particles{
 
     bool isTauJet(float metphi, TString Tagger="MV1");
     bool isBTagged(TString Tagger, float op);
-    bool isBTagged_70eff(TString Tagger);
-    bool isBTagged_77eff(TString Tagger);    
-    bool isBTagged_80eff(TString Tagger);    
+    bool isBTagged_70fc(TString Tagger);
+    bool isBTagged_77fc(TString Tagger);    
+    bool isBTagged_85fc(TString Tagger);    
     float getBweight(TString Tagger);
     void PrintInfo();
     ClassDef(Jet,1);
