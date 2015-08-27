@@ -46,7 +46,9 @@
 
     <OverlapRemoval>
       <Enable>true</Enable>
-      <Harmonisation>false</Harmonisation>
+      <useSignalLeptons>false</useSignalLeptons>
+      <useIsoLeptons>false</useIsoLeptons>
+      <doBjetOR>false</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
@@ -82,7 +84,7 @@
       
       <baseID>LooseLLH</baseID>
       <ID>LooseLLH</ID>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>
@@ -94,7 +96,7 @@
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
       <ID>Medium</ID>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
     </Muon>
     <Photon>
       <PreselPtCut>20000.</PreselPtCut>
@@ -103,7 +105,7 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>

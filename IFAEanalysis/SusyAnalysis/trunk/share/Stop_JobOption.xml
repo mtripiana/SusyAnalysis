@@ -44,12 +44,15 @@
 
     <OverlapRemoval>
       <Enable>true</Enable>
-      <Harmonisation>false</Harmonisation>
+      <useSignalLeptons>false</useSignalLeptons>
+      <useIsoLeptons>false</useIsoLeptons>
+      <doBjetOR>false</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
     <Trigger>
-      <chains>HLT_xe100,HLT_xe50,HLT_e28_tight_iloose,HLT_e60_medium,HLT_mu26_imedium,HLT_mu50</chains>
+      <!--      <chains>HLT_xe100,HLT_xe50,HLT_e28_tight_iloose,HLT_e60_medium,HLT_mu26_imedium,HLT_mu50</chains> -->
+      <chains>HLT_.*</chains>
     </Trigger>
 
     <Truth>
@@ -80,7 +83,7 @@
       
       <baseID>LooseLLH</baseID>
       <ID>TightLLH</ID>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>
@@ -92,7 +95,7 @@
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
       <ID>Loose</ID>
-      <isoType>Tight</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
     </Muon>
     <Photon>
       <PreselPtCut>20000.</PreselPtCut>
@@ -101,8 +104,8 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
-      
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>

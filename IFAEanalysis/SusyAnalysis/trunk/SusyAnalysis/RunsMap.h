@@ -472,6 +472,8 @@ m_map["13TEV_SinglePhotonMassiveCBPt500_BFilter"] = rlist( Rpair(177585,"mc14_13
   m_map["test_stop"] = rlist( Rpair(204422, "/nfs/at3/scratch/sfracchia/SUSY/test_stop/"));    
   //m_map["test_stop"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.DAOD_SUSY1.e3064_s1982_s2008_r5787_r5853_p1872/"));    //CutFlow check Stop0L pre-WT (p1872)
 
+  m_map["test_stop2"] = rlist( Rpair(205110, "/nfs/at3/scratch/tripiana/xAOD/mc14/stop/T600_L300/"));
+
   m_map["13TEV_Stop_800_1"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_s1982_s2008_r5787_r5853/"));  
   m_map["13TEV_Stop_800_1_af"] = rlist( Rpair(204422, "mc14_13TeV.204422.Herwigpp_UEEE4_CTEQ6L1_Tt_T800_L1.merge.AOD.e3064_a266_a265_r5853/"));
 

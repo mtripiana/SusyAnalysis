@@ -1,3 +1,7 @@
+2015-05-20 Martin <tripiana@cern.ch>
+	* Move to 05-00-31@Base,2.1.33
+	* Add new config for OR in jOptions
+
 2015-05-18 Martin <tripiana@cern.ch>
 	* Fix pdf accessors (hacked)
 

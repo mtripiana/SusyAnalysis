@@ -1274,8 +1274,9 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
-  doORharmo = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
-  //doORharmo = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Harmonisation");
+  m_or_useSigLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$useSignalLeptons");
+  m_or_useIsoLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$useIsoLeptons");
+  m_or_bjetOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doBjetOR");
   doORphotons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doPhotons");
   
   Info(whereAmI, Form(" - TrackVeto" ));
@@ -1301,8 +1302,8 @@ void chorizo :: ReadXML(){
 
   El_baseID        = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$baseID")).Data());
   El_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$ID")).Data());
-  El_isoType       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoType"));
-  
+  El_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoWP")).Data());
+
   El_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$recoSF");
   El_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$idSF");
   El_triggerSF     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$triggerSF");
@@ -1314,8 +1315,7 @@ void chorizo :: ReadXML(){
   Mu_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoEtaCut");
 
   Mu_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$ID")).Data());
-  Mu_isoType       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoType").c_str());    
-
+  Mu_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoWP")).Data());
 
   Info(whereAmI, Form(" - Photons") );
   Ph_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselPtCut");
@@ -1324,7 +1324,7 @@ void chorizo :: ReadXML(){
   Ph_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$RecoEtaCut");
 
   Ph_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$ID")).Data());
-  Ph_isoType       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoType").c_str());
+  Ph_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoWP")).Data());
   
   Ph_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$recoSF");
   Ph_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$idSF");
@@ -1431,33 +1431,25 @@ EL::StatusCode chorizo :: initialize ()
   for(const auto& s : TriggerNames)  trigchains += (s+",");
   meta_triggers = new TNamed("Triggers", trigchains.c_str());
   wk()->addOutput(meta_triggers);     
-
+  
   //initialize lepton isolation 
   elIsoArgs = new ST::IsSignalElectronExpCutArgs();
   muIsoArgs = new ST::IsSignalMuonExpCutArgs();
-
-  El_isoType.ToLower();
-  if(El_isoType.EqualTo("loose"))       elIsoType = ST::SignalIsoExp::LooseIso;
-  else if(El_isoType.EqualTo("medium")) elIsoType = ST::SignalIsoExp::MediumIso;
-  else if(El_isoType.EqualTo("tight"))  elIsoType = ST::SignalIsoExp::TightIso;
-  else{
-    elIsoType = ST::SignalIsoExp::LooseIso;
-    elIsoArgs->_etcut = El_PreselPtCut;
-    elIsoArgs->_id_isocut = -1; //do not apply it 
-    elIsoArgs->_calo_isocut = 0.;
-  }
-
-  Mu_isoType.ToLower();
-  if(Mu_isoType.EqualTo("loose"))       muIsoType = ST::SignalIsoExp::LooseIso;
-  else if(Mu_isoType.EqualTo("medium")) muIsoType = ST::SignalIsoExp::MediumIso;
-  else if(Mu_isoType.EqualTo("tight"))  muIsoType = ST::SignalIsoExp::TightIso;
-  else{
-    muIsoType = ST::SignalIsoExp::LooseIso;
-    muIsoArgs->_ptcut = Mu_PreselPtCut;
-    muIsoArgs->_id_isocut = -1; //do not apply it 
-    muIsoArgs->_calo_isocut = 0.;
-  }
   
+  elIsoArgs->etcut(El_PreselPtCut);
+  //  elIsoArgs->id_isocut(?);   //default 0.16                                                                                                                                                                                                                           
+  //  elIsoArgs->calo_isocut(?); //default 0.18                                                                                                                                                                                                                               
+  //  elIsoArgs->d0sigcut(?);    //default 5.                                                                                                                                                                                                                                 
+  //  elIsoArgs->z0cut(?);       //default 0.4                                                                                                                                                                                                                                
+  //  elIsoArgs->pt_isoMax(?);   //default 0                                                                                                                                                                                                                                  
+  
+  muIsoArgs->ptcut(Mu_PreselPtCut);
+  //  muIsoArgs->id_isocut(?);   //default 0.12                                                                                                                                                                                                                             
+  //  muIsoArgs->calo_isocut(?); //default 0.12                                                                                                                                                                                                                          
+  //  muIsoArgs->d0sigcut(?);    //default 3.                                                                                                                                                                                                                            
+  //  muIsoArgs->z0cut(?);       //default 0.4                                                                                                                                                                                                                           
+  //  muIsoArgs->pt_isoMax(?);   //default 0         
+
   
   //Initialize event counter
   m_eventCounter=0;
@@ -1495,7 +1487,7 @@ EL::StatusCode chorizo :: initialize ()
   std::string maindir = getenv("ROOTCOREBIN");
   maindir = maindir + "/data/";
 
-  int datasource = !this->isMC ? ST::Data : (this->isAtlfast ? ST::AtlfastII : ST::FullSim);
+  ST::SettingDataSource datasource = !this->isMC ? ST::Data : (this->isAtlfast ? ST::AtlfastII : ST::FullSim);
   bool isderived = isDerived();
 
   //--- SUSYTools
@@ -1503,6 +1495,8 @@ EL::StatusCode chorizo :: initialize ()
   CHECK(tool_st->setProperty("DataSource", datasource) );
   CHECK(tool_st->setProperty("IsDerived", isderived) );
   CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
+
+  CHECK( tool_st->setProperty("IsoWP",El_isoWP) );  //only one tool for it !! need to expand to el/mu splitting!                                                                                                                                                              
 
   CHECK(tool_st->setProperty("EleId",El_ID) );
   CHECK(tool_st->setProperty("EleIdBaseline",El_baseID) );
@@ -2164,12 +2158,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     //decorate electron with final pt requirements ('final')
     elIsoArgs->_etcut = El_RecoPtCut;
-    tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
+    tool_st->IsSignalElectronExp( (*el_itr), *elIsoArgs);
     dec_final(*el_itr) = dec_signal(*el_itr);
 
     //decorate electron with baseline pt requirements ('signal')
     elIsoArgs->_etcut = El_PreselPtCut;
-    tool_st->IsSignalElectronExp( (*el_itr), elIsoType, *elIsoArgs);
+    tool_st->IsSignalElectronExp( (*el_itr), *elIsoArgs);
   }
 
 
@@ -2193,12 +2187,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_RecoPtCut;
-    tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
+    tool_st->IsSignalMuonExp( *mu_itr, *muIsoArgs);  //'signal' decoration.
     dec_final(*mu_itr) = dec_signal(*mu_itr);
 
     //decorate muon with final pt requirements ('final')
     muIsoArgs->_ptcut = Mu_PreselPtCut;
-    tool_st->IsSignalMuonExp( *mu_itr, muIsoType, *muIsoArgs);  //'signal' decoration.
+    tool_st->IsSignalMuonExp( *mu_itr, *muIsoArgs);  //'signal' decoration.
 
     if(debug)
       if( dec_signal(*mu_itr) ) 
@@ -2214,12 +2208,12 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     //decorate photon with final pt requirements ('final')
     //    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut, phIsoType);
-    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut, -1);
+    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut);
     dec_final(*ph_itr) = dec_signal(*ph_itr);
     
     //decorate photon with baseline pt requirements ('signal')
     //    tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut, phIsoType);
-    tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut, -1);
+    tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
   }
   
   //--- Get Jets
@@ -2261,9 +2255,9 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   //--- Do overlap removal   
   if(doOR){
     if(doORphotons)
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, doORharmo) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
     else
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, doORharmo) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
   }
 
   // Apply the overlap removal to all objects (dumb example)
@@ -2863,9 +2857,9 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   if (doCutFlow) myfile << "n of signal b-jets: " << n_bjets << " \n"; 
 
   //** btagging weights
-   // if(isMC){
-   //btag_weight_total = GetBtagSF(m_goodJets, tool_btag); 
-   //btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
+  // if(isMC){
+  //btag_weight_total = GetBtagSF(m_goodJets, tool_btag); 
+  //btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
    
   //}
   

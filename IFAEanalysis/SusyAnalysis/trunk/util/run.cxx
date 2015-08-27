@@ -32,7 +32,7 @@
 #include <string>
 
 // Systematics includes
-#include "PATInterfaces/SystematicList.h"
+//#include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
 #include "PATInterfaces/SystematicCode.h"
@@ -63,6 +63,7 @@ void usage(){
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : run over truth xAODs" << endl;
   cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
+  cout << "       -i=<ID>       : specify a specific dataset ID inside the container" << endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
   cout << "       -s=<SystList> : systematics to be considered (comma-separated list) [optional]. " << endl;
   cout << "                       Just nominal is run by default (Nom)." << endl;       
