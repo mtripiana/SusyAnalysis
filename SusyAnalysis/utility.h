@@ -15,6 +15,10 @@ TString bold(TString t);
 
 TString red(TString t);
 
+TString blue(TString t);
+
+TString link(TString t);
+
 std::string getCmdOutput(const std::string& mStr);
 
 std::string tmpdirname();

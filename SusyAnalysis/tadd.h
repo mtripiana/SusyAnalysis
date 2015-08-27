@@ -9,7 +9,8 @@
 #include "TSystem.h"
 #include "Riostream.h"
 #include <vector>
-#include <iostream>
+
+using namespace std;
 
 void AddNewBranch(TString, Float_t);
 
@@ -22,6 +23,8 @@ void JoinSplittedFiles(TString fileName);
 void MergeFiles(std::vector<TString> files, TString outfile);
 
 void MergeSplittedFiles(TString fileName);
+
+void hadd(std::vector< TString>, TString);
 
 void tadd(std::vector< TString>, std::vector< Double_t>, TString, bool);
 

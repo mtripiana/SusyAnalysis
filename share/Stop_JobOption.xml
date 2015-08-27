@@ -3,22 +3,21 @@
 
   <GeneralSettings>
     <Mode name="setDefinitionRegion">SR</Mode> <!-- Name of the object definition regions, separated by comma -->
-    <Mode name="debug">true</Mode>
+    <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">false</Mode>
+    <Mode name="DoCutFlow">true</Mode>
     <Mode name="StopTL">true</Mode>    
+    <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
-    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/ORstudies/harmON/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
-    <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
-    <!--   <Path name="GRLxmlFile">SusyAnalysis/GRL/data12_8TeV.periodB_DetStatus-v61-pro16_DQDefects-00-01-00_PHYS_StandardGRL_All_Good.xml</Path> updated periodB GRL. Due to some job failures, not all lumiblocks are complete. -->
+    <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/CollateralRootFiles/</Path>
+    <!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
+    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
     <Pileup>
-      <Mode name="ApplyPileupReweighting">false</Mode>
-      <Path name="PileupReweightingConfigFolder"> </Path> <!-- leave it empty to use default location -->
-      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>		
-      <!-- <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/PileupRWfiles/</Path> -->
-      <!-- <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path> -->		
+      <Mode name="ApplyPileupReweighting">true</Mode>
+      <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/sfracchia/SUSY/pileup/</Path>  <!-- leave it empty to use default location -->
+      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_267638-267639.root</Path>
     </Pileup>
 
     <LeptonEfficiency>
@@ -29,7 +28,7 @@
       <Enable>false</Enable> 
       <ToBeamE>6.5</ToBeamE> <!-- Final beam energy (in TeV) -->
     </PdfRw>
-
+    
     <SmearTruth>
       <Enable>false</Enable> <!-- Only applicable to truth samples (isTruth==true) -->
       <Mu>60</Mu> <!-- needed for Jet smearing (hard coded) -->
@@ -46,21 +45,22 @@
       <Enable>true</Enable>
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
-      <doBjetOR>false</doBjetOR>
+      <doBjetOR>true</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
+    <Truth>
+      <dressLeptons>false</dressLeptons>
+    </Truth>
+    
     <Trigger>
-      <!--      <chains>HLT_xe100,HLT_xe50,HLT_e28_tight_iloose,HLT_e60_medium,HLT_mu26_imedium,HLT_mu50</chains> -->
-      <chains>HLT_.*</chains>
+      <SaveExtended>false</SaveExtended>
+      <!--      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM.*,L1_MU.*,L1_J.*,L1_EM12,L1_MU10,L1_J50,L1_J12,L1_J15</chains>-->
+      <chains>L1_MBTS_1_1,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,HLT_xe100,HLT_e24_lhtight_iloose,HLT_e24_tight_iloose,HLT_mu26_imedium,L1_MBTS_1,L1_MBTS_2</chains>
     </Trigger>
 
-    <Truth>
-      <dressLeptons>true</dressLeptons> <!--  to use dressed/bare lepton's 4mom -->
-    </Truth>
-
     <Vertex>
-      <nTracks>2</nTracks> <!-- The default in SUSYTools (IsVertexOk method) is 2 -->
+      <nTracks>2</nTracks> <!-- The default in SUSYTools (IsVertexOk method) is 2 --> 
     </Vertex>
 
     <TrackVeto>
@@ -75,28 +75,45 @@
       <PixHitsAndSCTHits>5</PixHitsAndSCTHits>
       <TrackIso>0</TrackIso>
     </TrackVeto>
+
+    <Booking>
+      <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
+      <ElSignal>2</ElSignal>   <!-- number of signal electrons to be saved -->
+      <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
+      <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
+      <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
+      <JetSignal>4</JetSignal> <!-- number of signal jets to be saved -->
+    </Booking>
+
     <Electron>
       <PreselPtCut>10000.</PreselPtCut>
       <PreselEtaCut>2.47</PreselEtaCut>
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.47</RecoEtaCut>
-      
+
       <baseID>LooseLLH</baseID>
       <ID>TightLLH</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+
+      <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
     </Electron>
+
     <Muon>
       <PreselPtCut>10000.</PreselPtCut>
       <PreselEtaCut>2.4</PreselEtaCut>
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
-      <ID>Loose</ID>
+
+      <ID>Medium</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+
+      <triggers>HLT_mu26_imedium</triggers>
     </Muon>
+
     <Photon>
       <PreselPtCut>20000.</PreselPtCut>
       <PreselEtaCut>2.37</PreselEtaCut>
@@ -106,49 +123,58 @@
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
+      <triggers>HLT_g140_loose</triggers>
+
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
     </Photon>
+
     <Jet>
+      <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
       <PreselPtCut>20000.</PreselPtCut>
       <PreselEtaCut>10</PreselEtaCut>
       <RecoPtCut>35000.</RecoPtCut>
-      <RecoEtaCut>2.8</RecoEtaCut> 
+      <RecoEtaCut>2.8</RecoEtaCut>
+      <RecoJVTCut>0.64</RecoJVTCut>
 
       <JESNPset>1</JESNPset>
 
-      <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
-      <Path name="BtagCalib">SUSYTools/</Path>
-      <dPhiMin>0.4</dPhiMin>
-      <JVFMin>0.5</JVFMin>
-      <Collection>AntiKt4LCTopo</Collection>
-            
       <!--- For the c/b-tagger -->
-      <!-- 	<Tagger>IP3DSV1</Tagger> -->
-      <!-- 	<TaggerOpPoint>1_85</TaggerOpPoint> -->	
-      <!-- 	<TaggerOpPoint2>m0_70</TaggerOpPoint2> -->				
-      <Tagger>MV1</Tagger>
-      <TaggerOpPoint>0_7892</TaggerOpPoint>
-      <TaggerOpPoint2>0_3511</TaggerOpPoint2>
-      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection>
+      <!--      <Tagger>IP3DSV1</Tagger> -->
+      <!--      <Tagge2rOpPoint>1_85</TaggerOpPoint> -->
+      <!--      <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
+
+      <!--      <Tagger>MV1</Tagger> -->
+      <!--      <TaggerOpPoint>0_7892</TaggerOpPoint> -->
+      <!--      <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
+      <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
+
+      <Tagger>MV2c20</Tagger> --> 
+      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
+      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 80% -->
+
     </Jet>
+
     <Etmiss>
       <Path name="FakeMetEstimator">fest_periodF_v1.root</Path>
       <Collection>Egamma10NoTau</Collection>
       <doMetCleaning>false</doMetCleaning> <!-- Cleaning cut with the MuonBoy term -->
       <doFakeEtmiss>true</doFakeEtmiss>
+      
       <Term name="doRefEle">true</Term>
       <Term name="doRefGamma">true</Term>
-      <Term name="doRefTau">true</Term>
+      <Term name="doRefTau">false</Term>
       <Term name="doRefJet">true</Term>
       <Term name="doMuons">true</Term>
       <Term name="doSoftTerms">true</Term>
     </Etmiss>
+
     <QCD>
       <Enable>false</Enable> <!-- Enable jet smearing  -->
-      <TrigChains> EF_j460,EF_j55</TrigChains>
+      <TrigChains> HLT_xe.* </TrigChains>
       <JetsPtPreselection>20000.0</JetsPtPreselection>
+      <JetsEtaPreselection>2.5</JetsEtaPreselection>
       <METSigCut>1.0</METSigCut>
       <LeadJetPreSel>Stop</LeadJetPreSel>
       <RandomSeedOffset>123456</RandomSeedOffset>
@@ -159,14 +185,11 @@
       <SmearExtraSmr>true</SmearExtraSmr>
       <DoPhiSmearing>true</DoPhiSmearing>
       <SmearedEvents>250</SmearedEvents>
+      <BtagFileMap>Moriond13/R_map2012_btag_WE010_p1328_doublegaus_optimal.root</BtagFileMap>
+      <BtagMap>responseWE010_p1328_doublegaus_optimal</BtagMap>
+      <BvetoFileMap>Moriond13/R_map2012_bveto_WE010_p1328_doublegaus_optimal.root</BvetoFileMap>
+      <BvetoMap>responseWE010_p1328_doublegaus_optimal</BvetoMap>
     </QCD>
-    
-    <Booking>
-      <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
-      <ElSignal>2</ElSignal>   <!-- number of signal electrons to be saved -->
-      <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
-      <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
-    </Booking>
 
   </ObjectDefinition>
 

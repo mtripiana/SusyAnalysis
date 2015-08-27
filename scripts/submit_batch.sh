@@ -3,7 +3,7 @@ SYSTEMATIC='Nom'
 MYJOP='METbb'
 MYSAMPLE=''
 
-QSUBDIRECTORY=$ANALYSISCODE'/SusyAnalysis/scripts/qsubFiles'
+QSUBDIRECTORY=$ROOTCOREBIN'/../SusyAnalysis/scripts/qsubFiles'
 
 #DATALIST=""
 
@@ -20,9 +20,9 @@ TESTLIST="TestWmunu167773 TestWmunu167774 TestWmunu167775 TestZnunu167818 TestZn
 
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
-source $ANALYSISCODE"/SusyAnalysis/scripts/grid_up.sh"
-#source $ANALYSISCODE"/SusyAnalysis/scripts/grid_up_pwin.sh"  # ! : switch to this to avoid being asked ask for the password every time you send a batch job
-source $ANALYSISCODE"/SusyAnalysis/scripts/export_proxy.sh"
+source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up.sh"
+#source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up_pwin.sh"  # ! : switch to this to avoid being asked ask for the password every time you send a batch job
+source $ROOTCOREBIN"/../SusyAnalysis/scripts/export_proxy.sh"
 #------------------------------------
 
 SAMPLELIST=$TESTLIST 
@@ -54,9 +54,9 @@ echo
 ##SUBMIT
 if [ "$SYSTEMATIC" == "ALL" ]
 then
-    if [ -f $ANALYSISCODE"/SusyAnalysis/ToRunSusy.txt" ]
+    if [ -f $ROOTCOREBIN"/../SusyAnalysis/ToRunSusy.txt" ]
     then
-        rm $ANALYSISCODE"/code/ToRunSusy.txt*"
+        rm $ROOTCOREBIN"/../code/ToRunSusy.txt*"
     fi
 
     for syst in $ALLSYSTLIST
@@ -67,14 +67,14 @@ then
             for sample in $BKGLISTGEN
             do
                 f=$QSUBDIRECTORY/$sample
-                echo "qsub -q $QUEUE -v MYSYS=Nom,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                echo "qsub -q $QUEUE -v MYSYS=Nom,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ROOTCOREBIN"/../ToRunSusy.txt"
             done
         else
             if [ "$syst" == "Nom" ]; then
                 for sample in $DATALIST
                 do
                     f=$QSUBDIRECTORY/$sample
-                    echo "qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                    echo "qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ROOTCOREBIN"/../ToRunSusy.txt"
                 done
             fi
             for sample in $SAMPLELIST
@@ -90,14 +90,14 @@ then
                 done
                 if [ $isequal == 0 ]
                 then
-                    echo "qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                    echo "qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ROOTCOREBIN"/../ToRunSusy.txt"
                 else
-                    echo "qsub -q at3_xxl -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+                    echo "qsub -q at3_xxl -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f.sub " >> $ROOTCOREBIN"/../ToRunSusy.txt"
                 fi
             done
         fi
     done
-    split -d -l910 $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt" $ANALYSISSUSYANALYSIS"/SusyAnalysis/ToRunSusy.txt"
+    split -d -l910 $ROOTCOREBIN"/../ToRunSusy.txt" $ROOTCOREBIN"/../ToRunSusy.txt"
 
 else
 
@@ -120,7 +120,7 @@ else
         for sample in $DATALIST
         do
             f=$QSUBDIRECTORY/$sample
-            qsub -q at3 -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub"
+            qsub -q $QUEUE -v MYSYS=$syst,MYJO=$MYJOP -o $ANALYSISROOTFILES/OutputLogFiles/ -e $ANALYSISROOTFILES/OutputLogFiles/ $f".sub"
         done
     fi
 fi

@@ -9,7 +9,6 @@ if [[ $3 != "" ]]; then jop=$3;fi
 WHEREFROM=$PWD
  
 echo "CURRENT = "$WHEREFROM 
-echo "ANALYSISCODE = "$ANALYSISCODE
 echo "ROOTCOREBIN = "$ROOTCOREBIN
 echo "ROOTCOREDIR = "$ROOTCOREDIR
 
@@ -39,7 +38,8 @@ export ROOTENV_NO_HOME=1  #--- To be able to read correctly the TEnv class in RO
 
 echo "===============  Run the code  ================"
 
-source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh
-run -l -j=$jop -s=$syst $1
+source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up.sh
+run -l -j=$jop -s=$syst $1 
+#-y
 
 

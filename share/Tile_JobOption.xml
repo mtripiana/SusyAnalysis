@@ -6,13 +6,13 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">true</Mode>
+    <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">false</Mode>    
-    <Mode name="TileDump">false</Mode>    
+    <Mode name="TileDump">true</Mode>    
     <Mode name="DoSkimming">false</Mode>    
-    <Path name="RootFilesFolder">/nfs/at3/scratch2/cfischer/SusyAnalysis/MC15/50ns_MonoJet.24jun15/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/cfischer/SusyAnalysis/TemporalFolder/</Path>
-    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_HEAD_DQDefects-00-01-02_PHYS_StandardGRL_Atlas_Ready.xml</Path>
+    <Path name="RootFilesFolder">/nfs/at3/scratch2/tripiana/anafiles/</Path>
+    <Path name="PartialRootFilesFolder">/tmp/</Path>
+    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>
     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
       <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
@@ -53,11 +53,10 @@
     </Truth>
     
     <Trigger>
-      <SaveExtended>false</SaveExtended>
-      <!--      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM.*,L1_MU.*,L1_J.*,L1_EM12,L1_MU10,L1_J50,L1_J12,L1_J15</chains>-->
-      <chains>L1_MBTS_1_1,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,L1_MBTS_1,L1_MBTS_2</chains>
+      <SaveExtended>true</SaveExtended>
+      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM12,L1_MU10,L1_J50</chains> 
     </Trigger>
-    
+
     <Vertex>
       <nTracks>2</nTracks> <!-- The default in SUSYTools (IsVertexOk method) is 2 --> 
     </Vertex>
@@ -76,18 +75,18 @@
     </TrackVeto>
 
     <Booking>
-      <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
-      <ElSignal>5</ElSignal>   <!-- number of signal electrons to be saved -->
-      <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
-      <MuSignal>5</MuSignal> <!-- number of signal muons to be saved -->
-      <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
-      <JetSignal>4</JetSignal> <!-- number of signal jets to be saved -->
+      <ElBase>2</ElBase>       <!-- number of (non-signal) baseline electrons to be saved -->
+      <ElSignal>2</ElSignal>   <!-- number of signal electrons to be saved -->
+      <MuBase>2</MuBase>       <!-- number of (non-signal) baseline muons to be saved -->
+      <MuSignal>2</MuSignal>   <!-- number of signal muons to be saved -->
+      <PhSignal>1</PhSignal>   <!-- number of signal photons to be saved -->
+      <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
 
     <Electron>
-      <PreselPtCut>15000.</PreselPtCut>
+      <PreselPtCut>10000.</PreselPtCut>
       <PreselEtaCut>2.47</PreselEtaCut>
-      <RecoPtCut>15000.</RecoPtCut>
+      <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.47</RecoEtaCut>
 
       <baseID>LooseLLH</baseID>
@@ -108,7 +107,7 @@
       <RecoEtaCut>2.4</RecoEtaCut>
 
       <ID>Medium</ID>
-      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_mu26_imedium</triggers>
     </Muon>
@@ -120,24 +119,28 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoWP>None</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+
+      <triggers>HLT_g140_loose</triggers>
 
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
-
-      <triggers>HLT_g140_loose</triggers>
     </Photon>
 
     <Jet>
       <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
       <PreselPtCut>20000.</PreselPtCut>
-      <PreselEtaCut>2.8</PreselEtaCut>
-      <RecoPtCut>30000.</RecoPtCut>
+      <PreselEtaCut>10</PreselEtaCut>
+      <RecoPtCut>20000.</RecoPtCut>
       <RecoEtaCut>2.8</RecoEtaCut>
-      <RecoJVTCut>-999</RecoJVTCut>
 
       <JESNPset>1</JESNPset>
+
+      <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
+      <Path name="BtagCalib">SUSYTools/</Path>
+      <dPhiMin>0.4</dPhiMin>
+      <JVFMin>0.5</JVFMin>
 
       <!--- For the c/b-tagger -->
       <!--      <Tagger>IP3DSV1</Tagger> -->
@@ -150,8 +153,10 @@
       <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
 
       <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 80% -->
+      <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
+      <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
+
+      <TaggerCollection>AntiKt4TopoEMnoJVF</TaggerCollection> -->  <!-- remove? -->
     </Jet>
 
     <Etmiss>

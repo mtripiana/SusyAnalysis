@@ -1,3 +1,4 @@
+
 #ifndef particles_h
 #define particles_h
 
@@ -13,36 +14,48 @@ using namespace std;
 
 namespace Particles{
 
-class Particle : public TLorentzVector {
+  class Particle : public TLorentzVector {
   public:
     Particle();
     ~Particle();
-    float  Pt_up;
-    float  Pt_down;
-    float  Ht;
-    float  ptraw;
-    bool   isGood;
-    bool   isIsolated;
-    int    id;
-    bool   isTight;
-    float isoTight;
-    float isoLoose;
-    float isoGradient;
-    float  ptcone20;
-    float  etcone20;
-    float  ptcone30;
-    float  etcone30;
-    float  d0_sig;
-    float  z0;    
-    int    charge;
-    float  SF;
-    float  SFu;
-    float  SFd;
 
     int    index;
     bool   gev;
     int    type;
     int    origin;
+
+    bool   isGood;
+    int    id;
+    bool   isTight;
+
+    bool   isTrigMatch;
+
+    bool   isIsolated;
+    float  isoTight;
+    float  isoLoose;
+    float  isoLooseTrackOnly;
+    float  isoGradient;
+    float  isoGradientLoose;
+    float  isoCone20;
+    float  isoCone40CaloOnly;     
+    float  isoCone40;   
+    float  ptcone20;
+    float  etcone20;
+    float  ptcone30;
+    float  etcone30;
+
+    float  d0_sig;
+    float  z0;    
+    int    charge;
+
+    float  SF;
+    float  SFu;
+    float  SFd;
+
+    float  Pt_up;
+    float  Pt_down;
+
+    float  Ht;
 
 
     TLorentzVector GetVector() const;
@@ -53,14 +66,32 @@ class Particle : public TLorentzVector {
 
     ClassDef(Particle,1);
 
-};
+  };
 
-class Jet : public Particle {
+  class Cluster : public TLorentzVector {
+  public:
+    Cluster();
+    ~Cluster();
+   
+    bool   gev;
+    float  emf;
+
+    TLorentzVector GetVector() const;
+    void SetVector(TLorentzVector vec, bool inGeV = false);
+
+    ClassDef(Cluster,1);    
+  };
+  
+  class Jet : public Particle {
   public:
     Jet();
     ~Jet();
+    TLorentzVector p4const;
+    float ptorig;
+
     bool                    isbjet; //--- as from SUSYTools (decoration)
     float                   MV1;
+    float                   MV2c20;
     float                   SV1plusIP3D;
     float                   SV1_pb;
     float                   SV1_pc;
@@ -89,25 +120,31 @@ class Jet : public Particle {
     float                   HECQuality;
     float                   NegativeE;
     float                   LArQuality;
-    float                   jvtxf;
+    float                   jvf;
+    float                   jvt;
     bool                    failBCHTight;
     bool                    failBCHMedium;
     float                   BCH_CORR_CELL;
     float                   BCH_CORR_JET;
+    bool                    isbjet_t70;
+    bool                    isbjet_t77;
+    bool                    isbjet_t80;
+    bool                    isbjet_fb70;
+    bool                    isbjet_fb77;
+    bool                    isbjet_fb85;
+    std::vector<Cluster>    clusters;
 
-    TLorentzVector          TruthJet;
-
-    bool  isTauJet(float metphi, TString Tagger="MV1");
-    bool  isBTagged(TString Tagger, float op);
-    bool  isBTagged(TString Tagger);
-    bool  isBTagged_80eff(TString Tagger);    
+    bool isTauJet(float metphi, TString Tagger="MV1");
+    bool isBTagged(TString Tagger, float op);
+    bool isBTagged_70eff(TString Tagger);
+    bool isBTagged_77eff(TString Tagger);    
+    bool isBTagged_80eff(TString Tagger);    
     float getBweight(TString Tagger);
-    void  PrintInfo();
-
+    void PrintInfo();
     ClassDef(Jet,1);
-};
+  };
 
-class MET : public TVector2{
+  class MET : public TVector2{
   public:
     MET();
     ~MET();
@@ -149,7 +186,7 @@ class MET : public TVector2{
 
     ClassDef(MET,1);
 
-};
+  };
 
 }
 
@@ -159,6 +196,6 @@ bool operator<(const Particle& Particle1, const Particle& Particle2);
 bool operator<(const Jet& Jet1, const Jet& Jet2);
 
 bool bw_MV1_sort(const Jet& Jet1, const Jet& Jet2);
-
+bool bw_MV2c20_sort(const Jet& Jet1, const Jet& Jet2);
 
 #endif

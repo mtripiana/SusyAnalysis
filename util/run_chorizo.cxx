@@ -13,6 +13,7 @@
 #include "SampleHandler/ToolsDiscovery.h"
 #include "SampleHandler/ToolsMeta.h"
 #include "SampleHandler/DiskListLocal.h"
+#include "SampleHandler/DiskListXRD.h"
 #include "SampleHandler/MetaFields.h"
 #include "SampleHandler/fetch.h"
 #include "EventLoop/Job.h"
@@ -33,7 +34,6 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
-#include <sys/stat.h>
 
 // Systematics includes
 //#include "PATInterfaces/SystematicList.h"
@@ -61,10 +61,9 @@ void usage(){
   cout << "       -b            : run in batch            " << endl;
   cout << "       -p            : run on the grid (prun)        " << endl;
   cout << "       -g            : run on the grid (ganga)        " << endl;
-  cout << "       -d            : enable Debug mode       " << endl;  
-  cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
+  cout << "       -y            : run using proof-lite " << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
-  cout << "       -t            : run over truth xAODs" << endl;
+  cout << "       -t            : to run just a test over 50 events " <<endl;
   cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -i=<ID>       : specify a specific dataset ID inside the container" << endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
@@ -73,7 +72,9 @@ void usage(){
   cout << "                       To list the available (recommended) systematic variations do: 'run_chorizo slist'" << endl;
   cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
-  cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;
+  cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;  
+  cout << "       -c             : run over specific directory, over-passing RunsMap (mainly for tests)" << endl;
+  cout << "       -d             : debug mode " << endl;
   cout << endl;
 }
 
@@ -101,7 +102,7 @@ std::string tmpdirname(){
 
 float getLumiWeight(Sample* sample){
 
-  if( sample->getMetaDouble( MetaFields::isData ) ) //don't weight data!
+  if( sample->getMetaString( MetaFields::isData )=="Y" ) //don't weight data!
     return 1.;
 
   return sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor ) * sample->getMetaDouble( MetaFields::filterEfficiency ) / sample->getMetaDouble( MetaFields::numEvents ); 
@@ -113,6 +114,13 @@ float getECM(Sample* sample){ //in TeV
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECMEnergy | awk '{print $2}'");
+  if(s_ecm.empty()){
+    cout << "no ECMEnergy field. Try new convention next... " << endl;
+    s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep beam_energy | awk '{print $2}'");
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), ']'), s_ecm.end());
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), '['), s_ecm.end());
+    return atof(s_ecm.c_str())*2./1000000.;
+  }
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -125,8 +133,8 @@ bool type_consistent(SampleHandler sh){
   bool isData=false;
   bool isMC=false;
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
-    isMC     |= ((*iter)->getMetaDouble( MetaFields::isData)==0);
-    isData   |= ((*iter)->getMetaDouble( MetaFields::isData)==1);
+    isMC     |= ((*iter)->getMetaString( MetaFields::isData)=="N");
+    isData   |= ((*iter)->getMetaString( MetaFields::isData)=="Y");
 
     if(isData && isMC)
       return false;
@@ -137,8 +145,17 @@ bool type_consistent(SampleHandler sh){
 bool is_data(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
-  return (itis=="collisions");
+
+  return !getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'").empty();
+
+  // std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
+  // std::size_t found = itis.find("collisions");
+  // if (found!=std::string::npos) return true;
+  // //add extra check for physics containers
+  // itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
+  // if(TString(itis).Contains("period")) return true;
+
+  //  return false;
 }
 
 
@@ -163,7 +180,7 @@ void printSampleMeta(Sample* sample){
   cout << bold("---- Sample metadata -----------------------------------------------------------------------------------------") << endl;
   cout << " Name            = " << sample->getMetaString( MetaFields::sampleName ) << endl;
   cout << " GridName        = " << sample->getMetaString( MetaFields::gridName ) << endl;
-  cout << " isData          = " << (is_data(sample) ? "Y" : "N") << endl;
+  cout << " isData          = " << sample->getMetaString( MetaFields::isData ) << endl;
   cout << " ECM (TeV)       = " << sample->getMetaDouble( "ebeam" )*2 << endl;
   cout << " Xsection        = " << sample->getMetaDouble( MetaFields::crossSection ) << endl;
   cout << " XsectionRelUnc  = " << sample->getMetaDouble( MetaFields::crossSectionRelUncertainty ) << endl;
@@ -171,7 +188,7 @@ void printSampleMeta(Sample* sample){
   cout << " filterEff       = " << sample->getMetaDouble( MetaFields::filterEfficiency ) << endl;
   cout << " N               = " << sample->getMetaDouble( MetaFields::numEvents ) << endl;
   cout << " Lumi            = " << sample->getMetaDouble( MetaFields::lumi ) << endl;
-  cout << " FileWeight      = " << sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor )  * sample->getMetaDouble( MetaFields::filterEfficiency ) / (sample->getMetaDouble( MetaFields::numEvents ))<< endl;
+  cout << "FileWeight       = " << sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor )  * sample->getMetaDouble( MetaFields::filterEfficiency ) / (sample->getMetaDouble( MetaFields::numEvents ))<< endl;
   cout << bold("--------------------------------------------------------------------------------------------------------------") << endl;
   cout << endl;  
 }
@@ -205,15 +222,17 @@ int main( int argc, char* argv[] ) {
   
   std::vector<TString> args,opts;
   bool runLocal = true;
+  bool runProof = false;
   bool runBatch = false;
   bool runGrid  = false;
   bool runPrun  = false;
   TString queue = "at3";
   TString version="";
-  TString eventList="";
-  bool genPU=false;
   bool isTruth=false;
+
+  bool userDir=false;
   bool debugMode=false;
+  string wildcard="*";
 
   std::string jOption = "METbb_JobOption.xml";
 
@@ -240,8 +259,8 @@ int main( int argc, char* argv[] ) {
   else if ( args[0] == "slist" ){ //just print systematics list?
     systListOnly=true;
     gErrorIgnoreLevel = kFatal;
-    args[0] = "test_stop"; //rename to test sample to get systematics list
-    
+    //    args[0] = "test_slist"; //"mc15_ttbar"; //TestDF"; //rename to test sample to get systematics list
+    args[0] = "test_ttbar_martin"; //"mc15_ttbar"; //TestDF"; //rename to test sample to get systematics list
     // printSystList();
     // return 0;
   }
@@ -255,6 +274,9 @@ int main( int argc, char* argv[] ) {
     if (opts[iop] == "l"){ //run locally
       runLocal = true;
     }
+    else if (opts[iop] == "y"){ //run with ProofLite
+      runProof = true;
+    }
     else if (opts[iop] == "b"){ //run in batch mode
       runBatch = true;
       runLocal = false;
@@ -267,17 +289,17 @@ int main( int argc, char* argv[] ) {
       runGrid = true;
       runLocal = false;
     }
-    else if (opts[iop] == "d"){ //enable debug mode
-      debugMode = true;
-    }
     else if (opts[iop] == "x"){ //switch to 'at3_xxl' batch queue (at3 by default)
       queue = "at3_xxl";
     }
     else if (opts[iop] == "t"){ //run over truth xAODs
       isTruth = true;
     }
-    else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
-      genPU = true;
+    else if (opts[iop] == "c" ){ //user-defined input dir
+      userDir = true;
+    }
+    else if (opts[iop] == "d" ){ //debug mode
+      debugMode = true;
     }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].ReplaceAll("s=","");
@@ -297,9 +319,6 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("v") ){
       version = opts[iop].ReplaceAll("v=","");
     }
-    else if (opts[iop].BeginsWith("e") ){
-      eventList = opts[iop].ReplaceAll("e=","");
-    }
   }
 
   if(syst_str.Length()){  
@@ -318,6 +337,7 @@ int main( int argc, char* argv[] ) {
     runGrid=false;
     runBatch=false;
     runPrun=false;
+    runProof=false;
     runLocal=true;
     cout << bold(red("\n Ups! "));
     cout << "Running mode forced to 'local' when printing systematics list.\n" << endl;
@@ -340,17 +360,20 @@ int main( int argc, char* argv[] ) {
   RunsMap mapOfRuns;
   //check if sample is mapped
   RMap mymap = mapOfRuns.getMap();
-  RMap::iterator it = mymap.find( args[0] );
-  if(it == mymap.end()){
-    cout << bold(red("\n Ups! "));    
-    cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
-    cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
-    return 0;
+  if(!userDir){
+    RMap::iterator it = mymap.find( args[0] );
+    if(it == mymap.end()){
+      cout << bold(red("\n Ups! "));    
+      cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
+      cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
+      cout << "            To run over a user-directory directly use -c.'\n" << endl;
+      return 0;
+    }
   }
 
 
   // Set up the job for xAOD access:
-  xAOD::Init().ignore();
+  //  xAOD::Init().ignore();
 
   // Read some config options
   std::string maindir = getenv("ROOTCOREBIN");
@@ -359,28 +382,25 @@ int main( int argc, char* argv[] ) {
   xmlReader->readXML(maindir+"/data/SusyAnalysis/"+jOption);
 
   bool doAnaTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/doTree");
-  bool doFlowTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
+  bool doFlowTree = true; //xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
   bool doPUTree = false; //No option in the xml yet!!
-  bool generatePUfile = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
 
   TString FinalPath      = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
   if( outDir.Length() ) FinalPath = outDir;    // Take the submit directory from the input if provided:
 
   TString CollateralPath = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
 
-  doFlowTree = true; // CHECK_ME  //need to arrange the options a bit! We don't want a HUGE logfile. 
-
-  //override jOptions if required
-  if(genPU){
-    doAnaTree=false;
-    doFlowTree=false;
-    doPUTree=false;
-    generatePUfile=true;
-  }
-
   // Get patterns/paths to load for this sample
-  std::vector<TString> run_pattern = mapOfRuns.getPatterns( args[0] );
-  std::vector<int>     run_ids     = mapOfRuns.getIDs( args[0] );
+  std::vector<TString> run_pattern;
+  std::vector<int>     run_ids;
+  if(!userDir){
+    run_pattern  = mapOfRuns.getPatterns( args[0] );
+    run_ids       = mapOfRuns.getIDs( args[0] );
+  }
+  else{
+    run_pattern.push_back( args[0] );
+    run_ids.push_back( single_id );
+  }
 
   // Construct the samples to run on:
   SampleHandler sh;
@@ -391,27 +411,17 @@ int main( int argc, char* argv[] ) {
 
     //** Run on local samples
     //   e.g. scanDir( sh, "/afs/cern.ch/atlas/project/PAT/xAODs/r5591/" );
-    if(runLocal){
-      if( run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
-	scanDir( sh, run_pattern[p].Data() );
+    if(runLocal){ // || userDir){
+      if( run_pattern[p].BeginsWith("/eos/") ){
+	//	  SH::DiskListEOS list ("eosatlas.cern.ch", run_patterns[i_id].Data());
+	SH::DiskListXRD list ("eosatlas.cern.ch", gSystem->DirName(run_pattern[p]), true);
+	TString bname_regexp = Form("%s*", gSystem->BaseName(run_pattern[p]));
+	SH::scanDir (sh, list, "*", bname_regexp.Data());
       }
-      else{//PIC samples
+      else if( userDir || run_pattern[p].Contains("/afs/") || run_pattern[p].Contains("/nfs/") || run_pattern[p].Contains("/tmp/") ){//local samples
+	scanDir( sh, run_pattern[p].Data() );// , wildcard);
+      }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
-
-	if(args[0]=="test_stop")
-	  sh.setMetaString ("nc_grid_filter", "*000001.pool.root*"); //REMOVE, JUST FOR STOP0L CUTFLOW
-
-	if(args[0].Contains("13TEV_ttbar1_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00001*.pool.root*"); 
-	if(args[0].Contains("13TEV_ttbar2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00002*.pool.root*");  
-	if(args[0].Contains("13TEV_ttbar3_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00003*.pool.root*"); 
-	if(args[0].Contains("13TEV_ttbar4_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00004*.pool.root*");  
-	if(args[0].Contains("13TEV_ttbar5_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00005*.pool.root*");
-
-	if(args[0].Contains("13TEV_Part1singleTop_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00001*.pool.root*"); 
-	if(args[0].Contains("13TEV_Part2singleTop_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00002*.pool.root*");  
-	if(args[0].Contains("13TEV_Part3singleTop_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00003*.pool.root*"); 
-	if(args[0].Contains("13TEV_Part4singleTop_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00004*.pool.root*");  
-
 	mgd=true;
       }
     }
@@ -426,13 +436,12 @@ int main( int argc, char* argv[] ) {
     //set ID (do it global since there will be only one sample now)
     sh.setMetaDouble( "DSID", (double)run_ids[p] );
   }
-  if(mgd){
-    //makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
+  if(mgd)
     makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
-    //    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
-  }
+  //    makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
+   
 
-  sh.print(); //print what we found
+  //  sh.print(); //print what we found
 
   //Handle Meta-Data
   sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
@@ -467,33 +476,36 @@ int main( int argc, char* argv[] ) {
       return 0;
     }
   }
-
+  
   bool amiFound=true;
   if(s_ecm=="0"){ //if sample not found (e.g. user-made) set to default  //FIX_ME do something about this?
     s_ecm="13";
     amiFound=false;
   }
 
+  bool isData = (sh.size() ? (sh.at(0)->getMetaString( MetaFields::isData )=="Y") : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
     
   //  fetch meta-data from AMI
   if(amiFound && 0){
-    try{
-      fetchMetaData (sh, false); 
-      for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
-	float newxs = (*iter)->getMetaDouble( MetaFields::crossSection )*1000.;
-	(*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
-      }
-    }
-    catch (...) { cout << bold(red("\n Ups! PROBLEMS WITH AMI!")+"Going for SUSYTools DB now...") << endl; }
+    fetchMetaData (sh, false); 
+    for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
+      float newxs = (*iter)->getMetaDouble( MetaFields::crossSection )*1000.;
+      (*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
+    }                                                          
   }
+  TString projectName="mc15_13TeV";
+  if(s_ecm=="8") projectName="mc12_8TeV";
+  
   //  then override some meta-data from SUSYTools
-  readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+  if(!isData){
+    // readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+    readSusyMetaDir(sh,Form("$ROOTCOREBIN/data/SUSYTools/%s", projectName.Data()));
+  }
 
-
+  
   //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 
   std::vector<double> weights;
-  bool isData = (sh.size() ? (sh.at(0)->getMetaString( MetaFields::isData )=="Y") : false); //global flag. It means we can't run MC and data at the same time. Probably ok?
   
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
       printSampleMeta( *iter );
@@ -530,20 +542,16 @@ int main( int argc, char* argv[] ) {
     
     //Add NtupleSvc
     std::string osname="output";
-
     EL::OutputStream output  (osname);
     job.outputAdd (output);
-    EL::NTupleSvc* ntuple = new EL::NTupleSvc (osname);
-    ntuple->treeName("AnalysisTree");
-    job.algsAdd (ntuple);
+    //EL::NTupleSvc *ntuple = new EL::NTupleSvc (osname);
+    //ntuple->treeName("AnalysisTree");
+    //job.algsAdd (ntuple);
     
-    chorizo* alg = new chorizo();
+    chorizo *alg = new chorizo();
     
     //Alg config options here
     alg->outputName = osname;
-    alg->Region = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Mode/name/setDefinitionRegion"));
-    
-    alg->defaultRegion = "SR"; //from XML?
     alg->jOption = jOption;
     
     alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
@@ -553,15 +561,13 @@ int main( int argc, char* argv[] ) {
     alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
     alg->isNCBG     = false;   //get it from the XML!!
 
-    alg->is8TeV     = (s_ecm=="8"); 
     alg->isTruth    = isTruth;   //to run over truth xAOD (e.g. MGN1 derivation)
 
     alg->doAnaTree  = doAnaTree;     // Output trees
     alg->doFlowTree = doFlowTree;
     alg->doPUTree   = false;         //get it from the XML!!
-    alg->genPUfile  = generatePUfile;
-    
-    cout << "CP NAME = " << syst_CP.name() << endl;
+    alg->doTrigExt  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Trigger$SaveExtended"); //save extended trigger information
+    alg->dumpTile   = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");
 
     alg->syst_CP    = syst_CP;      // Systematics
     alg->syst_CPstr = syst_CP.name();
@@ -570,21 +576,19 @@ int main( int argc, char* argv[] ) {
     alg->syst_PU    = syst_PU;
     alg->syst_JVF   = syst_JVF;
     //    alg->syst_BCH   = syst_BCH;
-    //    alg->syst_JESNPset = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$JESNPset")).Atoi();
     alg->syst_JESNPset =  xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Jet$JESNPset");
     
     
-    //debug printing                                                                                                               
-    alg->debug         = debugMode;
-    alg->eventsFile    = eventList;
-    alg->printMet      = false;     //debug printing
+    //debug printing
+    alg->debug         = debugMode;;
+    alg->printMet      = false;     
     alg->printJet      = false;
     alg->printElectron = false;
     alg->printMuon     = false;
     alg->errIgnoreLevel = (systListOnly ? kFatal : kInfo);
-
-    alg->systListOnly  = systListOnly;
     
+    alg->systListOnly  = systListOnly;
+
     //Load alg to job
     job.algsAdd( alg );
     
@@ -601,6 +605,7 @@ int main( int argc, char* argv[] ) {
     
     //create tmp output dir
     string tmpdir = tmpdirname();
+    if(debugMode)   std::cout << "OUTPUT TMPDIR = " << tmpdir << std::endl;
 
     // Run the job using the appropiate driver:
     EL::DirectDriver Ddriver;
@@ -609,71 +614,73 @@ int main( int argc, char* argv[] ) {
     EL::PrunDriver   Pdriver;
     EL::GridDriver   Gdriver;
         
-
-
     //submit the job
     if(runLocal){ //local mode 
-      Ddriver.submit( job, tmpdir );
-      
-      // ProofDriver.numWorkers = 4;
-      // ProofDriver.submit( job, tmpdir );
+      if(runProof){
+	//ProofDriver.numWorkers = 4;
+	ProofDriver.submit( job, tmpdir );
+      }
+      else{
+	Ddriver.submit( job, tmpdir );
+      }
     }
     else if(runBatch){ // batch mode
       //     const std::string HOME = getenv ("HOME");
-      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ANALYSISCODE/rcSetup.sh Base,2.1.27 || exit $?; source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
+      Tdriver.shellInit = "export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase; source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh; source $ROOTCOREBIN/../rcSetup.sh Base,2.3.16 || exit $?; source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up_pwin.sh || exit $?;";
 
       Tdriver.submit( job, tmpdir );
     }
     else if(runPrun){ //Prun mode
-      
+
       //** prun
-      std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
+      std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%.%in:name[3]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
-      Pdriver.options()->setDouble("nc_nFilesPerJob", 1); //By default, split in as few jobs as possible
-      Pdriver.options()->setDouble("nc_mergeOutput", 1); //run merging jobs for all samples before downloading (recommended) 
       sh.setMetaString ("nc_grid_filter", "*.root*");
-
-      Pdriver.options()->setString("nc_rootVer", "5.34.22");
-      Pdriver.options()->setString("nc_cmtConfig", "x86_64-slc6-gcc48-opt");
-
+ 
       Pdriver.submitOnly( job, tmpdir );
+
+      std::cout << "\n" << bold("Submitted!") << std::endl;
+      SH::SampleHandler sh2;
+      sh2.load(tmpdir);
+      for (unsigned int i = 0; i < sh.size(); ++i) {
+	std::cout << "  Check it in " << link(Form("http://bigpanda.cern.ch/task/%d", (int)sh[i]->getMetaDouble("nc_jediTaskID"))) << " \n " << std::endl; //sh[i]->name()
+      }
+
       break;
     }
     else if(runGrid){ //grid mode
 
       //** ganga
       sh.setMetaString ("nc_grid_filter", "*.root*");
-      Gdriver.outputSampleName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%")+vTag.Data());
+      Gdriver.outputSampleName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%in:name[3]%")+vTag.Data());
       Gdriver.nFiles = 1;
       Gdriver.mergeOutput = 1; 
 
       Gdriver.submit( job, tmpdir );
     }
 
-    
-    if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
-  
-    if(generatePUfile) return 0; //leave if generating PURW files... no need to merge here... (it seems)
 
+    if(systListOnly) return 0; //that's enough if running systematics list. Leave tmp dir as such.
+    
     //move output to collateral files' path
     TString sampleName,targetName;
-    struct stat buffer;   
     for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){
-
-      sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
-      targetName = Form("%s_%s_%d.root", systematic[isys].Data(), args[0].Data(), single_id);
       
-      if(!(stat ((tmpdir+"/data-"+osname+"/"+sampleName.Data()).c_str(), &buffer) == 0)) continue; 
+	sampleName = Form("%s.root",(*iter)->getMetaString( MetaFields::sampleName ).c_str());
+	targetName = Form("%s_%s%s_%d.root", systematic[isys].Data(), gSystem->BaseName(args[0]), vTag.Data(), single_id);
+	
+	addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
 
-      addMetaData(tmpdir+"/data-"+osname+"/"+sampleName.Data(),tmpdir+"/hist-"+sampleName.Data(),tmpdir+"/merged.root"); //default output is merged.root
-      //	system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
-      system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
-      system(("rm -rf "+tmpdir).c_str());
-
-      mergeList.push_back(TString(CollateralPath)+"/"+targetName);
+	// system("mv "+tmpdir+"/merged.root  "+CollateralPath+"/"+targetName.Data());
+	system("mv "+tmpdir+"/data-"+osname+"/"+sampleName.Data()+" "+CollateralPath+"/"+targetName.Data());
+	//system("mv "+tmpdir+"/histo-"+sampleName.Data()+" "+CollateralPath+"/histo-"+targetName.Data());
+	
+	system(("rm -rf "+tmpdir).c_str());
+	       
+	mergeList.push_back(TString(CollateralPath)+"/"+targetName);
     }
-
+  
     if(single_id<0){ //NOTE: moved to the run wrapper for now!!
 
       //** after-burner to merge samples, add weights and anti-SF
@@ -683,9 +690,7 @@ int main( int argc, char* argv[] ) {
 	cout<<"\t\t" << i << ": " << mergeList[i] << endl;
       }      
       
-      TString mergedName = Form("%s_%s.root",systematic[isys].Data(), args[0].Data());
-      if(vTag!="")
-	mergedName.ReplaceAll(".root",vTag+".root");
+      TString mergedName = Form("%s_%s%s.root",systematic[isys].Data(), gSystem->BaseName(args[0]), vTag.Data());
       
       if (!doAnaTree) {
 	//--- Case where we run on 1 file
@@ -697,8 +702,6 @@ int main( int argc, char* argv[] ) {
     }
 
   }//end systematics list
-
-  delete xmlReader;
 
   return 0;
 }
