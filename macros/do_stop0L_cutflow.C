@@ -7,6 +7,9 @@
 std::pair<int, float> get(TChain* c, TString var, TString cut);
 void print(TChain* ch, TString sel, TString var, TString cut);
 
+float N_in;
+float N_last;
+
 void do_stop0L_cutflow(TString sample=""){
   
   if(sample=="")
@@ -22,8 +25,23 @@ void do_stop0L_cutflow(TString sample=""){
 
   
   cout << "STOP 0L CUTFLOW " << endl;
-  //  cout << "-----------------------------------------------------------------------------------------------------" << endl;
-  cout << "---presel--------------------------------------------------------------------------------------------" << endl;
+  cout << "---------------------------------------------------------------------------------------------------------------------------------" << endl;
+  std::cout  << std::setw(45)
+	     << std::left
+	     << "Selection"
+	     << std::setiosflags(std::ios::fixed)
+	     << std::setprecision(3)
+	     << std::setw(18)
+	     << std::left
+	     << "Nraw"
+	     << "\t\t" 
+	     << "Rel.Eff."
+	     << "\t" 
+	     << "Abs.Eff"
+	     << "\t\t" 
+	     << "Nweighted"
+	     << std::endl;
+  cout << "---presel------------------------------------------------------------------------------------------------------------------------" << endl;
   print(ch, "No sel", myvar, base+" )");
   print(ch, "GRL", myvar, base+" && isGRL )");
   print(ch, "LarGood", myvar, base+" && isGRL && isLarGood)");  
@@ -35,7 +53,7 @@ void do_stop0L_cutflow(TString sample=""){
   print(ch, "JetCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID)"); 
   print(ch, "CosmicVeto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic)"); 
   print(ch, "MuonCleaning", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon)"); 
-  cout << "---SR------------------------------------------------------------------------------------------------" << endl;
+  cout << "---SR----------------------------------------------------------------------------------------------------------------------------" << endl;
   print(ch, "LeptonVeto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0)");   
   print(ch, "TrigMatch", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0)");   
   print(ch, "SignalJets (pt1,2>80, |eta|<2.8)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80.)");   
@@ -45,13 +63,13 @@ void do_stop0L_cutflow(TString sample=""){
   print(ch, "dPhiMetTrackMet", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80.  && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3.))");   
   print(ch, "2 btags", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3.) && n_bjets>1)");   
   print(ch, "tau-veto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3.) && n_bjets>1 && n_taujets[1]==0)");   
-  cout << "---SRA-----------------------------------------------------------------------------------------------" << endl;
+  cout << "---SRA---------------------------------------------------------------------------------------------------------------------------" << endl;
   print(ch, "Mt", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175.)");   
   print(ch, "TopDRminB0", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.)) && dPhi_met_mettrk[1]<(TMath::Pi()/3 && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && m_top_had1>50. && m_top_had1<250.)");   
   print(ch, "TopDRminB1", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && m_top_had1>50. && m_top_had1<250. && m_top_had2>50. && m_top_had2<400.)");   
   print(ch, "minMt", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && m_top_had1>50. && m_top_had1<250. && m_top_had2>50. && m_top_had2<400. && MT_min_jet_met[1]>50.)");   
   print(ch, "highMET", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && m_top_had1>50. && m_top_had1<250. && m_top_had2>50. && m_top_had2<400. && MT_min_jet_met[1]>50. && met[1]>350.)");   
-  cout << "---SRB-----------------------------------------------------------------------------------------------" << endl;
+  cout << "---SRB---------------------------------------------------------------------------------------------------------------------------" << endl;
   print(ch, "Mt (as above)", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175.)");
   print(ch, "AntiKt12MAsymmetry ", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && mtasym12<0.5 )");   
   print(ch, "AntiKt12M0>80", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && mtasym12<0.5 && m0_antikt12>80.)");   
@@ -59,7 +77,6 @@ void do_stop0L_cutflow(TString sample=""){
   print(ch, "Antikt8M>50", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200. && m0_antikt08>50.)");
   print(ch, "MtNonBMin>175", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200. && m0_antikt08>50. && MT_lcl_met[1]>175.)");
   print(ch, "HT", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag && isVertexOk && !isBadID && !isCosmic && !isBadMuon && (eb_N+mb_N)==0 && pt1>80. && pt2>80. && met[1]>250. && n_jets>5 && dPhi_min[1]>(TMath::Pi()/5.) && dPhi_met_mettrk[1]<(TMath::Pi()/3) && n_bjets>1 && n_taujets[1]==0 && MT_bcl_met[1]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200. && m0_antikt08>50. && MT_lcl_met[1]>175. && met[1]/sqrt(HT)>17.)");
-
 
 
 }
@@ -76,6 +93,13 @@ std::pair<int, float> get(TChain* ch, TString var, TString cut){
 
 void print(TChain* ch, TString sel, TString var, TString cut){ 
   std::pair<int, float> flow = get(ch, var, cut); 
+
+  if(N_in<0) N_in = flow.first;
+  if(N_last<0) N_last = N_in;
+
+  float releff = (N_last!=0 ? flow.first/(float)N_last : 0.);
+  float abseff = (N_in!=0 ? flow.first/(float)N_in : 0.);
+
   std::cout  << std::setw(45)
 	     << std::left
 	     << sel
@@ -85,7 +109,12 @@ void print(TChain* ch, TString sel, TString var, TString cut){
 	     << std::left
 	     << flow.first
 	     << "\t\t" 
+	     << releff
+	     << "\t\t" 
+	     << abseff
+	     << "\t\t" 
 	     << flow.second 
 	     << std::endl;
-  //cout << sel << "     = " << flow.first << "\t\t" << flow.second << endl;
+
+  N_last = flow.first;
 }

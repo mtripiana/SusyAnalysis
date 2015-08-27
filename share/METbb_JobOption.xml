@@ -9,7 +9,7 @@
     <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">false</Mode>    
     <Mode name="DoSkimming">false</Mode>    
-    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/ORstudies/harmON/</Path>
+    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/ORstudies/nom/</Path>
     <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
     <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path>
     <Pileup>
@@ -43,7 +43,9 @@
 
     <OverlapRemoval>
       <Enable>true</Enable> 
-      <Harmonisation>false</Harmonisation> <!-- false by default! -->
+      <useSignalLeptons>false</useSignalLeptons>
+      <useIsoLeptons>false</useIsoLeptons>
+      <doBjetOR>false</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
@@ -79,7 +81,7 @@
       
       <baseID>LooseLLH</baseID>
       <ID>TightLLH</ID>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>
@@ -91,7 +93,7 @@
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
       <ID>Loose</ID>
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
     </Muon>
     <Photon>
       <PreselPtCut>20000.</PreselPtCut>
@@ -100,7 +102,7 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoType>None</isoType> <!-- None,Loose,Medium,Tight -->
+      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>

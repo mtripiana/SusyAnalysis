@@ -61,7 +61,7 @@
 #endif 
 
 // Systematics includes
-#include "PATInterfaces/SystematicList.h"
+//#include "PATInterfaces/SystematicList.h"
 #include "PATInterfaces/SystematicSet.h"
 #include "PATInterfaces/SystematicVariation.h"
 #include "PATInterfaces/SystematicRegistry.h"
@@ -474,8 +474,9 @@ private:
 
   //OverlapRemoval
   bool  doOR; //! 
-  int   doORharmo; //!
-  //bool  doORharmo; //!
+  bool  m_or_useSigLep; //!
+  bool  m_or_useIsoLep; //!
+  bool  m_or_bjetOR; //!
   bool  doORphotons; //!
 
   //track veto
@@ -498,7 +499,7 @@ private:
   float   El_RecoEtaCut; //!
   string  El_baseID; //!
   string  El_ID; //!
-  TString El_isoType; //!
+  string  El_isoWP; //!                                                                                                                                                                                                                                                      
   bool    El_recoSF; //!
   bool    El_idSF; //!
   bool    El_triggerSF; //!  
@@ -509,6 +510,7 @@ private:
   float   Mu_RecoPtCut; //!
   float   Mu_RecoEtaCut; //!
   string  Mu_ID; //!
+  string  Mu_isoWP; //!                                                                                                                                                                                                                                                      
   TString Mu_isoType; //!
 
   //photons
@@ -517,7 +519,7 @@ private:
   float   Ph_RecoPtCut; //!
   float   Ph_RecoEtaCut; //!
   string  Ph_ID; //!
-  TString Ph_isoType; //!
+  string  Ph_isoWP; //!                                                                                                                                                                                                                                                      
   bool    Ph_recoSF; //!
   bool    Ph_idSF; //!
   bool    Ph_triggerSF; //!  
