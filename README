@@ -10,7 +10,7 @@ The first thing you need to do is to set the Analysis release, so to have access
 
 For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
 
-     >  rcSetup SUSY,2.3.23
+     >  rcSetup SUSY,2.3.24a
  
      Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
 
@@ -96,7 +96,7 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 			         -b             : run in batch          
 				 -p             : run on the grid    (prun)   
 				 -g             : run on the grid    (ganga)     
-				 -u             : generate pileup file (overrides jOption config)
+				 -y             : run using proof-lite
 				 -x             : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
 				 -t             : run over truth xAODs
 				 -n=<N>         : run over N events

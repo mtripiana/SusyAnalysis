@@ -27,9 +27,10 @@
 #include <TRandom.h>
 #include <TTreeFormula.h>
 #include "TStopwatch.h"
+#include "TEnv.h"
+#include "TMatrixD.h"
 
 // code includes
-#include "SusyAnalysis/XMLReader.h"
 #include "SusyAnalysis/utility.h"
 #include "SusyAnalysis/particles.h"
 #include "SusyAnalysis/Systematics.h"
@@ -275,7 +276,6 @@ private:
   TH1F* h_cut_var; //!
 
   //--- Tools
-  XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; //!
 
@@ -284,7 +284,6 @@ private:
 #endif // not __CINT__
   std::string smetmap=""; //!
 
-  JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
 
   Trig::TrigDecisionTool* tool_trigdec; //! 
@@ -305,8 +304,9 @@ private:
   BTaggingSelectionTool *tool_bsel77; //! //new btagging selector tool
   BTaggingSelectionTool *tool_bsel85; //! //new btagging selector tool
 
-  BTaggingEfficiencyTool* tool_btag;  //! //70%op
-  BTaggingEfficiencyTool* tool_btag2; //! //80%op
+  BTaggingEfficiencyTool* tool_btag70;  //! //70%op
+  BTaggingEfficiencyTool* tool_btag77;  //! //77%op
+  BTaggingEfficiencyTool* tool_btag85;  //! //85%op
 
   BTagEfficiencyReader* tool_btag_truth1; //!
   BTagEfficiencyReader* tool_btag_truth2; //!
@@ -334,7 +334,7 @@ private:
 
   //Member Functions
   virtual void InitVars();
-  virtual void ReadXML();
+  EL::StatusCode ReadConfig();
 
   virtual CutflowInfo getNinfo();
   virtual bool  isDerived();
@@ -418,7 +418,6 @@ private:
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
 
-  float GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool);
 #endif // not __MAKECINT__
 
 
@@ -439,9 +438,7 @@ private:
   int  m_pdfwarnCounter; //!
 
   bool isGRL; //! //event cleaning
-  bool isFakeMet; //!
   bool isBadID; //!
-  bool isMetCleaned; //!
   std::vector<int> isTrigger; 
   bool isVertexOk; //!
   bool isLarGood; //!
@@ -465,16 +462,13 @@ private:
   TString QCD_bvetoFileMap; //!
   TString QCD_btagMap; //!
   TString QCD_bvetoMap; //!
-  float   QCD_JetsPtPreselection; //!
-  float   QCD_JetsEtaPreselection; //!
-  float   QCD_JetsPtSelection; //! //taken from the jets section
-  float   QCD_JetsEtaSelection; //! //taken from the jets section
+  float   QCD_JetsPtPresel; //!
+  float   QCD_JetsEtaPresel; //!
   float   QCD_METSig; //!
   TString QCD_LeadJetPreSel; //!
   int     QCD_RandomSeedOffset; //!
   TString QCD_SmearType; //!
   bool    QCD_SmearUseBweight; //!
-  double  QCD_SmearBtagWeight; //!
   TString QCD_SmearMeanShift; //!
   bool    QCD_SmearExtraSmr; //!
   bool    QCD_DoPhiSmearing; //!
@@ -511,7 +505,6 @@ private:
   bool    applyPURW;
   TString PURW_Folder; //!
   TString PURW_IlumicalcFile; //!
-  bool    leptonEfficiencyUnitarity; //!
 
   std::vector<std::string> TriggerNames; //!
   std::vector<std::string> ElTriggers; //!
@@ -529,7 +522,6 @@ private:
 
   //track veto
   bool  tVeto_Enable; //! 
-  int   nTracks; //! 
   float tVeto_Pt; //!
   float tVeto_Eta; //!
   float tVeto_d0; //!
@@ -537,7 +529,7 @@ private:
   float tVeto_ndof; //!
   float tVeto_chi2OverNdof_min; //!
   float tVeto_chi2OverNdof_max; //!
-  float PixHitsAndSCTHits; //!
+  float tVeto_PixSCTHits; //!
   float tVeto_TrackIso; //!
 
   //electrons
@@ -600,20 +592,6 @@ private:
   TString Jet_Tagger; //!
   TString Jet_TaggerOp; //!
   TString Jet_TaggerOp2;   //!
-
-  //met
-  TString METCollection; //!
-  TString Met_FakeMetEstimator; //! 
-  bool Met_doFakeEtmiss; //!
-  bool Met_doMetCleaning; //!
-
-  //met recalculation
-  bool Met_doRefEle; //!
-  bool Met_doRefGamma; //!
-  bool Met_doRefTau; //!
-  bool Met_doRefJet; //!
-  bool Met_doMuons; //!
-  bool Met_doSoftTerms; //!
 
 
   //Particle collections
@@ -709,14 +687,23 @@ private:
   float    Trigger_w;
   float    Trigger_w_avg;
   float    e_SF;
-  float    m_SF;
-  float    ph_SF;
   float    e_SFu;
-  float    m_SFu;
-  float    ph_SFu;
   float    e_SFd;
+  float    eb_SF;
+  float    eb_SFu;
+  float    eb_SFd;
+  float    m_SF;
+  float    m_SFu;
   float    m_SFd;
+  float    mb_SF;
+  float    mb_SFu;
+  float    mb_SFd;
+  float    ph_SF;
+  float    ph_SFu;
   float    ph_SFd;
+  float    phb_SF;
+  float    phb_SFu;
+  float    phb_SFd;
 
   //- ttbar reweighting
   float ttbar_weight;
@@ -930,14 +917,21 @@ private:
   VFloat j2_cl_emf;
 
   //- Btagging
-  int   bj_N;
-  int   bj_Ne80;
-  float btag_weight_total;
-  float btag_weight_total_80eff;
+  int   bj_Nfc_70;
+  int   bj_Nfc_77;
+  int   bj_Nfc_85;
 
-  int bj_Nt70;
-  int bj_Nt77;
-  int bj_Nt80;
+  int   bj_Nfb_70;
+  int   bj_Nfb_77;
+  int   bj_Nfb_85;
+
+  float btag_weight_total_70fc;
+  float btag_weight_total_77fc;
+  float btag_weight_total_85fc;
+
+  int bj_Nt_70;
+  int bj_Nt_77;
+  int bj_Nt_80;
   
   //- MET
   VFloat met; 

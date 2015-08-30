@@ -234,7 +234,7 @@ int main( int argc, char* argv[] ) {
   bool debugMode=false;
   string wildcard="*";
 
-  std::string jOption = "METbb_JobOption.xml";
+  std::string jOption = "METbb";
 
   std::vector<TString> systematic; 
 
@@ -311,7 +311,7 @@ int main( int argc, char* argv[] ) {
       single_id = opts[iop].ReplaceAll("i=","").Atoi();
     }
     else if (opts[iop].BeginsWith("j") ){
-      jOption = opts[iop].ReplaceAll("j=","")+"_JobOption.xml";
+      jOption = opts[iop].ReplaceAll("j=","");
     }
     else if (opts[iop].BeginsWith("n") ){
       nMax = opts[iop].ReplaceAll("n=","").Atoi();
@@ -378,17 +378,23 @@ int main( int argc, char* argv[] ) {
   // Read some config options
   std::string maindir = getenv("ROOTCOREBIN");
 
-  XMLReader *xmlReader = new XMLReader();
-  xmlReader->readXML(maindir+"/data/SusyAnalysis/"+jOption);
+  TEnv rEnv;
+  int success = -1;
+  success = rEnv.ReadFile((maindir+"/data/SusyAnalysis/JOpt_"+jOption+".conf").c_str(), kEnvAll);
+  if(success != 0){
+    cout << "   CONFIG FILE NOT FOUND!  Please try again...\n" << endl;
+    return -1;
+  }
 
-  bool doAnaTree = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/doTree");
-  bool doFlowTree = true; //xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
-  bool doPUTree = false; //No option in the xml yet!!
+  bool doAnaTree = (bool)rEnv.GetValue("Global.doTree",1);
+  bool doFlowTree = (bool)rEnv.GetValue("Global.doCutFlow",0);
 
-  TString FinalPath      = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
-  if( outDir.Length() ) FinalPath = outDir;    // Take the submit directory from the input if provided:
-
-  TString CollateralPath = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
+  std::string username = getenv("USER");
+  TString FinalPath      = TString(rEnv.GetValue(string("Global."+username+".OutFolder").c_str(),"./"));
+  if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
+  
+  TString CollateralPath = TString(rEnv.GetValue(string("Global."+username+".TmpFolder").c_str(),"./"));
+    
 
   // Get patterns/paths to load for this sample
   std::vector<TString> run_pattern;
@@ -556,7 +562,7 @@ int main( int argc, char* argv[] ) {
     
     alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
-    alg->isQCD      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$Enable");
+    alg->isQCD      = (bool) rEnv.GetValue("Tools.JetSmear.enable",0);
     alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
     alg->isNCBG     = false;   //get it from the XML!!
@@ -565,9 +571,8 @@ int main( int argc, char* argv[] ) {
 
     alg->doAnaTree  = doAnaTree;     // Output trees
     alg->doFlowTree = doFlowTree;
-    alg->doPUTree   = false;         //get it from the XML!!
-    alg->doTrigExt  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Trigger$SaveExtended"); //save extended trigger information
-    alg->dumpTile   = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");
+    alg->doTrigExt  = (bool) rEnv.GetValue("Trigger.saveExt",0);
+    alg->dumpTile   = (bool) rEnv.GetValue("Booking.dumpTile",0);
 
     alg->syst_CP    = syst_CP;      // Systematics
     alg->syst_CPstr = syst_CP.name();
@@ -576,11 +581,11 @@ int main( int argc, char* argv[] ) {
     alg->syst_PU    = syst_PU;
     alg->syst_JVF   = syst_JVF;
     //    alg->syst_BCH   = syst_BCH;
-    alg->syst_JESNPset =  xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Jet$JESNPset");
+    alg->syst_JESNPset =  rEnv.GetValue("Syst.JESNPset",1);
     
     
     //debug printing
-    alg->debug         = debugMode;;
+    alg->debug         = debugMode;
     alg->printMet      = false;     
     alg->printJet      = false;
     alg->printElectron = false;

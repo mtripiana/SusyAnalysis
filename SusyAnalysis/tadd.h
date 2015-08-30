@@ -14,7 +14,7 @@ using namespace std;
 
 void AddNewBranch(TString, Float_t);
 
-void ComputeNewBranch(TString);
+void ComputeNewBranch(TString, Float_t, bool);
 
 void addAntiWeightToTree(TString fileName, bool isData);
 
