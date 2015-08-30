@@ -4,7 +4,6 @@
 
 
 #include "SusyAnalysis/tadd.h"
-#include "SusyAnalysis/XMLReader.h"
 #include "SusyAnalysis/utility.h"
 #include "TSystemDirectory.h"
 #include "TSystemFile.h"

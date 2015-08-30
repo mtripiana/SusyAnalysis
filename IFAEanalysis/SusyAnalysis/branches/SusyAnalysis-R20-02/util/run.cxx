@@ -32,6 +32,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include "TEnv.h"
 
 // Systematics includes
 //#include "PATInterfaces/SystematicList.h"
@@ -334,24 +335,23 @@ int main( int argc, char* argv[] ) {
     gSystem->Exec("source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up_pwin.sh");
   }
 
-
-  //*** Read some input options
+  // Read some config options
   std::string maindir = getenv("ROOTCOREBIN");
-
-  std::string xmlPath=maindir+"/data/SusyAnalysis/"+jOption+"_JobOption.xml";
-
-  XMLReader *xmlJobOption = new XMLReader();
-  xmlJobOption->readXML(xmlPath);
-
-  bool doAnaTree = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/doTree");
-  bool doFlowTree = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
-  bool doPUTree = false; //No option in the xml yet!!
-
-  TString FinalPath      = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
+  
+  TEnv rEnv;
+  int success = -1;
+  success = rEnv.ReadFile((maindir+"/data/SusyAnalysis/JOpt_"+jOption+".conf").c_str(), kEnvAll);
+  if(success != 0){
+    cout << "   CONFIG FILE NOT FOUND!  Please try again...\n" << endl;
+    return -1;
+  }
+  
+  std::string username = getenv("USER");
+  TString FinalPath      = TString(rEnv.GetValue(string("Global."+username+".OutFolder").c_str(),"./"));
   if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
-
-  TString CollateralPath = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/PartialRootFilesFolder").c_str());
-
+  
+  TString CollateralPath = TString(rEnv.GetValue(string("Global."+username+".TmpFolder").c_str(),"./"));
+    
 
   //*** Call run_chorizo for every sample-id-systematic combination
   //*** Merge ids for same sample-systematic pair
@@ -492,8 +492,14 @@ int main( int argc, char* argv[] ) {
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
 
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
+	
+
+
 	TString torun = Form("run_chorizo %s -i=%d %s -s=%s", allopts.Data(), run_ids[i_id], args[i_sample].Data(), systematics[i_syst].Data());
 	system(torun.Data());
+
+
+
       }//end of systematics loop
       
       //remove sample from SH
@@ -523,7 +529,9 @@ int main( int argc, char* argv[] ) {
       cout << endl;
 
       TString mergedName = Form("%s_%s%s.root",systematics[i_syst].Data(), gSystem->BaseName(samples[i_sample]), vTag.Data());
-    
+   
+      tadd(tmp_mergeList, weights, FinalPath+"/"+mergedName, isData);
+ 
     }//end of syst loop
   }//end of samples loop
 

@@ -1,3 +1,8 @@
+2015-08-28 Martin <tripiana@cern.ch>
+	* New configuration files, to fit new major version of SUSYTools (V7beta)
+	* Remove XMLReader and all xml files
+	* Merge Silvia's latest changes
+
 2015-08-27 Martin <tripiana@cern.ch>
 	* Add multiple GRLs in jOption
 
