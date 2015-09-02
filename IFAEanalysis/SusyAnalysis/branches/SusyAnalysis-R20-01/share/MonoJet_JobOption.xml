@@ -82,7 +82,7 @@
       <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
       <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
       <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
-      <JetSignal>4</JetSignal> <!-- number of signal jets to be saved -->
+      <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
 
     <Electron>
@@ -152,17 +152,11 @@
       <!--      <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
       <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
 
-      <Path name="BtagEnv">SUSYTools/BTagCalibration.env</Path>
-      <Path name="BtagCalib">SUSYTools/</Path>
-      <dPhiMin>0.4</dPhiMin>
-      <JVFMin>0.5</JVFMin>
-
-
-      <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0.3867</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0.5517</TaggerOpPoint2> --> <!-- 80% -->
-
-      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->  <!-- remove? -->
+      <Tagger>MV2c20</Tagger> -->
+      <TaggerOpPoint70>-0_0436</TaggerOpPoint70> --> <!-- 70% -->
+      <TaggerOpPoint77>-0_4434</TaggerOpPoint77> --> <!-- 77% -->
+      <TaggerOpPoint85>-0_7887</TaggerOpPoint85> --> <!-- 85% -->
+      <TaggerCollection>AntiKt4EMTopoJets</TaggerCollection> -->
     </Jet>
 
     <Etmiss>
