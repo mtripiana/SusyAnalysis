@@ -82,6 +82,12 @@
       <PhSignal>1</PhSignal>   <!-- number of signal photons to be saved -->
       <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
+    
+    <Objects>
+      <usePhotons>false</usePhotons>     <!-- To not read info from photons -->
+      <useTrueJets>false</useTrueJets>     <!-- To not read info from photons -->
+      <isoSignalLep>false</isoSignalLep>   <!-- use isolation for signal leptons -->
+    </Objects>    
 
     <Electron>
       <PreselPtCut>10000.</PreselPtCut>

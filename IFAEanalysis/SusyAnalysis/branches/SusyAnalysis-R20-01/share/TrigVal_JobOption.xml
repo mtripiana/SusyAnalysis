@@ -81,6 +81,12 @@
       <MuSignal>5</MuSignal> <!-- number of signal muons to be saved -->
       <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
+    
+    <Objects>
+      <usePhotons>true</usePhotons>     <!-- To not read info from photons -->
+      <useTrueJets>true</useTrueJets>     <!-- To not read info from photons -->
+      <isoSignalLep>false</isoSignalLep>   <!-- use isolation for signal leptons -->
+    </Objects>    
 
     <Electron>
       <PreselPtCut>7000.</PreselPtCut>

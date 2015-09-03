@@ -346,7 +346,7 @@ void chorizo :: bookTree(){
       m_atree->Branch("ph_origin",&ph_origin);
       m_atree->Branch("ph_Cone20",&ph_Cone20);      
       m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
-      m_atree->Branch("ph_Cone40",&ph_Cone40);      
+      m_atree->Branch("ph_Cone40",&ph_Cone40);     
       
 
       m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
@@ -1672,8 +1672,13 @@ void chorizo :: ReadXML(){
   BookMuSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$MuSignal");
   BookPhSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$PhSignal");
   BookJetSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$JetSignal");
-
-
+  
+  //Object options
+  Info(whereAmI, Form(" - Objects" ));
+  usePhotons   = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Objects$usePhotons");
+  useTrueJets  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Objects$useTrueJets");
+  isoSignalLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Objects$isoSignalLep");
+ 
   //--- To know if we gonna smear a truth sample                                         
   doTTR = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$Enable");
   ttr_mu = xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$Mu");
@@ -1820,9 +1825,13 @@ EL::StatusCode chorizo :: initialize ()
 
     CHECK( tool_st->setProperty("MuIsoWP",Mu_isoWP) ); 
 
+    if (usePhotons){
     CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
     CHECK( tool_st->setProperty("PhotonIsoWP",Ph_isoWP) );
+    }
 
+    CHECK( tool_st->setProperty("RequireIsoSignal", isoSignalLep));
+    
     // Set Btagging WPs
     //    CHECK( tool_st->setProperty("BtagWP", "FixedCutBEff_77" ) );
     //    CHECK( tool_st->setProperty("BtagWP_OR", "FixedCutBEff_80" ) );
@@ -1979,31 +1988,31 @@ EL::StatusCode chorizo :: initialize ()
   iso_1 = new CP::IsolationSelectionTool("iso_1");
   CHECK( iso_1->setProperty("ElectronWP","GradientLoose") );
   CHECK( iso_1->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_1->setProperty("PhotonWP","Cone20") );
+  if (usePhotons)CHECK( iso_1->setProperty("PhotonWP","Cone20") );
   CHECK( iso_1->initialize() );
 
   iso_2 = new CP::IsolationSelectionTool("iso_2");
   CHECK( iso_2->setProperty("ElectronWP","Loose") );
   CHECK( iso_2->setProperty("MuonWP","Loose") );
-  CHECK( iso_2->setProperty("PhotonWP","Cone40CaloOnly") );
+  if (usePhotons) CHECK( iso_2->setProperty("PhotonWP","Cone40CaloOnly") );
   CHECK( iso_2->initialize() );
 
   iso_3 = new CP::IsolationSelectionTool("iso_3");
   CHECK( iso_3->setProperty("ElectronWP","LooseTrackOnly") );
   CHECK( iso_3->setProperty("MuonWP","LooseTrackOnly") );
-  CHECK( iso_3->setProperty("PhotonWP","Cone40") );
+  if (usePhotons) CHECK( iso_3->setProperty("PhotonWP","Cone40") );
   CHECK( iso_3->initialize() );
 
   iso_4 = new CP::IsolationSelectionTool("iso_4");
   CHECK( iso_4->setProperty("ElectronWP","Gradient") );
   CHECK( iso_4->setProperty("MuonWP","Gradient") );
-  //CHECK( iso_4->setProperty("PhotonWP","Cone20") );
+  //if (usePhotons) CHECK( iso_4->setProperty("PhotonWP","Cone20") );
   CHECK( iso_4->initialize() );
 
   iso_5 = new CP::IsolationSelectionTool("iso_5");
   CHECK( iso_5->setProperty("ElectronWP","Tight") );
   CHECK( iso_5->setProperty("MuonWP","Tight") );
-  //CHECK( iso_5->setProperty("PhotonWP","Cone20") );
+  //if (usePhotons) CHECK( iso_5->setProperty("PhotonWP","Cone20") );
   CHECK( iso_5->initialize() );
 
 
@@ -2290,7 +2299,7 @@ EL::StatusCode chorizo :: loop ()
         
     CHECK( m_event->retrieve( m_truthE,     "TruthEvents" ) );
     CHECK( m_event->retrieve( m_truthP,     "TruthParticles" ) );
-    CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+    if (useTrueJets) CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
     CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );//PROBLEM!!!!!!
 
     mtruth_inv = (*cmet_truth)["Int"];
@@ -2613,6 +2622,7 @@ EL::StatusCode chorizo :: loop ()
   //--- Get Photons
   xAOD::PhotonContainer* photons_sc(0);
   xAOD::ShallowAuxContainer* photons_scaux(0);
+  if (usePhotons){
   CHECK( tool_st->GetPhotons(photons_sc, photons_scaux, false, Ph_PreselPtCut, Ph_PreselEtaCut ) ); //'baseline' decoration
 
   for(const auto& ph_itr : *photons_sc){ 
@@ -2629,6 +2639,8 @@ EL::StatusCode chorizo :: loop ()
       dec_final(*ph_itr) = dec_signal(*ph_itr);
 
   }
+  }//usephotons
+  
   //--- Get Jets
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
 
@@ -2657,14 +2669,15 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Do overlap removal   
   if(doOR){
-    if(doORphotons)
+    if(doORphotons && usePhotons)
       CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
     else
       CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
   }
 
   // Apply the overlap removal to all objects (dumb example)
-  CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
+  if (usePhotons) CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
+  
   //-- Pre-book baseline electrons (after OR)
   bool IsElectron = false; // any good not-overlapping electron in the event?
   int iEl = -1;
@@ -2933,6 +2946,7 @@ EL::StatusCode chorizo :: loop ()
   std::vector<Particle> photonCandidates; //intermediate selection photons
   int iPh = 0;
   ph_N=0; //signal photons
+  if (usePhotons){
   for(const auto& ph_itr : *photons_sc ){
     if( dec_baseline(*ph_itr) &&
 	((!doOR) || (!doORphotons) || dec_passOR(*ph_itr))){
@@ -3018,6 +3032,7 @@ EL::StatusCode chorizo :: loop ()
   //sort the photons in Pt
   if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
   if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+  }//usephotons
 
   //-- pre-book good jets now (after OR)
   auto jet_itr = jets_sc->begin();
@@ -3028,8 +3043,9 @@ EL::StatusCode chorizo :: loop ()
     
     if( doOR && !dec_passOR(**jet_itr) ) continue;
 
-    bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
     bool isbadjet = tool_st->IsBadJet( **jet_itr, Jet_RecoJVTCut); // Change preselEta to recoEta    
+    bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
+    
 
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
@@ -3241,7 +3257,7 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //Get truth jets vectors
-  if(isMC){
+  if(isMC && useTrueJets){
     xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
     xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
     
@@ -4406,7 +4422,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---Fill missing data members 
   this->dumpLeptons();
-  this->dumpPhotons();
+  if (usePhotons)this->dumpPhotons();
   this->dumpJets();
   
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
@@ -4584,6 +4600,7 @@ EL::StatusCode chorizo :: loop_truth()
 
 
   //Truth Photons 
+  if (usePhotons){
   if( !m_event->retrieve( m_truthPh, "TruthPhotons").isSuccess() ){
     if( !m_event->retrieve( m_truthPh, "Truth3Photons").isSuccess() ){
       Error("loop_truth()", "Failed to retrieve Truth(3)Photon container. Exiting." );
@@ -4592,8 +4609,10 @@ EL::StatusCode chorizo :: loop_truth()
   }
   //CHECK( m_event->retrieve( m_truthPh, "TruthPhotons" ) );
   //CHECK( m_event->retrieve( m_truthPh, "Truth3Photons" ) );
+  }//usephotons
 
   std::vector<Particle> photonCandidates; //intermediate selection photons
+  if (usePhotons){
   for(const xAOD::TruthParticle* tPh : *m_truthPh) {
 
       // FS selection
@@ -4618,10 +4637,11 @@ EL::StatusCode chorizo :: loop_truth()
 
   //sort the photons in Pt
   if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
+  }//usephotons
 
 
   //Truth Jets
-  CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+  if (useTrueJets) CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
   
   std::vector<Particles::Jet> jetCandidates; //intermediate selection photons
   for(const xAOD::Jet* tJet : *m_truth_jets) {
@@ -4755,12 +4775,14 @@ EL::StatusCode chorizo :: loop_truth()
       }
       if(overlap) continue;
       
+      if (usePhotons){
       for(const auto& c_ph : photonCandidates){
 	if(recoJet.GetVector().DeltaR(c_ph) < 0.4){
 	  overlap=true;
 	  break;
 	}
       }
+      }//usephoton
       if(overlap) continue;
     }
 
@@ -4797,6 +4819,7 @@ EL::StatusCode chorizo :: loop_truth()
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end());
 
 
+  if (usePhotons){
   for(const auto& c_ph : photonCandidates){
 
     if(doOR){    
@@ -4818,6 +4841,7 @@ EL::StatusCode chorizo :: loop_truth()
   }  
   //sort the photons in Pt (they should be already, but anyways)
   if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+  }//usephoton
 
   //just to TEST directHG thing
   // if(recoPhotons.size()>1){

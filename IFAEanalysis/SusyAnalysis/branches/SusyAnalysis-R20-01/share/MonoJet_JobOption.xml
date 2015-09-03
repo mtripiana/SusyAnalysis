@@ -6,13 +6,13 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">true</Mode>
+    <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">false</Mode>    
     <Mode name="TileDump">false</Mode>    
-    <Mode name="DoSkimming">true</Mode>    
-    <Path name="RootFilesFolder">/nfs/at3/scratch2/cfischer/SusyAnalysis/MC15/Susy1Samples_Aug15/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/cfischer/SusyAnalysis/TemporalFolder/</Path>
-    <Path name="GRLxmlFile">SusyAnalysis/GRL/data15_13TeV.periodAllYear_HEAD_DQDefects-00-01-02_PHYS_StandardGRL_Atlas_Ready.xml</Path>
+    <Mode name="DoSkimming">false</Mode>    
+    <Path name="RootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/SusyAnalysis_sep2015/Running/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/arelycg/SUSYANALYSIS_13TeV/SusyAnalysis_sep2015/Collateral/</Path>
+    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v63-pro18-01_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>
 <!--    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>-->
     <Pileup>
       <Mode name="ApplyPileupReweighting">false</Mode>
@@ -56,7 +56,7 @@
     <Trigger>
       <SaveExtended>false</SaveExtended>
 <!--      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM.*,L1_MU.*,L1_J.*,L1_EM12,L1_MU10,L1_J50,L1_J12,L1_J15</chains>-->
- <chains>L1_MBTS_1_1,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe50,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,L1_MBTS_1,L1_MBTS_2,HLT_mu26_imedium,HLT_e24_tight_iloose,HLT_e28_tight_iloose,HLT_xe70</chains>
+ <chains>HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,HLT_mu26_imedium,HLT_e24_tight_iloose,HLT_e28_tight_iloose,HLT_e24_tight_iloose_L1EM18VH</chains>
     </Trigger>
     
     <Vertex>
@@ -82,8 +82,14 @@
       <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
       <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
       <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
-      <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
+      <JetSignal>4</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
+    
+    <Objects>
+      <usePhotons>false</usePhotons>     <!-- To not read info from photons -->
+      <useTrueJets>false</useTrueJets>     <!-- To not read info from photons -->
+      <isoSignalLep>false</isoSignalLep>   <!-- use isolation for signal leptons -->
+    </Objects>    
 
     <Electron>
       <PreselPtCut>20000.</PreselPtCut>
@@ -93,10 +99,9 @@
 
       <baseID>LooseLH</baseID>
       <ID>TightLH</ID>
-      <!-- None,Loose,Medium,Tight -->
       <isoWP>LooseTrackOnly</isoWP><!-- None,Loose,Medium,Tight -->
 
-      <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
+      <triggers>HLT_e24_tight_iloose_L1EM18VH</triggers>
       
       <recoSF>true</recoSF>
       <idSF>true</idSF>
@@ -110,7 +115,6 @@
       <RecoEtaCut>2.5</RecoEtaCut>
 
       <ID>Medium</ID>
-      <!--e,Loose,Medium,Tight -->
       <isoWP>LooseTrackOnly</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_mu26_imedium</triggers>

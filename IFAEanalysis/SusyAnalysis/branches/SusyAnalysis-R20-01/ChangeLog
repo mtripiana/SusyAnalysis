@@ -1,3 +1,7 @@
+2015-09-03 Arely <arelycg@cern.ch>
+	* Added a flag to *not* use photons, and true jets (EXOT5).
+        * call isbadjets before isgoodjet.
+
 2015-08-27 Silvia <silvia.fracchia@cern.ch>
 	* Added b-tagging SFs for three working points (70, 77, 85%)
 	* Added lepton SF for baseline leptons

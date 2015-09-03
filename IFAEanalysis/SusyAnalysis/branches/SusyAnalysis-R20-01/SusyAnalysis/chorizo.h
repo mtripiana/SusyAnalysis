@@ -491,6 +491,11 @@ private:
   bool    doPDFrw; //!
   float   beamE_from; //!
   float   beamE_to; //!
+  
+  //---objects options
+  bool isoSignalLep;
+  bool useTrueJets;
+  bool usePhotons;
 
   //----- Truth-->Reco smearing
   bool doTTR; //!  // do truth to reco smearing ? 
