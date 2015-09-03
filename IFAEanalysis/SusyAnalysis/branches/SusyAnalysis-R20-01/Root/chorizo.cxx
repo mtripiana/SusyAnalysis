@@ -1491,9 +1491,10 @@ void chorizo :: ReadXML(){
   Info(whereAmI, Form(" - Cut Flow") );
   doCutFlow = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");  
   
-  isStopTL = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
-  m_skim   = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming");  
-  dumpTile = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");  
+  isStopTL    = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
+  m_skim_btag = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming_BTAG");  
+  m_skim_met  = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming_MET");  
+  dumpTile    = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");  
 
   Info(whereAmI, Form(" - PDF reweighting") );
   doPDFrw = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
@@ -1582,6 +1583,8 @@ void chorizo :: ReadXML(){
   El_baseID        = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$baseID")).Data());
   El_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$ID")).Data());
   El_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoWP")).Data());
+  El_d0sigcut      = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$d0sigcut"); 
+  El_z0cut         = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$z0cut"); 
   
   El_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$recoSF");
   El_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$idSF");
@@ -1595,6 +1598,8 @@ void chorizo :: ReadXML(){
 
   Mu_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$ID")).Data());
   Mu_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoWP")).Data());    
+  Mu_d0sigcut      = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$d0sigcut"); 
+  Mu_z0cut         = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$z0cut"); 
 
   Info(whereAmI, Form(" - Photons") );
   Ph_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselPtCut");
@@ -1822,7 +1827,6 @@ EL::StatusCode chorizo :: initialize ()
     else if(Mu_ID=="Medium") CHECK( tool_st->setProperty("MuId", xAOD::Muon::Medium));
     else if(Mu_ID=="Tight")  CHECK( tool_st->setProperty("MuId", xAOD::Muon::Tight));
     else                     CHECK( tool_st->setProperty("MuId", xAOD::Muon::VeryLoose));
-
     CHECK( tool_st->setProperty("MuIsoWP",Mu_isoWP) ); 
 
     if (usePhotons){
@@ -2591,7 +2595,7 @@ EL::StatusCode chorizo :: loop ()
     if(noElIso) dec_isol(*el_itr) = true;
 
     //decorate electron with baseline pt requirements ('signal')
-    tool_st->IsSignalElectron( (*el_itr), El_PreselPtCut);
+    tool_st->IsSignalElectron( (*el_itr), El_PreselPtCut, El_d0sigcut, El_z0cut);
     //tool_st->IsSignalElectron( (*el_itr));    
     
     //decorate electron with final pt requirements ('final')
@@ -2610,7 +2614,7 @@ EL::StatusCode chorizo :: loop ()
     if(noMuIso) dec_isol(*mu_itr) = true;
 
     //decorate muon with final pt requirements ('final')
-    tool_st->IsSignalMuon( *mu_itr, Mu_PreselPtCut);  //'signal' decoration.
+    tool_st->IsSignalMuon( *mu_itr, Mu_PreselPtCut, Mu_d0sigcut, Mu_z0cut);  //'signal' decoration.
     //tool_st->IsSignalMuon( *mu_itr);  //'signal' decoration.
 
     //decorate muon with final pt requirements ('final')
@@ -3648,17 +3652,17 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //*** Event Skimming (if requested)
-  if(m_skim){
+  if(m_skim_met || m_skim_btag){
     
     bool SK_passBtagging = (bj_N_77fc>0);
     
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
-			  || metmap[::MetDef::VisMu].Mod() > 100. );
+		       || metmap[::MetDef::VisMu].Mod() > 100. );
     
     bool SK_passSR = ( ((eb_N+mb_N)==0) &&  (metmap[::MetDef::InvMu].Mod() > 250. 
-					   || metmap[::MetDef::VisMu].Mod() > 250. 
-					   || metmap[::MetDef::VisMuTST].Mod() > 250. 
-					   || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
+					  || metmap[::MetDef::VisMu].Mod() > 250. 
+					  || metmap[::MetDef::InvMuTST].Mod() > 250. 
+					  || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
     
     bool SK_passCRe = ( (e_N>0) &&  (SK_passMETdef
 				     || metmap[::MetDef::InvMuECorr].Mod() > 100. 
@@ -3667,14 +3671,25 @@ EL::StatusCode chorizo :: loop ()
 				     || metmap[::MetDef::VisMuTSTECorr].Mod() > 100.)); 
     
     bool SK_passCRmu = ( (m_N>0) &&  ( SK_passMETdef
-					|| metmap[::MetDef::VisMuMuCorr].Mod() > 100.
-					|| metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.));
+				       || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
+				       || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.));
     
     bool SK_passCRph = ( (ph_N>0) &&  ( SK_passMETdef
-					|| metmap[::MetDef::VisMuPhCorr].Mod() > 100.));
+				        || metmap[::MetDef::VisMuPhCorr].Mod() > 100.));
 
 
-    bool keep_event = (SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph));
+    bool SK_passAnyMet = (metmap[::MetDef::InvMu].Mod() > 100.
+                       || metmap[::MetDef::VisMu].Mod() > 100. 
+                       || metmap[::MetDef::InvMuTST].Mod() > 100. 
+                       || metmap[::MetDef::VisMuTST].Mod() > 100. 
+                       || metmap[::MetDef::InvMuECorr].Mod() > 100. 
+                       || metmap[::MetDef::VisMuECorr].Mod() > 100. 
+                       || metmap[::MetDef::InvMuTSTECorr].Mod() > 100. 
+                       || metmap[::MetDef::VisMuTSTECorr].Mod() > 100. 
+                       || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
+                       || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.);
+    
+    bool keep_event = ( (m_skim_btag && SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph)) || (m_skim_met && SK_passAnyMet) );
 
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;

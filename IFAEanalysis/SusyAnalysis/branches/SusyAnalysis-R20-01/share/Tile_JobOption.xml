@@ -9,6 +9,8 @@
     <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">false</Mode>    
     <Mode name="TileDump">true</Mode>    
+    <Mode name="DoSkimming_MET">false</Mode>
+    <Mode name="DoSkimming_BTAG">false</Mode>
     <Mode name="DoSkimming">false</Mode>    
     <Path name="RootFilesFolder">/nfs/at3/scratch2/tripiana/anafiles/</Path>
     <Path name="PartialRootFilesFolder">/tmp/</Path>
@@ -98,6 +100,8 @@
       <baseID>LooseLLH</baseID>
       <ID>TightLLH</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <d0sigcut>5.</d0sigcut><!-- default:5, none:-1 -->
+      <z0cut>0.5</z0cut><!-- default:0.5, none:-1 -->
 
       <triggers>HLT_e24_medium_iloose_L1EM18VH</triggers>
       
@@ -114,6 +118,8 @@
 
       <ID>Medium</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <d0sigcut>3.</d0sigcut><!-- default:3, none:-1 -->
+      <z0cut>0.5</z0cut><!-- default:0.5, none:-1 -->
 
       <triggers>HLT_mu26_imedium</triggers>
     </Muon>

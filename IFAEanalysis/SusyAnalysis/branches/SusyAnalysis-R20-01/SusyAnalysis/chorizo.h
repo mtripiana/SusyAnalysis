@@ -515,7 +515,8 @@ private:
 
   bool doCutFlow; //! 
   bool isStopTL; //!  
-  bool m_skim; //! 
+  bool m_skim_btag; //! 
+  bool m_skim_met; //!
 
 
   TString GRLxmlFile; //!
@@ -559,6 +560,8 @@ private:
   string El_baseID; //!
   string El_ID; //!
   string El_isoWP; //!
+  float El_d0sigcut; //!
+  float El_z0cut; //!
   bool El_recoSF; //!
   bool El_idSF; //!
   bool El_triggerSF; //!  
@@ -570,6 +573,8 @@ private:
   float Mu_RecoEtaCut; //!
   string Mu_ID; //!
   string Mu_isoWP; //!
+  float Mu_d0sigcut; //!
+  float Mu_z0cut; //!
 
   //photons
   float Ph_PreselPtCut; //!
