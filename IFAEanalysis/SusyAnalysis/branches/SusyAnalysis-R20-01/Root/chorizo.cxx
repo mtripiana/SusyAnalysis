@@ -134,7 +134,7 @@ chorizo :: chorizo ()
 #endif
     tool_mct(0)
 {
-  //  Info("chorizo()", "HERE");
+  if(debug)  Info("chorizo()", "HERE");
 
   outputName="";
 
@@ -180,7 +180,7 @@ chorizo :: chorizo ()
 
 EL::StatusCode chorizo :: setupJob (EL::Job& job)
 {
-  //  Info("setupJob()", "HERE");
+  if(debug)   Info("setupJob()", "HERE");
 
   job.useXAOD();
 
@@ -213,7 +213,7 @@ void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, flo
 }
 
 void chorizo :: bookTree(){
-  //  Info("bookTree()", "HERE");  
+  if(debug)  Info("bookTree()", "HERE");  
 
   //add the branches to be saved
   if (output){
@@ -709,7 +709,7 @@ void chorizo :: bookTree(){
 
 EL::StatusCode chorizo :: histInitialize ()
 {
-  //  Info("histInitialize()", "HERE");
+  if(debug)  Info("histInitialize()", "HERE");
 
   gErrorIgnoreLevel = this->errIgnoreLevel;
 
@@ -818,7 +818,7 @@ EL::StatusCode chorizo :: histInitialize ()
 
 CutflowInfo chorizo :: getNinfo(){
 
-  //  Info("getNinfo()", "HERE");
+  if(debug)  Info("getNinfo()", "HERE");
 
   CutflowInfo sinfo = {};
   
@@ -943,7 +943,7 @@ bool chorizo :: inEventList(UInt_t run, UInt_t event){
 
 void chorizo :: InitVars()
 {
-  //  Info("InitVars()", "HERE");
+  if(debug)  Info("InitVars()", "HERE");
  
   //Initialize ntuple variables
 
@@ -1420,7 +1420,7 @@ void chorizo :: InitVars()
 
 EL::StatusCode chorizo :: fileExecute ()
 {
-  //  Info("fileExecute()", "HERE");
+  if(debug)  Info("fileExecute()", "HERE");
 
   //--- Get sum of weights and initial numbers of events
   // get the MetaData tree once a new file is opened, with
@@ -1459,7 +1459,7 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  //  Info("changeInput()", "HERE");
+  if(debug)  Info("changeInput()", "HERE");
 
   m_event = wk()->xaodEvent();   
 
@@ -1476,7 +1476,7 @@ EL::StatusCode chorizo :: changeInput (bool firstFile)
 }
 
 void chorizo :: ReadXML(){
-  //  Info("ReadXML()", "HERE");
+  if(debug)  Info("ReadXML()", "HERE");
 
   const char* whereAmI = "chorizo::ReadXML()";
   Info(whereAmI, "--- Read XML options ---");
@@ -1706,7 +1706,7 @@ void chorizo :: ReadXML(){
 
 EL::StatusCode chorizo :: initialize ()
 {
-  //  Info("initialize()", "HERE");
+  if(debug)  Info("initialize()", "HERE");
 
   //Start Clock
   watch.Start();
@@ -1905,7 +1905,7 @@ EL::StatusCode chorizo :: initialize ()
 
   tool_btag70 = new BTaggingEfficiencyTool("BTagSF70_EMTopoJets");
   CHECK( tool_btag70->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag70->setProperty("OperatingPoint",      "-0_0436") );
+  CHECK( tool_btag70->setProperty("OperatingPoint",      "-0_0436") ); //"FixedCutBEff_70") );
   CHECK( tool_btag70->setProperty("JetAuthor",           JetTagCollection.Data()) );
   CHECK( tool_btag70->setProperty("ScaleFactorFileName", FlvTagCutFN) );
   //CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
@@ -1914,7 +1914,7 @@ EL::StatusCode chorizo :: initialize ()
   
   tool_btag77 = new BTaggingEfficiencyTool("BTagSF77_EMTopoJets");
   CHECK( tool_btag77->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag77->setProperty("OperatingPoint",      "-0_4434") );
+  CHECK( tool_btag77->setProperty("OperatingPoint",      "-0_4434") ); //"FixedCutBEff_77") );
   CHECK( tool_btag77->setProperty("JetAuthor",           JetTagCollection.Data() ) );
   CHECK( tool_btag77->setProperty("ScaleFactorFileName", FlvTagCutFN) );
   //CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
@@ -1923,7 +1923,7 @@ EL::StatusCode chorizo :: initialize ()
   
   tool_btag85 = new BTaggingEfficiencyTool("BTagSF85_EMTopoJets");
   CHECK( tool_btag85->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag85->setProperty("OperatingPoint",      "-0_7887") );
+  CHECK( tool_btag85->setProperty("OperatingPoint",      "-0_7887") ); //FixedCutBEff_85") );
   CHECK( tool_btag85->setProperty("JetAuthor",           JetTagCollection.Data() ) ); 
   CHECK( tool_btag85->setProperty("ScaleFactorFileName", FlvTagCutFN) );
   //  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
@@ -2181,7 +2181,7 @@ void chorizo :: printSystList(){
 
 void chorizo :: loadMetaData(){
 
-  //  Info("loadMetaData()", "HERE");
+  if(debug)  Info("loadMetaData()", "HERE");
 
   if(!isMC) return;
 
@@ -2200,7 +2200,7 @@ void chorizo :: loadMetaData(){
 
 EL::StatusCode chorizo :: nextEvent(){
   
-  //  Info("nextEvent()", "HERE");
+  if(debug)  Info("nextEvent()", "HERE");
 
   //*** clean event (store, pointers, etc...) before leaving successfully... ***
   
@@ -2229,7 +2229,7 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
-  //  Info("execute()", "HERE");
+  if(debug)  Info("execute()", "HERE");
 
   if(this->isTruth) //truth derivations
     return loop_truth();
@@ -2240,7 +2240,7 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  //Info("loop()", "HERE");
+  if(debug)  Info("loop()", "HERE");
   
 #ifdef PROFCODE
   if(m_eventCounter!=0)
@@ -3033,11 +3033,9 @@ EL::StatusCode chorizo :: loop ()
     bool isbadjet = tool_st->IsBadJet( **jet_itr, Jet_RecoJVTCut); // Change preselEta to recoEta    
     bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
 
-    //** Bjet decoration 
-    if (fabs((*jet_itr)->eta()) < 2.5){
-      tool_st->IsBJet( **jet_itr );  //rel20 0.77 eff value from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks#MV2c20_tagger_antikt4topoem_jets
+    //** Bjet decoration  
+    tool_st->IsBJet( **jet_itr );  //rel20 0.77 eff value from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks#MV2c20_tagger_antikt4topoem_jets
 
-    }
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
 
@@ -3047,7 +3045,7 @@ EL::StatusCode chorizo :: loop ()
 
     if( !isgoodjet ) continue; //just book good jets!
 
-    if (fabs((*jet_itr)->eta()) <2.5) m_goodJets->push_back (*jet_itr);
+    m_goodJets->push_back (*jet_itr);
 
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
     recoJet.id = iJet;
@@ -5481,14 +5479,14 @@ void chorizo :: dumpJets(){
 
 EL::StatusCode chorizo :: postExecute ()
 {
-  //  Info("postExecute()","HERE");
+  if(debug)  Info("postExecute()","HERE");
   return EL::StatusCode::SUCCESS;
 }
 
 
 EL::StatusCode chorizo :: finalize ()
 {
-  Info("finalize()","HERE");
+  if(debug)  Info("finalize()","HERE");
 
   h_presel_flow->Fill(0.5, meta_nsim);
   h_presel_wflow->Fill(0.5, meta_nwsim);
@@ -5664,7 +5662,7 @@ EL::StatusCode chorizo :: finalize ()
 
 EL::StatusCode chorizo :: histFinalize ()
 {
-  Info("histFinalize()","HERE");
+  if(debug)  Info("histFinalize()","HERE");
   return EL::StatusCode::SUCCESS;
 }
 

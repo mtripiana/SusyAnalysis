@@ -65,6 +65,7 @@ void usage(){
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
+  cout << "       -a            : is AFII reconstruction? It is guessed from the sample name otherwise." <<endl;
   cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -i=<ID>       : specify a specific dataset ID inside the container" << endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
@@ -142,6 +143,13 @@ bool type_consistent(SampleHandler sh){
   } 
   return true;
 }
+
+
+bool is_AtlFast(Sample* sample){ 
+  TString sampleName(sample->getMetaString( MetaFields::sampleName ));
+  return stripName(sampleName).Contains("_a");
+}
+
 
 bool is_data(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
@@ -230,7 +238,9 @@ int main( int argc, char* argv[] ) {
   TString queue = "at3";
   TString version="";
   bool genPU=false;
+
   bool isTruth=false;
+  bool isAFII=false;
 
   bool userDir=false;
   bool debugMode=false;
@@ -274,6 +284,7 @@ int main( int argc, char* argv[] ) {
   TString outDir="";
   //config options
   for( unsigned int iop=0; iop < opts.size(); iop++){
+
     if (opts[iop] == "l"){ //run locally
       runLocal = true;
     }
@@ -306,6 +317,9 @@ int main( int argc, char* argv[] ) {
     }
     else if (opts[iop] == "d" ){ //debug mode
       debugMode = true;
+    }
+    if (opts[iop] == "a"){ //is AFII reco
+      isAFII = true;
     }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].ReplaceAll("s=","");
@@ -521,7 +535,10 @@ int main( int argc, char* argv[] ) {
     readSusyMetaDir(sh,Form("$ROOTCOREBIN/data/SUSYTools/%s", projectName.Data()));
   }
 
-  
+  //check if it is AFII simulation (if not explicitly said by command line)
+  isAFII |= is_AtlFast(sh.at(0));
+
+
   //Print meta-data and save weights+names for later use
   std::vector<TString> mergeList; 
   std::vector<double> weights;
@@ -576,7 +593,7 @@ int main( int argc, char* argv[] ) {
     alg->isSignal   = false;   //get it from D3PDReader-like code (add metadata to SH)
     alg->isTop      = true;    //get it from D3PDReader-like code (add metadata to SH)
     alg->isQCD      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$Enable");
-    alg->isAtlfast  = false;   //get it from D3PDReader-like code (add metadata to SH)
+    alg->isAtlfast  = isAFII;   //get it from D3PDReader-like code (add metadata to SH)
     alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
     alg->isNCBG     = false;   //get it from the XML!!
 

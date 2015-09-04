@@ -65,6 +65,7 @@ void usage(){
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
   cout << "       -t            : to run just a test over 50 events " <<endl;
+  cout << "       -a            : is AFII reconstruction? It is guessed from the sample name otherwise." <<endl;
   cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -i=<ID>       : specify a specific dataset ID inside the container" << endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;

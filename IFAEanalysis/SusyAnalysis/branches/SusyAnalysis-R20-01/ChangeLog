@@ -1,3 +1,6 @@
+2015-09-04 Martin <tripiana@cern.ch>
+	* Add -a option to pick AFII calibration (it is guessed from the sample name otherwise)
+
 2015-09-03 Martin <tripiana@cern.ch>
         * Add option to toggle btagging emulation on/off at truth level
 	* Update do_sbottom_cutflow macro
