@@ -2,7 +2,7 @@
 
 : ${ROOTCOREBIN:?" You need to set an AnalysisRelease before (rcSetup)!! Please do so and try again..."}
 
-cd $ANALYSISCODE 
+cd $ROOTCOREBIN/../
 
 echo 'Loading...'
 echo 

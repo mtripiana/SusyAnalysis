@@ -10,7 +10,7 @@ The first thing you need to do is to set the Analysis release, so to have access
 
 For that you do simply (after 'setupATLAS' if not in at3), from your Analysis folder:
 
-     >  rcSetup Base,2.1.33
+     >  rcSetup SUSY,2.3.24a
  
      Version might change in the future though. Please check https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AnalysisRelease        	 	      
 
@@ -32,6 +32,7 @@ For that you do simply (after 'setupATLAS' if not in at3), from your Analysis fo
    =====================
    cd $ANALYSISCODE
    svn co svn+ssh://$USER@svn.cern.ch/reps/IfaeAnaRepo/IFAEanalysis/SusyAnalysis/trunk SusyAnalysis
+   svn co svn+ssh://$USER@svn.cern.ch/reps/IfaeAnaRepo/IFAEanalysis/SusyAnalysis/branches/SusyAnalysis-Rel20-01 SusyAnalysis
 
 
 4) Getting extra packages (not included in the Analysis release):
@@ -96,12 +97,12 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 			         -b             : run in batch          
 				 -p             : run on the grid    (prun)   
 				 -g             : run on the grid    (ganga)     
-				 -d             : enable debug mode 
 				 -u             : generate pileup file (overrides jOption config)
 				 -x             : switch to 'at3_xxl' queue (when running in batch mode) (default='at3') 
 				 -t             : run over truth xAODs
+				 -a             : is AFII reconstruction? It is guessed from the sample name otherwise.
 				 -n=<N>         : run over N events
-                                 -i=<ID>        : specify a specific dataset ID inside the container
+				 -i=<ID>        : specify a specific dataset ID inside the container
 				 -v=<V>         : output version. To tag output files. (adds a '_vV' suffix)
 				 -s=<S>         : systematics to be considered (comma-separated list) [optional]. 
 		            	 	          Just nominal is taken by default (Nom).
@@ -111,7 +112,8 @@ NOTE:   before running please check the path for the pdfrw tool is properly set.
 						  or well run './SusyAnalysis/scripts/list_systematics.sh'
 
  				 -o=<outDir>    : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath)).
-				 -e=<eventList> : provide list of run & event numbers you want to keep.	("Run EventNumber" formatted file. One per line)
+                                 -e=<eventList> : provide list of run & event numbers you want to keep. ("Run EventNumber" formatted file. One per line)
+ 				 -d=<inputDir>  : run over specific directory, over-passing RunsMap (mainly for tests)
 
 
        or just type:  'run'  to get this help.

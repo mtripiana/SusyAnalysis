@@ -13,6 +13,8 @@
 #include "SampleHandler/ToolsDiscovery.h"
 #include "SampleHandler/ToolsMeta.h"
 #include "SampleHandler/DiskListLocal.h"
+#include "SampleHandler/DiskListEOS.h"
+#include "SampleHandler/DiskListXRD.h"
 #include "SampleHandler/MetaFields.h"
 #include "SampleHandler/fetch.h"
 #include "EventLoop/Job.h"
@@ -50,18 +52,20 @@ void usage(){
   cout << endl;
   cout << " <Sample> : The sample name to run over. " << endl;
   cout << "            To list the implemented samples do: 'run samples'" << endl;
+  cout << "            You can also specify the input directory directly here (in combination with -u option. see below)" << endl;
   cout << endl;
   cout << "" << endl;
   cout << " [options] : supported option flags" << endl;
-  cout << "       -j=<jOption>  : choose which analysis you want to run over. ( = 'METbb'(default), 'Stop', 'Monojet')	" << endl;
+  cout << "       -j=<jOption>  : choose which analysis you want to run over. ( = 'METbb'(default), 'Stop', 'Monojet')	" << endl;		    
   cout << "       -l            : run locally (default)   " << endl;
   cout << "       -b            : run in batch            " << endl;
   cout << "       -p            : run on the grid (prun)        " << endl;
   cout << "       -g            : run on the grid (ganga)        " << endl;
-  cout << "       -d            : enable Debug mode       " << endl;  
+  cout << "       -y            : run using proof-lite " << endl;
   cout << "       -u            : generate pileup file (overrides jOption config)" << endl;
   cout << "       -x            : switch to 'at3_xxl' queue (when running in batch mode) (default='at3')  " << endl;
-  cout << "       -t            : run over truth xAODs" << endl;
+  cout << "       -t            : to run just a test over 50 events " <<endl;
+  cout << "       -a            : is AFII reconstruction? It is guessed from the sample name otherwise." <<endl;
   cout << "       -v=<V>        : output version. To tag output files. (adds a '_vV' suffix)" <<endl;
   cout << "       -i=<ID>       : specify a specific dataset ID inside the container" << endl;
   cout << "       -n=<N>        : to run over N  events " <<endl;
@@ -70,12 +74,15 @@ void usage(){
   cout << "                       To list the available (recommended) systematic variations do: 'run slist'" << endl;
   cout << "                       or well run './SusyAnalysis/scripts/list_systematics.sh'" << endl; 
   cout << "       -o=<outDir>   : where all the output is saved (if left empty is reads the path from the xml jobOption (FinalPath))." << endl;
+  cout << "       -e=<eventList> : provide list of run & event numbers you want to keep." << endl;  
+  cout << "       -c             : run over specific directory, over-passing RunsMap (mainly for tests)" << endl;
+  cout << "       -d             : debug mode " << endl;
   cout << endl;
 }
 
 float getLumiWeight(Sample* sample){
 
-  if( sample->getMetaDouble( MetaFields::isData ) ) //don't weight data!
+  if( sample->getMetaString( MetaFields::isData )=="Y" ) //don't weight data!
     return 1.;
 
   return sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor ) * sample->getMetaDouble( MetaFields::filterEfficiency ) / sample->getMetaDouble( MetaFields::numEvents ); 
@@ -87,6 +94,13 @@ float getECM(Sample* sample){ //in TeV
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
   std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECMEnergy | awk '{print $2}'");
+  if(s_ecm.empty()){
+    cout << "no ECMEnergy field. Try new convention next... " << endl;
+    s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep beam_energy | awk '{print $2}'");
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), ']'), s_ecm.end());
+    s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), '['), s_ecm.end());
+    return atof(s_ecm.c_str())*2./1000000.;
+  }
   return atof(s_ecm.c_str())/1000.;
 }
 
@@ -99,8 +113,8 @@ bool type_consistent(SampleHandler sh){
   bool isData=false;
   bool isMC=false;
   for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){             
-    isMC     |= ((*iter)->getMetaDouble( MetaFields::isData)==0);
-    isData   |= ((*iter)->getMetaDouble( MetaFields::isData)==1);
+    isMC     |= ((*iter)->getMetaString( MetaFields::isData)=="N");
+    isData   |= ((*iter)->getMetaString( MetaFields::isData)=="Y");
 
     if(isData && isMC)
       return false;
@@ -111,13 +125,17 @@ bool type_consistent(SampleHandler sh){
 bool is_data(Sample* sample){ 
   TString sampleName(sample->getMetaString( MetaFields::sampleName ));
   std::string newName = stripName(sampleName).Data();
-  std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
-  if(itis=="collisions") return true;
-  //add extra check for physics containers
-  itis = getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'");
-  if(TString(itis).Contains("period")) return true;
 
-  return false;
+  return !getCmdOutput( "ami dataset info "+newName+" | grep runNumber | awk '{print $2}'").empty();
+
+  // std::string itis = getCmdOutput( "ami dataset info "+newName+" | grep beamType | awk '{print $2}'");
+  // std::size_t found = itis.find("collisions");
+  // if (found!=std::string::npos) return true;
+
+  //add extra check for physics containers
+  //  if(TString(itis).Contains("period")) return true;
+
+  // return false;
 }
 
 double getNPrimary(Sample* sample){ 
@@ -182,16 +200,20 @@ int main( int argc, char* argv[] ) {
 
   std::vector<TString> args,opts;
   bool runLocal = true;
+  bool runProof = false;
   bool runBatch = false;
   bool runPrun  = false;
   bool runGrid  = false;
 
   std::string jOption = "METbb";
   TString queue = "at3";
-  TString version="";
   bool genPU=false;
   int single_id = -1;
   bool isTruth=false;
+  TString version="";
+  bool userDir=false;
+
+  string wildcard="*";
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
@@ -217,12 +239,15 @@ int main( int argc, char* argv[] ) {
   }
 
   //config options
-  //  int nMax=-1;
+  int nMax=-1;
   TString syst_str="";
   TString outDir="";
   for( unsigned int iop=0; iop < opts.size(); iop++){
     if (opts[iop] == "l"){ //run locally
       runLocal = true;
+    }
+    if (opts[iop] == "y"){ //run using proof-lite
+      runProof = true;
     }
     else if (opts[iop] == "b"){ //run in batch mode
       runBatch = true;
@@ -245,6 +270,9 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop] == "u" ){ //generate pileup file (overrides jOption config)
       genPU = true;
     }
+    else if (opts[iop] == "c" ){ //user-defined input dir
+      userDir = true;
+    }
     else if (opts[iop].BeginsWith("s") ){
       syst_str = opts[iop].Copy().ReplaceAll("s=","");
     }
@@ -252,22 +280,23 @@ int main( int argc, char* argv[] ) {
       outDir = opts[iop].Copy().ReplaceAll("o=","");
     }
     else if (opts[iop].BeginsWith("i") ){
-      single_id = opts[iop].ReplaceAll("i=","").Atoi();
+      single_id = opts[iop].Copy().ReplaceAll("i=","").Atoi();
     }
     else if (opts[iop].BeginsWith("j") ){
       jOption = opts[iop].Copy().ReplaceAll("j=","");
     }
-    else if (opts[iop].BeginsWith("v") ){
-      version = opts[iop].ReplaceAll("v=","");
+    else if (opts[iop].BeginsWith("n") ){ //limit run to n events
+      nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
     }
-    // else if (opts[iop].BeginsWith("n") ){ //limit run to n events
-    //   nMax = opts[iop].Copy().ReplaceAll("n=","").Atoi();
-    // }
+    else if (opts[iop].BeginsWith("v") ){
+      version = opts[iop].Copy().ReplaceAll("v=","");
+    }
   }
 
   TString vTag="";
   if(version!="")
     vTag = "_v"+version;
+
 
   //samples
   std::vector<TString> samples;
@@ -288,17 +317,16 @@ int main( int argc, char* argv[] ) {
   //(temporary?) Wrapper to run on the batch .   Until we get the TorqueDriver working...
   if(runBatch){
     for(unsigned int isp=0; isp < samples.size(); isp++){
-      gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/submit_batch.sh "+queue+" "+syst_str+" "+jOption+" "+samples[isp]);
+      gSystem->Exec("source $ROOTCOREBIN/../SusyAnalysis/scripts/submit_batch.sh "+queue+" "+syst_str+" "+jOption+" "+samples[isp]);
     }
     return 0;
   }
   //***
 
-  TString allopts=""; //join all options in one string (all but systematics!)
-  for (unsigned int iopt=0; iopt < opts.size(); iopt++){
-    if (opts[iopt].BeginsWith("s") ) continue; //we'll loop over the systematics later
+  TString allopts=""; //join all options in one string
+  for (unsigned int iopt=0; iopt < opts.size(); iopt++)
     allopts += " -"+opts[iopt]+" ";
-  }
+
 
   //check for needed setup 
   std::string ami_check = gSystem->GetFromPipe("which ami 2>/dev/null").Data(); 
@@ -306,14 +334,13 @@ int main( int argc, char* argv[] ) {
     cout << bold(red("\n Ups! "));
     cout << "You need to setup a few things first!" << endl;
     cout << " Please do: " << endl;
-    cout << "\n   source $ANALYSISCODE/SusyAnalysis/scripts/grid_up.sh   \n" << endl;
+    cout << "\n   source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up.sh   \n" << endl;
     cout << "\n ...but ok! this time I'll try to do it for you...  :) \n" << endl;
-    gSystem->Exec("source $ANALYSISCODE/SusyAnalysis/scripts/grid_up_pwin.sh");
+    gSystem->Exec("source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up_pwin.sh");
   }
 
 
   //*** Read some input options
-  //  std::string DirectoryPath=gSystem->Getenv("ANALYSISCODE");
   std::string maindir = getenv("ROOTCOREBIN");
 
   std::string xmlPath=maindir+"/data/SusyAnalysis/"+jOption+"_JobOption.xml";
@@ -325,8 +352,6 @@ int main( int argc, char* argv[] ) {
   bool doFlowTree = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");
   bool doPUTree = false; //No option in the xml yet!!
   bool generatePUfile = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/GeneratePileupFiles");
-  bool isStopTL = xmlJobOption->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
-
 
   TString FinalPath      = TString(xmlJobOption->retrieveChar("AnalysisOptions$GeneralSettings$Path/name/RootFilesFolder").c_str());
   if( args.size() > 2 ) FinalPath = args[2];    // Take the submit directory from the input if provided:
@@ -365,12 +390,15 @@ int main( int argc, char* argv[] ) {
     RunsMap mapOfRuns;
     //check if sample is mapped
     RMap mymap = mapOfRuns.getMap();
-    RMap::iterator it = mymap.find( samples[i_sample] );
-    if(it == mymap.end()){
-      cout << bold(red("\n Ups! "));    
-      cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
-      cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
-      return 0;
+    if(!userDir){
+      RMap::iterator it = mymap.find( samples[i_sample] );
+      if(it == mymap.end()){
+	cout << bold(red("\n Ups! "));    
+	cout << " Sample '" << args[0] << "' not found in current map. Please pick another one." << endl;
+	cout << "            To list the implemented samples do: 'run_chorizo samples'\n" << endl;
+	cout << "            To run over a user-directory directly use -c.'\n" << endl;
+	return 0;
+      }
     }
 
     //Print meta-data and save weights+names for later use
@@ -379,17 +407,32 @@ int main( int argc, char* argv[] ) {
     isData=false;
 
     // Get patterns/paths to load for this sample
-    std::vector<TString> run_patterns  = mapOfRuns.getPatterns( args[i_sample] );
-    std::vector<int>     run_ids       = mapOfRuns.getIDs( args[i_sample] );
+    std::vector<TString> run_patterns;
+    std::vector<int>     run_ids;
+    if(!userDir){
+      run_patterns  = mapOfRuns.getPatterns( args[i_sample] );
+      run_ids       = mapOfRuns.getIDs( args[i_sample] );
+    }
+    else{
+      run_patterns.push_back( args[i_sample] );
+      run_ids.push_back( 0 ); //single_id );
+    }
+
     bool mgd=false;  //make grid direct (for direct access to PIC disks)
     for(unsigned int i_id = 0; i_id < run_ids.size(); i_id++){ //id loop
       
-      if(single_id>=0 && run_ids[i_id] != single_id) continue; //pick only chosen id (if given)
+      if(!userDir && single_id>=0 && run_ids[i_id] != single_id) continue; //pick only chosen id (if given)
 
       //** Run on local samples
-      if(runLocal){
-	if( run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
-	  scanDir( sh, run_patterns[i_id].Data() );
+      if(runLocal){ // || userDir){
+	if( run_patterns[i_id].BeginsWith("/eos/") ){
+	  //	  SH::DiskListEOS list ("eosatlas.cern.ch", run_patterns[i_id].Data());
+	  SH::DiskListXRD list ("eosatlas.cern.ch", gSystem->DirName(run_patterns[i_id]), true);
+	  TString bname_regexp = Form("%s*", gSystem->BaseName(run_patterns[i_id]));
+	  SH::scanDir (sh, list, "*", bname_regexp.Data());
+	}
+	else if(userDir || run_patterns[i_id].Contains("/afs/") || run_patterns[i_id].Contains("/nfs/") || run_patterns[i_id].Contains("/tmp/")){//local samples
+	  scanDir( sh, run_patterns[i_id].Data(), wildcard );
 	  //.Find( run_patterns[i_id].Data() );
 	}
 	else{//PIC samples
@@ -407,14 +450,11 @@ int main( int argc, char* argv[] ) {
 	scanDQ2 (sh, run_patterns[i_id].Data() );
       }    
       
-      if(mgd){
-	//makeGridDirect (sh, "IFAE_SCRATCHDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true/*partial files*/);
+      if(mgd)
 	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", false);
 	//	makeGridDirect (sh, "IFAE_LOCALGROUPDISK", "srm://srmifae.pic.es", "dcap://dcap.pic.es", true); //allow for partial files
-      }
       
       sh.print();
-      
 
       //*** Handle Meta-Data
       sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
@@ -433,7 +473,7 @@ int main( int argc, char* argv[] ) {
       }
 
       //set EBeam field
-      TString s_ecm  = "13"; //default is 13TeV 
+      TString s_ecm  = "13"; //default is 8TeV 
       sh.at(0)->setMetaDouble ("ebeam", (double)getEBeam(sh.at(0)));
       s_ecm = Form("%.0f", sh.at(0)->getMetaDouble ("ebeam")*2); 
 
@@ -446,32 +486,35 @@ int main( int argc, char* argv[] ) {
       //set ID
       sh.at(0)->setMetaDouble( "DSID", (double)run_ids[i_id] );
 
+      isData = (sh.at(0)->getMetaString( MetaFields::isData )=="Y"); //global flag. It means we can't run MC and data at the same time. Probably ok?
+
       //  fetch meta-data from AMI
       if(amiFound && 0){
-	try{
-	  fetchMetaData (sh, false); 
-	  for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
-	    float newxs = (*iter)->getMetaDouble( MetaFields::crossSection )*1000.;
-	    (*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
-	  }     
-	}
-	catch (...) { cout << bold(red("\n Ups! PROBLEMS WITH AMI!")+"Going for SUSYTools DB now...") << endl; }
+	fetchMetaData (sh, false); 
+	for (SampleHandler::iterator iter = sh.begin(); iter != sh.end(); ++ iter){ //convert to SUSYTools metadata convention (pb)
+	  float newxs = (*iter)->getMetaDouble( MetaFields::crossSection )*1000.;
+	  (*iter)->setMetaDouble (MetaFields::crossSection, newxs);                
+	}                                                          
       }
-      //  then override some meta-data from SUSYTools
-      readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+      TString projectName="mc15_13TeV";
+      if(s_ecm=="8") projectName="mc12_8TeV";
 
-      isData = (sh.at(0)->getMetaString( MetaFields::isData )=="Y"); //global flag. It means we can't run MC and data at the same time. Probably ok?
-      
+      //  then override some meta-data from SUSYTools
+      if(!isData){
+	//readSusyMeta(sh,Form("$ROOTCOREBIN/data/SUSYTools/susy_crosssections_%sTeV.txt", s_ecm.Data()));
+	readSusyMetaDir(sh,Form("$ROOTCOREBIN/data/SUSYTools/%s", projectName.Data()));
+      }
+
       if(!isData)
 	weights.push_back( getLumiWeight(sh.at(0)) );
       else
 	weights.push_back( 1. );
 
-      TString targetName = Form("SYST_%s_%d.root", samples[i_sample].Data(), run_ids[i_id]);
+      TString targetName = Form("SYST_%s%s_%d.root", gSystem->BaseName(samples[i_sample]), vTag.Data(), run_ids[i_id]);
       mergeList.push_back(TString(CollateralPath)+"/"+targetName);
 
       for(unsigned int i_syst=0; i_syst < systematics.size(); i_syst++){ //systs loop
-	TString torun = Form("run_chorizo %s -i=%d -s=%s %s", allopts.Data(), run_ids[i_id], systematics[i_syst].Data(), args[i_sample].Data());
+	TString torun = Form("run_chorizo %s -i=%d %s -s=%s", allopts.Data(), run_ids[i_id], args[i_sample].Data(), systematics[i_syst].Data());
 	system(torun.Data());
       }//end of systematics loop
       
@@ -479,7 +522,7 @@ int main( int argc, char* argv[] ) {
       sh.remove(sh.at(0));
 
     }//end of id loop
-
+    
 
     //Done merging step only if running locally
     if(!runLocal) return 0;
@@ -504,9 +547,7 @@ int main( int argc, char* argv[] ) {
       }      
       cout << endl;
 
-      TString mergedName = Form("%s_%s.root",systematics[i_syst].Data(), samples[i_sample].Data());
-      if(vTag!="")
-	mergedName.ReplaceAll(".root",vTag+".root");
+      TString mergedName = Form("%s_%s%s.root",systematics[i_syst].Data(), gSystem->BaseName(samples[i_sample]), vTag.Data());
     
       if (!generatePUfile){
 	if (!doAnaTree) {
@@ -520,7 +561,6 @@ int main( int argc, char* argv[] ) {
     }//end of syst loop
   }//end of samples loop
 
-  delete xmlJobOption;
   return 0;
 }
 

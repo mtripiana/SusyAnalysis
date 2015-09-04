@@ -1,0 +1,22 @@
+Index: SUSYTools/Root/SUSYToolsInit.cxx
+===================================================================
+--- SUSYTools/Root/SUSYToolsInit.cxx	(revision 693135)
++++ SUSYTools/Root/SUSYToolsInit.cxx	(working copy)
+@@ -646,7 +646,7 @@
+       if(!BtagWP_eff.empty()) {
+ 	BTaggingEfficiencyTool* btagEffTool = new BTaggingEfficiencyTool("BTagSF_"+jetcoll);
+ 	ATH_CHECK( btagEffTool->setProperty("TaggerName",     "MV2c20"  ) );
+-	ATH_CHECK( btagEffTool->setProperty("OperatingPoint", BtagWP_eff ) );
++	ATH_CHECK( btagEffTool->setProperty("OperatingPoint", "-0_4434") ); //BtagWP_eff ) );
+ 	ATH_CHECK( btagEffTool->setProperty("JetAuthor",      jetcoll ) );
+ 	ATH_CHECK( btagEffTool->setProperty("ScaleFactorFileName","xAODBTaggingEfficiency/13TeV/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root") );
+ 	ATH_CHECK( btagEffTool->setProperty("SystematicsStrategy","Envelope") );
+@@ -1237,7 +1237,7 @@
+       m_btagEffTool.setTypeAndName("BTaggingEfficiencyTool/STAutoConf_"+toolName);
+       fullToolName = "ToolSvc.STAutoConf_"+toolName;
+       ATH_CHECK( josvc->addPropertyToCatalogue(fullToolName,StringProperty("TaggerName", "MV2c20")) );
+-      ATH_CHECK( josvc->addPropertyToCatalogue(fullToolName,StringProperty("OperatingPoint", BtagWP_eff)) );
++      ATH_CHECK( josvc->addPropertyToCatalogue(fullToolName,StringProperty("OperatingPoint", "-0_4434")) ); //BtagWP_eff)) );
+       ATH_CHECK( josvc->addPropertyToCatalogue(fullToolName,StringProperty("JetAuthor", jetcoll)) );
+       ATH_CHECK( josvc->addPropertyToCatalogue(fullToolName,StringProperty("ScaleFactorFileName","xAODBTaggingEfficiency/13TeV/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root")) );
+       ATH_CHECK( josvc->addPropertyToCatalogue(fullToolName,StringProperty("SystematicsStrategy","Envelope")) );
