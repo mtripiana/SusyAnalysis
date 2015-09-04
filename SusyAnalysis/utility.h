@@ -15,6 +15,10 @@ TString bold(TString t);
 
 TString red(TString t);
 
+TString blue(TString t);
+
+TString link(TString t);
+
 std::string getCmdOutput(const std::string& mStr);
 
 std::string tmpdirname();
@@ -22,6 +26,8 @@ std::string tmpdirname();
 std::vector<TString> getTokens(TString line, TString delim);
 
 TString stripName(TString name);
+
+double getRatio(double, double);
 
 float MinimumOf(float, float);
 

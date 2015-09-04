@@ -6,18 +6,18 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">false</Mode>
+    <Mode name="DoCutFlow">true</Mode>
     <Mode name="StopTL">false</Mode>    
     <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming_MET">false</Mode>
     <Mode name="DoSkimming_BTAG">false</Mode>
-    <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/CollateralRootFiles/</Path>
-    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v63-pro18-01_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml,data15_13TeV.periodAllYear_DetStatus-v64-pro19_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path> <!-- - 50ns + 25ns -->
+    <Path name="RootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/tripiana/StopAnalysis/colfiles/</Path>
+    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v63-pro18-01_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>
     <Pileup>
-      <Mode name="ApplyPileupReweighting">true</Mode>
-      <Path name="PileupReweightingConfigFolder">""</Path>  <!-- leave it empty to use default location -->
-      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_267073-271595.root</Path>
+      <Mode name="ApplyPileupReweighting">false</Mode>
+      <Path name="PileupReweightingConfigFolder"> </Path>  <!-- leave it empty to use default location -->
+      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_EF_xe80_tclcw_200842-215643.root</Path>
     </Pileup>
 
     <LeptonEfficiency>
@@ -42,7 +42,7 @@
   <ObjectDefinition>
 
     <OverlapRemoval>
-      <Enable>true</Enable>
+      <Enable>false</Enable>
       <useSignalLeptons>false</useSignalLeptons>
       <useIsoLeptons>false</useIsoLeptons>
       <doBjetOR>true</doBjetOR>
@@ -56,8 +56,7 @@
     
     <Trigger>
       <SaveExtended>false</SaveExtended>
-      <!--      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM.*,L1_MU.*,L1_J.*,L1_EM12,L1_MU10,L1_J50,L1_J12,L1_J15</chains>-->
-      <chains>L1_MBTS_1_1,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,HLT_xe100,HLT_e24_lhtight_iloose,HLT_e24_tight_iloose,HLT_mu26_imedium,L1_MBTS_1,L1_MBTS_2,HLT_mu20_iloose_L1MU15,HLT_mu50,HLT_e24_lhmedium_iloose_L1EM20VH,HLT_e60_lhmedium</chains>
+      <chains>HLT_xe.*</chains>
     </Trigger>
 
     <Vertex>
@@ -79,11 +78,11 @@
 
     <Booking>
       <ElBase>2</ElBase>     <!-- number of (non-signal) baseline electrons to be saved -->
-      <ElSignal>2</ElSignal>   <!-- number of signal electrons to be saved -->
+      <ElSignal>5</ElSignal>   <!-- number of signal electrons to be saved -->
       <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
-      <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
+      <MuSignal>5</MuSignal> <!-- number of signal muons to be saved -->
       <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
-      <JetSignal>4</JetSignal> <!-- number of signal jets to be saved -->
+      <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
     
     <Objects>
@@ -93,14 +92,14 @@
     </Objects>    
 
     <Electron>
-      <PreselPtCut>10000.</PreselPtCut>
+      <PreselPtCut>7000.</PreselPtCut>
       <PreselEtaCut>2.47</PreselEtaCut>
-      <RecoPtCut>10000.</RecoPtCut>
+      <RecoPtCut>7000.</RecoPtCut>
       <RecoEtaCut>2.47</RecoEtaCut>
 
-      <baseID>LooseLH</baseID>
-      <ID>TightLH</ID>
-      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <baseID>LooseLLH</baseID>
+      <ID>TightLLH</ID>
+      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
       <d0sigcut>5.</d0sigcut><!-- default:5, none:-1 -->
       <z0cut>0.5</z0cut><!-- default:0.5, none:-1 -->
 
@@ -112,13 +111,13 @@
     </Electron>
 
     <Muon>
-      <PreselPtCut>10000.</PreselPtCut>
+      <PreselPtCut>6000.</PreselPtCut>
       <PreselEtaCut>2.4</PreselEtaCut>
-      <RecoPtCut>10000.</RecoPtCut>
+      <RecoPtCut>6000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
 
-      <ID>Medium</ID>
-      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <ID>Loose</ID>
+      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
       <d0sigcut>3.</d0sigcut><!-- default:3, none:-1 -->
       <z0cut>0.5</z0cut><!-- default:0.5, none:-1 -->
 
@@ -132,28 +131,28 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoWP>Cone20</isoWP> <!-- None,Loose,Medium,Tight -->
-
-      <triggers>HLT_g140_loose</triggers>
+      <isoWP>Loose</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <recoSF>true</recoSF>
       <idSF>true</idSF>
       <triggerSF>false</triggerSF>
+
+      <triggers>HLT_g140_loose</triggers>
     </Photon>
 
     <Jet>
       <Collection>AntiKt4EMTopo</Collection> <!-- AntiKt4LCTopo before -->
       <PreselPtCut>20000.</PreselPtCut>
       <PreselEtaCut>10</PreselEtaCut>
-      <RecoPtCut>35000.</RecoPtCut>
+      <RecoPtCut>20000.</RecoPtCut>
       <RecoEtaCut>2.8</RecoEtaCut>
       <RecoJVTCut>0.64</RecoJVTCut>
 
       <JESNPset>1</JESNPset>
 
-      <Tagger>MV2c20</Tagger> 
+      <Tagger>MV2c20</Tagger> --> 
       <BtagWP>FlatBEff_77</BtagWP>
-      <BtagWP_OR>FlatBEff_85</BtagWP_OR>
+      <BtagWP_OR>FlatBEff_80</BtagWP_OR>
     </Jet>
 
     <Etmiss>

@@ -8,13 +8,20 @@ using namespace Particles;
 
 // Default constructor for Particle
 Particle::Particle(){
-  Pt_up = 0;
-  Pt_down = 0;
-  Ht = 0;
-  ptraw=0;
+
+  gev=false; //4mom in GeV?
+  index = -1;
+
+  type = 0; //as defined in MCTruthClassifier::ParticleType
+  origin = 0; //as defined in MCTruthClassifier::ParticleOrigin
+
   isGood = true;
-  isIsolated = false;
+  id = -1;
   isTight = false;
+
+  isTrigMatch = false;
+
+  isIsolated = false;
   isoTight = 0.;
   isoLoose = 0.;
   isoGradient = 0.;
@@ -22,17 +29,16 @@ Particle::Particle(){
   etcone20 = 0;
   ptcone30 = 0;
   etcone30 = 0;
+
   d0_sig = 0;
   z0 = 0;
   charge = 0;
+
+  Pt_up = 0;
+  Pt_down = 0;
   SF = 1;
   SFu = 0;
   SFd = 0;
-  gev=false; //4mom in GeV?
-  index = -1;
-  id = -1;
-  type = 0; //as defined in MCTruthClassifier::ParticleType
-  origin = 0; //as defined in MCTruthClassifier::ParticleOrigin
 }
 
 Particle::~Particle(){}
@@ -67,10 +73,34 @@ void Particle::PrintInfo(){
   cout<<endl;
 }
 
+
+// Default constructor for Cluster
+Cluster::Cluster(){
+  gev=false; //4mom in GeV?
+  emf = 0.;
+}
+
+Cluster::~Cluster(){}
+
+TLorentzVector Cluster::GetVector() const{
+  return TLorentzVector(*this);
+}
+
+void Cluster::SetVector(TLorentzVector vec, bool inGeV){ //inGeV=true if it is already in GeV!
+  if(inGeV)
+    this->SetPtEtaPhiE(vec.Pt(), vec.Eta(), vec.Phi(), vec.E());
+  else
+    this->SetPtEtaPhiE(vec.Pt()*0.001, vec.Eta(), vec.Phi(), vec.E()*0.001);
+
+  this->gev=true;
+}
+
 // Default constructor for Jet
 Jet::Jet(){
+  p4const = TLorentzVector();
   isbjet = false;
   MV1 = -1;
+  MV2c20 = -1;
   SV1plusIP3D = -1;
   SV1_pb = -1;
   SV1_pc = -1;
@@ -102,60 +132,68 @@ Jet::Jet(){
   HECQuality=-100.;
   NegativeE=-100.;
   LArQuality=-100.;
-  jvtxf=-100.;
+  jvf=-100.;
+  jvt=-100.;
   failBCHTight=false;
   failBCHMedium=false;
   BCH_CORR_CELL=-100;
   BCH_CORR_JET=-100;
-
-  TruthJet.Clear();
+  isbjet_fb70=false;
+  isbjet_fb77=false;
+  isbjet_fb85=false;
+  isbjet_t70=false;
+  isbjet_t77=false;
+  isbjet_t80=false;
+  clusters.clear();
 }
 
 Jet::~Jet(){}
 
-bool Jet::isBTagged(TString Tagger, float op){ 
-  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
-  if      (Tagger=="MV1")            return (this->MV1 > op);
-  else if (Tagger=="IP3DSV1")        return (this->SV1plusIP3D > op);
-  else if (Tagger=="Truth")          return (abs(this->FlavorTruth)==5);
-  // else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > op && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
-  // else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
- 
-  return false;
-}
 
 
-bool Jet::isBTagged(TString Tagger){ 
-  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
-  if      (Tagger=="MV1")              return (this->MV1 > 0.7892); //70% b eff  
-  else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > 1.85); //70% b eff 
-  else if (Tagger=="JetFitterCombNN")  return (this->JetFitterCombNN > -2.55 && this->JetFitterCombNNc < 1.0); //57-80% b eff 
-  else if (Tagger=="JetFitterCombNNc") return (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2);
+bool Jet::isBTagged_70fc(TString Tagger){ 
+  
+  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.0436); //80% b eff  
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
-bool Jet::isBTagged_80eff(TString Tagger){ 
-  if      (Tagger=="MV1"              && (this->MV1 > 0.3511))              {return true;}
-  if      (Tagger=="IP3DSV1"          && (this->SV1plusIP3D > -0.70))       {return true;}
+bool Jet::isBTagged_77fc(TString Tagger){ 
+  
+  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.4434); //77% b eff  
+  else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
+  return false;
+}
+
+
+bool Jet::isBTagged_85fc(TString Tagger){ 
+  //if      (Tagger=="MV1")              return (this->MV1 > 0.3511); //80% b eff  
+  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.7887); //85% b eff  
+  //else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > -0.70); //80% b eff 
+  else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
 bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
 
-  if (this->isBTagged(Tagger)) return false;
+  //if (deltaPhi(this->Phi(), metphi) > min_dphi_tau) return false;
+  if (this->isBTagged_77fc(Tagger)) return false;
+  if (fabs(this->Eta())>=2.5) return false;      
   if (this->nTrk >= 5) return false;
-  if (deltaPhi(this->Phi(), metphi)>=TMath::Pi()/5.) return false; //CHANGED BEFORE 0.2
-  if (fabs(this->Eta())>2.5) return false;                               //CHANGED BEFORE NOTHING
+  if (deltaPhi(metphi, this->Phi())>=TMath::Pi()/5.0) return false; //CHANGED BEFORE 0.2
   return true;
+
+
+
+
 }
 
 
 float Jet::getBweight(TString Tagger){
   if (Tagger=="MV1")              return (this->MV1);
+  if (Tagger=="MV2c20")           return (this->MV2c20);
   if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D);
-  if (Tagger=="JetFitterCOMBNN")  return (this->JetFitterCombNN);
-  if (Tagger=="JetFitterCOMBNNc") return (this->JetFitterCombNNc); 
+  else if (Tagger=="Truth")       return (abs(this->FlavorTruth)); 
   
   return -1; //not valid Tagger!
 }
@@ -163,8 +201,8 @@ float Jet::getBweight(TString Tagger){
 void Jet::PrintInfo(){
   cout<<"Pt: "<<this->Pt()<<" Pt_up: "<<this->Pt_up<<" Pt_down: "<<this->Pt_down<<endl;
   cout<<"Eta: "<<this->Eta()<<" Phi: "<<this->Phi()<<endl;
-  cout<<"Chf: "<<this->chf<<" Emf: "<<this->emf<<" time: "<<this->time<<" fsm: "<<this->fsm<<" width: "<<this->width<<" n90: "<<this->n90<<" hecf: "<<this->hecf<<" HECQuality: "<<this->HECQuality<<" NegativeE: "<<this->NegativeE<<" LArQuality: "<<this->LArQuality<<" jvtxf: "<<this->jvtxf<<"  failBCHTight: "<<this->failBCHTight<<"  failBCHMedium: "<<this->failBCHMedium<<endl;
-  cout<<" MV1: "<<this->MV1<<" JetFitterCOMBNN: "<<this->JetFitterCombNN<<" JetFitterCOMBNNc: "<<this->JetFitterCombNNc<<" EffSF: "<<this->TagEffSF.first<<" IneffSF: "<<this->TagIneffSF.first<<" EffMC: "<<TagEffMC.first<<endl;
+  cout<<"Chf: "<<this->chf<<" Emf: "<<this->emf<<" time: "<<this->time<<" fsm: "<<this->fsm<<" width: "<<this->width<<" n90: "<<this->n90<<" hecf: "<<this->hecf<<" HECQuality: "<<this->HECQuality<<" NegativeE: "<<this->NegativeE<<" LArQuality: "<<this->LArQuality<<" JVF: "<<this->jvf<<" JVT: "<<this->jvt<<"  failBCHTight: "<<this->failBCHTight<<"  failBCHMedium: "<<this->failBCHMedium<<endl;
+  cout<<" MV1: "<<this->MV1<<" MV2c20: "<<this->MV2c20<<" EffSF: "<<this->TagEffSF.first<<" IneffSF: "<<this->TagIneffSF.first<<" EffMC: "<<TagEffMC.first<<endl;
   cout<<endl;
 }
 
@@ -189,6 +227,7 @@ MET::MET(){
   met_vmu_phcorr.Set(0., 0.);  
   met_truth_imu.Set(0., 0.);
   met_truth_vmu.Set(0., 0.);    
+
   m_hasMuons = false;
   gev=false;
 }
@@ -255,10 +294,11 @@ void MET::SetVector(TVector2 vec, TString which, bool inGeV){
   else if(which=="met_truth_vmu"){
     this->met_truth_vmu.Set(vec.X() * sf, vec.Y() * sf);
   }  
+
 }
 
 TVector2 MET::GetVector(TString which){
-  
+
   if(which=="met_imu"){
     return TVector2(this->met_imu);
   }
@@ -313,7 +353,7 @@ TVector2 MET::GetVector(TString which){
   if(which=="met_truth_vmu"){
     return TVector2(this->met_truth_vmu);
   }      
-
+  
 }
 
 float MET::Phi(TString which){
@@ -378,4 +418,8 @@ bool operator<(const Particle& Particle1, const Particle& Particle2){
 
 bool bw_MV1_sort(const Jet& Jet1, const Jet& Jet2){
   return Jet1.MV1 > Jet2.MV1;
+};
+
+bool bw_MV2c20_sort(const Jet& Jet1, const Jet& Jet2){
+  return Jet1.MV2c20 > Jet2.MV2c20;
 };

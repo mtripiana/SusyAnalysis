@@ -35,12 +35,17 @@
 #include "xAODTracking/VertexContainer.h"
 #include "xAODTracking/Vertex.h"
 //#include "xAODTracking/TrackingPrimitives.h"
-#include "xAODEgamma/EgammaxAODHelpers.h"
+//#include "xAODEgamma/EgammaxAODHelpers.h"
+#include "xAODTruth/xAODTruthHelpers.h"
 
+#include "xAODTrigger/EnergySumRoI.h"
+#include "xAODTrigMissingET/TrigMissingET.h"
+#include "xAODTrigMissingET/TrigMissingETContainer.h"
+#include "xAODTrigEgamma/TrigElectronContainer.h"
 
 #include "SUSYTools/SUSYObjDef_xAOD.h"
-ST::SignalIsoExp::IsoExp elIsoType;
-ST::SignalIsoExp::IsoExp muIsoType;
+/* ST::SignalIsoExp::IsoExp elIsoType; */
+/* ST::SignalIsoExp::IsoExp muIsoType; */
 
 // Transient object store. Needed for the CP tools.
 xAOD::TStore* m_store;
@@ -49,12 +54,12 @@ xAOD::TStore* m_store;
 // Jet container made in initialize() as view container. Holds selected
 // jets but does not own them.
 xAOD::JetContainer* m_goodJets;
+xAOD::JetContainer* m_smdJets;
 
+xAOD::IParticleContainer* m_inv_el; //invisible electrons going into MET calculation
+xAOD::IParticleContainer* m_inv_mu; //invisible muons going into MET calculation
+xAOD::IParticleContainer* m_inv_ph; //invisible photons going into MET calculation
 
-/* const xAOD::JetContainer* m_jets; */
-/* const xAOD::ElectronContainer* m_electrons; */
-/* const xAOD::MuonContainer* m_muons; */
-/* const xAOD::PhotonContainer* m_photons; */
 
 const xAOD::JetContainer* m_truth_jets;
 

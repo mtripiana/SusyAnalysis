@@ -10,6 +10,14 @@ TString red(TString t){
   return "\x1b[31m"+t+"\x1b[0m";
 }
 
+TString blue(TString t){
+  return "\x1b[36m"+t+"\x1b[0m";
+}
+
+TString link(TString t){
+  return "\e[4m"+blue(t)+"\e[0m";
+}
+
 std::string getCmdOutput(const std::string& mStr)
 {
   std::string result, file;
@@ -83,6 +91,11 @@ TString stripName(TString name){ //remove not-official tags for AMI search (so t
   } 
 
   return new_name;
+}
+
+double getRatio(double a, double b){
+  if(fabs(b)>0.) return a/b;
+  return 0.;
 }
 
 float MinimumOf(float a, float b){
@@ -235,81 +248,12 @@ TLorentzVector makeTLV(TVector2 v2){
 float getAsymmetry(float a, float b){
   if( ! (a+b > 0)) return -1;
 
-  return fabs(a-b) / (a+b);
+  return (a-b) / (a+b);
 };
 
 bool isBeamHalo(int run=0,int event=0){ //CHECK_ME
-  bool isBH=0;
-  //  std::cout<<run<<"\t"<<event<<std::endl;
-  if(run==179804 && event==25569828){isBH=1;return isBH;}
-  if(run==179804 && event==58049650){isBH=1;return isBH;}
-  if(run==180124 && event==19339070){isBH=1;return isBH;}
-  if(run==180124 && event==43983153){isBH=1;return isBH;}
-  if(run==180139 && event==71949585){isBH=1;return isBH;}
-  if(run==180144 && event==7513531){isBH=1;return isBH;}
-  if(run==180149 && event==11599878){isBH=1;return isBH;}
-  if(run==180164 && event==155811122){isBH=1;return isBH;}
-  if(run==180225 && event==107576587){isBH=1;return isBH;}
-  if(run==180400 && event==65602861){isBH=1;return isBH;}
-  if(run==180448 && event==4000428){isBH=1;return isBH;}
-  if(run==180481 && event==26550624){isBH=1;return isBH;}
-  if(run==180636 && event==23004421){isBH=1;return isBH;}
-  if(run==180636 && event==34834356){isBH=1;return isBH;}
-  if(run==180636 && event==50254258){isBH=1;return isBH;}
-  if(run==180710 && event==35431006){isBH=1;return isBH;}
-  if(run==180710 && event==37833641){isBH=1;return isBH;}
-  if(run==182284 && event==91229245){isBH=1;return isBH;}
-  if(run==182424 && event==49106874){isBH=1;return isBH;}
-  if(run==182454 && event==3852905){isBH=1;return isBH;}
-  if(run==182454 && event==47919953){isBH=1;return isBH;}
-  if(run==182456 && event==116320663){isBH=1;return isBH;}
-  if(run==182518 && event==5129826){isBH=1;return isBH;}
-  if(run==182787 && event==38730893){isBH=1;return isBH;}
-  if(run==182796 && event==13977392){isBH=1;return isBH;}
-  if(run==182796 && event==24734882){isBH=1;return isBH;}
-  if(run==182879 && event==18185422){isBH=1;return isBH;}
-  if(run==183286 && event==77892314){isBH=1;return isBH;}
-  if(run==183462 && event==1675840){isBH=1;return isBH;}
-  if(run==183581 && event==54371679){isBH=1;return isBH;}
-  if(run==184130 && event==209030514){isBH=1;return isBH;}
-  if(run==186399 && event==3076863){isBH=1;return isBH;}
-  if(run==186493 && event==5614942){isBH=1;return isBH;}
-  if(run==186669 && event==3147076){isBH=1;return isBH;}
-  if(run==186673 && event==54079860){isBH=1;return isBH;}
-  if(run==186877 && event==74542417){isBH=1;return isBH;}
-  if(run==187014 && event==70112686){isBH=1;return isBH;}
-  if(run==187014 && event==83281842){isBH=1;return isBH;}
-  if(run==187219 && event==92420097){isBH=1;return isBH;}
-  if(run==189049 && event==66810203){isBH=1;return isBH;}
-  if(run==189280 && event==19675947){isBH=1;return isBH;}
-  if(run==189421 && event==40697471){isBH=1;return isBH;}
-  if(run==189421 && event==44163286){isBH=1;return isBH;}
-  if(run==189561 && event==68816684){isBH=1;return isBH;}
-  if(run==189598 && event==9572526){isBH=1;return isBH;}
-  if(run==189598 && event==76832225){isBH=1;return isBH;}
-  if(run==189875 && event==4440151){isBH=1;return isBH;}
-  if(run==189965 && event==8877734){isBH=1;return isBH;}
-  if(run==190236 && event==61048051){isBH=1;return isBH;}
-  if(run==190256 && event==30793053){isBH=1;return isBH;}
-  if(run==190300 && event==60832471){isBH=1;return isBH;}
-  if(run==190611 && event==18615342){isBH=1;return isBH;}
-  if(run==190611 && event==25855344){isBH=1;return isBH;}
-  if(run==190618 && event==29113731){isBH=1;return isBH;}
-  if(run==190618 && event==64111225){isBH=1;return isBH;}
-  if(run==190643 && event==2271173){isBH=1;return isBH;}
-  if(run==190643 && event==13407982){isBH=1;return isBH;}
-  if(run==190644 && event==51663925){isBH=1;return isBH;}
-  if(run==190872 && event==64245675){isBH=1;return isBH;}
-  if(run==190933 && event==5310947){isBH=1;return isBH;}
-  if(run==190933 && event==135797847){isBH=1;return isBH;}
-  if(run==191150 && event==23841046){isBH=1;return isBH;}
-  if(run==191190 && event==2127279){isBH=1;return isBH;}
-  if(run==191190 && event==5773247){isBH=1;return isBH;}
-  if(run==191190 && event==117421360){isBH=1;return isBH;}
-  if(run==191190 && event==128973146){isBH=1;return isBH;}
-  if(run==191190 && event==149415555){isBH=1;return isBH;}
-  
-  return isBH;
+
+  return false; //dummy for now
 }
   
 bool goodLumiBlock(int rn, int lbn){
