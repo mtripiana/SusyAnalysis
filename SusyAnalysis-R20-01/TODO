@@ -1,0 +1,89 @@
+
+HIGH PRIORITY
+--------------------------------------------------------------------------------------------------------
+
+** add JVT cut (at least to check)
+
+** revise track veto
+
+** use only baseline muons to compute MET (not sure we use this anyways)
+
+** move ntuple creation inside algorithm. It might fix the Histogram filling problem o.O?
+
+** how to get the original number of events??  --> Through CutFlow service, that should be available (soon?) in the DxAODs. Awaiting news from ASG...
+    --> Please have a look at https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AthAnalysisBase#How_to_access_EventBookkeeper_in
+
+    --> Done via provenance info in AMI for now
+
+** pass options to qsub files calls (directly or through submit_bash script)! --> run in batch from command line now. (-b) . Propagate missing options (e.g. nMax)
+
+** Allow for multiple samples inside same directory, e.g.:
+   	 Znunu/sample1/AOD.pool.root
+   	 Znunu/sample2/AOD.pool.root
+
+
+** set drivers for batch 
+   Running on IFAE's batch (PSB) is done with local driver anyways for now.
+
+** Multiple-ID samples. Crashes for second sample. TStore problem related to ST?  (contacted Nils about it...) --> 'run' wrapper for now
+    *** CHECK CASE for multi-samples+multi-systs
+
+
+** revisit matching everywhere. Use Links? ghost association? 
+
+** move random number generation from BCH to PURW tool? (DataPeriod class in ST at the moment...)
+
+** truth navigation
+
+** apply isolation corrections once IsoTool is ready. It will probably come through SUSYTools anyways.
+
+** TriggerInfo
+     *** not accesible via ROOT for now ...
+
+VALIDATION/CHECK
+--------------------------------------------------------------------------------------------------------
+
+** check 'baseline' selection in SUSYTools suits our needs
+
+** btagging
+       review current setup, variables and ops.
+
+
+
+LOW priority
+--------------------------------------------------------------------------------------------------------
+
+** Implement PROOF driver? 
+
+** Move to new JetSmearing package
+
+** Remove unchecked code warnings for StatusCode and CP::SystematicCode
+
+** Create qsub files on the fly? Do we really need to save them? (for local running maybe...but can be overcome)
+
+**  modulate some actions into xAOD-methods, bypassing the CINT compilation.  [already started!]
+
+** clean-up RegionIdentifier
+
+** move to new truthParticle/Event aliases once it is all updated.
+
+** templatize hist handling methods. (TH1F, TH1D, ...)
+
+** Systematics:
+
+       - Connect to list_systematics.sh script for auto-update (perhaps)
+
+** move to Sample class inside RunsMap ? so to specify ecm, location (afs, pic, ...), etc. So to map "sampleKey" --> rlist( Rpair(id, Sample("name",...other attributes)))
+
+** Add the --systematics option to the run_weights_grid function (and the dq2get call).
+
+
+Errors/Warning to take care of (at least understand if we can safely ignore these)
+--------------------------------------------------------------------------------------------------------
+~~ SUSYObjDef_xAOD           ERROR No ID track!!     (ATH_MSG_ERROR from FillMuon())
+
+~~ Info in <xAOD::TAuxStore::setupAuxBranch>: Variable ExtrapolatedMuonTrackParticlesAuxDyn.trackLink will not be available for reading/copying
+
+~~ ERROR in TElectronEfficiencyCorrectionTool (file: /nfs/at3users/users/tripiana/StopAnalysis_xAOD/ElectronEfficiencyCorrection/Root/TElectronEfficiencyCorrectionTool.cxx, line: 591!)
+No correction factor provided for et=31.302971
+Returning scale factor 1.0 with uncertainty 1.0
