@@ -406,6 +406,8 @@ private:
   virtual float Calc_Sphericity(std::vector<TLorentzVector> pvectors,
 				bool IsTransverseSphericity=false);
   
+  virtual float amt2_calc(TLorentzVector b1v, TLorentzVector b2v, TLorentzVector lepton,TVector2 EtMissVec, double cut);
+  
   virtual double Calc_TruthNuMET();
 
   virtual double epsilon(double x);
@@ -1009,6 +1011,11 @@ private:
   std::vector<float>  tr_spher;
   std::vector<double> tr_thrust; 
 
+  VFloat amt2_0;
+  VFloat amt2_1;  
+  VFloat amt2_2;
+  VFloat amt2_3;   
+   
   //- Topologic variables
   VFloat dPhi_met_j1;
   VFloat dPhi_met_j2;

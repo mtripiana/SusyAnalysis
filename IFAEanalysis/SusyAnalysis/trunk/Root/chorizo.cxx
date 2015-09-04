@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <EventLoop/StatusCode.h>
+#include "NewMT2/MT2.h"
 
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
@@ -526,6 +527,11 @@ void chorizo :: bookTree(){
       //(transv. thrust and sphericity
       //m_atree->Branch("tr_spher",&tr_spher); 
       //m_atree->Branch("tr_thrust",&tr_thrust); 
+
+      m_atree->Branch("amt2_0",&amt2_0);
+      m_atree->Branch("amt2_1",&amt2_1);
+      m_atree->Branch("amt2_2",&amt2_2);      
+      m_atree->Branch("amt2_3",&amt2_3);      
 
       //event variables
       //dphi
@@ -1243,6 +1249,11 @@ void chorizo :: InitVars()
   //(transverse) sphericity
   tr_spher.clear();
   tr_thrust.clear(); 
+  
+  amt2_0.clear();
+  amt2_1.clear();
+  amt2_2.clear();
+  amt2_3.clear();
 
   //event variables 
   dPhi_met_j1.clear();
@@ -3770,6 +3781,23 @@ EL::StatusCode chorizo :: loop ()
     
     dPhi_met_mettrk.push_back( deltaPhi( metmap[MetDef::Track].Phi(), mk.second.Phi()) );	
 
+    if (recoJets.size()>=2 && (recoElectrons.size()>=1 || recoMuons.size()>=1)){
+        
+      TLorentzVector lead_lep(0.,0.,0.,0.); 
+      if (recoMuons.size()==0) lead_lep = recoElectrons.at(0).GetVector(); 
+      else if (recoElectrons.size()==0) lead_lep = recoMuons.at(0).GetVector();
+      else {
+        if (recoMuons.at(0).Pt()>recoElectrons.at(0).Pt()) lead_lep = recoMuons.at(0).GetVector();
+        if (recoMuons.at(0).Pt()<recoElectrons.at(0).Pt()) lead_lep = recoElectrons.at(0).GetVector();	
+      }
+      
+      
+      amt2_0.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 160));
+      amt2_1.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 170));
+      amt2_2.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 180));
+      amt2_3.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 200));
+    }
+    
     //some extra variables
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
@@ -4141,6 +4169,7 @@ EL::StatusCode chorizo :: loop ()
 	}
       }
 
+
       ijet++;
  
   }
@@ -4177,6 +4206,7 @@ EL::StatusCode chorizo :: loop ()
     }   
   }
   // -----------------------------  
+
 
   //dPhi_b1_b2  
   dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
@@ -4945,6 +4975,22 @@ EL::StatusCode chorizo :: loop_truth()
 
     thrust_jets.pop_back(); //remove met from jet vectors
 
+    if (recoJets.size()>=2 && (recoElectrons.size()>=1 || recoMuons.size()>=1)){
+        
+      TLorentzVector lead_lep(0.,0.,0.,0.); 
+      if (recoMuons.size()==0) lead_lep = recoElectrons.at(0).GetVector(); 
+      else if (recoElectrons.size()==0) lead_lep = recoMuons.at(0).GetVector();
+      else {
+        if (recoMuons.at(0).Pt()>recoElectrons.at(0).Pt()) lead_lep = recoMuons.at(0).GetVector();
+        if (recoMuons.at(0).Pt()<recoElectrons.at(0).Pt()) lead_lep = recoElectrons.at(0).GetVector();	
+      }
+      
+      
+      amt2_0.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 160));
+      amt2_1.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 170));
+      amt2_2.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 180));
+      amt2_3.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 200));
+    }
 
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
@@ -7583,6 +7629,44 @@ void chorizo :: Zll_extra(TVector2 met){
     }  
   }
 } 
+
+
+float chorizo :: amt2_calc(TLorentzVector b1v, TLorentzVector b2v, TLorentzVector lepton,TVector2 EtMissVec, double cut) {
+
+  ComputeMT2* mycalc;
+   
+  TLorentzVector lepb1 = b1v + lepton;
+  TLorentzVector lepb2 = b2v + lepton;
+  float amt2=0;
+
+  if((lepb1.M()>cut)&&(lepb2.M()>cut))  //set overflow bin to 0 if no combinations are a 'top'
+    {
+      amt2=0;
+    }
+  else if ((lepb1.M()<cut)&&(lepb2.M()>cut))  // if lepb1 is the 'top'
+    {
+      mycalc = new ComputeMT2(lepb1,b2v,EtMissVec,0,0);
+      amt2=mycalc->Compute();
+      delete mycalc;
+    }
+  else if ((lepb1.M()>cut)&&(lepb2.M()<cut)) // if lepb2 is the 'top'
+    {
+      mycalc = new ComputeMT2(lepb2,b1v,EtMissVec,0,0);
+      amt2=mycalc->Compute();
+      delete mycalc;
+    }
+  else  // if both lepb1 and lepb2 are the 'top' calculate minimum of mt2
+    {
+      mycalc = new ComputeMT2(lepb1,b2v,EtMissVec,0,0);
+      double tmp1=mycalc->Compute();
+      mycalc = new ComputeMT2(lepb2,b1v,EtMissVec,0,0);
+      double tmp2=mycalc->Compute();
+      amt2=min(tmp1,tmp2);
+      delete mycalc;
+    }
+  return amt2;
+ 
+}
 
 
 TVector2 chorizo :: getMET( const xAOD::MissingETContainer* METcon, TString name ) {
