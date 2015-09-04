@@ -426,7 +426,7 @@ private:
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
 
-  float GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool);
+  float GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool, float btag_op);
 #endif // not __MAKECINT__
 
 
@@ -976,7 +976,7 @@ private:
   int bj_Nt80;
   
   int bj_Nf70;
-  int bj_Nf77;
+  int bj_N;
   int bj_Nf85;  
   
   

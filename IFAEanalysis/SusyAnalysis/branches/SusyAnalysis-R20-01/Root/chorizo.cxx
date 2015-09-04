@@ -499,7 +499,7 @@ void chorizo :: bookTree(){
       m_atree->Branch("j_btruth_85",&j_btruth_85);
       
       m_atree->Branch("bj_Nf70",&bj_Nf70,"bj_Nf70/I", 10000);
-      m_atree->Branch("bj_Nf77",&bj_Nf77,"bj_Nf77/I", 10000);
+      m_atree->Branch("bj_N",&bj_N,"bj_N/I", 10000);
       m_atree->Branch("bj_Nf85",&bj_Nf85,"bj_Nf85/I", 10000);
       
       m_atree->Branch("j_bflat_70",&j_bflat_70);
@@ -1211,7 +1211,7 @@ void chorizo :: InitVars()
   j_btruth_85.clear();
   
   bj_Nf70 = 0;                               
-  bj_Nf77 = 0;                               
+  bj_N = 0;                               
   bj_Nf85 = 0;   
 
   j_bflat_70.clear();
@@ -1795,7 +1795,7 @@ EL::StatusCode chorizo :: initialize ()
     CHECK(tool_st->setProperty("DataSource", datasource) );
     //  CHECK(tool_st->setProperty("IsDerived", m_isderived) );
     //  CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
-    CHECK(tool_st->setProperty("Is25ns", true));
+    CHECK(tool_st->setProperty("Is25ns", false));
 
     if(JetCollection.Contains("LCTopo"))
       CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::LCTopo ));
@@ -1842,7 +1842,7 @@ EL::StatusCode chorizo :: initialize ()
     // Set to false if not doing JetAreaCalib
     CHECK(tool_st->setProperty("DoJetGSCCalib",m_isderived) );
     // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                   
-    CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) );
+    CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) ); 
     
     // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
     // if(!Met_doRefGamma)   CHECK(tool_st->setProperty("METGammaTerm","")); //No GammaTerm default
@@ -1903,10 +1903,9 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_bsel85->setProperty("JetAuthor",JetTagCollection.Data()) );
   CHECK( tool_bsel85->initialize() );
 
-
   tool_btag70 = new BTaggingEfficiencyTool("BTagSF70_EMTopoJets");
   CHECK( tool_btag70->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag70->setProperty("OperatingPoint",      "FixedCutBEff_70") );
+  CHECK( tool_btag70->setProperty("OperatingPoint",      "-0_0436") );
   CHECK( tool_btag70->setProperty("JetAuthor",           JetTagCollection.Data()) );
   CHECK( tool_btag70->setProperty("ScaleFactorFileName", FlvTagCutFN) );
   //CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
@@ -1915,7 +1914,7 @@ EL::StatusCode chorizo :: initialize ()
   
   tool_btag77 = new BTaggingEfficiencyTool("BTagSF77_EMTopoJets");
   CHECK( tool_btag77->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag77->setProperty("OperatingPoint",      "FixedCutBEff_77") );
+  CHECK( tool_btag77->setProperty("OperatingPoint",      "-0_4434") );
   CHECK( tool_btag77->setProperty("JetAuthor",           JetTagCollection.Data() ) );
   CHECK( tool_btag77->setProperty("ScaleFactorFileName", FlvTagCutFN) );
   //CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
@@ -1924,7 +1923,7 @@ EL::StatusCode chorizo :: initialize ()
   
   tool_btag85 = new BTaggingEfficiencyTool("BTagSF85_EMTopoJets");
   CHECK( tool_btag85->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag85->setProperty("OperatingPoint",      "FixedCutBEff_85") );
+  CHECK( tool_btag85->setProperty("OperatingPoint",      "-0_7887") );
   CHECK( tool_btag85->setProperty("JetAuthor",           JetTagCollection.Data() ) ); 
   CHECK( tool_btag85->setProperty("ScaleFactorFileName", FlvTagCutFN) );
   //  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
@@ -2037,8 +2036,6 @@ EL::StatusCode chorizo :: initialize ()
       Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
 
       TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
-      //      std::cout << "PRW file: " << prwfile << std::endl;
-      //TString prwfile=PURW_Folder+"410000.prw.root";      
       std::ifstream test_prwfile(prwfile);
       
       if (test_prwfile.good()) {
@@ -2243,7 +2240,7 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  Info("loop()", "HERE");
+  //Info("loop()", "HERE");
   
 #ifdef PROFCODE
   if(m_eventCounter!=0)
@@ -2314,14 +2311,10 @@ EL::StatusCode chorizo :: loop ()
     
     if (!doPUTree)         
       return nextEvent();
-    //if (isMC) pileup_w = acc_PUweight(*eventInfo);
     //if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(222500, 410000, averageIntPerXing);    
     if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);      
-    //    output->setFilterPassed ();
-    //if (!isMC) averageIntPerXing = tool_purw->GetLumiBlockMu(RunNumber,lb);
     return nextEvent();
   }
-
 
   //  -- Retrieve Truth containers
   m_truthE= 0;
@@ -2377,7 +2370,6 @@ EL::StatusCode chorizo :: loop ()
       }
     }
 
-
     //Find Hard Process particles
     int pdgid1 = 0;
     int pdgid2 = 0;
@@ -2415,7 +2407,6 @@ EL::StatusCode chorizo :: loop ()
     return nextEvent();
   }  
     
-
   //------------------------ ttbar reweighting ---------------------------
   if (isMC) {
     if (mc_channel_number==117050 || mc_channel_number==110401) {
@@ -2577,7 +2568,6 @@ EL::StatusCode chorizo :: loop ()
   xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
   metRFC->setStore(metRFCAux);
 
-
   //--- Get Electrons
   xAOD::ElectronContainer* electrons_sc(0);
   xAOD::ShallowAuxContainer* electrons_scaux(0);
@@ -2654,12 +2644,6 @@ EL::StatusCode chorizo :: loop ()
 //    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
 //      Error("loop()", "Failed to apply JetTileCorrection!");
 //#endif
-
-    //** Bjet decoration 
-    if (fabs((*jet_itr).eta()) < 2.5){
-      tool_st->IsBJet( *jet_itr );  //rel20 0.77 eff value from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks#MV2c20_tagger_antikt4topoem_jets
-
-    }
 
     //book jets for smearing method
     if(dec_baseline(*jet_itr))
@@ -3037,7 +3021,6 @@ EL::StatusCode chorizo :: loop ()
     if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
   }//usephotons
 
-
   //-- pre-book good jets now (after OR)
   auto jet_itr = jets_sc->begin();
   auto jet_end = jets_sc->end();
@@ -3050,7 +3033,11 @@ EL::StatusCode chorizo :: loop ()
     bool isbadjet = tool_st->IsBadJet( **jet_itr, Jet_RecoJVTCut); // Change preselEta to recoEta    
     bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
 
+    //** Bjet decoration 
+    if (fabs((*jet_itr)->eta()) < 2.5){
+      tool_st->IsBJet( **jet_itr );  //rel20 0.77 eff value from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks#MV2c20_tagger_antikt4topoem_jets
 
+    }
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
 
@@ -3073,7 +3060,7 @@ EL::StatusCode chorizo :: loop ()
     recoJet.p4const = p4c;
 
     //--- Flavor-tagging    
-    //from SUSYTools (based on MV1 (70%) at the moment!)
+    //from SUSYTools 
     recoJet.isbjet = dec_bjet(**jet_itr);
 
     if(isMC){
@@ -3116,7 +3103,7 @@ EL::StatusCode chorizo :: loop ()
     //      local_truth_flavor = (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
     //   local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
     // }    
-    
+  
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
     recoJet.MV1 = btag->MV1_discriminant(); 
     double wmv2=-1;
@@ -3212,7 +3199,6 @@ EL::StatusCode chorizo :: loop ()
     iJet++;
 
   }  //jet loop
-  
  // if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
     
   //sort the jet candidates in Pt
@@ -3288,6 +3274,8 @@ EL::StatusCode chorizo :: loop ()
   int bjet_counter_70fc=0;
   int bjet_counter_77fc=0;
   int bjet_counter_85fc=0;
+  
+  int bjet_counter=0;
 
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
 
@@ -3307,9 +3295,12 @@ EL::StatusCode chorizo :: loop ()
     if( jetCandidates.at(iJet).isbjet_t80  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt80++;
     
     if( jetCandidates.at(iJet).isbjet_fb70  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf70++;
-    if( jetCandidates.at(iJet).isbjet_fb77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf77++;
+    //if( jetCandidates.at(iJet).isbjet_fb77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf77++;
     if( jetCandidates.at(iJet).isbjet_fb85  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf85++;    
-
+    
+    if( jetCandidates.at(iJet).isbjet && fabs(jetCandidates.at(iJet).Eta())<2.5) 
+      bjet_counter++;
+    
     //recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
     
     //count high pt jet multiplicity
@@ -3328,7 +3319,7 @@ EL::StatusCode chorizo :: loop ()
 	}
       }
     }
-
+    
     if (isStopTL){
       if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
     }
@@ -3350,6 +3341,7 @@ EL::StatusCode chorizo :: loop ()
   }//end of jets loop
 
   j_N  = recoJets.size();
+  bj_N = bjet_counter;
   bj_N_77fc = bjet_counter_77fc; 
   bj_N_85fc = bjet_counter_85fc; 
   bj_N_70fc = bjet_counter_70fc;   
@@ -3359,9 +3351,9 @@ EL::StatusCode chorizo :: loop ()
 
   //** btagging weights
   if(isMC){
-    btag_weight_total_70fc       = GetBtagSF(m_goodJets, tool_btag70);   
-    btag_weight_total_77fc       = GetBtagSF(m_goodJets, tool_btag77);
-    btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85); //CHECK! not to trust for now
+    btag_weight_total_70fc       = GetBtagSF(m_goodJets, tool_btag70, -0.0436);   
+    btag_weight_total_77fc       = GetBtagSF(m_goodJets, tool_btag77, -0.4434);
+    btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85, -0.7887); //CHECK! not to trust for now
   }
   
   //the list of jets to smear for qcd are not the jet-candidates!
@@ -3396,9 +3388,7 @@ EL::StatusCode chorizo :: loop ()
     mtrack = (*cmet_track)["PVTrack_vx0"];
     // mtrack = (*cmet_track)["Track"];
   }                 
-       
-  
-  
+         
   //** Met components
   //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
 
@@ -3650,7 +3640,7 @@ EL::StatusCode chorizo :: loop ()
   //*** Event Skimming (if requested)
   if(m_skim_met || m_skim_btag){
     
-    bool SK_passBtagging = (bj_N_77fc>0);
+    bool SK_passBtagging = (bj_N>0);
     
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
 		       || metmap[::MetDef::VisMu].Mod() > 100. );
@@ -3824,25 +3814,30 @@ EL::StatusCode chorizo :: loop ()
 
  
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
+        if( jet.isbjet && fabs(jet.Eta())<2.5){
 	
-	if( dphi_jm < min_dphi_bm){ //closest bjet
-	  min_dphi_bm = dphi_jm;
-	  ibcl = ijet;
-	}
+	  if( dphi_jm < min_dphi_bm){ //closest bjet
+	    min_dphi_bm = dphi_jm;
+	    ibcl = ijet;
+	  }
 	
-	if( dphi_jm > max_dphi_bm){ //most faraway bjet
-	  max_dphi_bm = dphi_jm;
-	  ibfar = ijet;
-	}
+	  if( dphi_jm > max_dphi_bm){ //most faraway bjet
+	    max_dphi_bm = dphi_jm;
+	    ibfar = ijet;
+	  }
 	
-      }
-      else{
-	if( dphi_jm < min_dphi_lm){ //closest light-jet
-	  min_dphi_lm = dphi_jm;
-	  ilcl = ijet;
-	}
-      }
+        }
+        else{
+	  if( dphi_jm < min_dphi_lm){ //closest light-jet
+	    min_dphi_lm = dphi_jm;
+	    ilcl = ijet;
+	  }
+        }
+      
+   
+      
+      
+      
       
       ijet++;
     }
@@ -4102,14 +4097,15 @@ EL::StatusCode chorizo :: loop ()
       
     }
   }
-  
-
-  
+   
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_77fc(Jet_Tagger) && recoJets.at(1).isBTagged_77fc(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
-      mbb = mjj;
+
+      if( recoJets.at(0).isbjet && recoJets.at(1).isbjet && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
+        mbb = mjj;
+    
+	
   }
 
   //Mct
@@ -4124,8 +4120,8 @@ EL::StatusCode chorizo :: loop ()
   float maxbw2=-99;
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
-
-    if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
+    
+    if( jet.isbjet && fabs(jet.Eta())<2.5){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -4183,7 +4179,6 @@ EL::StatusCode chorizo :: loop ()
     }   
   }
   // -----------------------------  
-
 
   //dPhi_b1_b2  
   dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
@@ -4992,7 +4987,7 @@ EL::StatusCode chorizo :: loop_truth()
       
       
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
+      if( jet.isbjet && fabs(jet.Eta())<2.5){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -5125,12 +5120,13 @@ EL::StatusCode chorizo :: loop_truth()
       }
     }
   }
+  
 
   
   //Dijet Mass
   if (j_N>1){  
     mjj = Calc_Mjj();
-    if( recoJets.at(0).isBTagged_77fc(Jet_Tagger) && recoJets.at(1).isBTagged_77fc(Jet_Tagger) && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
+    if( recoJets.at(0).isbjet && recoJets.at(1).isbjet && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
       mbb = mjj;
   }
 
@@ -5147,8 +5143,8 @@ EL::StatusCode chorizo :: loop_truth()
   float maxbw2=-999;
   auto ijet=0;
   for( auto jet : recoJets ){  //jet loop
-
-    if( jet.isBTagged_77fc(Jet_Tagger) && fabs(jet.Eta())<2.5){
+        
+    if( jet.isbjet && fabs(jet.Eta())<2.5){
 
 	
 	if(iblead1<0)//leadings
@@ -6443,13 +6439,17 @@ float chorizo :: GetAverageWeight(){
 }
 
 
-float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool)
+float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool, float btag_op)
 {
   float totalSF = 1.;
   for ( const auto& jet : *goodJets ) {
 
     float sf = 1.;
-
+    
+    const xAOD::BTagging* btag =jet->btagging();
+    double wmv2=-1;
+    btag->MVx_discriminant("MV2c20",wmv2);
+    
     if ( fabs(jet->eta()) > 2.5 ) {
       ATH_MSG_VERBOSE( " Trying to retrieve b-tagging SF for jet with |eta|>2.5 (jet eta=" << jet->eta() << "), jet will be skipped");
     } else if ( jet->pt() < 20e3 && jet->pt() < 1e6 ) {
@@ -6464,7 +6464,7 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
       ATH_MSG_VERBOSE("This jet is " << (dec_bjet(*jet) ? "" : "not ") << "b-tagged.");
       ATH_MSG_VERBOSE("This jet's truth label is " << truthlabel);
 
-      if ( dec_bjet(*jet) ) {  //FIX_ME !!
+      if ( wmv2>btag_op ) {  //FIX_ME !!
 
         result = btagTool->getScaleFactor(*jet, sf);
 
@@ -6787,7 +6787,7 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
     muadded=true;
   }
 
-  if (bj_N_77fc>=1 && recoJets.size()>=3)
+  if (bj_N>=1 && recoJets.size()>=3)
     {
 
       Wjet1=Wjet2=-1;
@@ -6846,7 +6846,7 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
       //book first top
       TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
       
-      if (bj_N_77fc>=2 && recoJets.size()>=6)
+      if (bj_N>=2 && recoJets.size()>=6)
       {     
         Wjet3=Wjet4=-1;
         mindr = 1000.;
