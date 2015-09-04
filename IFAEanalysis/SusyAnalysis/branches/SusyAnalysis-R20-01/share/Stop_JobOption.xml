@@ -52,6 +52,7 @@
 
     <Truth>
       <dressLeptons>false</dressLeptons>
+      <simBtagging>false</simBtagging>  <!-- do you want to emulate the btagging eff at truth level? -->
     </Truth>
     
     <Trigger>
@@ -151,20 +152,9 @@
 
       <JESNPset>1</JESNPset>
 
-      <!--- For the c/b-tagger -->
-      <!--      <Tagger>IP3DSV1</Tagger> -->
-      <!--      <Tagge2rOpPoint>1_85</TaggerOpPoint> -->
-      <!--      <TaggerOpPoint2>m0_70</TaggerOpPoint2> -->
-
-      <!--      <Tagger>MV1</Tagger> -->
-      <!--      <TaggerOpPoint>0_7892</TaggerOpPoint> -->
-      <!--      <TaggerOpPoint2>0_3511</TaggerOpPoint2> -->
-      <!--      <TaggerCollection>AntiKt4TopoLCnoJVF</TaggerCollection> -->
-
       <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 80% -->
-
+      <BtagWP>FixedCutBEff_77</BtagWP>
+      <BtagWP_OR>FixedCutBEff_80</BtagWP_OR>
     </Jet>
 
     <Etmiss>

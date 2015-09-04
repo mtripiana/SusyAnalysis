@@ -203,6 +203,7 @@ public:
 
   bool isTruth;
   bool dressLeptons;
+  bool simBtagging;
 
   bool doAnaTree;
   bool doPUTree; 
@@ -211,6 +212,7 @@ public:
   bool isPUfile;
   bool doTrigExt;
   bool dumpTile; 
+
 
   CP::SystematicSet syst_CP; //!
   TString syst_CPstr;
@@ -613,11 +615,15 @@ private:
   float Jet_RecoEtaCut; //!
   float Jet_RecoJVTCut; //!
   bool  Jet_DoOR; //! 
+
   TString Jet_Tagger; //!
+  TString Jet_Btag_WP; //!
+  TString Jet_Btag_WP_OR; //!
+
   TString Jet_TaggerOp70;   //!
   TString Jet_TaggerOp77;   //!
   TString Jet_TaggerOp85;   //!  
-  TString Jet_TaggerCollection; //!
+
 
   //met
   TString METCollection; //!

@@ -27,6 +27,8 @@ std::vector<TString> getTokens(TString line, TString delim);
 
 TString stripName(TString name);
 
+double getRatio(double, double);
+
 float MinimumOf(float, float);
 
 bool checkNonFiltered(int);

@@ -79,7 +79,7 @@ void SetBinning(TString var, int &n, float &min, float &max){
   }
 
   if(var.Contains("_pt") || var.BeginsWith("met")){
-    n = 100;
+    n = 25;
     min = 0.;
     max = 1500.;
   }
@@ -255,6 +255,7 @@ void draw_var(TString vname, TChain* ch1, TChain* ch2, TString label1, TString l
   pad1->cd(); //go to top pad
 
   TString sel = "(isGRL && isLarGood && isTileGood && !isTileTrip && isCoreFlag && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon) && ("+vname+"!="+Form("%d",DUMMYUP)+" && "+vname+"!="+Form("%d",DUMMYDN)+") && j_N>0 && j_pt[0]>250.";
+  //isTrigger[86]";
 
 
   //njets requirement!

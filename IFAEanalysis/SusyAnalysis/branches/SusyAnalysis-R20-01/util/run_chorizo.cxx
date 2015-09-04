@@ -189,7 +189,7 @@ void printSampleMeta(Sample* sample){
   cout << " filterEff       = " << sample->getMetaDouble( MetaFields::filterEfficiency ) << endl;
   cout << " N               = " << sample->getMetaDouble( MetaFields::numEvents ) << endl;
   cout << " Lumi            = " << sample->getMetaDouble( MetaFields::lumi ) << endl;
-  cout << "FileWeight       = " << sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor )  * sample->getMetaDouble( MetaFields::filterEfficiency ) / (sample->getMetaDouble( MetaFields::numEvents ))<< endl;
+  cout << "FileWeight       = " << getRatio( sample->getMetaDouble( MetaFields::crossSection ) * sample->getMetaDouble( MetaFields::kfactor )  * sample->getMetaDouble( MetaFields::filterEfficiency ), sample->getMetaDouble( MetaFields::numEvents ))<< endl;
   cout << bold("--------------------------------------------------------------------------------------------------------------") << endl;
   cout << endl;  
 }
@@ -237,6 +237,7 @@ int main( int argc, char* argv[] ) {
   string wildcard="*";
 
   std::string jOption = "METbb_JobOption.xml";
+  TString eventsFile = "";
 
   std::vector<TString> systematic; 
 
@@ -324,6 +325,10 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("v") ){
       version = opts[iop].ReplaceAll("v=","");
     }
+    else if (opts[iop].BeginsWith("e") ){
+      eventsFile = opts[iop].ReplaceAll("e=","");
+    }
+
   }
 
   if(syst_str.Length()){  
@@ -583,6 +588,8 @@ int main( int argc, char* argv[] ) {
     alg->genPUfile  = generatePUfile;
     alg->doTrigExt  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Trigger$SaveExtended"); //save extended trigger information
     alg->dumpTile   = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");
+
+    alg->eventsFile = eventsFile;
 
     alg->syst_CP    = syst_CP;      // Systematics
     alg->syst_CPstr = syst_CP.name();

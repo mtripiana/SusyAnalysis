@@ -1,8 +1,17 @@
+2015-09-03 Martin <tripiana@cern.ch>
+        * Add option to toggle btagging emulation on/off at truth level
+	* Update do_sbottom_cutflow macro
+	* Add options for Btag (_OR) WP
+
 2015-09-03 Arely <arelycg@cern.ch>
 	* Added a flag to *not* use photons, and true jets (EXOT5).
         * call isbadjets before isgoodjet.
         * added d0 and z0 cut to job options.
         * used two flags for skimming (btag+met or met-only). Also, fixed a bug in the btag+met skimming.
+
+2015-08-31 Martin <tripiana@cern.ch>
+	* Fix btag tools init
+	* New mu value in data (from PURW tool)
 
 2015-08-27 Silvia <silvia.fracchia@cern.ch>
 	* Added b-tagging SFs for three working points (70, 77, 85%)

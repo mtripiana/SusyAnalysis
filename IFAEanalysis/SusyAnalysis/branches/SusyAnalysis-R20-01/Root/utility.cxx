@@ -93,6 +93,11 @@ TString stripName(TString name){ //remove not-official tags for AMI search (so t
   return new_name;
 }
 
+double getRatio(double a, double b){
+  if(fabs(b)>0.) return a/b;
+  return 0.;
+}
+
 float MinimumOf(float a, float b){
   float min=0.;
   (a < b) ? min=a : min=b;

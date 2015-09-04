@@ -25,10 +25,6 @@
 //Pileup Reweighting
 #include "PileupReweighting/PileupReweightingTool.h"
 
-//Jet Truth Labeling
-// #include "ParticleJetTools/JetQuarkLabel.h"
-// #include "ParticleJetTools/JetFlavourInfo.h"
-
 //CutBookkeeping
 #include "xAODCutFlow/CutBookkeeper.h"
 #include "xAODCutFlow/CutBookkeeperContainer.h"
@@ -931,9 +927,12 @@ void chorizo :: loadEventList(){
   std::ifstream infile(eventsFile);
   
   UInt_t a, b;
-  while (infile >> a >> b)
+  cout << "EVENTS LIST " << endl;
+  cout << "-----------------------------------------" << endl;
+  while (infile >> a >> b){
+    cout << "ADDING (RUN, EVENT) :  " << a << "   " << b << endl;
     m_eventList.insert( std::make_pair(a, b) );
-  
+  }
 }
 
 bool chorizo :: inEventList(UInt_t run, UInt_t event){
@@ -1551,6 +1550,7 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Truth") );
   dressLeptons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Truth$dressLeptons");
+  simBtagging  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Truth$simBtagging");
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
@@ -1615,14 +1615,11 @@ void chorizo :: ReadXML(){
   Ph_triggerSF     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$triggerSF");
   
   Info(whereAmI, Form(" - Jets") );
-  JetCollection=TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
+  JetCollection     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
   Jet_Tagger        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
-  Jet_TaggerOp70    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint70").c_str());
-  Jet_TaggerOp85    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint85").c_str());      
-  Jet_TaggerOp77    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint77").c_str());      
-  Jet_TaggerCollection    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerCollection").c_str());      
-  
-  
+  Jet_Btag_WP       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$BtagWP").c_str());
+  Jet_Btag_WP_OR    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$BtagWP_OR").c_str());
+
   Jet_PreselPtCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselPtCut");
   Jet_PreselEtaCut = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselEtaCut");
   Jet_RecoPtCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoPtCut");
@@ -1793,12 +1790,12 @@ EL::StatusCode chorizo :: initialize ()
 
   //--- SUSYTools
   if(!this->isTruth){
-
+    
     tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
     CHECK(tool_st->setProperty("DataSource", datasource) );
     //  CHECK(tool_st->setProperty("IsDerived", m_isderived) );
     //  CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
-    CHECK(tool_st->setProperty("Is25ns", false ));
+    CHECK(tool_st->setProperty("Is25ns", true));
 
     if(JetCollection.Contains("LCTopo"))
       CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::LCTopo ));
@@ -1818,7 +1815,7 @@ EL::StatusCode chorizo :: initialize ()
       Ph_isoWP = "LooseTrackOnly";
       noPhIso = true;
     }
-
+    
     CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
     CHECK( tool_st->setProperty("EleId",El_ID) ); 
     CHECK( tool_st->setProperty("EleIsoWP",El_isoWP) ); 
@@ -1830,15 +1827,15 @@ EL::StatusCode chorizo :: initialize ()
     CHECK( tool_st->setProperty("MuIsoWP",Mu_isoWP) ); 
 
     if (usePhotons){
-    CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
-    CHECK( tool_st->setProperty("PhotonIsoWP",Ph_isoWP) );
+      CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
+      CHECK( tool_st->setProperty("PhotonIsoWP",Ph_isoWP) );
     }
 
     CHECK( tool_st->setProperty("RequireIsoSignal", isoSignalLep));
     
     // Set Btagging WPs
-    //    CHECK( tool_st->setProperty("BtagWP", "FixedCutBEff_77" ) );
-    //    CHECK( tool_st->setProperty("BtagWP_OR", "FixedCutBEff_80" ) );
+    CHECK( tool_st->setProperty("BtagWP", Jet_Btag_WP.Data() ) );
+    CHECK( tool_st->setProperty("BtagWP_OR", Jet_Btag_WP_OR.Data() ) );
     
     // Set to true for DxAOD, false for primary xAOD
     CHECK(tool_st->setProperty("DoJetAreaCalib",m_isderived) );
@@ -1865,6 +1862,7 @@ EL::StatusCode chorizo :: initialize ()
     }
   }
 
+
   //--- Overlap Removal
   tool_or = new OverlapRemovalTool("OverlapRemovalTool");
   // Turn on the object links for debugging
@@ -1876,65 +1874,60 @@ EL::StatusCode chorizo :: initialize ()
   
   
   //--- B-tagging
+  TString JetTagCollection = JetCollection+"Jets";
   string FlvTagCutFN = "xAODBTaggingEfficiency/13TeV/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root";
   tool_bsel70 = new BTaggingSelectionTool("BTagSelEMTopoJets70");
   CHECK( tool_bsel70->setProperty("MaxEta",2.5) );
   CHECK( tool_bsel70->setProperty("MinPt",20000.) );
-  //  CHECK( tool_bsel70->setProperty("FlvTagCutDefinitionsFileName",maindir+"/xAODBTaggingEfficiency/cutprofiles_14072015.root") );
   CHECK( tool_bsel70->setProperty("FlvTagCutDefinitionsFileName", FlvTagCutFN) );
   CHECK( tool_bsel70->setProperty("TaggerName","MV2c20") );
   CHECK( tool_bsel70->setProperty("OperatingPoint","FlatBEff_70") );
-  CHECK( tool_bsel70->setProperty("JetAuthor","AntiKt4EMTopoJets") );
+  CHECK( tool_bsel70->setProperty("JetAuthor",JetTagCollection.Data()) );
   CHECK( tool_bsel70->initialize() );
 
   tool_bsel77 = new BTaggingSelectionTool("BTagSelEMTopoJets77");
   CHECK( tool_bsel77->setProperty("MaxEta",2.5) );
   CHECK( tool_bsel77->setProperty("MinPt",20000.) );
-  //  CHECK( tool_bsel77->setProperty("FlvTagCutDefinitionsFileName",maindir+"/xAODBTaggingEfficiency/cutprofiles_14072015.root") );
   CHECK( tool_bsel77->setProperty("FlvTagCutDefinitionsFileName", FlvTagCutFN) );
   CHECK( tool_bsel77->setProperty("TaggerName","MV2c20") );
   CHECK( tool_bsel77->setProperty("OperatingPoint","FlatBEff_77") );
-  CHECK( tool_bsel77->setProperty("JetAuthor","AntiKt4EMTopoJets") );
+  CHECK( tool_bsel77->setProperty("JetAuthor",JetTagCollection.Data()) );
   CHECK( tool_bsel77->initialize() );
 
   tool_bsel85 = new BTaggingSelectionTool("BTagSelEMTopoJets85");
   CHECK( tool_bsel85->setProperty("MaxEta",2.5) );
   CHECK( tool_bsel85->setProperty("MinPt",20000.) );
-  //CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName",maindir+"/xAODBTaggingEfficiency/cutprofiles_14072015.root") );
   CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName", FlvTagCutFN) );
   CHECK( tool_bsel85->setProperty("TaggerName","MV2c20") );
-  //CHECK( tool_bsel85->setProperty("OperatingPoint","-0.0436") );
   CHECK( tool_bsel85->setProperty("OperatingPoint","FlatBEff_85") );
-  CHECK( tool_bsel85->setProperty("JetAuthor","AntiKt4EMTopoJets") );
+  CHECK( tool_bsel85->setProperty("JetAuthor",JetTagCollection.Data()) );
   CHECK( tool_bsel85->initialize() );
 
 
-  TString BTagFile = maindir+"/SusyAnalysis/BTAG/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root";
- 
-  tool_btag70 = new BTaggingEfficiencyTool("BTagSF_EMTopoJets");
+  tool_btag70 = new BTaggingEfficiencyTool("BTagSF70_EMTopoJets");
   CHECK( tool_btag70->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag70->setProperty("OperatingPoint",      Jet_TaggerOp70.Data()) );
-  CHECK( tool_btag70->setProperty("JetAuthor",           Jet_TaggerCollection.Data()) ); 
-  CHECK( tool_btag70->setProperty("ScaleFactorFileName", BTagFile.Data()) );
-  CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
+  CHECK( tool_btag70->setProperty("OperatingPoint",      "FixedCutBEff_70") );
+  CHECK( tool_btag70->setProperty("JetAuthor",           JetTagCollection.Data()) );
+  CHECK( tool_btag70->setProperty("ScaleFactorFileName", FlvTagCutFN) );
+  //CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
   CHECK( tool_btag70->initialize() ); 
   tool_btag70->msg().setLevel( MSG::FATAL );  
- 
-  tool_btag77 = new BTaggingEfficiencyTool("BTagSF_EMTopoJets");
+  
+  tool_btag77 = new BTaggingEfficiencyTool("BTagSF77_EMTopoJets");
   CHECK( tool_btag77->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag77->setProperty("OperatingPoint",      Jet_TaggerOp77.Data()) );
-  CHECK( tool_btag77->setProperty("JetAuthor",           Jet_TaggerCollection.Data()) ); 
-  CHECK( tool_btag77->setProperty("ScaleFactorFileName", BTagFile.Data()) );
-  CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag77->setProperty("OperatingPoint",      "FixedCutBEff_77") );
+  CHECK( tool_btag77->setProperty("JetAuthor",           JetTagCollection.Data() ) );
+  CHECK( tool_btag77->setProperty("ScaleFactorFileName", FlvTagCutFN) );
+  //CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
   CHECK( tool_btag77->initialize() );
   tool_btag77->msg().setLevel( MSG::FATAL );  
-
-  tool_btag85 = new BTaggingEfficiencyTool("BTagSF_EMTopoJets");
+  
+  tool_btag85 = new BTaggingEfficiencyTool("BTagSF85_EMTopoJets");
   CHECK( tool_btag85->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag85->setProperty("OperatingPoint",      Jet_TaggerOp85.Data()) );
-  CHECK( tool_btag85->setProperty("JetAuthor",           Jet_TaggerCollection.Data()) ); 
-  CHECK( tool_btag85->setProperty("ScaleFactorFileName", BTagFile.Data()) );
-  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag85->setProperty("OperatingPoint",      "FixedCutBEff_85") );
+  CHECK( tool_btag85->setProperty("JetAuthor",           JetTagCollection.Data() ) ); 
+  CHECK( tool_btag85->setProperty("ScaleFactorFileName", FlvTagCutFN) );
+  //  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
   CHECK( tool_btag85->initialize() );
   tool_btag85->msg().setLevel( MSG::FATAL );
 
@@ -1944,7 +1937,7 @@ EL::StatusCode chorizo :: initialize ()
   tool_btag_truth3 = new BTagEfficiencyReader();
   tool_btag_truth1->Initialize("FlatBEff", "1D", "MV2c20", "70");
   tool_btag_truth2->Initialize("FlatBEff", "1D", "MV2c20", "77");
-  tool_btag_truth3->Initialize("FlatBEff", "1D", "MV2c20", "80");
+  tool_btag_truth3->Initialize("FlatBEff", "1D", "MV2c20", "80");  //85 is not supported yet!
 
   //--- MCTruthClassifier
   if (isMC){    
@@ -1977,8 +1970,6 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_jsmear->setProperty("GaussianCoreSmearingType", gsmtype) );
   CHECK( tool_jsmear->setProperty("ShiftMeanType",mstype) );
   CHECK( tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing) );
-  //  CHECK( tool_jsmear->setProperty("PtCutValue",QCD_JetsPtPreselection) );
-  //  CHECK( tool_jsmear->setProperty("EtaCutValue",QCD_JetsEtaPreselection) );
   CHECK( tool_jsmear->initialize() );
 
   TFile* bVetoJetFile = new TFile(maindir+"/JetSmearing/"+QCD_bvetoFileMap);
@@ -1992,7 +1983,7 @@ EL::StatusCode chorizo :: initialize ()
   iso_1 = new CP::IsolationSelectionTool("iso_1");
   CHECK( iso_1->setProperty("ElectronWP","GradientLoose") );
   CHECK( iso_1->setProperty("MuonWP","GradientLoose") );
-  if (usePhotons)CHECK( iso_1->setProperty("PhotonWP","Cone20") );
+  if (usePhotons) CHECK( iso_1->setProperty("PhotonWP","Cone20") );
   CHECK( iso_1->initialize() );
 
   iso_2 = new CP::IsolationSelectionTool("iso_2");
@@ -2034,10 +2025,8 @@ EL::StatusCode chorizo :: initialize ()
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
   }
   tool_purw = new CP::PileupReweightingTool(purw_name.Data());
-  //  CHECK( tool_purw->setProperty("Input","EventInfo") );
   if (this->isMC){
     if(genPUfile && !doPUTree){ //--- Generate the pileup root files
-      //      tool_purw->setProperty("UsePeriodConfig","MC14");
       CHECK( tool_purw->initialize() );
     }
     else if(applyPURW || doPUTree){ //--- Apply the weights found after generating the pileup root files
@@ -2048,7 +2037,7 @@ EL::StatusCode chorizo :: initialize ()
       Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
 
       TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
-      std::cout << "PRW file: " << prwfile << std::endl;
+      //      std::cout << "PRW file: " << prwfile << std::endl;
       //TString prwfile=PURW_Folder+"410000.prw.root";      
       std::ifstream test_prwfile(prwfile);
       
@@ -2056,15 +2045,17 @@ EL::StatusCode chorizo :: initialize ()
 	isPUfile=true;
 	prwFiles.push_back(prwfile.Data());
 	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
-	//CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
-	if (this->syst_PU == pileupErr::PileupLow)        
-	CHECK( tool_purw->setProperty("DataScaleFactor", 1./0.96) );
-	else if(this->syst_PU == pileupErr::PileupHigh) 
-	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.04) );
-	
 	lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
 	CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
 	CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
+
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
+	if (this->syst_PU == pileupErr::PileupLow)        
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
+	else if(this->syst_PU == pileupErr::PileupHigh) 
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
+	
+
 	CHECK( tool_purw->initialize() );
       } 
       
@@ -2074,23 +2065,19 @@ EL::StatusCode chorizo :: initialize ()
 	prwFiles.push_back(prwfile.Data());
 	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
 	CHECK( tool_purw->setProperty("DefaultChannel",410000) );      
-	
-	//CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
-	if (this->syst_PU == pileupErr::PileupLow)        
-	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./0.96) );
-	else if(this->syst_PU == pileupErr::PileupHigh) 
-	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.04) );
-	
 	lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
 	CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
 	CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
+	
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
+	if (this->syst_PU == pileupErr::PileupLow)        
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
+	else if(this->syst_PU == pileupErr::PileupHigh) 
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
+	
 	CHECK( tool_purw->initialize() );
       }      
-      
-      
     }
-    
-    
   }
 
   
@@ -2152,7 +2139,7 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_jClean->setProperty( "CutLevel", "LooseBad") );
   CHECK( tool_jClean->initialize() );
   
-                          
+
   //--- number of events
   Info("initialize()", Form("Total number of events = %lli", m_event->getEntries() ));
   watch.Stop();
@@ -2256,7 +2243,7 @@ EL::StatusCode chorizo :: execute ()
 
 EL::StatusCode chorizo :: loop ()
 {
-  //  Info("loop()", "HERE");
+  Info("loop()", "HERE");
   
 #ifdef PROFCODE
   if(m_eventCounter!=0)
@@ -2282,6 +2269,7 @@ EL::StatusCode chorizo :: loop ()
   }
 
   m_eventCounter++;
+
   //----------------------------
   // Event information
   //--------------------------- 
@@ -2289,67 +2277,31 @@ EL::StatusCode chorizo :: loop ()
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
   //  loadMetaData();
-   
-  //-- Retrieve objects Containers
-  m_truthE= 0;
-  m_truthP= 0;
-  m_truth_jets= 0;
 
-  //  -- Truth Particles
-  const xAOD::MissingETContainer* cmet_truth;    
-  const xAOD::MissingET* mtruth_inv;
-  const xAOD::MissingET* mtruth_vis;
-  if(this->isMC){
-        
-    CHECK( m_event->retrieve( m_truthE,     "TruthEvents" ) );
-    CHECK( m_event->retrieve( m_truthP,     "TruthParticles" ) );
-    if (useTrueJets) CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
-    CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );//PROBLEM!!!!!!
-
-    mtruth_inv = (*cmet_truth)["Int"];
-    mtruth_vis = (*cmet_truth)["NonInt"];
-
-    sumET_truth     = (*cmet_truth)["Int"]->sumet()*0.001;
-    sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
-  }
-  
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
-
-
-  // View container provides access to selected jets   (for MET recalculation and JetSmearing)
-  m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-  m_smdJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-
-  m_inv_el = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
-  m_inv_mu = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
-  m_inv_ph = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
-
-  // MET container (general)
-  xAOD::MissingETContainer* metRFC       = new xAOD::MissingETContainer;
-  xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
-  metRFC->setStore(metRFCAux);
-
-  //--- Analysis Code 
-  //--- 
   RunNumber = eventInfo->runNumber();
   mc_channel_number = (isMC ? eventInfo->mcChannelNumber() : 0); 
   EventNumber = eventInfo->eventNumber();
-  
+
   //EventList
   if(m_eventList.size()){
-    if( !inEventList(RunNumber, EventNumber) ){
-      //      output->setFilterPassed (false);    
+    if(isMC && !inEventList(mc_channel_number, EventNumber) ){
+      return nextEvent();
+    } 
+    if(!isMC && !inEventList(RunNumber, EventNumber) ){
       return nextEvent();
     } 
   }
-  
+   
+
+  //--- Analysis Code 
+  //--- 
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
   
   lb = eventInfo->lumiBlock();
   bcid = eventInfo->bcid();
-  averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
-   
+  averageIntPerXing = ( isMC ? eventInfo->averageInteractionsPerCrossing() : tool_purw->getLumiBlockMu( *eventInfo ) );
+
+  
   //PURW
   // if(isMC && applyPURW)
   //   CHECK( tool_purw->apply(*eventInfo) );  //it does already the filling in 'ConfigMode'
@@ -2369,9 +2321,19 @@ EL::StatusCode chorizo :: loop ()
     //if (!isMC) averageIntPerXing = tool_purw->GetLumiBlockMu(RunNumber,lb);
     return nextEvent();
   }
-  //--- Weights for MC
+
+
+  //  -- Retrieve Truth containers
+  m_truthE= 0;
+  m_truthP= 0;
+  m_truth_jets= 0;
   if (isMC){
 
+    CHECK( m_event->retrieve( m_truthE,     "TruthEvents" ) );
+    CHECK( m_event->retrieve( m_truthP,     "TruthParticles" ) );
+
+    //--- Weights for MC
+    
     //--- Weigths for Sherpa, MC@NLO, Acer, ...
     MC_w = eventInfo->mcEventWeight();
     
@@ -2414,6 +2376,7 @@ EL::StatusCode chorizo :: loop ()
 	cout << "-------------------------------------" << endl;
       }
     }
+
 
     //Find Hard Process particles
     int pdgid1 = 0;
@@ -2486,7 +2449,6 @@ EL::StatusCode chorizo :: loop ()
     nVertex++;
   }
   //  this->isVertexOk = (nVertex > 0);
-
 
 
   //--- trigger debugging (check all MET triggers in menu)
@@ -2584,6 +2546,38 @@ EL::StatusCode chorizo :: loop ()
     if(debug) Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
   }
 
+
+  //-- Retrieve objects Containers
+  const xAOD::MissingETContainer* cmet_truth;    
+  const xAOD::MissingET* mtruth_inv;
+  const xAOD::MissingET* mtruth_vis;
+  if(this->isMC){
+        
+    if(useTrueJets)    CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+    CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );//PROBLEM!!!!!!
+
+    mtruth_inv = (*cmet_truth)["Int"];
+    mtruth_vis = (*cmet_truth)["NonInt"];
+
+    sumET_truth     = (*cmet_truth)["Int"]->sumet()*0.001;
+    sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
+  }
+  
+
+  // View container provides access to selected jets   (for MET recalculation and JetSmearing)
+  m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
+  m_smdJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
+
+  m_inv_el = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
+  m_inv_mu = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
+  m_inv_ph = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
+
+  // MET container (general)
+  xAOD::MissingETContainer* metRFC       = new xAOD::MissingETContainer;
+  xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
+  metRFC->setStore(metRFCAux);
+
+
   //--- Get Electrons
   xAOD::ElectronContainer* electrons_sc(0);
   xAOD::ShallowAuxContainer* electrons_scaux(0);
@@ -2627,23 +2621,24 @@ EL::StatusCode chorizo :: loop ()
   xAOD::PhotonContainer* photons_sc(0);
   xAOD::ShallowAuxContainer* photons_scaux(0);
   if (usePhotons){
-  CHECK( tool_st->GetPhotons(photons_sc, photons_scaux, false, Ph_PreselPtCut, Ph_PreselEtaCut ) ); //'baseline' decoration
-
-  for(const auto& ph_itr : *photons_sc){ 
-
-    //redefine iso decoration if needed
-    if(noPhIso) dec_isol(*ph_itr) = true;
-
-    //decorate photon with baseline pt requirements ('signal')
-    tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
-    //tool_st->IsSignalPhoton( (*ph_itr));    
-
-    //decorate photon with final pt requirements ('final')
-    if( (*ph_itr).pt() > Ph_RecoPtCut )
-      dec_final(*ph_itr) = dec_signal(*ph_itr);
-
-  }
+    CHECK( tool_st->GetPhotons(photons_sc, photons_scaux, false, Ph_PreselPtCut, Ph_PreselEtaCut ) ); //'baseline' decoration
+    
+    for(const auto& ph_itr : *photons_sc){ 
+      
+      //redefine iso decoration if needed
+      if(noPhIso) dec_isol(*ph_itr) = true;
+      
+      //decorate photon with baseline pt requirements ('signal')
+      tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
+      //tool_st->IsSignalPhoton( (*ph_itr));    
+      
+      //decorate photon with final pt requirements ('final')
+      if( (*ph_itr).pt() > Ph_RecoPtCut )
+	dec_final(*ph_itr) = dec_signal(*ph_itr);
+      
+    }
   }//usephotons
+
   
   //--- Get Jets
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
@@ -2681,6 +2676,8 @@ EL::StatusCode chorizo :: loop ()
 
   // Apply the overlap removal to all objects (dumb example)
   if (usePhotons) CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
+  else CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, 0) );
+
   
   //-- Pre-book baseline electrons (after OR)
   bool IsElectron = false; // any good not-overlapping electron in the event?
@@ -2802,6 +2799,7 @@ EL::StatusCode chorizo :: loop ()
   //sort the electrons in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end()); //non-signal electrons
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end()); //signal electrons
+
 
   //-- Pre-book baseline muons (after OR)
   bool IsMuon = false; // any good not-overlapping muon in the event?
@@ -2946,97 +2944,99 @@ EL::StatusCode chorizo :: loop ()
   this->isCosmic  = (nCosmicMuons>0);
   this->isBadMuon = (nBadMuons>0);
 
+
   //-- Pre-book baseline photons (after OR)
   std::vector<Particle> photonCandidates; //intermediate selection photons
   int iPh = 0;
   ph_N=0; //signal photons
   if (usePhotons){
-  for(const auto& ph_itr : *photons_sc ){
-    if( dec_baseline(*ph_itr) &&
-	((!doOR) || (!doORphotons) || dec_passOR(*ph_itr))){
-      
-      //define preselected photon                
-      Particle recoPhoton;
-      recoPhoton.SetVector( getTLV( &(*ph_itr) ));
-      if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
-      if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
-
-      recoPhoton.id = iPh;
-      recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
-      recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
-      recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
-      recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
-      (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
-
-    if(iso_1->accept(*ph_itr)) recoPhoton.isoCone20 = 1.0;
-    if(iso_2->accept(*ph_itr)) recoPhoton.isoCone40CaloOnly = 1.0;
-    if(iso_3->accept(*ph_itr)) recoPhoton.isoCone40= 1.0;
-
-
-      recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
-      recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
-   
-      //trigger matching
-      std::vector<bool> ph_trig_pass;
-      for(const auto& t : PhTriggers){
-      if(t.substr(0, 4) == "HLT_"){ 
-	std::string tsub = t.substr(4);
-	ph_trig_pass.push_back( tool_trig_match_ph->matchHLT( ph_itr, tsub ));
-      }
-      else
-	ph_trig_pass.push_back( false ); //only check for HLT items at the moment
-     
-      recoPhoton.isTrigMatch |= ph_trig_pass.back();
-    }
-      //get photon scale factors
-      if(this->isMC){
-	//nominal
-	recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
-
-	//+1 sys up
-	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+    for(const auto& ph_itr : *photons_sc ){
+      if( dec_baseline(*ph_itr) &&
+	  ((!doOR) || (!doORphotons) || dec_passOR(*ph_itr))){
+	
+	//define preselected photon                
+	Particle recoPhoton;
+	recoPhoton.SetVector( getTLV( &(*ph_itr) ));
+	if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
+	if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
+	
+	recoPhoton.id = iPh;
+	recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
+	recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
+	recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
+	recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
+	(*ph_itr).passSelection(recoPhoton.isTight, "Tight");
+	
+	if(iso_1->accept(*ph_itr)) recoPhoton.isoCone20 = 1.0;
+	if(iso_2->accept(*ph_itr)) recoPhoton.isoCone40CaloOnly = 1.0;
+	if(iso_3->accept(*ph_itr)) recoPhoton.isoCone40= 1.0;
+	
+	
+	recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
+	recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
+	
+	//trigger matching
+	std::vector<bool> ph_trig_pass;
+	for(const auto& t : PhTriggers){
+	  if(t.substr(0, 4) == "HLT_"){ 
+	    std::string tsub = t.substr(4);
+	    ph_trig_pass.push_back( tool_trig_match_ph->matchHLT( ph_itr, tsub ));
+	  }
+	  else
+	    ph_trig_pass.push_back( false ); //only check for HLT items at the moment
+	  
+	  recoPhoton.isTrigMatch |= ph_trig_pass.back();
 	}
-	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
-	}
-	recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-
-	//+1 sys down
-	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	  Error("loop()", "Cannot configure SUSYTools for default systematics");
-	}
-	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
-	}
-	recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-
-	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	  Error("loop()", "Cannot configure SUSYTools for default systematics");
-	}
-      }
-
-      photonCandidates.push_back(recoPhoton);
-
-      //save signal electrons
-      if( dec_signal(*ph_itr) ){
-	recoPhotons.push_back(recoPhoton);
-	ph_N++;
+	//get photon scale factors
 	if(this->isMC){
-	  ph_SF *= recoPhoton.SF;
-	  ph_SFu *= recoPhoton.SFu;
-	  ph_SFd *= recoPhoton.SFd;
+	  //nominal
+	  recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
+	  
+	  //+1 sys up
+	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	    Error("loop()", "Cannot configure SUSYTools for default systematics");
+	  }
+	  if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	    Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
+	  }
+	  recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+	  
+	  //+1 sys down
+	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	    Error("loop()", "Cannot configure SUSYTools for default systematics");
+	  }
+	  if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	    Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
+	  }
+	  recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+	  
+	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	    Error("loop()", "Cannot configure SUSYTools for default systematics");
+	  }
 	}
-      }
-
-      iPh++;
-    }//if baseline 
-  }//electron loop
-
-  //sort the photons in Pt
-  if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
-  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+	
+	photonCandidates.push_back(recoPhoton);
+	
+	//save signal electrons
+	if( dec_signal(*ph_itr) ){
+	  recoPhotons.push_back(recoPhoton);
+	  ph_N++;
+	  if(this->isMC){
+	    ph_SF *= recoPhoton.SF;
+	    ph_SFu *= recoPhoton.SFu;
+	    ph_SFd *= recoPhoton.SFd;
+	  }
+	}
+	
+	iPh++;
+      }//if baseline 
+    }//photon loop
+    
+    //sort the photons in Pt
+    if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
+    if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
   }//usephotons
+
 
   //-- pre-book good jets now (after OR)
   auto jet_itr = jets_sc->begin();
@@ -3049,7 +3049,7 @@ EL::StatusCode chorizo :: loop ()
 
     bool isbadjet = tool_st->IsBadJet( **jet_itr, Jet_RecoJVTCut); // Change preselEta to recoEta    
     bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
-    
+
 
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
@@ -3229,14 +3229,12 @@ EL::StatusCode chorizo :: loop ()
   if ( this->isMC && !this->isSignal ){
 
     //truth particles loop
-    truthP_itr = m_truthP->begin();
-    truthP_end = m_truthP->end();
-    for( ; truthP_itr != truthP_end; ++truthP_itr ) {
+    for(const xAOD::TruthParticle* tp : *m_truthP) {
       
-      if( !isStable( *truthP_itr ) || !isElectron(*truthP_itr) ) continue;  //->isElectron() ? 
-
+      if( !isStable(tp) || !isElectron(tp) ) continue;  //->isElectron() ? 
+      
       Particle electron;
-      electron.SetVector( getTLV( *truthP_itr ) ); 
+      electron.SetVector( getTLV(tp) ); 
       truthElectrons.push_back(electron);
 
     }
@@ -3262,22 +3260,21 @@ EL::StatusCode chorizo :: loop ()
 
   //Get truth jets vectors
   if(isMC && useTrueJets){
-    xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
-    xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
-    
+
     //loop over truth jets & save 'high-pt' jets for later use 
     jb_truth_N=0;
     j_truth_pt1=0.;
-    for( ; tjet_itr != tjet_end; ++tjet_itr ) {
-      if ( (*tjet_itr)->pt()/1000.0 > j_truth_pt1 ){
-	j_truth_pt1 = (*tjet_itr)->pt()/1000.0;
-	j_truth_eta1 = (*tjet_itr)->eta();
+    for(const xAOD::Jet* tj : *m_truth_jets) {    
+
+      if ( tj->pt()/1000.0 > j_truth_pt1 ){
+	j_truth_pt1 = tj->pt()/1000.0;
+	j_truth_eta1 = tj->eta();
       }
-      if ( (*tjet_itr)->pt() < 10000. ) continue;
+      if ( tj->pt() < 10000. ) continue;
      
-      if ( (*tjet_itr)->pt() > 20000. )
+      if ( tj->pt() > 20000. )
 	jb_truth_N++;
-      if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) j_truth_N++;
+      if ( tj->pt() > 50000. && fabs(tj->eta()) < Jet_RecoEtaCut ) j_truth_N++;
 
     }
   }
@@ -3362,7 +3359,6 @@ EL::StatusCode chorizo :: loop ()
 
   //** btagging weights
   if(isMC){
-    //btag_weight_total       = tool_st->BtagSF(m_goodJets);
     btag_weight_total_70fc       = GetBtagSF(m_goodJets, tool_btag70);   
     btag_weight_total_77fc       = GetBtagSF(m_goodJets, tool_btag77);
     btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85); //CHECK! not to trust for now
@@ -3375,7 +3371,6 @@ EL::StatusCode chorizo :: loop ()
     if ( jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta())<2.4 && jetCandidates.at(iJet).jvf < 0.5) continue;
     seedJets.push_back( jetCandidates.at(iJet) );
   }
-
 
   //--- Get MET
   // For the moment only the official flavors are available.
@@ -3650,6 +3645,7 @@ EL::StatusCode chorizo :: loop ()
     cout<<"MET from D3PD = " << v_met_rfinal_mu.Mod()*0.001 << endl;
     cout<<endl;
   }
+
 
   //*** Event Skimming (if requested)
   if(m_skim_met || m_skim_btag){
@@ -4081,11 +4077,10 @@ EL::StatusCode chorizo :: loop ()
       
       if(recoJets.at(2).nTrk>0 && recoJets.at(2).nTrk<5 && dPhi_met_j3[0] < TMath::Pi()/5. && j3_mT[0]<100.){
 	
-	truthP_itr = m_truthP->begin();
-	for( ; truthP_itr != truthP_end; ++truthP_itr ) {
+	for(const xAOD::TruthParticle* tp : *m_truthP) {
 	  
-	  if ( isHard((*truthP_itr)) && isTau((*truthP_itr)) ){
-	    fillTLV(TruthTau, (*truthP_itr));
+	  if ( isHard(tp) && isTau(tp) ){
+	    fillTLV(TruthTau, tp);
 	    
  	    float tmpDR = TruthTau.DeltaR(recoJets.at(2));
 	    if(dR_truthTau_j3 > tmpDR)
@@ -4437,7 +4432,7 @@ EL::StatusCode chorizo :: loop ()
 
   //---Fill missing data members 
   this->dumpLeptons();
-  if (usePhotons)this->dumpPhotons();
+  this->dumpPhotons();
   this->dumpJets();
   
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
@@ -4505,7 +4500,10 @@ EL::StatusCode chorizo :: loop_truth()
   m_truthE= 0;
   m_truthP= 0;
   m_truth_jets= 0;
-  
+
+  //  -- Event presel  
+  isVertexOk = true; //dummy 
+
  
   //  -- Truth Particles
   //  CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
@@ -4616,16 +4614,16 @@ EL::StatusCode chorizo :: loop_truth()
 
   //Truth Photons 
   if (usePhotons){
-  if( !m_event->retrieve( m_truthPh, "TruthPhotons").isSuccess() ){
-    if( !m_event->retrieve( m_truthPh, "Truth3Photons").isSuccess() ){
-      Error("loop_truth()", "Failed to retrieve Truth(3)Photon container. Exiting." );
-      return EL::StatusCode::FAILURE;
+    if( !m_event->retrieve( m_truthPh, "TruthPhotons").isSuccess() ){
+      if( !m_event->retrieve( m_truthPh, "Truth3Photons").isSuccess() ){
+	Error("loop_truth()", "Failed to retrieve Truth(3)Photon container. Exiting." );
+	return EL::StatusCode::FAILURE;
+      }
     }
-  }
-  //CHECK( m_event->retrieve( m_truthPh, "TruthPhotons" ) );
-  //CHECK( m_event->retrieve( m_truthPh, "Truth3Photons" ) );
+    //CHECK( m_event->retrieve( m_truthPh, "TruthPhotons" ) );
+    //CHECK( m_event->retrieve( m_truthPh, "Truth3Photons" ) );
   }//usephotons
-
+  
   std::vector<Particle> photonCandidates; //intermediate selection photons
   if (usePhotons){
   for(const xAOD::TruthParticle* tPh : *m_truthPh) {
@@ -4656,7 +4654,7 @@ EL::StatusCode chorizo :: loop_truth()
 
 
   //Truth Jets
-  if (useTrueJets) CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+  CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
   
   std::vector<Particles::Jet> jetCandidates; //intermediate selection photons
   for(const xAOD::Jet* tJet : *m_truth_jets) {
@@ -4677,7 +4675,7 @@ EL::StatusCode chorizo :: loop_truth()
 	recoJet.FlavorTruth = 0;
       }
     }
-
+    
     //hack for cutflow afterwards
     if(recoJet.FlavorTruth==5){
       recoJet.MV1 = 99.;
@@ -4695,73 +4693,74 @@ EL::StatusCode chorizo :: loop_truth()
     // recoJet.isbjet_t70 = tool_btag_truth1->performTruthTagging(tJet);
     // recoJet.isbjet_t77 = tool_btag_truth2->performTruthTagging(tJet);
     // recoJet.isbjet_t80 = tool_btag_truth3->performTruthTagging(tJet);
-      
-    //emulate btagging efficiency! (77% here)
-    float bprob = gRandom->Rndm(1);
-    if(recoJet.FlavorTruth==5){
-      if(bprob<0.77){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
-      }
-      else{
- 	recoJet.FlavorTruth = 0;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
-      }
-    }
-    else if (recoJet.FlavorTruth==4){
-      if(bprob<0.22){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
-      }
-      else{
- 	recoJet.FlavorTruth = 4;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
-      }
-    }
-    else if (recoJet.FlavorTruth==15){
-      if(bprob<0.1){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
-      }
-      else{
- 	recoJet.FlavorTruth = 15;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
-      }
-    }
-    else{
-      if(bprob<0.007){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
-      }
-      else{
- 	recoJet.FlavorTruth = 0;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
-      }
-    }
     
+    //emulate btagging efficiency! (77% here)
+    if( simBtagging ){
+      float bprob = gRandom->Rndm(1);
+      if(recoJet.FlavorTruth==5){
+	if(bprob<0.77){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 0;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else if (recoJet.FlavorTruth==4){
+	if(bprob<0.22){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 4;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else if (recoJet.FlavorTruth==15){
+	if(bprob<0.1){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 15;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else{
+	if(bprob<0.007){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 0;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+    }
     
     recoJet.isbjet = recoJet.isBTagged_77fc("Truth");
-
+    
     jetCandidates.push_back(recoJet);
     
     //apply signal cuts...
     if ( recoJet.Pt() < (Jet_RecoPtCut/1000.) ) continue;
     if ( fabs(recoJet.Eta()) > Jet_RecoEtaCut ) continue;
-
+    
     if ( recoJet.isbjet ){
       bj_N_77fc++;
       bj_N_85fc++;
       bj_N_70fc++;      
     }
-
+    
     //check for higher pt jet multiplicity
     if(recoJet.Pt() > 30.){
       j_N30++;
@@ -4791,16 +4790,16 @@ EL::StatusCode chorizo :: loop_truth()
       if(overlap) continue;
       
       if (usePhotons){
-      for(const auto& c_ph : photonCandidates){
-	if(recoJet.GetVector().DeltaR(c_ph) < 0.4){
-	  overlap=true;
-	  break;
+	for(const auto& c_ph : photonCandidates){
+	  if(recoJet.GetVector().DeltaR(c_ph) < 0.4){
+	    overlap=true;
+	    break;
+	  }
 	}
-      }
       }//usephoton
       if(overlap) continue;
     }
-
+    
     recoJets.push_back(recoJet);
     j_N++;
   }
@@ -4835,29 +4834,29 @@ EL::StatusCode chorizo :: loop_truth()
 
 
   if (usePhotons){
-  for(const auto& c_ph : photonCandidates){
-
-    if(doOR){    
-      bool overlap=false;
-      for(const auto& c_jet : recoJets){
-	if( c_ph.GetVector().DeltaR(c_jet) < 0.4 ){
-	  overlap=true;
-	  break;
+    for(const auto& c_ph : photonCandidates){
+      
+      if(doOR){    
+	bool overlap=false;
+	for(const auto& c_jet : recoJets){
+	  if( c_ph.GetVector().DeltaR(c_jet) < 0.4 ){
+	    overlap=true;
+	    break;
+	  }
 	}
+	if(overlap) continue;
       }
-      if(overlap) continue;
-    }
-
-    //apply signal cuts...
-    //if(...)
-    
-    recoPhotons.push_back(c_ph);
-    ph_N++;
-  }  
-  //sort the photons in Pt (they should be already, but anyways)
-  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+      
+      //apply signal cuts...
+      //if(...)
+      
+      recoPhotons.push_back(c_ph);
+      ph_N++;
+    }  
+    //sort the photons in Pt (they should be already, but anyways)
+    if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
   }//usephoton
-
+  
   //just to TEST directHG thing
   // if(recoPhotons.size()>1){
   //   double mgg = (recoPhotons.at(0).GetVector()+recoPhotons.at(1).GetVector()).M();
@@ -5382,7 +5381,7 @@ void chorizo :: dumpPhotons(){
   //-signal
   //  for(unsigned int iph = 0; iph < TMath::Min((int)recoPhotons.size(), BookPhSignal); iph++){
   for(unsigned int iph = 0; iph < BookPhSignal; iph++){
-
+    
     fill = (iph < recoPhotons.size());
     ph_pt.push_back( fill ?  recoPhotons.at(iph).Pt()  : DUMMYDN );
     ph_eta.push_back( fill ?  recoPhotons.at(iph).Eta()  : DUMMYDN );
@@ -5393,7 +5392,7 @@ void chorizo :: dumpPhotons(){
     ph_type.push_back( fill ?  recoPhotons.at(iph).type  : DUMMYDN );
     ph_origin.push_back( fill ?  recoPhotons.at(iph).origin  : DUMMYDN );
     ph_trigger.push_back( fill ?  (int)recoPhotons.at(iph).isTrigMatch  : DUMMYDN );
-   
+    
   }
 }
 
@@ -5803,18 +5802,11 @@ bool chorizo :: passMCor(){
 
   double cutting_var=0.;
   //to loop over  
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
-  
   if (this->mc_channel_number>=156803 && this->mc_channel_number<=156828){ //Znunu AlpGen
 
-    //truth particles loop                                                              
-    truthP_itr = m_truthP->begin();
-    truthP_end = m_truthP->end();
-    for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-
-      if(( *truthP_itr )->status()==124 && ( *truthP_itr )->absPdgId()==23){ //Z boson
-	cutting_var = ( *truthP_itr )->pt();
+    for(const xAOD::TruthParticle* tp : *m_truthP) {
+      if(tp->status()==124 && tp->absPdgId()==23){ //Z boson
+	cutting_var = tp->pt();
 	this->bos_pt = cutting_var;
       }
     } 
@@ -5841,18 +5833,16 @@ bool chorizo :: passMCor(){
       vector<float> mc_phi(mcall_n);
       vector<float> mc_m(mcall_n);
       
-      truthP_itr = m_truthP->begin();
-      truthP_end = m_truthP->end();
-      for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	if( !isHard( *truthP_itr ) ) continue; //look at ME particles only
-	if( !isLepNeut( *truthP_itr) ) continue; //look for leptons only
+      for(const xAOD::TruthParticle* tp : *m_truthP) {
+	if( !isHard( tp ) ) continue; //look at ME particles only
+	if( !isLepNeut( tp ) ) continue; //look for leptons only
 	mc3_n++;
-	mc_status[mc3_n] = ( *truthP_itr )->status();
-	mc_pdgId[mc3_n] = ( *truthP_itr )->pdgId();
-	mc_pt[mc3_n] =  ( *truthP_itr )->pt();
-	mc_eta[mc3_n] = ( *truthP_itr )->eta();
-	mc_phi[mc3_n] = ( *truthP_itr )->phi();
-	mc_m[mc3_n] = ( *truthP_itr )->m();
+	mc_status[mc3_n] = tp->status();
+	mc_pdgId[mc3_n]  = tp->pdgId();
+	mc_pt[mc3_n]     = tp->pt();
+	mc_eta[mc3_n]    = tp->eta();
+	mc_phi[mc3_n]    = tp->phi();
+	mc_m[mc3_n]      = tp->m();
       }
       mc3_n++;  // index --> size
       const int mc_n = static_cast< const int >( mc3_n );
@@ -5871,18 +5861,16 @@ bool chorizo :: passMCor(){
       TLorentzVector v1(0.,0.,0.,0.);
       TLorentzVector v2(0.,0.,0.,0.);
 
-      //reinitialize iterators
-      truthP_itr = m_truthP->begin();
-      for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	
-	if( isLepNeut( (*truthP_itr) ) && isStable( (*truthP_itr) ) ){
-	  bos_pdgId = (*truthP_itr)->pdgId(); //CHECK_ME
+      for(const xAOD::TruthParticle* tp : *m_truthP) {
+      
+	if( isLepNeut( tp ) && isStable( tp ) ){
+	  bos_pdgId = tp->pdgId(); //CHECK_ME
 	  lep_count++;
 	  if(lep_count==1){
-	    fillTLV(v1, (*truthP_itr));
+	    fillTLV(v1, tp);
 	  }
 	  else if(lep_count==2){
-	    fillTLV(v2, (*truthP_itr));
+	    fillTLV(v2, tp);
 	    break;
 	  }
 	}//if                                                                                   
@@ -6321,8 +6309,6 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
   }
 
   truth_shat = V.M();//magnitude or V.M()
-  //  cout << "-----------------------truth_shat: " << V.M() << endl;
-  //cout << "-----------------------truth_shat_pt: " << V.Pt() << endl;
   truth_shat_pt = V.Pt();//some sort of truth met
 
 }
@@ -6375,27 +6361,19 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
   int nTruthJets=0;
   int sampleId=0;
 
-  xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
-  xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
-
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
-
   //loop over truth jets
   TLorentzVector truthJet;
-  for( ; tjet_itr != tjet_end; ++tjet_itr ) {
+  for(const xAOD::Jet* tjet : *m_truth_jets) {
   
-    fillTLV( truthJet, (*tjet_itr), true);
+    fillTLV( truthJet, tjet, true);
     
     //look for overlapping electron
     bool isElectronFakingJet = false;
-    truthP_itr = m_truthP->begin();
-    truthP_end = m_truthP->end();
-    for( ; truthP_itr != truthP_end; ++truthP_itr ) {
+    for(const xAOD::TruthParticle* tp : *m_truthP) {
       
       TLorentzVector truthPart;
-      if ( isElectron( *truthP_itr ) && isStable( *truthP_itr ) ){
-  	fillTLV( truthPart, ( *truthP_itr ), true);
+      if ( isElectron(tp) && isStable(tp) ){
+  	fillTLV( truthPart, tp, true);
   	if (truthPart.DeltaR(truthJet) < 0.1) {
   	  isElectronFakingJet = true;
   	  break;
@@ -6486,7 +6464,8 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
       ATH_MSG_VERBOSE("This jet is " << (dec_bjet(*jet) ? "" : "not ") << "b-tagged.");
       ATH_MSG_VERBOSE("This jet's truth label is " << truthlabel);
 
-      if ( dec_bjet(*jet) ) {
+      if ( dec_bjet(*jet) ) {  //FIX_ME !!
+
         result = btagTool->getScaleFactor(*jet, sf);
 
         switch (result) {
@@ -6642,8 +6621,8 @@ bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double 
     TLorentzVector elLV;
     for(const auto& eg : *elCont){
       elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());                                                                                                                                                                          
-      cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
-      cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+      // cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+      // cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
       if(elLV.DeltaR(eloff) < dR) 
   	return true;
     }
@@ -6807,6 +6786,7 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
     recoJets.push_back(MuJet);
     muadded=true;
   }
+
   if (bj_N_77fc>=1 && recoJets.size()>=3)
     {
 

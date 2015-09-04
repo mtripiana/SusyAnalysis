@@ -51,6 +51,7 @@
 
     <Truth>
       <dressLeptons>false</dressLeptons>
+      <simBtagging>false</simBtagging>  <!-- do you want to emulate the btagging eff at truth level? -->
     </Truth>
     
     <Trigger>
@@ -150,8 +151,8 @@
       <JESNPset>1</JESNPset>
 
       <Tagger>MV2c20</Tagger> --> 
-      <TaggerOpPoint>-0_4434</TaggerOpPoint> --> <!-- 77% -->
-      <TaggerOpPoint2>-0_5911</TaggerOpPoint2> --> <!-- 80% -->
+      <BtagWP>FlatBEff_77</BtagWP>
+      <BtagWP_OR>FlatBEff_80</BtagWP_OR>
     </Jet>
 
     <Etmiss>

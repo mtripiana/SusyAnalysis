@@ -290,7 +290,6 @@ int main( int argc, char* argv[] ) {
     else if (opts[iop].BeginsWith("v") ){
       version = opts[iop].Copy().ReplaceAll("v=","");
     }
-
   }
 
   TString vTag="";
