@@ -6,7 +6,9 @@
 
 cd $ROOTCOREBIN/..
 
-# Extra tags needed for Analysis,2.3.21
+# Extra tags needed for SUSY,2.3.24a
 rc checkout $ROOTCOREBIN/../SusyAnalysis/scripts/packages.txt 
 
+## patch SUSYTools to allow for FlatBEff WPs while we wait for their calibrations
+patch -p0 -i SusyAnalysis/patches/patch_SUSYTools_06-23-03.diff
 
