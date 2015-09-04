@@ -1,6 +1,7 @@
 #define  chorizo_cxx
 #include <EventLoop/Job.h>
 #include <EventLoop/Worker.h>
+#include "EventLoop/OutputStream.h"
 #include "SampleHandler/MetaFields.h"
 #include <SusyAnalysis/chorizo.h>
 #include <SusyAnalysis/chorizoEDM.h>
@@ -8,8 +9,6 @@
 #include <iostream>
 #include <fstream>
 #include <EventLoop/StatusCode.h>
-
-#include "ElectronIsolationSelection/IsolationSelectionTool.h"
 
 //Jet Cleaning
 #include "JetSelectorTools/JetCleaningTool.h"
@@ -26,11 +25,12 @@
 //Pileup Reweighting
 #include "PileupReweighting/PileupReweightingTool.h"
 
+//CutBookkeeping
+#include "xAODCutFlow/CutBookkeeper.h"
+#include "xAODCutFlow/CutBookkeeperContainer.h"
 
-
-//Jet Truth Labeling
-#include "ParticleJetTools/JetQuarkLabel.h"
-//#include "ParticleJetTools/JetFlavourInfo.h"
+//BTagging SF
+#include "xAODBTaggingEfficiency/BTaggingEfficiencyTool.h"
 
 //TeV unit (w.r.t MeV)
 #ifndef TEV
@@ -59,6 +59,8 @@
 #define TRIGGERTEST
 #include "TrigDecisionTool/TrigDecisionTool.h"
 #include "TrigConfxAOD/xAODConfigTool.h"
+#include "TrigEgammaMatchingTool/TrigEgammaMatchingTool.h"
+#include "TrigMuonMatching/TrigMuonMatching.h"
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
@@ -70,6 +72,7 @@ ClassImp(chorizo)
 //decorators and accessors
 static SG::AuxElement::Decorator<char> dec_baseline("baseline");
 static SG::AuxElement::Decorator<char> dec_signal("signal");
+static SG::AuxElement::Decorator<char> dec_isol("isol");
 static SG::AuxElement::Decorator<char> dec_passOR("passOR");
 static SG::AuxElement::Decorator<char> dec_failOR("overlaps");
 static SG::AuxElement::Decorator<char> dec_badjet("bad");
@@ -77,11 +80,8 @@ static SG::AuxElement::Decorator<char> dec_bjet("bjet");
 static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
 static SG::AuxElement::Decorator<char> dec_final("final");
 
-static SG::AuxElement::Decorator<float> dec_ptraw("ptraw");
-static SG::AuxElement::Decorator<float> dec_truthphi("truthphi");
-static SG::AuxElement::Decorator<float> dec_trutheta("trutheta");
-static SG::AuxElement::Decorator<float> dec_truthpt("truthpt");
-static SG::AuxElement::Decorator<float> dec_truthe("truthe");
+static SG::AuxElement::Accessor<float>  acc_jvt("Jvt");
+static SG::AuxElement::ConstAccessor<float> cacc_jvt("Jvt");
 
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
@@ -100,52 +100,60 @@ static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
 static SG::AuxElement::Accessor<double> acc_PUweight("PileupWeight");
 
-
-
 chorizo :: chorizo ()
   : m_MetaData(0), 
     tool_st(0),
-    tool_trigdec(0),  
-    tool_trigconfig(0),     
-    tool_jetlabel(0),       
-    tool_or(0),             
-    tool_purw(0),           
-    tool_btag(0),           
-    tool_btag2(0), 
+    tool_trigdec(0), 
+    tool_trigconfig(0), 
+    tool_trig_match_el(0),
+    tool_trig_match_mu(0),
+    tool_trig_match_ph(0),    
+    tool_jClean(0), 
+    tool_tileTrip(0), 
+    tool_or(0), 
+    tool_purw(0), 
+    tool_grl(0),
     iso_1(0),
     iso_2(0),
     iso_3(0),
-    tool_jvf(0),            
-    tool_grl(0),            
-    tool_tileTrip(0),       
-    m_PDF(0),
+    iso_4(0),
+    iso_5(0),
+    tool_bsel70(0), 
+    tool_bsel77(0), 
+    tool_bsel85(0), 
+    tool_btag70(0),    
+    tool_btag77(0), 
+    tool_btag85(0),
+    tool_btag_truth1(0),
+    tool_btag_truth2(0),
+    tool_btag_truth3(0),
+    tool_mcc(0),
     tool_jsmear(0),
 #ifdef TILETEST
     tool_jettile(0),
 #endif
     tool_mct(0)
 {
+  if(debug)  Info("chorizo()", "HERE");
 
   outputName="";
-  Region="";
-  defaultRegion="SR";
 
   xmlReader = 0;
   jOption = "";
 
   isMC=false;
   isSignal=false;
-  is8TeV=false;
   isTop=false;
   isTruth=false;
   leptonType="";
-  
+
   isAtlfast=false;
   isQCD=false;
   isNCBG=false; 
   doAnaTree=false;
   doPUTree=false;
-  doFlowTree=true;
+  doFlowTree=false;
+  doTrigExt=false;
 
   debug=false;
   eventsFile="";
@@ -155,6 +163,7 @@ chorizo :: chorizo ()
   printMuon=false;
 
   genPUfile = false;
+  isPUfile = false;
 
   syst_CP  = CP::SystematicSet();
   syst_CPstr = "";
@@ -162,28 +171,30 @@ chorizo :: chorizo ()
   syst_PU  = pileupErr::NONE; 
   syst_JVF = JvfUncErr::NONE;
   syst_JESNPset = 1;
-
+  
   systListOnly = false;
   errIgnoreLevel = kInfo;
-
-  
 }
 
 
 
 EL::StatusCode chorizo :: setupJob (EL::Job& job)
 {
+  if(debug)   Info("setupJob()", "HERE");
 
-  job.useXAOD ();
+  job.useXAOD();
 
   // let's initialize the algorithm to use the xAODRootAccess package
   xAOD::Init( "chorizo" ).ignore(); // call before opening first file
+  
+  xAOD::TReturnCode::enableFailure();
+  StatusCode::enableFailure();
+  CP::SystematicCode::enableFailure();
 
   return EL::StatusCode::SUCCESS;
 }
 
 TH1F* chorizo :: InitHist(std::string name, int nbin, float binlow, float binhigh, std::string xaxis, std::string yaxis) {
-
   TH1F *h = new TH1F(name.c_str(), name.c_str(), nbin, binlow, binhigh);
   h->GetXaxis()->SetTitle(xaxis.c_str());
   h->GetYaxis()->SetTitle(yaxis.c_str());
@@ -193,450 +204,527 @@ TH1F* chorizo :: InitHist(std::string name, int nbin, float binlow, float binhig
 }
 
 void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, float binhigh, std::string xaxis, std::string yaxis) {
-
   h = new TH1F(name.c_str(), name.c_str(), nbin, binlow, binhigh);
   h->GetXaxis()->SetTitle(xaxis.c_str());
   h->GetYaxis()->SetTitle(yaxis.c_str());
   h->Sumw2();
   wk()->addOutput(h);
+  h->SetDirectory(out_TDir);
 }
 
 void chorizo :: bookTree(){
-
-  
+  if(debug)  Info("bookTree()", "HERE");  
 
   //add the branches to be saved
   if (output){
-    output->tree()->Branch ("RunNumber", &RunNumber, "RunNumber/I");
-    output->tree()->Branch ("EventNumber", &EventNumber, "EventNumber/I");
-    output->tree()->Branch ("procID", &procID, "procID/I");
-    //    output->tree()->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
-    output->tree()->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
-    output->tree()->Branch ("nVertex", &nVertex, "nVertex/I");                        
+    m_atree->Branch ("RunNumber", &RunNumber, "RunNumber/I");
+    m_atree->Branch ("EventNumber", &EventNumber, "EventNumber/I");
+    m_atree->Branch ("lb", &lb, "lb/I");
+    m_atree->Branch ("bcid", &bcid, "bcid/I");
+    m_atree->Branch ("procID", &procID, "procID/I");
+    //    m_atree->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
+    m_atree->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
+    m_atree->Branch ("nVertex", &nVertex, "nVertex/I");                        
     //common vars
-    output->tree()->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
-    output->tree()->Branch ("MC_w", &MC_w, "MC_w/F");                       
+    m_atree->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
+    m_atree->Branch ("MC_w", &MC_w, "MC_w/D");                       
 
     //presel
-    output->tree()->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
-    output->tree()->Branch("isTrigger",&isTrigger);
-      
+    m_atree->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
+    m_atree->Branch("isTrigger",&isTrigger);
+    
     //FlowTree
     if (doFlowTree){
-      output->tree()->Branch("isGRL",&isGRL,"isGRL/O", 10000);
-      //output->tree()->Branch("isTrigger",&isTrigger);
-      output->tree()->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
-      output->tree()->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
-      output->tree()->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
-      output->tree()->Branch("isTileTrip",&isTileTrip,"isTileTrip/O", 10000);
-      output->tree()->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
-      output->tree()->Branch("isFakeMet",&isFakeMet,"isFakeMet/O", 10000);
-      output->tree()->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
-      output->tree()->Branch("isBadID",&isBadID,"isBadID/O", 10000);
-      output->tree()->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
-      output->tree()->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
-      output->tree()->Branch("nCosmicMuons",&nCosmicMuons,"nCosmicMuons/I");
-      output->tree()->Branch("nBadMuons",&nBadMuons,"nBadMuons/I");            
+      m_atree->Branch("isGRL",&isGRL,"isGRL/O", 10000);
+      m_atree->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
+      m_atree->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
+      m_atree->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
+      m_atree->Branch("isTileTrip",&isTileTrip,"isTileTrip/O", 10000);
+      m_atree->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
+      m_atree->Branch("isFakeMet",&isFakeMet,"isFakeMet/O", 10000);
+      m_atree->Branch("isMetCleaned",&isMetCleaned,"isMetCleaned/O", 10000);
+      m_atree->Branch("isBadID",&isBadID,"isBadID/O", 10000);
+      m_atree->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
+      m_atree->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
     }
 
     
     //metadata
-    output->tree()->Branch ("xsec", &meta_xsec, "xsec/F");
-    output->tree()->Branch ("xsec_relunc", &meta_xsec_relunc, "xsec_relunc/F");
-    output->tree()->Branch ("kfactor", &meta_kfactor, "kfactor/F");
-    output->tree()->Branch ("feff", &meta_feff, "feff/F");
-    output->tree()->Branch ("nsim", &meta_nsim, "nsim/F");
-    output->tree()->Branch ("nwsim", &meta_nwsim, "nwsim/F");
-    output->tree()->Branch ("lumi", &meta_lumi, "lumi/F");
+    m_atree->Branch ("xsec", &meta_xsec, "xsec/F");
+    m_atree->Branch ("xsec_relunc", &meta_xsec_relunc, "xsec_relunc/F");
+    m_atree->Branch ("kfactor", &meta_kfactor, "kfactor/F");
+    m_atree->Branch ("feff", &meta_feff, "feff/F");
+    m_atree->Branch ("nsim", &meta_nsim, "nsim/F");
+    m_atree->Branch ("nwsim", &meta_nwsim, "nwsim/F");
+    m_atree->Branch ("lumi", &meta_lumi, "lumi/F");
 
 
     if(doAnaTree){ //AnalysisTree
       //weights
-      //output->tree()->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
-      output->tree()->Branch ("w_average", &w_average, "w_average/F");             
-      output->tree()->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
-      output->tree()->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
-      output->tree()->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
-      output->tree()->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
-      output->tree()->Branch ("e_SF", &e_SF, "e_SF/F");
-      output->tree()->Branch ("m_SF", &m_SF, "m_SF/F");
-      output->tree()->Branch ("ph_SF", &ph_SF, "ph_SF/F");
-      output->tree()->Branch ("e_SFu", &e_SFu, "e_SFu/F");
-      output->tree()->Branch ("m_SFu", &m_SFu, "m_SFu/F");
-      output->tree()->Branch ("ph_SFu", &ph_SFu, "ph_SFu/F");
-      output->tree()->Branch ("e_SFd", &e_SFd, "e_SFd/F");
-      output->tree()->Branch ("m_SFd", &m_SFd, "m_SFd/F");
-      output->tree()->Branch ("ph_SFd", &ph_SFd, "ph_SFd/F");
+      //m_atree->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
+      m_atree->Branch ("w_average", &w_average, "w_average/F");             
+      m_atree->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
+      m_atree->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
+      m_atree->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
+      m_atree->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
+      m_atree->Branch ("e_SF", &e_SF,"e_SF/F");
+      m_atree->Branch ("m_SF", &m_SF,"m_SF/F");
+      m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
+      m_atree->Branch ("eb_SF", &eb_SF,"eb_SF/F");
+      m_atree->Branch ("mb_SF", &mb_SF,"mb_SF/F");
+      m_atree->Branch ("phb_SF", &phb_SF,"phb_SF/F");      
+      m_atree->Branch ("e_SFu", &e_SFu,"e_SFu/F");
+      m_atree->Branch ("m_SFu", &m_SFu,"m_SFu/F");
+      m_atree->Branch ("ph_SFu", &ph_SFu,"ph_SFu/F");
+      m_atree->Branch ("e_SFd", &e_SFd,"e_SFd/F");
+      m_atree->Branch ("m_SFd", &m_SFd,"m_SFd/F");
+      m_atree->Branch ("ph_SFd", &ph_SFd,"ph_SFd/F");
+      m_atree->Branch ("eb_SFu", &eb_SFu,"eb_SFu/F");
+      m_atree->Branch ("mb_SFu", &mb_SFu,"mb_SFu/F");
+      m_atree->Branch ("phb_SFu", &phb_SFu,"phb_SFu/F");
+      m_atree->Branch ("eb_SFd", &eb_SFd,"eb_SFd/F");
+      m_atree->Branch ("mb_SFd", &mb_SFd,"mb_SFd/F");
+      m_atree->Branch ("phb_SFd", &phb_SFd,"phb_SFd/F");      
+      
+      
 
       //boson 
-      output->tree()->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
+      m_atree->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
 
-      output->tree()->Branch ("bosonVec_reco_pt", &bosonVec_reco_pt, "bosonVec_reco_pt/F");             
-      output->tree()->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
-      output->tree()->Branch ("bosonVec_reco_phi", &bosonVec_reco_phi, "bosonVec_reco_phi/F");      
+      m_atree->Branch ("bosonVec_reco_pt", &bosonVec_reco_pt, "bosonVec_reco_pt/F");             
+      m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
+      m_atree->Branch ("bosonVec_reco_phi", &bosonVec_reco_phi, "bosonVec_reco_phi/F");      
       
-      output->tree()->Branch ("bosonVec_reco_pt_vmu", &bosonVec_reco_pt_vmu, "bosonVec_reco_pt_vmu/F");             
-      //output->tree()->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
-      output->tree()->Branch ("bosonVec_reco_phi_vmu", &bosonVec_reco_phi_vmu, "bosonVec_reco_phi_vmu/F");                
+      m_atree->Branch ("bosonVec_reco_pt_vmu", &bosonVec_reco_pt_vmu, "bosonVec_reco_pt_vmu/F");             
+      //m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
+      m_atree->Branch ("bosonVec_reco_phi_vmu", &bosonVec_reco_phi_vmu, "bosonVec_reco_phi_vmu/F");                
       
-      output->tree()->Branch ("bosonVec_truth_pt", &bosonVec_truth_pt, "bosonVec_truth_pt/F");             
-      output->tree()->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
-      output->tree()->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
+      m_atree->Branch ("bosonVec_truth_pt", &bosonVec_truth_pt, "bosonVec_truth_pt/F");             
+      m_atree->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
+      m_atree->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
+
+      m_atree->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
+      m_atree->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
+      m_atree->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
+      m_atree->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
 
       //truth
-      output->tree()->Branch("truth_M",&truth_M,"truth_M/F", 10000);
-      output->tree()->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
+      m_atree->Branch("truth_M",&truth_M,"truth_M/F", 10000);
+      m_atree->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
 
-      output->tree()->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
 
-      output->tree()->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
-      output->tree()->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
-      output->tree()->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
-      output->tree()->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
-      output->tree()->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
-      output->tree()->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
-      output->tree()->Branch("truth_met",&truth_met,"truth_met/F", 10000);
-      output->tree()->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
+      m_atree->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
+
+      m_atree->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
+      m_atree->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
+      m_atree->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
+      m_atree->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
+      m_atree->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
+      m_atree->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
+      m_atree->Branch("truth_met",&truth_met,"truth_met/F", 10000);
+      m_atree->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
 
       //top
-      output->tree()->Branch("Top_truth_pt",&Top_truth_pt,"Top_truth_pt/F", 10000);
-      output->tree()->Branch("Topbar_truth_pt",&Topbar_truth_pt,"Topbar_truth_pt/F", 10000);
-      output->tree()->Branch("avTop_truth_pt",&avTop_truth_pt,"avTop_truth_pt/F", 10000);
-      output->tree()->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
+      m_atree->Branch("Top_truth_pt",&Top_truth_pt,"Top_truth_pt/F", 10000);
+      m_atree->Branch("Topbar_truth_pt",&Topbar_truth_pt,"Topbar_truth_pt/F", 10000);
+      m_atree->Branch("avTop_truth_pt",&avTop_truth_pt,"avTop_truth_pt/F", 10000);
+      m_atree->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
 
       //photons
-      output->tree()->Branch("ph_N",&ph_N,"ph_N/I", 10000);
-      output->tree()->Branch("ph_pt",&ph_pt,"ph_pt/F", 10000);
-      output->tree()->Branch("ph_eta",&ph_eta,"ph_eta/F", 10000);
-      output->tree()->Branch("ph_phi",&ph_phi,"ph_phi/F", 10000);
-      output->tree()->Branch("ph_etiso30",&ph_etiso30,"ph_etiso30/F", 10000);
-      output->tree()->Branch("ph_ptiso30",&ph_ptiso30,"ph_ptiso30/F", 10000);
-      output->tree()->Branch("ph_tight",&ph_tight,"ph_tight/O", 10000);
-      output->tree()->Branch("ph_type",&ph_type,"ph_type/I", 10000);
-      output->tree()->Branch("ph_origin",&ph_origin,"ph_origin/I", 10000);
+      m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
+      m_atree->Branch("ph_pt",&ph_pt);
+      m_atree->Branch("ph_eta",&ph_eta);
+      m_atree->Branch("ph_phi",&ph_phi);
+      //m_atree->Branch("ph_etiso30",&ph_etiso30);
+      //m_atree->Branch("ph_ptiso30",&ph_ptiso30);
+      m_atree->Branch("ph_tight",&ph_tight);
+      m_atree->Branch("ph_type",&ph_type);
+      m_atree->Branch("ph_origin",&ph_origin);
+      m_atree->Branch("ph_Cone20",&ph_Cone20);      
+      m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
+      m_atree->Branch("ph_Cone40",&ph_Cone40);     
+      
+
+      m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
+      m_atree->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
+      m_atree->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
+      
+      m_atree->Branch("ph_trigger",&ph_trigger);
 
       //electrons
-      output->tree()->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
-      output->tree()->Branch("e_truth_eta",&e_truth_eta,"e_truth_eta/F", 10000);
-      output->tree()->Branch("e_truth_phi",&e_truth_phi,"e_truth_phi/F", 10000);
+      m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
+      m_atree->Branch("e_truth_eta",&e_truth_eta,"e_truth_eta/F", 10000);
+      m_atree->Branch("e_truth_phi",&e_truth_phi,"e_truth_phi/F", 10000);
 
-      output->tree()->Branch("e_N",&e_N,"e_N/I", 10000);
-      output->tree()->Branch("e_pt",&e_pt);      
-      output->tree()->Branch("e_eta",&e_eta);
-      output->tree()->Branch("e_phi",&e_phi);
-      output->tree()->Branch("e_type",&e_type);
-      output->tree()->Branch("e_origin",&e_origin);            
-      output->tree()->Branch("e_etiso30",&e_etiso30);
-      output->tree()->Branch("e_ptiso30",&e_ptiso30);
-      output->tree()->Branch("e_etiso20",&e_etiso20);
-      output->tree()->Branch("e_ptiso20",&e_ptiso20);
-      output->tree()->Branch("e_isoTight",&e_isoTight);
-      output->tree()->Branch("e_isoGradient",&e_isoGradient);
-      output->tree()->Branch("e_isoLoose",&e_isoLoose);
-      output->tree()->Branch("e_id",&e_id);
-      output->tree()->Branch("e_d0_sig",&e_d0_sig);  
-      output->tree()->Branch("e_z0",&e_z0);      
+      m_atree->Branch("e_N",&e_N,"e_N/I", 10000);
+      m_atree->Branch("e_pt",&e_pt);      
+      m_atree->Branch("e_eta",&e_eta);
+      m_atree->Branch("e_phi",&e_phi);
+      m_atree->Branch("e_type",&e_type);
+      m_atree->Branch("e_origin",&e_origin);            
+      //m_atree->Branch("e_etiso30",&e_etiso30);
+      //m_atree->Branch("e_ptiso30",&e_ptiso30);
+      //m_atree->Branch("e_etiso20",&e_etiso20);
+      //m_atree->Branch("e_ptiso20",&e_ptiso20);
+      m_atree->Branch("e_isoT",&e_isoTight);
+      m_atree->Branch("e_isoL",&e_isoLoose);
+      m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
+      m_atree->Branch("e_isoG",&e_isoGradient);
+      m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
+      m_atree->Branch("e_id",&e_id);
+      //m_atree->Branch("e_d0_sig",&e_d0_sig);  
+      //m_atree->Branch("e_z0",&e_z0);      
 
-      output->tree()->Branch("eb_N",&eb_N,"eb_N/I", 10000);
-      output->tree()->Branch("eb_pt",&eb_pt);
-      output->tree()->Branch("eb_eta",&eb_eta);
-      output->tree()->Branch("eb_phi",&eb_phi);
+      m_atree->Branch("eb_N",&eb_N,"eb_N/I", 10000);
+      m_atree->Branch("eb_pt",&eb_pt);
+      m_atree->Branch("eb_eta",&eb_eta);
+      m_atree->Branch("eb_phi",&eb_phi);
 
-      output->tree()->Branch("e_MT",&e_MT,"e_MT/F", 10000);
-      output->tree()->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);    
-      output->tree()->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
-      output->tree()->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
-      output->tree()->Branch("e_M",&e_M,"e_M/F", 10000);
-      output->tree()->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
-     
+      m_atree->Branch("e_trigger",&e_trigger);
 
+      m_atree->Branch("e_MT",&e_MT,"e_MT/F", 10000);
+      m_atree->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
+      m_atree->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
+      m_atree->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
+      m_atree->Branch("e_M",&e_M,"e_M/F", 10000);
+      m_atree->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
+
+      
       //muons
-      output->tree()->Branch("m_N",&m_N,"m_N/I",10000);
-      output->tree()->Branch("m_pt",&m_pt);
-      output->tree()->Branch("m_eta",&m_eta);
-      output->tree()->Branch("m_phi",&m_phi);      
-      output->tree()->Branch("m_type",&m_type);
-      output->tree()->Branch("m_origin",&m_origin);
-      output->tree()->Branch("m_etiso20",&m_etiso20);          
-      output->tree()->Branch("m_ptiso20",&m_ptiso20);          
-      output->tree()->Branch("m_etiso30",&m_etiso30);          
-      output->tree()->Branch("m_ptiso30",&m_ptiso30);          
-      output->tree()->Branch("m_isoTight",&m_isoTight);
-      output->tree()->Branch("m_isoGradient",&m_isoGradient);
-      output->tree()->Branch("m_isoLoose",&m_isoLoose);
+      m_atree->Branch("m_N",&m_N,"m_N/I",10000);
+      m_atree->Branch("m_pt",&m_pt);
+      m_atree->Branch("m_eta",&m_eta);
+      m_atree->Branch("m_phi",&m_phi);      
+      m_atree->Branch("m_type",&m_type);
+      m_atree->Branch("m_origin",&m_origin);
+      //m_atree->Branch("m_etiso20",&m_etiso20);          
+      //m_atree->Branch("m_ptiso20",&m_ptiso20);          
+      //m_atree->Branch("m_etiso30",&m_etiso30);          
+      //m_atree->Branch("m_ptiso30",&m_ptiso30);          
+      m_atree->Branch("m_isoTight",&m_isoTight);
+      m_atree->Branch("m_isoLoose",&m_isoLoose);
+      m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
+      m_atree->Branch("m_isoGradient",&m_isoGradient);
+      m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
 
-      output->tree()->Branch("mb_N",&mb_N,"mb_N/I",10000);
-      output->tree()->Branch("mb_pt",&mb_pt);
-      output->tree()->Branch("mb_eta",&mb_eta);
-      output->tree()->Branch("mb_phi",&mb_phi);
+      m_atree->Branch("mb_N",&mb_N,"mb_N/I",10000);
+      m_atree->Branch("mb_pt",&mb_pt);
+      m_atree->Branch("mb_eta",&mb_eta);
+      m_atree->Branch("mb_phi",&mb_phi);
 
-      output->tree()->Branch("m_M",&m_M,"m_M/F", 10000);                            
-      output->tree()->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
-      output->tree()->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);             
-      output->tree()->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
-      output->tree()->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                           
-      output->tree()->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
-      output->tree()->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
+      m_atree->Branch("m_trigger",&m_trigger);
+
+      m_atree->Branch("m_M",&m_M,"m_M/F", 10000);                            
+      m_atree->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
+      m_atree->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
+      m_atree->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
+      m_atree->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                            
+      m_atree->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
+      m_atree->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
+
 
       //jets
-      output->tree()->Branch("JVF_min",&JVF_min,"JVF_min/O", 10000);                           
-      output->tree()->Branch("n_jets",&n_jets,"n_jets/I", 10000);
-      output->tree()->Branch("n_tjets",&n_tjets,"n_tjets/I", 10000);
-      output->tree()->Branch("n_jets40",&n_jets40,"n_jets40/I", 10000);
-      output->tree()->Branch("n_jets50",&n_jets50,"n_jets50/I", 10000);
-      output->tree()->Branch("n_jets60",&n_jets60,"n_jets60/I", 10000);
-      output->tree()->Branch("n_jets80",&n_jets80,"n_jets80/I", 10000);
-      output->tree()->Branch("n_taujets",&n_taujets);
-      output->tree()->Branch("truth_n_jets",&truth_n_jets,"truth_n_jets/I", 10000);
-      output->tree()->Branch("truth_n_jets40",&truth_n_jets40,"truth_n_jets40/I", 10000);
-      output->tree()->Branch("truth_n_jets50",&truth_n_jets50,"truth_n_jets50/I", 10000);
-      output->tree()->Branch("truth_pt1",&truth_pt1,"truth_pt1/F", 10000);
-      output->tree()->Branch("truth_eta1",&truth_eta1,"truth_eta1/F", 10000);
-      output->tree()->Branch("pt1",&pt1,"pt1/F", 10000);
+      m_atree->Branch("j_N"   ,&j_N   ,"j_N/I"   ,10000);
+      m_atree->Branch("j_N30" ,&j_N30 ,"j_N30/I" ,10000);
+      m_atree->Branch("j_N40" ,&j_N40 ,"j_N40/I" ,10000);
+      m_atree->Branch("j_N50" ,&j_N50 ,"j_N50/I" ,10000);
+      m_atree->Branch("j_N60" ,&j_N60 ,"j_N60/I" ,10000);
+      m_atree->Branch("j_N80" ,&j_N80 ,"j_N80/I" ,10000);
 
-      output->tree()->Branch("truthpt1",&truthpt1,"truthpt1/F", 10000);
-      output->tree()->Branch("trutheta1",&trutheta1,"trutheta1/F", 10000);
-      output->tree()->Branch("truthphi1",&truthphi1,"truthphi1/F", 10000);
+      m_atree->Branch("j_pt", &j_pt);
+      m_atree->Branch("j_eta",&j_eta);
+      m_atree->Branch("j_phi",&j_phi);
+      m_atree->Branch("j_m",  &j_m);
 
-      output->tree()->Branch("pt1raw",&pt1raw,"pt1raw/F", 10000);
-      output->tree()->Branch("pt2raw",&pt2raw,"pt2raw/F", 10000);
+      m_atree->Branch("j_chf", &j_chf);
+      m_atree->Branch("j_emf", &j_emf);
+      m_atree->Branch("j_fsm", &j_fsm);
+      m_atree->Branch("j_time",&j_time);
+      m_atree->Branch("j_nTrk",&j_nTrk);
+      m_atree->Branch("j_sumPtTrk",&j_sumPtTrk);
+      m_atree->Branch("j_jvf",&j_jvf);
+      m_atree->Branch("j_jvt",&j_jvt);
+      m_atree->Branch("j_tflavor",&j_tflavor);
 
-      output->tree()->Branch("pt2",&pt2,"pt2/F", 10000);
-      output->tree()->Branch("pt3",&pt3,"pt3/F", 10000);
-      output->tree()->Branch("pt4",&pt4,"pt4/F", 10000);
-      output->tree()->Branch("pt5",&pt5,"pt5/F", 10000);
-      output->tree()->Branch("pt6",&pt6,"pt6/F", 10000);
-      output->tree()->Branch("eta1",&eta1,"eta1/F", 10000);
-      output->tree()->Branch("eta2",&eta2,"eta2/F", 10000);
-      output->tree()->Branch("eta3",&eta3,"eta3/F", 10000);
-      output->tree()->Branch("eta4",&eta4,"eta4/F", 10000);
-      output->tree()->Branch("eta5",&eta5,"eta5/F", 10000);
-      output->tree()->Branch("eta6",&eta6,"eta6/F", 10000);
-      output->tree()->Branch("phi1",&phi1,"phi1/F", 10000);
-      output->tree()->Branch("phi2",&phi2,"phi2/F", 10000);
-      output->tree()->Branch("phi3",&phi3,"phi3/F", 10000);
-      output->tree()->Branch("phi4",&phi4,"phi4/F", 10000);
-      output->tree()->Branch("phi5",&phi5,"phi5/F", 10000);
-      output->tree()->Branch("phi6",&phi6,"phi6/F", 10000);
-      output->tree()->Branch("j1_E",&j1_E,"j1_E/F", 10000);   
-      output->tree()->Branch("j2_E",&j2_E,"j2_E/F", 10000);      
-      output->tree()->Branch("j3_E",&j3_E,"j3_E/F", 10000);      
-      output->tree()->Branch("j4_E",&j4_E,"j4_E/F", 10000);        
-      output->tree()->Branch("j5_E",&j5_E,"j5_E/F", 10000);      
-      output->tree()->Branch("j6_E",&j6_E,"j6_E/F", 10000);      
-      output->tree()->Branch("j1_chf",&j1_chf,"j1_chf/F", 10000);
-      output->tree()->Branch("j2_chf",&j2_chf,"j2_chf/F", 10000);
-      output->tree()->Branch("j3_chf",&j3_chf,"j3_chf/F", 10000);
-      output->tree()->Branch("j4_chf",&j4_chf,"j4_chf/F", 10000);
-      output->tree()->Branch("j1_emf",&j1_emf,"j1_emf/F", 10000);
-      output->tree()->Branch("j2_emf",&j2_emf,"j2_emf/F", 10000);
-      output->tree()->Branch("j3_emf",&j3_emf,"j3_emf/F", 10000);
-      output->tree()->Branch("j4_emf",&j4_emf,"j4_emf/F", 10000);
-      output->tree()->Branch("j1_fsm",&j1_fsm,"j1_fsm/F", 10000);
-      output->tree()->Branch("j2_fsm",&j2_fsm,"j2_fsm/F", 10000);
-      output->tree()->Branch("j3_fsm",&j3_fsm,"j3_fsm/F", 10000);
-      output->tree()->Branch("j4_fsm",&j4_fsm,"j4_fsm/F", 10000);
-      output->tree()->Branch("j1_time",&j1_time,"j1_time/F", 10000);
-      output->tree()->Branch("j2_time",&j2_time,"j2_time/F", 10000);
-      output->tree()->Branch("j3_time",&j3_time,"j3_time/F", 10000);
-      output->tree()->Branch("j4_time",&j4_time,"j4_time/F", 10000);
-      output->tree()->Branch("j1_mT",&j1_mT);
-      output->tree()->Branch("j2_mT",&j2_mT);
-      output->tree()->Branch("j3_mT",&j3_mT);
-      output->tree()->Branch("j4_mT",&j4_mT);
-      output->tree()->Branch("j1_nTrk",&j1_nTrk,"j1_nTrk/F", 10000);
-      output->tree()->Branch("j2_nTrk",&j2_nTrk,"j2_nTrk/F", 10000);
-      output->tree()->Branch("j3_nTrk",&j3_nTrk,"j3_nTrk/F", 10000);
-      output->tree()->Branch("j4_nTrk",&j4_nTrk,"j4_nTrk/F", 10000);
-      output->tree()->Branch("j1_sumPtTrk",&j1_sumPtTrk,"j1_sumPtTrk/F", 10000);
-      output->tree()->Branch("j2_sumPtTrk",&j2_sumPtTrk,"j2_sumPtTrk/F", 10000);
-      output->tree()->Branch("j3_sumPtTrk",&j3_sumPtTrk,"j3_sumPtTrk/F", 10000);
-      output->tree()->Branch("j4_sumPtTrk",&j4_sumPtTrk,"j4_sumPtTrk/F", 10000);
-      output->tree()->Branch("j1_jvtxf",&j1_jvtxf,"j1_jvtxf/F", 10000);
-      output->tree()->Branch("j2_jvtxf",&j2_jvtxf,"j2_jvtxf/F", 10000);
-      output->tree()->Branch("j3_jvtxf",&j3_jvtxf,"j3_jvtxf/F", 10000);
-      output->tree()->Branch("j4_jvtxf",&j4_jvtxf,"j4_jvtxf/F", 10000);
-      output->tree()->Branch("j1_tflavor",&j1_tflavor,"j1_tflavor/F", 10000);
-      output->tree()->Branch("j2_tflavor",&j2_tflavor,"j2_tflavor/F", 10000);
-      output->tree()->Branch("j3_tflavor",&j3_tflavor,"j3_tflavor/F", 10000);
-      output->tree()->Branch("j4_tflavor",&j4_tflavor,"j4_tflavor/F", 10000);
+      m_atree->Branch("j1_mT" ,&j1_mT);
+      m_atree->Branch("j2_mT" ,&j2_mT);
+      m_atree->Branch("j3_mT" ,&j3_mT);
+      m_atree->Branch("j4_mT" ,&j4_mT);
 
+      m_atree->Branch("j_truth_N",&j_truth_N,"j_truth_N/I", 10000);
+      m_atree->Branch("j_tau_N",&j_tau_N);
+
+      m_atree->Branch("j_truth_pt1",&j_truth_pt1,"j_truth_pt1/F", 10000);
+      m_atree->Branch("j_truth_eta1",&j_truth_eta1,"j_truth_eta1/F", 10000);
+
+      //tile output
+      if(dumpTile){
+	m_atree->Branch("j_const_pt",&j_const_pt);
+	m_atree->Branch("j_const_eta",&j_const_eta);
+	m_atree->Branch("j_const_phi",&j_const_phi);
+	m_atree->Branch("j_const_m",&j_const_m);
+
+	m_atree->Branch("j1_cl_N",&j1_cl_N,"j1_cl_N/I",10000);
+	m_atree->Branch("j1_cl_pt",&j1_cl_pt);
+	m_atree->Branch("j1_cl_eta",&j1_cl_eta);
+	m_atree->Branch("j1_cl_phi",&j1_cl_phi);
+	m_atree->Branch("j1_cl_emf",&j1_cl_emf);
+
+	m_atree->Branch("j2_cl_N",&j2_cl_N,"j2_cl_N/I",10000);
+	m_atree->Branch("j2_cl_pt",&j2_cl_pt);
+	m_atree->Branch("j2_cl_eta",&j2_cl_eta);
+	m_atree->Branch("j2_cl_phi",&j2_cl_phi);
+	m_atree->Branch("j2_cl_emf",&j2_cl_emf);
+      }
 
       //btagging
-      output->tree()->Branch("n_bjets",&n_bjets,"n_bjets/I", 10000);
-      output->tree()->Branch("n_bjets_80eff",&n_bjets_80eff,"n_bjets_80eff/I", 10000); 
-      // output->tree()->Branch("btag_weight1",&btag_weight1,"btag_weight1/F", 10000);
-      // output->tree()->Branch("btag_weight2",&btag_weight2,"btag_weight2/F", 10000);
-      // output->tree()->Branch("btag_weight3",&btag_weight3,"btag_weight3/F", 10000);
-      // output->tree()->Branch("btag_weight4",&btag_weight4,"btag_weight4/F", 10000);
-      // output->tree()->Branch("btag_weight_80eff1",&btag_weight_80eff1,"btag_weight_80eff1/F", 10000);
-      // output->tree()->Branch("btag_weight_80eff2",&btag_weight_80eff2,"btag_weight_80eff2/F", 10000);
-      // output->tree()->Branch("btag_weight_80eff3",&btag_weight_80eff3,"btag_weight_80eff3/F", 10000);
-      // output->tree()->Branch("btag_weight_80eff4",&btag_weight_80eff4,"btag_weight_80eff4/F", 10000);
-      output->tree()->Branch("btag_weight_total",&btag_weight_total,"btag_weight_total/F", 10000);
-      output->tree()->Branch("btag_weight_total_80eff",&btag_weight_total_80eff,"btag_weight_total_80eff/F", 10000);
+      m_atree->Branch("bj_N_70fc",&bj_N_70fc,"bj_N_70fc/I", 10000);
+      m_atree->Branch("bj_N_77fc",&bj_N_77fc,"bj_N_77fc/I", 10000);
+      m_atree->Branch("bj_N_85fc",&bj_N_85fc,"bj_N_85fc/I", 10000);
+     
+      m_atree->Branch("btag_weight_total_70fc",&btag_weight_total_70fc,"btag_weight_total_70fc/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc",&btag_weight_total_77fc,"btag_weight_total_77fc/F", 10000);
+      m_atree->Branch("btag_weight_total_85fc",&btag_weight_total_85fc,"btag_weight_total_85fc/F", 10000);
 
-      output->tree()->Branch("tag_MV1_1",&tag_MV1_1,"tag_MV1_1/F", 10000);
-      output->tree()->Branch("tag_MV1_2",&tag_MV1_2,"tag_MV1_2/F", 10000);
-      output->tree()->Branch("tag_MV1_3",&tag_MV1_3,"tag_MV1_3/F", 10000);
-      output->tree()->Branch("tag_MV1_4",&tag_MV1_4,"tag_MV1_4/F", 10000);
-      output->tree()->Branch("tag_SV1_1",&tag_SV1_1,"tag_SV1_1/F", 10000);
-      output->tree()->Branch("tag_SV1_2",&tag_SV1_2,"tag_SV1_2/F", 10000);
-      output->tree()->Branch("tag_SV1_3",&tag_SV1_3,"tag_SV1_3/F", 10000);
-      output->tree()->Branch("tag_SV1_4",&tag_SV1_4,"tag_SV1_4/F", 10000);
-      output->tree()->Branch("tag_JetFitterCu_1",&tag_JetFitterCu_1,"tag_JetFitterCu_1/F", 10000);
-      output->tree()->Branch("tag_JetFitterCu_2",&tag_JetFitterCu_2,"tag_JetFitterCu_2/F", 10000);
-      output->tree()->Branch("tag_JetFitterCu_3",&tag_JetFitterCu_3,"tag_JetFitterCu_3/F", 10000);
-      output->tree()->Branch("tag_JetFitterCu_4",&tag_JetFitterCu_4,"tag_JetFitterCu_4/F", 10000);
-      output->tree()->Branch("tag_JetFitterCb_1",&tag_JetFitterCb_1,"tag_JetFitterCb_1/F", 10000);
-      output->tree()->Branch("tag_JetFitterCb_2",&tag_JetFitterCb_2,"tag_JetFitterCb_2/F", 10000);
-      output->tree()->Branch("tag_JetFitterCb_3",&tag_JetFitterCb_3,"tag_JetFitterCb_3/F", 10000);
-      output->tree()->Branch("tag_JetFitterCb_4",&tag_JetFitterCb_4,"tag_JetFitterCb_4/F", 10000);
+
+      //m_atree->Branch("j_tag_MV1",&j_tag_MV1);
+      m_atree->Branch("j_tag_MV2c20",&j_tag_MV2c20);
+
+      m_atree->Branch("bj_Nt70",&bj_Nt70,"bj_Nt70/I", 10000);
+      m_atree->Branch("bj_Nt77",&bj_Nt77,"bj_Nt77/I", 10000);
+      m_atree->Branch("bj_Nt80",&bj_Nt80,"bj_Nt80/I", 10000);
+
+      m_atree->Branch("j_btruth_70",&j_btruth_70);
+      m_atree->Branch("j_btruth_77",&j_btruth_77);
+      m_atree->Branch("j_btruth_85",&j_btruth_85);
+      
+      m_atree->Branch("bj_Nf70",&bj_Nf70,"bj_Nf70/I", 10000);
+      m_atree->Branch("bj_N",&bj_N,"bj_N/I", 10000);
+      m_atree->Branch("bj_Nf85",&bj_Nf85,"bj_Nf85/I", 10000);
+      
+      m_atree->Branch("j_bflat_70",&j_bflat_70);
+      m_atree->Branch("j_bflat_77",&j_bflat_77);
+      m_atree->Branch("j_bflat_85",&j_bflat_85);
       
       //met 
-      output->tree()->Branch("met",&met);
-      output->tree()->Branch("met_phi",&met_phi);
+      m_atree->Branch("met",&met);
+      m_atree->Branch("met_phi",&met_phi);
 
-      output->tree()->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
+      m_atree->Branch("met_cst",&met_cst,"met_cst/f", 10000);
+      m_atree->Branch("met_tst",&met_tst,"met_tst/f", 10000);
+      
+      //m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
+      m_atree->Branch("met_top", &met_top, "met_top/F", 10000);
 
       //met recoil system
-      output->tree()->Branch("rmet_par", &rmet_par);
-      output->tree()->Branch("rmet_norm", &rmet_norm);
-      output->tree()->Branch("rmet_par_mod", &rmet_par_mod);
-      output->tree()->Branch("rmet_norm_mod", &rmet_norm_mod);
-      output->tree()->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
+      //m_atree->Branch("rmet_par", &rmet_par);
+      //m_atree->Branch("rmet_norm", &rmet_norm);
+      //m_atree->Branch("rmet_par_mod", &rmet_par_mod);
+      //m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
+      //m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
 
       //(transv. thrust and sphericity
-      output->tree()->Branch("tr_spher",&tr_spher); 
-      output->tree()->Branch("tr_thrust",&tr_thrust); 
+      //m_atree->Branch("tr_spher",&tr_spher); 
+      //m_atree->Branch("tr_thrust",&tr_thrust); 
 
       //event variables
       //dphi
-      output->tree()->Branch("dPhi_met_j1",&dPhi_met_j1);
-      output->tree()->Branch("dPhi_met_j2",&dPhi_met_j2);
-      output->tree()->Branch("dPhi_met_j3",&dPhi_met_j3);
-      output->tree()->Branch("dPhi_met_j4",&dPhi_met_j4);
-      output->tree()->Branch("dPhi_met_mettrk",&dPhi_met_mettrk);//,"dPhi_met_mettrk/f", 10000); //recompute from mini-ntuples? //CHECK_ME
-      output->tree()->Branch("dPhi_min",&dPhi_min);
-      output->tree()->Branch("dPhi_min_4jets",&dPhi_min_4jets);      
-      output->tree()->Branch("dPhi_min_alljets",&dPhi_min_alljets);
-
-      output->tree()->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
-      output->tree()->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
-      output->tree()->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
-      output->tree()->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
+      m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
+      m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
+      //m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
+      //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
+      
+      // Max bb-system
+      m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
+      m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
+      m_atree->Branch("min_dR_bb",&min_dR_bb); 
+      m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
+      
+      m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
+      m_atree->Branch("dPhi_min",&dPhi_min);
+      m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
+      m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
+  
+      m_atree->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
+      m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
+      m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
+      //m_atree->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
 
       //dR
-      output->tree()->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
-      output->tree()->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
-      output->tree()->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
+      m_atree->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
+      m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
+      m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
 
-      output->tree()->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
-      output->tree()->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
-      output->tree()->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
-      output->tree()->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
-      output->tree()->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
-      output->tree()->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
+//       m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
+//       m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
+//       m_atree->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
+//       m_atree->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
+//       m_atree->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
+//       m_atree->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
 
       //dEta
-      output->tree()->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
+      m_atree->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
 
       //Mbl_min  (for single top CR)
-      output->tree()->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
-      output->tree()->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
-
-      //sumet  (provisional silvia)           
-                                                                                       
-      output->tree()->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
-      output->tree()->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
-      output->tree()->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
-      output->tree()->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
-      output->tree()->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
-      output->tree()->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
+      m_atree->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
+      m_atree->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
       
-      //soft met
-      output->tree()->Branch("soft_met_cst",&soft_met_cst,"soft_met_cst/f", 10000);
-      output->tree()->Branch("soft_met_tst",&soft_met_tst,"soft_met_tst/f", 10000);
+      m_atree->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
+      m_atree->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
+      m_atree->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
+      m_atree->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
+      m_atree->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
+      m_atree->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
+
 
       //MTs
-      output->tree()->Branch("MT_min_jet_met",&MT_min_jet_met);
-      output->tree()->Branch("MT_bcl_met",&MT_bcl_met);
-      output->tree()->Branch("MT_bfar_met",&MT_bfar_met);
-      output->tree()->Branch("MT_lcl_met",&MT_lcl_met);
-      output->tree()->Branch("MT_jsoft_met",&MT_jsoft_met);
+      m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
+      m_atree->Branch("MT_bcl_met",&MT_bcl_met);
+      m_atree->Branch("MT_bfar_met",&MT_bfar_met);
+      m_atree->Branch("MT_lcl_met",&MT_lcl_met);
+      m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
 
       //Misc
-      output->tree()->Branch("DiJet_Mass",&DiJet_Mass,"DiJet_Mass/F", 10000);  
-      output->tree()->Branch("DiBJet_Mass",&DiBJet_Mass,"DiBJet_Mass/F", 10000);         
+      m_atree->Branch("mjj",&mjj,"mjj/F", 10000);  
+      m_atree->Branch("mbb",&mbb,"mbb/F", 10000);         
       
-      output->tree()->Branch("mct",&mct,"mct/F", 10000);  
-      output->tree()->Branch("mct_corr",&mct_corr);          
-      output->tree()->Branch("meff",&meff);
-      output->tree()->Branch("HT",&HT,"HT/F", 10000);    
-      output->tree()->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
+      m_atree->Branch("mct",&mct,"mct/F", 10000);    
+      m_atree->Branch("mct_corr",&mct_corr);    
+      m_atree->Branch("meff",&meff);
+      m_atree->Branch("HT",&HT,"HT/F", 10000);    
+//       m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
+//       
+//       //Razor
+      m_atree->Branch("MR",&MR,"MR/F", 10000);
+      m_atree->Branch("MTR",&MTR);
+      m_atree->Branch("R",&R);
+             
+      m_atree->Branch("shatR",&shatR);
+      m_atree->Branch("gaminvR",&gaminvR);
+      m_atree->Branch("mdeltaR",&mdeltaR);
+      m_atree->Branch("cosptR",&cosptR);
       
-      //Razor
-      output->tree()->Branch("MR",&MR,"MR/F", 10000);
-      output->tree()->Branch("MTR",&MTR);
-      output->tree()->Branch("R",&R);
-            
-      output->tree()->Branch("shatR",&shatR);
-      output->tree()->Branch("gaminvR",&gaminvR);
-      output->tree()->Branch("mdeltaR",&mdeltaR);
-      output->tree()->Branch("cosptR",&cosptR);
-      
-      //Z candidate
-      output->tree()->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
-      output->tree()->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
-      output->tree()->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
-      output->tree()->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
+      //Z candidate 
+      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+      m_atree->Branch("lep3_MT",&lep3_MT);
+      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
 
-      output->tree()->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
-      output->tree()->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);      
-      output->tree()->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);     
-      output->tree()->Branch("Z_m",&Z_m,"Z_m/F", 10000); 
-      output->tree()->Branch("lep3_MT",&lep3_MT);
-      output->tree()->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);       
-      
+
       //top reconstruction
-      output->tree()->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
-      output->tree()->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
-      output->tree()->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
+      m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
+      m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
+      m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
       //fat jets 
-      output->tree()->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
-      output->tree()->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
-      output->tree()->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
-      output->tree()->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
-      output->tree()->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
-      output->tree()->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
-      output->tree()->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
-      output->tree()->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
-      output->tree()->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
-      output->tree()->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
+      m_atree->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
+      m_atree->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
+      m_atree->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
+      m_atree->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
+      m_atree->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
+      m_atree->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
+      m_atree->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
+      m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
+      m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
+      m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
       
+      //Extended trigger info
+      if(doTrigExt){
 
+	m_atree->Branch("trig_l1_ex",               &trig_l1_ex 		              ,"trig_l1_ex/F"); 		            
+	m_atree->Branch("trig_l1_ey", 		   &trig_l1_ey 		    	      ,"trig_l1_ey/F"); 		    
+	m_atree->Branch("trig_l1_et", 		   &trig_l1_et 		    	      ,"trig_l1_et/F"); 		    
+	m_atree->Branch("trig_l1_sumet", 	   &trig_l1_sumet 	   	      ,"trig_l1_sumet/F"); 		    
+	m_atree->Branch("trig_l1_phi",		   &trig_l1_phi		    	      ,"trig_l1_phi/F");		    
+
+	m_atree->Branch("trig_hlt_EFJetEtSum_ex",                   &trig_hlt_EFJetEtSum_ex 		              ,"trig_hlt_EFJetEtSum_ex/F"); 		            
+	m_atree->Branch("trig_hlt_EFJetEtSum_ey", 		   &trig_hlt_EFJetEtSum_ey 		    	      ,"trig_hlt_EFJetEtSum_ey/F"); 		    
+	m_atree->Branch("trig_hlt_EFJetEtSum_et", 		   &trig_hlt_EFJetEtSum_et 		    	      ,"trig_hlt_EFJetEtSum_et/F"); 		    
+	m_atree->Branch("trig_hlt_EFJetEtSum_sumet", 		   &trig_hlt_EFJetEtSum_sumet 		    	      ,"trig_hlt_EFJetEtSum_sumet/F"); 		    
+	m_atree->Branch("trig_hlt_EFJetEtSum_phi",		   &trig_hlt_EFJetEtSum_phi		    	      ,"trig_hlt_EFJetEtSum_phi/F");		    
+									   					    	      					    
+	m_atree->Branch("trig_hlt_T2MissingET_ex", 		   &trig_hlt_T2MissingET_ex 		    	      ,"trig_hlt_T2MissingET_ex/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_ey", 		   &trig_hlt_T2MissingET_ey 		    	      ,"trig_hlt_T2MissingET_ey/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_et", 		   &trig_hlt_T2MissingET_et 		    	      ,"trig_hlt_T2MissingET_et/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_sumet", 		   &trig_hlt_T2MissingET_sumet 		    	      ,"trig_hlt_T2MissingET_sumet/F"); 		    
+	m_atree->Branch("trig_hlt_T2MissingET_phi",		   &trig_hlt_T2MissingET_phi		      ,"trig_hlt_T2MissingET_phi/F");		    
+
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet/F"); 		    
+	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi",	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi/F");		    
+									   					    	      					    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ex", 	   &trig_hlt_TrigL2MissingET_FEB_ex 		      ,"trig_hlt_TrigL2MissingET_FEB_ex/F"); 		    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ey", 	   &trig_hlt_TrigL2MissingET_FEB_ey 		      ,"trig_hlt_TrigL2MissingET_FEB_ey/F"); 		    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_et", 	   &trig_hlt_TrigL2MissingET_FEB_et 		      ,"trig_hlt_TrigL2MissingET_FEB_et/F"); 		    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_sumet", 	   &trig_hlt_TrigL2MissingET_FEB_sumet 	    	      ,"trig_hlt_TrigL2MissingET_FEB_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_phi",	   &trig_hlt_TrigL2MissingET_FEB_phi	    	      ,"trig_hlt_TrigL2MissingET_FEB_phi/F");	    
+									   					    	      					    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_ex", 		   &trig_hlt_TrigEFMissingET_ex 		      ,"trig_hlt_TrigEFMissingET_ex/F"); 		    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_ey", 		   &trig_hlt_TrigEFMissingET_ey 		      ,"trig_hlt_TrigEFMissingET_ey/F"); 		    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_et", 		   &trig_hlt_TrigEFMissingET_et 		      ,"trig_hlt_TrigEFMissingET_et/F"); 		    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_sumet", 	   &trig_hlt_TrigEFMissingET_sumet 	    	      ,"trig_hlt_TrigEFMissingET_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_phi",   	   &trig_hlt_TrigEFMissingET_phi	    	      ,"trig_hlt_TrigEFMissingET_phi/F");	    
+									   					    	      					    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ex", 	   &trig_hlt_TrigEFMissingET_FEB_ex 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ex/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ey", 	   &trig_hlt_TrigEFMissingET_FEB_ey 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ey/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_et", 	   &trig_hlt_TrigEFMissingET_FEB_et 	    	      ,"trig_hlt_TrigEFMissingET_FEB_et/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_sumet", 	   &trig_hlt_TrigEFMissingET_FEB_sumet 	    	      ,"trig_hlt_TrigEFMissingET_FEB_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_phi",	   &trig_hlt_TrigEFMissingET_FEB_phi	              ,"trig_hlt_TrigEFMissingET_FEB_phi/F");	    
+
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ex", 	   &trig_hlt_TrigEFMissingET_mht_ex 	    	      ,"trig_hlt_TrigEFMissingET_mht_ex/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ey", 	   &trig_hlt_TrigEFMissingET_mht_ey 	    	      ,"trig_hlt_TrigEFMissingET_mht_ey/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_et", 	   &trig_hlt_TrigEFMissingET_mht_et 	    	      ,"trig_hlt_TrigEFMissingET_mht_et/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_sumet", 	   &trig_hlt_TrigEFMissingET_mht_sumet 	    	      ,"trig_hlt_TrigEFMissingET_mht_sumet/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_phi",	   &trig_hlt_TrigEFMissingET_mht_phi	              ,"trig_hlt_TrigEFMissingET_mht_phi/F");	    
+									   					    	      					    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ex", 	   &trig_hlt_TrigEFMissingET_topocl_ex 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ex/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ey", 	   &trig_hlt_TrigEFMissingET_topocl_ey 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ey/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_et", 	   &trig_hlt_TrigEFMissingET_topocl_et 	    	      ,"trig_hlt_TrigEFMissingET_topocl_et/F"); 	    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_sumet",    &trig_hlt_TrigEFMissingET_topocl_sumet     	      ,"trig_hlt_TrigEFMissingET_topocl_sumet/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_phi",      &trig_hlt_TrigEFMissingET_topocl_phi   	      ,"trig_hlt_TrigEFMissingET_topocl_phi/F");   
+									   					    	      					    
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ex",    &trig_hlt_TrigEFMissingET_topocl_PS_ex     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ex/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ey",	   &trig_hlt_TrigEFMissingET_topocl_PS_ey     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ey/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_et",    &trig_hlt_TrigEFMissingET_topocl_PS_et     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_et/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_sumet", &trig_hlt_TrigEFMissingET_topocl_PS_sumet  	      ,"trig_hlt_TrigEFMissingET_topocl_PS_sumet/F");  
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_phi",   &trig_hlt_TrigEFMissingET_topocl_PS_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PS_phi/F");
+
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ex" ,    &trig_hlt_TrigEFMissingET_topocl_PUC_ex          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ex/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ey",     &trig_hlt_TrigEFMissingET_topocl_PUC_ey          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ey/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_et",     &trig_hlt_TrigEFMissingET_topocl_PUC_et          ,"trig_hlt_TrigEFMissingET_topocl_PUC_et/F");     
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_sumet",  &trig_hlt_TrigEFMissingET_topocl_PUC_sumet       ,"trig_hlt_TrigEFMissingET_topocl_PUC_sumet/F");  
+	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_phi",    &trig_hlt_TrigEFMissingET_topocl_PUC_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PUC_phi/F");
+      }
     }
     else if(doPUTree){
-    
+      
     }
   }
-
+  
 }
+
 
 EL::StatusCode chorizo :: histInitialize ()
 {
+  if(debug)  Info("histInitialize()", "HERE");
 
   gErrorIgnoreLevel = this->errIgnoreLevel;
 
-  if (!outputName.empty()){
-    output = EL::getNTupleSvc (wk(), outputName);
-  } 
-  else{
-    output = 0;
-  }
+  // if (!outputName.empty()){
+  //   output = EL::getNTupleSvc (wk(), outputName);
+  // } 
+  // else{
+  //   output = 0;
+  // }
 
-  //Initialize variables
-  InitVars();
+  out_TFile = (TFile*) wk()->getOutputFile ("output");
+  m_atree = new TTree ("AnalysisTree", "analysis output tree");
+  m_atree->SetDirectory (out_TFile);
+
+  out_TDir  = (TDirectory*) wk()->getOutputFile ("output");
 
   //Book the output Tree
   bookTree();
@@ -644,11 +732,28 @@ EL::StatusCode chorizo :: histInitialize ()
   //Load event list (if provided)
   loadEventList();
 
+  //Init MetaData
+  meta_xsec = 1.;
+  meta_xsec_relunc = 0.;
+  meta_kfactor = 1.;
+  meta_feff = 1.;
+  meta_lumi = 1.;
+  
+  meta_nsim=0.; 
+  meta_nwsim=0.;
+
+
   //JopOption
   meta_jOption= new TNamed("jOption", jOption.c_str());
   wk()->addOutput(meta_jOption);     
+  
+  //Trigger meta
+  meta_triggers = new TNamed("Triggers", " "); //to be filled later
+  wk()->addOutput(meta_triggers);     
 
-  meta_nwsim=0; //only once!
+  //METMAP
+  meta_metmap = new TNamed("METmap", " ");
+  wk()->addOutput(meta_metmap);     
 
   //Histos
   //---  right errors in histos with weights
@@ -656,23 +761,35 @@ EL::StatusCode chorizo :: histInitialize ()
   TH2F::SetDefaultSumw2();
   TProfile::SetDefaultSumw2();
 
+
+  // ** NOT working ... not sure why!
+  // InitGHist(h_cut_var, "h_cut_var", 2000, 0, 1000., "Cut Var (GeV)", "");  
+  // InitGHist(h_presel_flow, "h_presel_flow", 10, 0., 10., "", "");
+  // InitGHist(h_presel_wflow, "h_presel_wflow", 10, 0., 10., "", "");
+
   //need template to do TH1D as well...
   h_average = new TH1D("beginning","beggining",1,0,1);
   wk()->addOutput(h_average);     
+  h_average->SetDirectory(out_TDir);
 
   //histograms
-  InitGHist(h_cut_var, "h_cut_var", 2000, 0, 1000., "Cut Var (GeV)", "");  
-  //  InitGHist(h_presel_flow, "h_presel_flow", 10, 0., 10., "", "");
-  //  InitGHist(h_presel_wflow, "h_presel_wflow", 10, 0., 10., "", "");
+  h_presel_flow = new TH1F("h_presel_flow","",10,0,10);
+  h_presel_flow->Sumw2();
+  wk()->addOutput(h_presel_flow);     
+  h_presel_flow->SetDirectory(out_TDir);
 
-  // const char *cutNames[] = {"GRL","Trigger","PVertex","LarGood","TileGood","CoreFlag","BadJet","FakeMET","MET cleaning","TileTrip"};
+  h_presel_wflow = new TH1F("h_presel_wflow","",10,0,10);
+  h_presel_wflow->Sumw2();
+  wk()->addOutput(h_presel_wflow);     
+  h_presel_wflow->SetDirectory(out_TDir);
 
-  // for (int i=1; i<h_presel_flow->GetNbinsX(); ++i) {
-  //   h_presel_flow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
-  //   h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1]);
-  // }
+  
+  TString cutNames[] = {"None","GRL","Trigger","PVertex","LarGood","TileGood","TileTrip","CoreFlag","CleanJet","CleanMuon"};  
+  for (int i=1; i<h_presel_flow->GetNbinsX()+1; ++i) {
+    h_presel_flow->GetXaxis()->SetBinLabel(i,cutNames[i-1].Data());
+    h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1].Data());
+  }
 
-  //  syst_CPstr = ""; //TESTING!!
   //Systematics (override CP set if string is given) [tmp hack]
   if(!syst_CPstr.IsNull()){
     syst_CP  = CP::SystematicSet(); //needed?
@@ -695,40 +812,97 @@ EL::StatusCode chorizo :: histInitialize ()
     }
   }
 
-  //Sum of weights for primary sample
-  //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
-  m_cfilename = wk()->metaData()->getString(SH::MetaFields::sampleName); //name of current sample
-
   return EL::StatusCode::SUCCESS;
 }
 
-float chorizo :: getNWeightedEvents(){
-  //  return 0.; //TAKE OUT!!!
 
+CutflowInfo chorizo :: getNinfo(){
 
-  //Try to get the original number of events (relevant in case of derivations)
-  if (!m_MetaData) 
-    m_MetaData = dynamic_cast<TTree*> (wk()->inputFile()->Get("MetaData"));
+  if(debug)  Info("getNinfo()", "HERE");
 
-  if (!m_MetaData) {
-    Error("getNWeightedEvents()", "\nDid not manage to get MetaData tree. Leaving...");
-    return EL::StatusCode::FAILURE;
+  CutflowInfo sinfo = {};
+  
+  m_event = wk()->xaodEvent();   
+
+  //  if(m_isderived || 1){
+  if(!this->isTruth){
+
+    //    m_event = wk()->xaodEvent();   
+
+    const xAOD::CutBookkeeperContainer* incompleteCBC = nullptr;
+    if(!m_event->retrieveMetaInput(incompleteCBC, "IncompleteCutBookkeepers").isSuccess()){
+      Error("initializeEvent()","Failed to retrieve IncompleteCutBookkeepers from MetaData! Exiting.");
+      return sinfo;
+    }
+    if ( incompleteCBC->size() != 0 ) {
+      Error("initializeEvent()","Found incomplete Bookkeepers! Check file for corruption.");
+      return sinfo;
+    }
+
+    //Read the CutBookkeeper container
+    const xAOD::CutBookkeeperContainer* completeCBC = 0;
+    if (!m_event->retrieveMetaInput(completeCBC, "CutBookkeepers").isSuccess()) {
+      Error( APP_NAME, "Failed to retrieve CutBookkeepers from MetaData! Exiting.");
+      return sinfo;
+    }
+
+    //for DEBUGGING
+    cout << " CBK CICLES ::   AMI\t" << wk()->metaData()->getDouble( SH::MetaFields::numEvents ) << endl; 
+
+    // First, let's find the smallest cycle number,
+    // i.e., the original first processing step/cycle
+    int minCycle = 10000;
+    for ( auto cbk : *completeCBC ) {
+      if ( ! cbk->name().empty()  && minCycle > cbk->cycle() ){ minCycle = cbk->cycle(); }
+
+      //for DEBUGGING
+      cout << " CBK CICLES ::   " << cbk->cycle() << "\t" <<  cbk->name() << "\t" << cbk->nAcceptedEvents() << "\t" << cbk->sumOfEventWeights() << "\t" << cbk->sumOfEventWeightsSquared() << endl;
+    }
+
+    // Now, let's actually find the right one that contains all the needed info...
+    const xAOD::CutBookkeeper* allEventsCBK=0;
+    const xAOD::CutBookkeeper* DxAODEventsCBK=0;
+    std::string derivationName = "SUSY1Kernel"; //need to replace by appropriate name
+    for ( auto cbk :  *completeCBC ) {
+      if ( minCycle == cbk->cycle() && cbk->name() == "AllExecutedEvents" ) {
+	allEventsCBK = cbk;
+	//	break;
+      }
+      if ( cbk->name() == derivationName){
+	DxAODEventsCBK = cbk;
+      }
+    }
+
+    if(allEventsCBK){    
+      sinfo.nEvents    = allEventsCBK->nAcceptedEvents();
+      sinfo.weightSum  = allEventsCBK->sumOfEventWeights();
+      sinfo.weight2Sum = allEventsCBK->sumOfEventWeightsSquared();
+    }
+    if(DxAODEventsCBK){
+      sinfo.nEventsDx    = DxAODEventsCBK->nAcceptedEvents();
+      sinfo.weightSumDx  = DxAODEventsCBK->sumOfEventWeights();
+      sinfo.weight2SumDx = DxAODEventsCBK->sumOfEventWeightsSquared();
+    }
   }
-
-  TTreeFormula treeform("treeform","EventBookkeepers.m_nWeightedAcceptedEvents",m_MetaData);
-  m_MetaData->LoadTree(0);
-  treeform.UpdateFormulaLeaves();
-  treeform.GetNdata();
-
-  cout << "Initial = " << treeform.EvalInstance(1) << endl;
-  cout << "Final   = " << treeform.EvalInstance(0) << endl;
-
-  return (float)treeform.EvalInstance(1); //initialSumOfWeightsInThisFile
+  else{
+    try{
+      m_ctree = dynamic_cast<TTree*> (wk()->inputFile()->Get("CollectionTree"));
+      sinfo.nEvents      = m_ctree->GetEntries();
+      sinfo.weightSum    = sinfo.nEvents;
+      sinfo.weight2Sum   = sinfo.nEvents*sinfo.nEvents;
+      sinfo.nEventsDx    = sinfo.nEvents;
+      sinfo.weightSumDx  = sinfo.nEvents;
+      sinfo.weight2SumDx = sinfo.nEvents*sinfo.nEvents;
+    }
+    catch(...){
+      // pass
+    }
+  }
+  return sinfo;
+  
 }
 
 bool chorizo :: isDerived(){
-
-  return true; //dummy for now!
 
   //Try to get the original number of events (relevant in case of derivations)
   if (!m_MetaData) 
@@ -739,21 +913,10 @@ bool chorizo :: isDerived(){
     return EL::StatusCode::FAILURE;
   }
   
-  TTreeFormula* streamAOD = new TTreeFormula("StreamAOD","StreamAOD",m_MetaData);
-  m_MetaData->LoadTree(0);
-  streamAOD->UpdateFormulaLeaves();
-  if(streamAOD->GetNcodes() < 1 ){
-    // This is not an xAOD, that's a derivation!
-    Info( "isDerived()", "This file is a derivation"); 
-    return true;
-  }
-  else{
-    Info( "isDerived()", "This file is NOT a derivation"); 
-  }
-  if(streamAOD)
-    delete streamAOD;
+  
+  //check if file is from a DxAOD
+  return !m_MetaData->GetBranch("StreamAOD");
 
-  return false;
 }
 
 void chorizo :: loadEventList(){
@@ -764,9 +927,12 @@ void chorizo :: loadEventList(){
   std::ifstream infile(eventsFile);
   
   UInt_t a, b;
-  while (infile >> a >> b)
+  cout << "EVENTS LIST " << endl;
+  cout << "-----------------------------------------" << endl;
+  while (infile >> a >> b){
+    cout << "ADDING (RUN, EVENT) :  " << a << "   " << b << endl;
     m_eventList.insert( std::make_pair(a, b) );
-  
+  }
 }
 
 bool chorizo :: inEventList(UInt_t run, UInt_t event){
@@ -777,40 +943,31 @@ bool chorizo :: inEventList(UInt_t run, UInt_t event){
 
 void chorizo :: InitVars()
 {
+  if(debug)  Info("InitVars()", "HERE");
+ 
   //Initialize ntuple variables
 
-  //- MetaData
-  meta_xsec = 1.;
-  meta_xsec_relunc = 0.;
-  meta_kfactor = 1.;
-  meta_feff = 1.;
-  meta_nsim = 0.; 
-  //  meta_nwsim = 0.; 
-  meta_lumi = 1.;
-  
   //- Event info
   RunNumber = 0;
   EventNumber = 0;
+  lb = 0;
+  bcid = 0;
   procID = 0;
-  mc_channel_number = 0;
   averageIntPerXing = 0;
-
+ 
   //- Data Quality (event is good by default! (i.e. MC))
   isGRL = true; 
   isFakeMet = false;                 
   isBadID = false;                   
   isMetCleaned = true; //CHECK_ME
   isTrigger.clear();
-  isVertexOk = true;                
+  isVertexOk = false;                
   isLarGood = true;                 
   isTileGood = true;                
   isTileTrip = false;                
   isCoreFlag = false;          
-  isCosmic = false;       
-  isBadMuon = false; 
-  
-  nCosmicMuons = 0;
-  nBadMuons = 0;  
+  isCosmic = false;          
+  isBadMuon = false;          
       
   passPreselectionCuts = false;
 
@@ -824,15 +981,23 @@ void chorizo :: InitVars()
   Trigger_w = 1.;    
   Trigger_w_avg = 1.;
   e_SF = 1.;
-  e_SFu = 1.;
-  e_SFd = 1.;
   m_SF = 1.;
-  m_SFu = 1.;
-  m_SFd = 1.;
   ph_SF = 1.;
+  eb_SF = 1.;
+  mb_SF = 1.;
+  phb_SF = 1.;  
+  e_SFu = 1.;
+  m_SFu = 1.;
   ph_SFu = 1.;
+  e_SFd = 1.;
+  m_SFd = 1.;
   ph_SFd = 1.;
-
+  eb_SFu = 1.;
+  mb_SFu = 1.;
+  phb_SFu = 1.;
+  eb_SFd = 1.;
+  mb_SFd = 1.;
+  phb_SFd = 1.;
 
   //- Top    
   ttbar_weight = 1.;                  
@@ -898,8 +1063,10 @@ void chorizo :: InitVars()
   e_ptiso20.clear();
   e_etiso20.clear();
   e_isoTight.clear();
-  e_isoGradient.clear();
   e_isoLoose.clear();
+  e_isoLooseTrackOnly.clear();
+  e_isoGradient.clear();
+  e_isoGradientLoose.clear();
   e_id.clear();
   e_d0_sig.clear();
   e_z0.clear();
@@ -913,31 +1080,30 @@ void chorizo :: InitVars()
   e_truth_eta = DUMMYDN;       
   e_truth_phi = DUMMYDN;       
 
+  e_trigger.clear();
+  
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
   e_MT_vmu = DUMMYDN;     
   e_MT_tst = DUMMYDN;   
-  e_MT_tst_vmu = DUMMYDN;   
+  e_MT_tst_vmu = DUMMYDN;     
   e_Zpt = DUMMYDN;             
-    
-  //Z candidate
-  Z_flav = -99;
-  Z_lep1 = -99;  
-  Z_lep2 = -99;  
-  Z_m = DUMMYDN; 
-  lep3_MT.clear();
-  lep_mct = DUMMYDN;  
-  
+
   //- Photon Info
-  ph_N = 0; //DUMMYDN;               
-  ph_pt = 0; //DUMMYDN;              
-  ph_eta = 0.; //DUMMYDN;             
-  ph_phi = 0.; //DUMMYDN;             
-  ph_ptiso30 = 0.; //DUMMYDN;         
-  ph_etiso30 = 0.; //DUMMYDN;         
-  ph_tight = false;           
-  ph_type = 0; //Unknown
-  ph_origin = 0; //NonDefined
+  ph_N = 0; 
+  ph_pt.clear();
+  ph_eta.clear();
+  ph_phi.clear();
+  ph_ptiso30.clear();
+  ph_etiso30.clear();
+  ph_tight.clear();           
+  ph_type.clear();
+  ph_origin.clear();
+  ph_Cone20.clear();
+  ph_Cone40CaloOnly.clear();  
+  ph_Cone40.clear();  
+  
+  ph_trigger.clear();
   
   //- Muon info
   m_N = 0;
@@ -951,156 +1117,121 @@ void chorizo :: InitVars()
   m_ptiso20.clear();          
   m_etiso20.clear(); 
   m_isoTight.clear();
+  m_isoLoose.clear();
+  m_isoLooseTrackOnly.clear();
   m_isoGradient.clear();
-  m_isoLoose.clear();         
+  m_isoGradientLoose.clear();
+
   mb_N = 0;
   mb_pt.clear(); 
   mb_eta.clear();
   mb_phi.clear();
 
+  m_trigger.clear();
+
   m_M = DUMMYDN;                
   m_MT = DUMMYDN;  
-  m_MT_vmu = DUMMYDN;                  
+  m_MT_vmu = DUMMYDN;                
   m_MT_tst = DUMMYDN;  
-  m_MT_tst_vmu = DUMMYDN;               
+  m_MT_tst_vmu = DUMMYDN;                
   m_Zpt = DUMMYDN;              
   m_EM = DUMMYDN;               
 
+
   //- Jet Info
-  JVF_min=false;
-  n_jets=0;
-  n_tjets=0;
-  truth_n_jets=0;
-  truth_n_jets40=0;
-  truth_n_jets50=0;
-  truth_pt1=DUMMYDN;
-  truth_eta1=DUMMYDN;
-  n_jets40=0;
-  n_jets50=0;
-  n_jets60=0;
-  n_jets80=0;
-  n_taujets.clear();
-  pt1raw = DUMMYDN;
-  pt2raw = DUMMYDN;
-  truthphi1 = DUMMYDN;
-  trutheta1 = DUMMYDN;
-  truthpt1 = DUMMYDN;
-              
-  pt1 = DUMMYDN;              
-  pt2 = DUMMYDN;              
-  pt3 = DUMMYDN;              
-  pt4 = DUMMYDN;              
-  pt5 = DUMMYDN;              
-  pt6 = DUMMYDN;              
-  eta1 = DUMMYDN;             
-  eta2 = DUMMYDN;             
-  eta3 = DUMMYDN;             
-  eta4 = DUMMYDN;             
-  eta5 = DUMMYDN;             
-  eta6 = DUMMYDN;             
-  phi1 = DUMMYDN;             
-  phi2 = DUMMYDN;             
-  phi3 = DUMMYDN;             
-  phi4 = DUMMYDN;             
-  phi5 = DUMMYDN;             
-  phi6 = DUMMYDN; 
-  j1_E = DUMMYDN;             
-  j2_E = DUMMYDN;             
-  j3_E = DUMMYDN;             
-  j4_E = DUMMYDN;             
-  j5_E = DUMMYDN;             
-  j6_E = DUMMYDN;   
-  j1_chf = DUMMYDN;           
-  j2_chf = DUMMYDN;           
-  j3_chf = DUMMYDN;           
-  j4_chf = DUMMYDN;           
-  j1_emf = DUMMYDN;           
-  j2_emf = DUMMYDN;           
-  j3_emf = DUMMYDN;           
-  j4_emf = DUMMYDN;           
-  j1_fsm = DUMMYDN;           
-  j2_fsm = DUMMYDN;           
-  j3_fsm = DUMMYDN;           
-  j4_fsm = DUMMYDN;           
-  j1_time = DUMMYDN;          
-  j2_time = DUMMYDN;          
-  j3_time = DUMMYDN;          
-  j4_time = DUMMYDN;          
-  j1_mT.clear();            
-  j2_mT.clear();            
-  j3_mT.clear();            
-  j4_mT.clear();            
-  j1_nTrk = DUMMYDN;                               
-  j2_nTrk = DUMMYDN;                               
-  j3_nTrk = DUMMYDN;                               
-  j4_nTrk = DUMMYDN;                               
-  j1_sumPtTrk = DUMMYDN;                           
-  j2_sumPtTrk = DUMMYDN;                           
-  j3_sumPtTrk = DUMMYDN;                           
-  j4_sumPtTrk = DUMMYDN;                           
-  j1_jvtxf = DUMMYDN;                              
-  j2_jvtxf = DUMMYDN;                              
-  j3_jvtxf = DUMMYDN;                              
-  j4_jvtxf = DUMMYDN;                              
-  j1_tflavor = DUMMYDN;                              
-  j2_tflavor = DUMMYDN;                              
-  j3_tflavor = DUMMYDN;                              
-  j4_tflavor = DUMMYDN;                              
+  j_N=0;
+  j_N30=0;
+  j_N40=0;
+  j_N50=0;
+  j_N60=0;
+  j_N80=0;
+
+  jb_truth_N = 0;
+  j_truth_N  = 0;
+  j_truth_pt1=DUMMYDN;
+  j_truth_eta1=DUMMYDN;
+  
+  j1_mT.clear(); 
+  j2_mT.clear(); 
+  j3_mT.clear(); 
+  j4_mT.clear(); 
+
+  j_tau_N.clear();
+
+  j_pt.clear();                
+  j_eta.clear();               
+  j_phi.clear();               
+  j_m.clear();               
+  j_chf.clear();
+  j_emf.clear();
+  j_fsm.clear();
+  j_time.clear();
+  j_nTrk.clear();
+  j_sumPtTrk.clear();
+  j_jvf.clear();
+  j_jvt.clear();
+  j_tflavor.clear();
+  j_tag_MV1.clear();
+  j_tag_MV2c20.clear();
+
+  if(dumpTile){
+    j_const_pt.clear();
+    j_const_eta.clear();
+    j_const_phi.clear();
+    j_const_m.clear();
+
+    j1_cl_N = 0;
+    j1_cl_pt.clear();
+    j1_cl_eta.clear();
+    j1_cl_phi.clear();
+    j1_cl_emf.clear();
+
+    j2_cl_N = 0;
+    j2_cl_pt.clear();
+    j2_cl_eta.clear();
+    j2_cl_phi.clear();
+    j2_cl_emf.clear();
+  };
                                                
   //- Btagging                                 
-  n_bjets = 0;                               
-  n_bjets_80eff = DUMMYDN;                     
-  btag_weight_total = 1.;
-  btag_weight_total_80eff = 1.;
-  // btag_weight1 = DUMMYDN;                          
-  // btag_weight2 = DUMMYDN;                          
-  // btag_weight3 = DUMMYDN;                          
-  // btag_weight4 = DUMMYDN;                          
-  // btag_weight_80eff1 = DUMMYDN;                    
-  // btag_weight_80eff2 = DUMMYDN;                    
-  // btag_weight_80eff3 = DUMMYDN;                    
-  // btag_weight_80eff4 = DUMMYDN;                    
+  bj_N_70fc = 0;                               
+  bj_N_77fc = 0; 
+  bj_N_85fc = 0; 
+                                  
+  btag_weight_total_70fc = 1.;
+  btag_weight_total_77fc = 1.;
+  btag_weight_total_85fc = 1.;
 
-  // btag_weight_first.clear();
-  // btag_weight_first_80eff.clear();
-  // btag_weight.clear();
-  // btag_weight_80eff.clear();
+  bj_Nt70 = 0;                               
+  bj_Nt77 = 0;                               
+  bj_Nt80 = 0;                              
+   
+  j_btruth_70.clear();
+  j_btruth_77.clear();
+  j_btruth_85.clear();
   
-  // btag_weight_B_down.clear();
-  // btag_weight_B_down_80eff.clear();
-  // btag_weight_B_up.clear();
-  // btag_weight_B_up_80eff.clear();
-  // btag_weight_C_down.clear();
-  // btag_weight_C_down_80eff.clear();
-  // btag_weight_C_up.clear();
-  // btag_weight_C_up_80eff.clear();
-  // btag_weight_L_down.clear();
-  // btag_weight_L_down_80eff.clear();
-  // btag_weight_L_up.clear();
-  // btag_weight_L_up_80eff.clear();
+  bj_Nf70 = 0;                               
+  bj_N = 0;                               
+  bj_Nf85 = 0;   
 
-  tag_MV1_1 = DUMMYDN;
-  tag_MV1_2 = DUMMYDN;
-  tag_MV1_3 = DUMMYDN;
-  tag_MV1_4 = DUMMYDN;
-  tag_SV1_1 = DUMMYDN;
-  tag_SV1_2 = DUMMYDN;
-  tag_SV1_3 = DUMMYDN;
-  tag_SV1_4 = DUMMYDN;
-  tag_JetFitterCu_1 = DUMMYDN;
-  tag_JetFitterCu_2 = DUMMYDN;
-  tag_JetFitterCu_3 = DUMMYDN;
-  tag_JetFitterCu_4 = DUMMYDN;
-  tag_JetFitterCb_1 = DUMMYDN;
-  tag_JetFitterCb_2 = DUMMYDN;
-  tag_JetFitterCb_3 = DUMMYDN;
-  tag_JetFitterCb_4 = DUMMYDN;
-  
+  j_bflat_70.clear();
+  j_bflat_77.clear();
+  j_bflat_85.clear();
+
   //met 
   met.clear();
   met_phi.clear();
 
+  met_cst = DUMMYDN;
+  met_tst = DUMMYDN;
+
   met_lochadtopo = DUMMYDN;
+  met_top = DUMMYDN;
+
+  index_min_dR_bb.clear();
+  index_min_dR_pt_bb.clear();  
+  min_dR_bb.clear();
+  min_dR_pt_bb.clear(); 
 
   //recoiling system
   rmet_par.clear();
@@ -1118,14 +1249,14 @@ void chorizo :: InitVars()
   dPhi_met_j2.clear(); 
   dPhi_met_j3.clear(); 
   dPhi_met_j4.clear(); 
-  dPhi_met_mettrk.clear();
+  dPhi_met_mettrk.clear();                     
   dPhi_j1_j2 = DUMMYDN;                          
   dPhi_j1_j3 = DUMMYDN;                          
   dPhi_j2_j3 = DUMMYDN;                          
   dPhi_b1_b2 = DUMMYDN;                          
   dPhi_min.clear();
-  dPhi_min_4jets.clear();  
   dPhi_min_alljets.clear();
+  dPhi_min_4jets.clear();  
   dR_j1_j2 = DUMMYDN;                            
   dR_j1_j3 = DUMMYDN;                            
   dR_j2_j3 = DUMMYDN;                            
@@ -1141,6 +1272,7 @@ void chorizo :: InitVars()
   
   Melb_min = DUMMYDN; 
   Mmub_min = DUMMYDN;   
+  
 
   sumET_cst = DUMMYDN;
   sumET_cst_vmu = DUMMYDN;
@@ -1148,9 +1280,7 @@ void chorizo :: InitVars()
   sumET_tst_vmu = DUMMYDN;
   sumET_truth = DUMMYDN;
   sumET_truth_vmu = DUMMYDN;
-  
-  soft_met_cst = DUMMYDN;
-  soft_met_tst = DUMMYDN;
+
 
   MT_min_jet_met.clear();  
   MT_bcl_met.clear();  
@@ -1158,8 +1288,8 @@ void chorizo :: InitVars()
   MT_lcl_met.clear();  
   MT_jsoft_met.clear();  
 
-  DiJet_Mass=0;
-  DiBJet_Mass=0;
+  mjj=0.;
+  mbb=0.;
 
   mct=0.;
   mct_corr.clear();
@@ -1176,6 +1306,14 @@ void chorizo :: InitVars()
   gaminvR.clear();
   mdeltaR.clear();
   cosptR.clear();
+
+  //Z reco
+  Z_flav = -99;
+  Z_lep1 = -99;
+  Z_lep2 = -99;
+  Z_m = DUMMYDN;
+  lep3_MT.clear();
+  lep_mct = DUMMYDN;
     
   //top reconstruction
   MtTop = DUMMYDN;
@@ -1198,19 +1336,121 @@ void chorizo :: InitVars()
 
   //Clear particle collections
   electronCandidates.clear();
-  recoElectrons.clear();
-  truthElectrons.clear();
   muonCandidates.clear();
-  recoMuons.clear();
+  recoElectrons.clear();
   recoPhotons.clear();
+  recoMuons.clear();
   recoJets.clear();
+  truthElectrons.clear();
   seedJets.clear();
+
+  //Extended trigger
+  if(doTrigExt){
+
+    trig_l1_ex=0.; 			   
+    trig_l1_ey=0.; 			   
+    trig_l1_et=0.; 			   
+    trig_l1_sumet=0.; 			   
+    trig_l1_phi=0.;			   
+
+    trig_hlt_EFJetEtSum_ex=0.; 			   
+    trig_hlt_EFJetEtSum_ey=0.; 			   
+    trig_hlt_EFJetEtSum_et=0.; 			   
+    trig_hlt_EFJetEtSum_sumet=0.; 			   
+    trig_hlt_EFJetEtSum_phi=0.;			   
+                                                   
+    trig_hlt_T2MissingET_ex=0.; 			   
+    trig_hlt_T2MissingET_ey=0.; 			   
+    trig_hlt_T2MissingET_et=0.; 			   
+    trig_hlt_T2MissingET_sumet=0.; 			   
+    trig_hlt_T2MissingET_phi=0.;			   
+                                                   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex=0.;   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey=0.;   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et=0.;   
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet=0.;
+    trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi=0.;  
+                                                   
+                                                   
+    trig_hlt_TrigL2MissingET_FEB_ex=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_ey=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_et=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_sumet=0.; 		   
+    trig_hlt_TrigL2MissingET_FEB_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_FEB_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_et=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_FEB_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_ex=0.; 			   
+    trig_hlt_TrigEFMissingET_ey=0.; 			   
+    trig_hlt_TrigEFMissingET_et=0.; 			   
+    trig_hlt_TrigEFMissingET_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_phi=0.;			   
+                                                   
+    trig_hlt_TrigEFMissingET_mht_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_et=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_mht_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_topocl_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_et=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_sumet=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_topocl_PS_ex=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_PS_ey=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_PS_et=0.; 		   
+    trig_hlt_TrigEFMissingET_topocl_PS_sumet=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PS_phi=0.;		   
+                                                   
+    trig_hlt_TrigEFMissingET_topocl_PUC_ex=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_ey=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_et=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_sumet=0.; 	   
+    trig_hlt_TrigEFMissingET_topocl_PUC_phi=0.;           
+  }
 
 }
 
 
 EL::StatusCode chorizo :: fileExecute ()
 {
+  if(debug)  Info("fileExecute()", "HERE");
+
+  //--- Get sum of weights and initial numbers of events
+  // get the MetaData tree once a new file is opened, with
+  //  if (!m_MetaData) 
+  m_MetaData = dynamic_cast<TTree*> (wk()->inputFile()->Get("MetaData"));
+
+  if (!m_MetaData) {
+    Error("fileExecute()", "MetaData not found! Exiting.");
+    return EL::StatusCode::FAILURE;
+  }
+
+  try{
+    m_MetaData->LoadTree(0);
+  }
+  catch(...){
+    Info("fileExecute()", "Could not LoadTree()");
+  }
+
+  //check if file is from a DxAOD
+  try{
+    m_isderived = ! m_MetaData->GetBranch("StreamAOD");
+  }
+  catch(...){
+    Info("fileExecute()", "Could not determine derivation state (no StreamAOD accesible)");
+  }
+
+
+  CutflowInfo sinfo = getNinfo(); 
+  meta_nsim  += sinfo.nEvents; //load number of events
+  meta_nwsim += sinfo.weightSum; //load weighted number of events
 
   return EL::StatusCode::SUCCESS;
 }
@@ -1219,12 +1459,24 @@ EL::StatusCode chorizo :: fileExecute ()
 
 EL::StatusCode chorizo :: changeInput (bool firstFile)
 {
-  //  meta_nwsim += getNWeightedEvents(); //load weighted number of events
+  if(debug)  Info("changeInput()", "HERE");
+
+  m_event = wk()->xaodEvent();   
+
+  // get event info needed for tool's config
+  const xAOD::EventInfo* eventInfo = 0;
+  CHECK( m_event->retrieve( eventInfo, "EventInfo") );
+  
+  isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
+  
+  //--- Load xs_section, kfactors, etc...
+  loadMetaData();
 
   return EL::StatusCode::SUCCESS;
 }
 
 void chorizo :: ReadXML(){
+  if(debug)  Info("ReadXML()", "HERE");
 
   const char* whereAmI = "chorizo::ReadXML()";
   Info(whereAmI, "--- Read XML options ---");
@@ -1237,10 +1489,12 @@ void chorizo :: ReadXML(){
   //------ Define and read global variables from the XML
   Info(whereAmI, Form(" - Cut Flow") );
   doCutFlow = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoCutFlow");  
-
-  isStopTL = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
-  m_skim   = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming");  
   
+  isStopTL    = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/StopTL");
+  m_skim_btag = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming_BTAG");  
+  m_skim_met  = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming_MET");  
+  dumpTile    = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");  
+
   Info(whereAmI, Form(" - PDF reweighting") );
   doPDFrw = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
   beamE_to = xmlReader->retrieveFloat("AnalysisOptions$GeneralSettings$PdfRw$ToBeamE");
@@ -1267,10 +1521,36 @@ void chorizo :: ReadXML(){
     Info(whereAmI, Form("adding trigger chain = %s",s.c_str()));
     TriggerNames.push_back(s);
   }
+
+  //electron triggers for matching
+  triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$triggers");
+  std::istringstream EltriggerNameIStr(triggerNameStr);
+  while (std::getline(EltriggerNameIStr, s, ',')) {
+    Info(whereAmI, Form("adding electron trigger chain = %s",s.c_str()));
+    ElTriggers.push_back(s);
+  }
+
+  //muon triggers for matching
+  triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$triggers");
+  std::istringstream MutriggerNameIStr(triggerNameStr);
+  while (std::getline(MutriggerNameIStr, s, ',')) {
+    Info(whereAmI, Form("adding muon trigger chain = %s",s.c_str()));
+    MuTriggers.push_back(s);
+  }
+
+  //photon triggers for matching
+  triggerNameStr = xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$triggers");
+  std::istringstream PhtriggerNameIStr(triggerNameStr);
+  while (std::getline(PhtriggerNameIStr, s, ',')) {
+    Info(whereAmI, Form("adding photon trigger chain = %s",s.c_str()));
+    PhTriggers.push_back(s);
+  }
+
 #endif
 
   Info(whereAmI, Form(" - Truth") );
   dressLeptons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Truth$dressLeptons");
+  simBtagging  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Truth$simBtagging");
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
@@ -1292,7 +1572,7 @@ void chorizo :: ReadXML(){
   tVeto_TrackIso         = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$TrackVeto$TrackIso");
 
   Info(whereAmI, Form(" - Vertex") );
-  nTracks          = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Vertex$nTracks");
+  nTracks = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Vertex$nTracks");
 
   Info(whereAmI, Form(" - Electrons") );
   El_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$PreselPtCut");
@@ -1303,7 +1583,9 @@ void chorizo :: ReadXML(){
   El_baseID        = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$baseID")).Data());
   El_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$ID")).Data());
   El_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Electron$isoWP")).Data());
-
+  El_d0sigcut      = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$d0sigcut"); 
+  El_z0cut         = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Electron$z0cut"); 
+  
   El_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$recoSF");
   El_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$idSF");
   El_triggerSF     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Electron$triggerSF");
@@ -1315,7 +1597,9 @@ void chorizo :: ReadXML(){
   Mu_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$RecoEtaCut");
 
   Mu_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$ID")).Data());
-  Mu_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoWP")).Data());
+  Mu_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Muon$isoWP")).Data());    
+  Mu_d0sigcut      = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$d0sigcut"); 
+  Mu_z0cut         = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Muon$z0cut"); 
 
   Info(whereAmI, Form(" - Photons") );
   Ph_PreselPtCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$PreselPtCut");
@@ -1324,26 +1608,24 @@ void chorizo :: ReadXML(){
   Ph_RecoEtaCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Photon$RecoEtaCut");
 
   Ph_ID            = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$ID")).Data());
-  Ph_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoWP")).Data());
+  Ph_isoWP         = std::string(TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Photon$isoWP")).Data());    
   
   Ph_recoSF        = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$recoSF");
   Ph_idSF          = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$idSF");
   Ph_triggerSF     = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Photon$triggerSF");
   
   Info(whereAmI, Form(" - Jets") );
-  JetCollection=TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
-  Jet_BtagEnv      = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagEnv").c_str());
-  Jet_BtagCalib    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Path/name/BtagCalib").c_str());
-  Jet_Tagger       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
-  Jet_TaggerOp     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint").c_str());
-  Jet_TaggerOp2    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerOpPoint2").c_str());      
-  Jet_Tagger_Collection = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$TaggerCollection").c_str());
-  
+  JetCollection     = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Collection").c_str());
+  Jet_Tagger        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$Tagger").c_str());
+  Jet_Btag_WP       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$BtagWP").c_str());
+  Jet_Btag_WP_OR    = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Jet$BtagWP_OR").c_str());
+
   Jet_PreselPtCut  = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselPtCut");
   Jet_PreselEtaCut = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$PreselEtaCut");
   Jet_RecoPtCut    = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoPtCut");
   Jet_RecoEtaCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoEtaCut");
-
+  Jet_RecoJVTCut   = xmlReader->retrieveFloat("AnalysisOptions$ObjectDefinition$Jet$RecoJVTCut");
+  
   Info(whereAmI, Form(" - Etmiss") );
   METCollection        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Etmiss$Collection").c_str());
   Met_FakeMetEstimator = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$Etmiss$Path/name/FakeMetEstimator").c_str());
@@ -1372,13 +1654,17 @@ void chorizo :: ReadXML(){
   QCD_SmearExtraSmr      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$SmearExtraSmr");
   QCD_DoPhiSmearing      = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$QCD$DoPhiSmearing");
   QCD_SmearedEvents      = (unsigned int)xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$QCD$SmearedEvents");
-  
+
+  QCD_btagFileMap        = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BtagFileMap").c_str());
+  QCD_btagMap            = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BtagMap").c_str());
+  QCD_bvetoFileMap       = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BvetoFileMap").c_str());
+  QCD_bvetoMap           = TString(xmlReader->retrieveChar("AnalysisOptions$ObjectDefinition$QCD$BvetoMap").c_str());
+
   std::istringstream QCD_triggerNameIStr(QCD_triggerNameStr);
   std::string stqcd;
   while (std::getline(QCD_triggerNameIStr, stqcd, ',')) {
     JS_triggers.push_back(stqcd);
   }
-
 
   //Booking options
   Info(whereAmI, Form(" - Booking" ));
@@ -1386,12 +1672,19 @@ void chorizo :: ReadXML(){
   BookElSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$ElSignal");
   BookMuBase   = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$MuBase");
   BookMuSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$MuSignal");
-
-
+  BookPhSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$PhSignal");
+  BookJetSignal = xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Booking$JetSignal");
+  
+  //Object options
+  Info(whereAmI, Form(" - Objects" ));
+  usePhotons   = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Objects$usePhotons");
+  useTrueJets  = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Objects$useTrueJets");
+  isoSignalLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$Objects$isoSignalLep");
+ 
   //--- To know if we gonna smear a truth sample                                         
-  doTTR          = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$Enable");
-  ttr_mu         = xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$Mu");
-  ttr_eleWP      = (short) xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$ElectronWP");
+  doTTR = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$Enable");
+  ttr_mu = xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$Mu");
+  ttr_eleWP = (short) xmlReader->retrieveInt("AnalysisOptions$GeneralSettings$SmearTruth$ElectronWP");
   ttr_recjetflav = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$SmearTruth$RecJetFlav");
 
   TString st_ttr_metWP = TString(xmlReader->retrieveChar("AnalysisOptions$GeneralSettings$SmearTruth$MetWP"));
@@ -1406,12 +1699,14 @@ void chorizo :: ReadXML(){
   delete xmlReader;
 
   //--- Systematics
-  //...  
+  //...
+  
   Info(whereAmI, Form("--------------------------------------------\n\n") );
 }
 
 EL::StatusCode chorizo :: initialize ()
 {
+  if(debug)  Info("initialize()", "HERE");
 
   //Start Clock
   watch.Start();
@@ -1419,121 +1714,155 @@ EL::StatusCode chorizo :: initialize ()
   m_event = wk()->xaodEvent();
   //  TEvent::kBranchAccess
 
-  // Create a transient object store. Needed for the tools.
-  // Like m_event but does not assume new objects are written to file
   m_store = new xAOD::TStore(); 
 
   //Read XML options
   ReadXML();
 
-  //save Trigger metadata
-  std::string trigchains="";
-  for(const auto& s : TriggerNames)  trigchains += (s+",");
-  meta_triggers = new TNamed("Triggers", trigchains.c_str());
-  wk()->addOutput(meta_triggers);     
-  
-  //initialize lepton isolation 
-  elIsoArgs = new ST::IsSignalElectronExpCutArgs();
-  muIsoArgs = new ST::IsSignalMuonExpCutArgs();
-  
-  elIsoArgs->etcut(El_PreselPtCut);
-  //  elIsoArgs->id_isocut(?);   //default 0.16                                                                                                                                                                                                                           
-  //  elIsoArgs->calo_isocut(?); //default 0.18                                                                                                                                                                                                                               
-  //  elIsoArgs->d0sigcut(?);    //default 5.                                                                                                                                                                                                                                 
-  //  elIsoArgs->z0cut(?);       //default 0.4                                                                                                                                                                                                                                
-  //  elIsoArgs->pt_isoMax(?);   //default 0                                                                                                                                                                                                                                  
-  
-  muIsoArgs->ptcut(Mu_PreselPtCut);
-  //  muIsoArgs->id_isocut(?);   //default 0.12                                                                                                                                                                                                                             
-  //  muIsoArgs->calo_isocut(?); //default 0.12                                                                                                                                                                                                                          
-  //  muIsoArgs->d0sigcut(?);    //default 3.                                                                                                                                                                                                                            
-  //  muIsoArgs->z0cut(?);       //default 0.4                                                                                                                                                                                                                           
-  //  muIsoArgs->pt_isoMax(?);   //default 0         
-
-  
   //Initialize event counter
   m_eventCounter=0;
   m_metwarnCounter=0;
   m_pdfwarnCounter=0;
+
+
+  //--- Create the output tree
+  // out_TFile = (TFile*) wk()->getOutputFile ("output");
+  // m_atree = new TTree ("AnalysisTree", "analysis output tree");
+  // m_atree->SetDirectory (out_TFile);
+
+  //Book the output Tree
+  //bookTree();
+
+  //Initialize variables
+  InitVars();
 
 #ifdef TRIGGERTEST
   if(!this->isTruth){
     //--- Trigger Decision
     // The configuration tool.
     if(!tool_trigconfig)
-      tool_trigconfig = new TrigConf::xAODConfigTool ("xAODConfigTool");
-    CHECK(tool_trigconfig->initialize());                                                  
+      tool_trigconfig = new TrigConf::xAODConfigTool ("MYxAODConfigTool");
+    CHECK( tool_trigconfig->initialize() ); 
+    
     ToolHandle<TrigConf::ITrigConfigTool> configHandle(tool_trigconfig);
-    //    configHandle->initialize();                                                   
-                                                                                     
+    
     // The decision tool  
     if(!tool_trigdec)
-      tool_trigdec = new Trig::TrigDecisionTool("TrigDecTool");
-    CHECK(tool_trigdec->setProperty("ConfigTool",configHandle));
-    CHECK(tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision"));
+      tool_trigdec = new Trig::TrigDecisionTool("MYTrigDecTool");
+    CHECK( tool_trigdec->setProperty("ConfigTool",configHandle) );
+    CHECK( tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision") );
     //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
-    CHECK(tool_trigdec->initialize());
+    CHECK( tool_trigdec->initialize() );
+    
+    if(!tool_trig_match_el)    
+      tool_trig_match_el = new Trig::TrigEgammaMatchingTool("TrigEgammaMatchingTool");
+    CHECK( tool_trig_match_el->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
+    CHECK( tool_trig_match_el->initialize());
+    
+    if(!tool_trig_match_mu)    
+      tool_trig_match_mu = new Trig::TrigMuonMatching("TrigMuonMatchingTool");
+    CHECK( tool_trig_match_mu->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
+    CHECK( tool_trig_match_mu->initialize());
+   
+    if(!tool_trig_match_ph)    
+      tool_trig_match_ph = new Trig::TrigEgammaMatchingTool("TrigEgammaMatchingTool");
+    CHECK( tool_trig_match_ph->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
+    CHECK( tool_trig_match_ph->initialize());    
   }
 #endif
-
-
+  
+  
   // get event info needed for tool's config
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
-
+  
   isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
+  
+  //--- Corrected mct calculator
+  tool_mct = new TMctLib();
 
   //*** Initialize all CP tools
   std::string maindir = getenv("ROOTCOREBIN");
   maindir = maindir + "/data/";
 
   ST::SettingDataSource datasource = !this->isMC ? ST::Data : (this->isAtlfast ? ST::AtlfastII : ST::FullSim);
-  bool isderived = isDerived();
+  //  m_isderived = isDerived(); //should be filled in already!
 
   //--- SUSYTools
-  tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
-  CHECK(tool_st->setProperty("DataSource", datasource) );
-  CHECK(tool_st->setProperty("IsDerived", isderived) );
-  CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
+  if(!this->isTruth){
+    
+    tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
+    CHECK(tool_st->setProperty("DataSource", datasource) );
+    //  CHECK(tool_st->setProperty("IsDerived", m_isderived) );
+    //  CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
+    CHECK(tool_st->setProperty("Is25ns", false));
 
-  CHECK( tool_st->setProperty("IsoWP",El_isoWP) );  //only one tool for it !! need to expand to el/mu splitting!                                                                                                                                                              
+    if(JetCollection.Contains("LCTopo"))
+      CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::LCTopo ));
+    else if(JetCollection.Contains("EMTopo"))
+      CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::EMTopo ));
+    
+    //redefine isolation WPs (if needed)
+    if(El_isoWP=="None"){      
+      El_isoWP = "LooseTrackOnly";
+      noElIso = true;
+    }
+    if(Mu_isoWP=="None"){      
+      Mu_isoWP = "LooseTrackOnly";
+      noMuIso = true;
+    }
+    if(Ph_isoWP=="None"){      
+      Ph_isoWP = "LooseTrackOnly";
+      noPhIso = true;
+    }
+    
+    CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
+    CHECK( tool_st->setProperty("EleId",El_ID) ); 
+    CHECK( tool_st->setProperty("EleIsoWP",El_isoWP) ); 
 
-  CHECK(tool_st->setProperty("EleId",El_ID) );
-  CHECK(tool_st->setProperty("EleIdBaseline",El_baseID) );
-  CHECK(tool_st->setProperty("TauId","Tight") );
-  CHECK(tool_st->setProperty("MuId",Mu_ID) );
-  CHECK(tool_st->setProperty("PhotonId",Ph_ID) );
-  
-  // Set to true for DxAOD, false for primary xAOD
-  CHECK(tool_st->setProperty("DoJetAreaCalib",isderived) );
-  // Set to false if not doing JetAreaCalib
-  CHECK(tool_st->setProperty("DoJetGSCCalib",isderived) );
-  // Set 0 for 14NP, 1,2,3,4 for 3NP sets
-  CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) );
+    if(Mu_ID=="Loose")       CHECK( tool_st->setProperty("MuId", xAOD::Muon::Loose));
+    else if(Mu_ID=="Medium") CHECK( tool_st->setProperty("MuId", xAOD::Muon::Medium));
+    else if(Mu_ID=="Tight")  CHECK( tool_st->setProperty("MuId", xAOD::Muon::Tight));
+    else                     CHECK( tool_st->setProperty("MuId", xAOD::Muon::VeryLoose));
+    CHECK( tool_st->setProperty("MuIsoWP",Mu_isoWP) ); 
 
-  // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
-  // if(!Met_doRefGamma)   CHECK(tool_st->setProperty("METGammaTerm","")); //No GammaTerm default
-  // if(!Met_doRefTau)     CHECK(tool_st->setProperty("METTauTerm", "")); //No TauTerm default
+    if (usePhotons){
+      CHECK( tool_st->setProperty("PhotonId",Ph_ID) );
+      CHECK( tool_st->setProperty("PhotonIsoWP",Ph_isoWP) );
+    }
 
-  //NEW
-  if(isderived){
-    CHECK(tool_st->setProperty("METInputMap", "METMap_RefFinalFix"));
-    CHECK(tool_st->setProperty("METInputCont", "MET_RefFinalFix"));
-  }
-  
-  CHECK( tool_st->SUSYToolsInit() );
-  CHECK( tool_st->initialize() );
-  tool_st->msg().setLevel( MSG::ERROR ); //set message level 
-  
-  if(syst_CP.size()){
-    if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){    // Tell the SUSYObjDef_xAOD which variation to apply
-      Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
-    }else{
-      Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
+    CHECK( tool_st->setProperty("RequireIsoSignal", isoSignalLep));
+    
+    // Set Btagging WPs
+    CHECK( tool_st->setProperty("BtagWP", Jet_Btag_WP.Data() ) );
+    CHECK( tool_st->setProperty("BtagWP_OR", Jet_Btag_WP_OR.Data() ) );
+    
+    // Set to true for DxAOD, false for primary xAOD
+    CHECK(tool_st->setProperty("DoJetAreaCalib",m_isderived) );
+    // Set to false if not doing JetAreaCalib
+    CHECK(tool_st->setProperty("DoJetGSCCalib",m_isderived) );
+    // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                   
+    CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) ); 
+    
+    // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
+    // if(!Met_doRefGamma)   CHECK(tool_st->setProperty("METGammaTerm","")); //No GammaTerm default
+    // if(!Met_doRefTau)     CHECK(tool_st->setProperty("METTauTerm", "")); //No TauTerm default
+    
+    CHECK( tool_st->SUSYToolsInit() );
+    CHECK( tool_st->initialize() );
+    tool_st->msg().setLevel( MSG::ERROR ); //set message level 
+
+    if(syst_CP.size()){
+      // Tell the SUSYObjDef_xAOD which variation to apply
+      if( tool_st->applySystematicVariation( syst_CP ) != CP::SystematicCode::Ok){
+	Error("initialize()", "Cannot configure SUSYTools for systematic var. %s", (syst_CP.name()).c_str() );
+      }else{
+	if(debug) Info("initialize()", "Variation \"%s\" configured...", (syst_CP.name()).c_str() );
+      }
     }
   }
-  
-  
+
+
   //--- Overlap Removal
   tool_or = new OverlapRemovalTool("OverlapRemovalTool");
   // Turn on the object links for debugging
@@ -1543,57 +1872,83 @@ EL::StatusCode chorizo :: initialize ()
   tool_or->msg().setLevel(MSG::INFO);
   CHECK( tool_or->initialize() );
   
+  
+  //--- B-tagging
+  TString JetTagCollection = JetCollection+"Jets";
+  string FlvTagCutFN = "xAODBTaggingEfficiency/13TeV/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root";
+  tool_bsel70 = new BTaggingSelectionTool("BTagSelEMTopoJets70");
+  CHECK( tool_bsel70->setProperty("MaxEta",2.5) );
+  CHECK( tool_bsel70->setProperty("MinPt",20000.) );
+  CHECK( tool_bsel70->setProperty("FlvTagCutDefinitionsFileName", FlvTagCutFN) );
+  CHECK( tool_bsel70->setProperty("TaggerName","MV2c20") );
+  CHECK( tool_bsel70->setProperty("OperatingPoint","FlatBEff_70") );
+  CHECK( tool_bsel70->setProperty("JetAuthor",JetTagCollection.Data()) );
+  CHECK( tool_bsel70->initialize() );
 
-  //--- B-tagging               
-  tool_btag  = new BTaggingEfficiencyTool("BTag70");
-  CHECK( tool_btag->setProperty("TaggerName",          Jet_Tagger.Data()) );
-  CHECK( tool_btag->setProperty("OperatingPoint",      Jet_TaggerOp.Data()) );
-  CHECK( tool_btag->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) );
-  CHECK( tool_btag->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );
-  CHECK( tool_btag->initialize() );
+  tool_bsel77 = new BTaggingSelectionTool("BTagSelEMTopoJets77");
+  CHECK( tool_bsel77->setProperty("MaxEta",2.5) );
+  CHECK( tool_bsel77->setProperty("MinPt",20000.) );
+  CHECK( tool_bsel77->setProperty("FlvTagCutDefinitionsFileName", FlvTagCutFN) );
+  CHECK( tool_bsel77->setProperty("TaggerName","MV2c20") );
+  CHECK( tool_bsel77->setProperty("OperatingPoint","FlatBEff_77") );
+  CHECK( tool_bsel77->setProperty("JetAuthor",JetTagCollection.Data()) );
+  CHECK( tool_bsel77->initialize() );
 
-  tool_btag2  = new BTaggingEfficiencyTool("BTag80");
-  CHECK( tool_btag2->setProperty("TaggerName",          Jet_Tagger.Data()) );                                                     
-  CHECK( tool_btag2->setProperty("OperatingPoint",      Jet_TaggerOp2.Data()) );                                                  
-  CHECK( tool_btag2->setProperty("JetAuthor",           Jet_Tagger_Collection.Data()) );                                          
-  CHECK( tool_btag2->setProperty("ScaleFactorFileName",maindir+"SUSYTools/2014-Winter-8TeV-MC12-CDI.root") );                    
-  CHECK( tool_btag2->initialize() );                                                                                               
+  tool_bsel85 = new BTaggingSelectionTool("BTagSelEMTopoJets85");
+  CHECK( tool_bsel85->setProperty("MaxEta",2.5) );
+  CHECK( tool_bsel85->setProperty("MinPt",20000.) );
+  CHECK( tool_bsel85->setProperty("FlvTagCutDefinitionsFileName", FlvTagCutFN) );
+  CHECK( tool_bsel85->setProperty("TaggerName","MV2c20") );
+  CHECK( tool_bsel85->setProperty("OperatingPoint","FlatBEff_85") );
+  CHECK( tool_bsel85->setProperty("JetAuthor",JetTagCollection.Data()) );
+  CHECK( tool_bsel85->initialize() );
 
-  //isolation tool
-  // Setup standard working point for 
-  // photons, electrons and muons
-  //  CP::IsolationSelectionTool iso_1( "iso_1" );
-  iso_1 = new CP::IsolationSelectionTool("iso_1");
-  CHECK( iso_1->setProperty("WorkingPoint","Tight") );
-  CHECK( iso_1->initialize() );
+  tool_btag70 = new BTaggingEfficiencyTool("BTagSF70_EMTopoJets");
+  CHECK( tool_btag70->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag70->setProperty("OperatingPoint",      "-0_0436") ); //"FixedCutBEff_70") );
+  CHECK( tool_btag70->setProperty("JetAuthor",           JetTagCollection.Data()) );
+  CHECK( tool_btag70->setProperty("ScaleFactorFileName", FlvTagCutFN) );
+  //CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
+  CHECK( tool_btag70->initialize() ); 
+  tool_btag70->msg().setLevel( MSG::FATAL );  
+  
+  tool_btag77 = new BTaggingEfficiencyTool("BTagSF77_EMTopoJets");
+  CHECK( tool_btag77->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag77->setProperty("OperatingPoint",      "-0_4434") ); //"FixedCutBEff_77") );
+  CHECK( tool_btag77->setProperty("JetAuthor",           JetTagCollection.Data() ) );
+  CHECK( tool_btag77->setProperty("ScaleFactorFileName", FlvTagCutFN) );
+  //CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag77->initialize() );
+  tool_btag77->msg().setLevel( MSG::FATAL );  
+  
+  tool_btag85 = new BTaggingEfficiencyTool("BTagSF85_EMTopoJets");
+  CHECK( tool_btag85->setProperty("TaggerName",          Jet_Tagger.Data()) );
+  CHECK( tool_btag85->setProperty("OperatingPoint",      "-0_7887") ); //FixedCutBEff_85") );
+  CHECK( tool_btag85->setProperty("JetAuthor",           JetTagCollection.Data() ) ); 
+  CHECK( tool_btag85->setProperty("ScaleFactorFileName", FlvTagCutFN) );
+  //  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag85->initialize() );
+  tool_btag85->msg().setLevel( MSG::FATAL );
 
-  // Pick a different working point
-  //  CP::IsolationSelectionTool iso_2( "iso_2" );
-  iso_2 = new CP::IsolationSelectionTool("iso_2");
-  CHECK( iso_2->setProperty("WorkingPoint","Gradient") );
-  CHECK( iso_2->initialize() );
+   
+  tool_btag_truth1 = new BTagEfficiencyReader();
+  tool_btag_truth2 = new BTagEfficiencyReader();
+  tool_btag_truth3 = new BTagEfficiencyReader();
+  tool_btag_truth1->Initialize("FlatBEff", "1D", "MV2c20", "70");
+  tool_btag_truth2->Initialize("FlatBEff", "1D", "MV2c20", "77");
+  tool_btag_truth3->Initialize("FlatBEff", "1D", "MV2c20", "80");  //85 is not supported yet!
 
-  // Custom isolation for your own optimization
-  // Select calo and track functions, isolation variables
-  // Function string gets passed to a ROOT TF1 object
-  //  CP::IsolationSelectionTool iso_3( "iso_3" );
-  iso_3 = new CP::IsolationSelectionTool("iso_3");
-  CHECK( iso_3->setProperty("WorkingPoint","Loose") ); 
-  /*  CHECK( iso_3->setProperty("ElectronCaloIsoFunction","0.1*x+90") );
-  CHECK( iso_3->setProperty("ElectronTrackIsoFunction","98") ); // flat 98% efficiency
-  CHECK( iso_3->setProperty("ElectronCaloIsoType","topoetcone30") );  
-  CHECK( iso_3->setProperty("ElectronTrackIsoType","ptcone30") );  
-  CHECK( iso_3->setProperty("MuonCaloIsoFunction","0.1*x+92") );
-  CHECK( iso_3->setProperty("MuonTrackIsoFunction","95") ); // flat 95% efficiency
-  CHECK( iso_3->setProperty("MuonCaloIsoType","topoetcone40") );
-  CHECK( iso_3->setProperty("MuonTrackIsoType","ptcone40") );  */
-  CHECK( iso_3->initialize() ); 
+  //--- MCTruthClassifier
+  if (isMC){    
+    tool_mcc = new MCTruthClassifier("MCTruthClassifier");
+    CHECK( tool_mcc->initialize() );
+  }
 
-  //--- truth jet labeling                                                                                                        
-  tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
-  CHECK( tool_jetlabel->setProperty("McEventCollection","TruthEvents") );
-  CHECK( tool_jetlabel->initialize() );
-
+  //--- truth jet labeling
+  // tool_jetlabel = new Analysis::JetQuarkLabel("JetLabelTool");
+  // CHECK( tool_jetlabel->setProperty("McEventCollection","TruthEvents") );
+  // CHECK( tool_jetlabel->initialize() );
+  
   //--- Jet smearing tool
   SUSY::SmearingType gsmtype = SUSY::SmearingType::optimal;
   if(QCD_SmearType=="high") gsmtype = SUSY::SmearingType::high;
@@ -1616,21 +1971,61 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_jsmear->setProperty("DoPhiSmearing",QCD_DoPhiSmearing) );
   CHECK( tool_jsmear->initialize() );
 
+  TFile* bVetoJetFile = new TFile(maindir+"/JetSmearing/"+QCD_bvetoFileMap);
+  TH2F* bVetoJetResponse = (TH2F*)bVetoJetFile->Get(QCD_bvetoMap);
+  TFile* bTagJetFile = new TFile(maindir+"/JetSmearing/"+QCD_btagFileMap);
+  TH2F* bTagJetResponse = (TH2F*)bTagJetFile->Get(QCD_btagMap);
+  tool_jsmear->SetResponseMaps(bVetoJetResponse,bTagJetResponse);
+
+  //--- Isolation tools
+  // Setup standard working point for photons, electrons and muons
+  iso_1 = new CP::IsolationSelectionTool("iso_1");
+  CHECK( iso_1->setProperty("ElectronWP","GradientLoose") );
+  CHECK( iso_1->setProperty("MuonWP","GradientLoose") );
+  if (usePhotons) CHECK( iso_1->setProperty("PhotonWP","Cone20") );
+  CHECK( iso_1->initialize() );
+
+  iso_2 = new CP::IsolationSelectionTool("iso_2");
+  CHECK( iso_2->setProperty("ElectronWP","Loose") );
+  CHECK( iso_2->setProperty("MuonWP","Loose") );
+  if (usePhotons) CHECK( iso_2->setProperty("PhotonWP","Cone40CaloOnly") );
+  CHECK( iso_2->initialize() );
+
+  iso_3 = new CP::IsolationSelectionTool("iso_3");
+  CHECK( iso_3->setProperty("ElectronWP","LooseTrackOnly") );
+  CHECK( iso_3->setProperty("MuonWP","LooseTrackOnly") );
+  if (usePhotons) CHECK( iso_3->setProperty("PhotonWP","Cone40") );
+  CHECK( iso_3->initialize() );
+
+  iso_4 = new CP::IsolationSelectionTool("iso_4");
+  CHECK( iso_4->setProperty("ElectronWP","Gradient") );
+  CHECK( iso_4->setProperty("MuonWP","Gradient") );
+  //if (usePhotons) CHECK( iso_4->setProperty("PhotonWP","Cone20") );
+  CHECK( iso_4->initialize() );
+
+  iso_5 = new CP::IsolationSelectionTool("iso_5");
+  CHECK( iso_5->setProperty("ElectronWP","Tight") );
+  CHECK( iso_5->setProperty("MuonWP","Tight") );
+  //if (usePhotons) CHECK( iso_5->setProperty("PhotonWP","Cone20") );
+  CHECK( iso_5->initialize() );
+
+
+
+
+
   //--- Pileup Reweighting
   // trick: path in the tool name so it gets saved to the desired place
   //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
   TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
-  if(PURW_Folder.IsWhitespace())
-    PURW_Folder = maindir + "/../../SusyAnalysis/share/PURW/";
+  //if(PURW_Folder.IsWhitespace())
+  PURW_Folder = maindir + "/SusyAnalysis/PURW/";
 
   if(this->isMC && genPUfile){ 
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
   }
   tool_purw = new CP::PileupReweightingTool(purw_name.Data());
-  CHECK( tool_purw->setProperty("Input","EventInfo") );
   if (this->isMC){
     if(genPUfile && !doPUTree){ //--- Generate the pileup root files
-      //      tool_purw->setProperty("UsePeriodConfig","MC14");
       CHECK( tool_purw->initialize() );
     }
     else if(applyPURW || doPUTree){ //--- Apply the weights found after generating the pileup root files
@@ -1641,18 +2036,44 @@ EL::StatusCode chorizo :: initialize ()
       Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
 
       TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
-      prwFiles.push_back(prwfile.Data());
-      CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
-      CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.09) );
-      if (this->syst_PU == pileupErr::PileupLow)
-        CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.05) );
-      else if(this->syst_PU == pileupErr::PileupHigh)
-        CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.13) );
+      std::ifstream test_prwfile(prwfile);
+      
+      if (test_prwfile.good()) {
+	isPUfile=true;
+	prwFiles.push_back(prwfile.Data());
+	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
+	lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
+	CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
+	CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
 
-      lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());
-      CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
-      CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
-      CHECK( tool_purw->initialize() );
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
+	if (this->syst_PU == pileupErr::PileupLow)        
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
+	else if(this->syst_PU == pileupErr::PileupHigh) 
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
+	
+
+	CHECK( tool_purw->initialize() );
+      } 
+      
+      else {
+	isPUfile=false;
+	prwfile=PURW_Folder+"410000.prw.root";
+	prwFiles.push_back(prwfile.Data());
+	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
+	CHECK( tool_purw->setProperty("DefaultChannel",410000) );      
+	lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
+	CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
+	CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
+	
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
+	if (this->syst_PU == pileupErr::PileupLow)        
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
+	else if(this->syst_PU == pileupErr::PileupHigh) 
+	  CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
+	
+	CHECK( tool_purw->initialize() );
+      }      
     }
   }
 
@@ -1660,37 +2081,42 @@ EL::StatusCode chorizo :: initialize ()
   //--- GRL
   tool_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
   std::vector<std::string> grlist;
-  grlist.push_back((maindir + GRLxmlFile).Data());
+
+  std::istringstream GRLIStr(GRLxmlFile.Data());
+  std::string g;
+  while (std::getline(GRLIStr, g, ',')) {
+    grlist.push_back(maindir+"/../../SusyAnalysis/share/GRL/"+g);
+  }
+
   CHECK( tool_grl->setProperty( "GoodRunsListVec", grlist) );
   CHECK( tool_grl->setProperty("PassThrough", false) );
   CHECK( tool_grl->initialize() );
+  
  
   //--- TileTripReader
   tool_tileTrip = new Root::TTileTripReader("TileTripReader");
   std::string TileTripReader_file = "CompleteTripList_2011-2012.root";
   CHECK( tool_tileTrip->setTripFile((maindir + "TileTripReader/" + TileTripReader_file).data()) );
-
+      
   //--- JetTileCorrectionTool
 #ifdef TILETEST
-   tool_jettile = new CP::JetTileCorrectionTool("JetTileCorrectionTool");
-   std::string parfile="param_test.root";
-   // @param part tile partition: LBA=0, LBC=1, EBA=2, EBC=3
-   //  std::vector<std::string> dead_modules = {"0 1","0 10"};
-   std::vector<std::string> dead_modules = {"0 0" , "0 7" ,"0 36", "1 50", "1 24", "1 62", "2 15", "2 35", "2 44", "3 2", "3 57"};
-   bool kill=true;
-   CHECK( tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile) );
-   CHECK( tool_jettile->setProperty("DeadModules",dead_modules) );
-   CHECK( tool_jettile->setProperty("killDead",kill) );
-   CHECK( tool_jettile->initializeTool(tool_tileTrip) );
+  tool_jettile = new CP::JetTileCorrectionTool("JetTileCorrectionTool");
+  std::string parfile="param_test.root";
+  // @param part tile partition: LBA=0, LBC=1, EBA=2, EBC=3
+  std::vector<std::string> dead_modules = {"0 1","0 10"};
+  
+  CHECK( tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile) );
+  CHECK( tool_jettile->setProperty("DeadModules",dead_modules) );
+  CHECK( tool_jettile->initializeTool(tool_tileTrip) );
 #endif 
 
-  //--- JVF uncertainty
-  tool_jvf = new JVFUncertaintyTool();
-  tool_jvf->UseGeV(true);
   
   //--- PDF reweighting
+  // LHAPDF::setPDFPath( gSystem->Getenv("LHAPATH") );
+  // Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPATH")) );
   LHAPDF::setPaths( gSystem->Getenv("LHAPDF_DATA_PATH") );
   Info("initialize()", Form(" -- LHAPATH = %s", gSystem->Getenv("LHAPDF_DATA_PATH")) );
+  
   TString input_pdfset    = "CT10"; // 10800 //CHECK_ME this was not CT10as but CT10 !!
   int input_pdfset_member = 0;     
   if (this->isSignal || this->isTop) {
@@ -1704,9 +2130,13 @@ EL::StatusCode chorizo :: initialize ()
     m_PDF = LHAPDF::mkPDF(input_pdfset.Data(), input_pdfset_member); //LHAPDF6
   }
 
-  // Corrected mct calculator
-  tool_mct = new TMctLib();
+  // initialize and configure the jet cleaning tool
+  tool_jClean = new JetCleaningTool("JetCleaning");
+  //  tool_jClean->msg().setLevel( MSG::DEBUG ); 
+  CHECK( tool_jClean->setProperty( "CutLevel", "LooseBad") );
+  CHECK( tool_jClean->initialize() );
   
+
   //--- number of events
   Info("initialize()", Form("Total number of events = %lli", m_event->getEntries() ));
   watch.Stop();
@@ -1739,35 +2169,19 @@ void chorizo :: printSystList(){
     case ST::SystObjType::Muon     : affectedType = "MUON";     break;
     case ST::SystObjType::Tau      : affectedType = "TAU";      break;
     case ST::SystObjType::BTag     : affectedType = "BTAG";     break;
-    case ST::SystObjType::MET      : affectedType = "MET";      break;
+    case ST::SystObjType::MET_TST      : affectedType = "MET_TST";      break;
     }
     
-    // TString sout = Form("%s     :   affects %s%s for %s",sys.name(),( sysInfo.affectsWeights ? "weights " : "" ),( sysInfo.affectsKinematics ? "kinematics " : "" ),affectedType);
-    // Info("", sout.Data().c_str());
-
-
     cout <<  sys.name() << "    : affects " << ( sysInfo.affectsWeights ? "weights " : "" ) << ( sysInfo.affectsKinematics ? "kinematics " : "" ) << "  for " << affectedType << endl;
   }
   
   cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" << endl;
-  
-  
-  // const CP::SystematicRegistry& registry = CP::SystematicRegistry::getInstance();
-  // const CP::SystematicSet& recommendedSystematics = registry.recommendedSystematics();
-  
-  // // this is the nominal set
-  // for(CP::SystematicSet::const_iterator sysItr = recommendedSystematics.begin(); sysItr != recommendedSystematics.end(); ++sysItr){
-  //   //   std::cout << sysItr->basename();
-  //   std::cout << sysItr->name();
-  //   // if (*sysItr == CP::SystematicVariation (sysItr->basename(), CP::SystematicVariation::CONTINUOUS)){
-  //   //   std::cout << "\t +-" ;
-  //   // }
-  //   std::cout << std::endl;
-  // }
+
 }
 
-
 void chorizo :: loadMetaData(){
+
+  if(debug)  Info("loadMetaData()", "HERE");
 
   if(!isMC) return;
 
@@ -1775,7 +2189,7 @@ void chorizo :: loadMetaData(){
   meta_xsec_relunc = wk()->metaData()->getDouble( SH::MetaFields::crossSectionRelUncertainty );
   meta_kfactor     = wk()->metaData()->getDouble( SH::MetaFields::kfactor );
   meta_feff        = wk()->metaData()->getDouble( SH::MetaFields::filterEfficiency );
-  meta_nsim        = wk()->metaData()->getDouble( SH::MetaFields::numEvents );
+  //  meta_nsim        = wk()->metaData()->getDouble( SH::MetaFields::numEvents );
   meta_lumi        = wk()->metaData()->getDouble( SH::MetaFields::lumi );
   //  meta_id = (int)wk()->metaData()->getDouble( "DSID" ));
 
@@ -1785,12 +2199,27 @@ void chorizo :: loadMetaData(){
 }
 
 EL::StatusCode chorizo :: nextEvent(){
+  
+  if(debug)  Info("nextEvent()", "HERE");
+
   //*** clean event (store, pointers, etc...) before leaving successfully... ***
- 
+  
   // Clear View container
   if(m_goodJets)
     m_goodJets->clear();
-  
+
+  if(m_smdJets)
+    m_smdJets->clear();
+
+  if(m_inv_el)
+    m_inv_el->clear();
+
+  if(m_inv_mu)
+    m_inv_mu->clear();
+
+  if(m_inv_ph)
+    m_inv_ph->clear();
+
   // Clear transient store
   m_store->clear();
 
@@ -1800,26 +2229,30 @@ EL::StatusCode chorizo :: nextEvent(){
 
 EL::StatusCode chorizo :: execute ()
 {
-  if(this->isTruth){ //truth derivations
+  if(debug)  Info("execute()", "HERE");
+
+  if(this->isTruth) //truth derivations
     return loop_truth();
-  }
+  
   return loop();
 }
 
 
 EL::StatusCode chorizo :: loop ()
 {
-  //Info("loop()", "Inside loop");
-
+  if(debug)  Info("loop()", "HERE");
+  
 #ifdef PROFCODE
   if(m_eventCounter!=0)
     CALLGRIND_START_INSTRUMENTATION;
 #endif  
 
   ofstream myfile; //produces a text file with event information
-  std::string ofpath(gSystem->Getenv("ANALYSISCODE"),0, 200);
-  if (doCutFlow) myfile.open ( (ofpath+"/cutflow.txt").c_str(), ios::app);
-
+  string ocfile; 
+  if (doCutFlow){
+    ocfile = string(gSystem->Getenv("ROOTCOREBIN"))+"/cutflow.txt";
+    myfile.open (ocfile.c_str(), ios::app);
+  }
   if(systListOnly){  //just print systematics list and leave!
     this->printSystList();
     wk()->skipEvent();
@@ -1840,99 +2273,63 @@ EL::StatusCode chorizo :: loop ()
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
-  loadMetaData();
+  //  loadMetaData();
 
-  //-- Retrieve objects Containers
-  m_truthE= 0;
-  m_truthP= 0;
-  m_truth_jets= 0;
-  
-  //  -- Truth Particles
-  const xAOD::MissingETContainer* cmet_truth;    
-  const xAOD::MissingET* mtruth_inv;
-  const xAOD::MissingET* mtruth_vis;
-  if(this->isMC){
-        
-    CHECK( m_event->retrieve( m_truthE,     "TruthEvent" ) );
-    CHECK( m_event->retrieve( m_truthP,     "TruthParticle" ) );
-    CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
-    CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );//PROBLEM!!!!!!
-
-    mtruth_inv = (*cmet_truth)["Int"];
-    mtruth_vis = (*cmet_truth)["NonInt"];
-
-    sumET_truth     = (*cmet_truth)["Int"]->sumet()*0.001;
-    sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
-
-    // mtruth_inv = (*cmet_truth)["Final"];
-    // mtruth_vis = (*cmet_truth)["Final"];
-
-    // sumET_truth     = (*cmet_truth)["Final"]->sumet()*0.001;
-    // sumET_truth_vmu = (*cmet_truth)["Final"]->sumet()*0.001;
-  }
-
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
-
-  // View container provides access to selected jets   (for MET recalculation)
-  if( !m_goodJets )
-    m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-  //  CHECK( m_store->record(m_goodJets, "MySelJets"));
-  
-  // MET container (general)
-  xAOD::MissingETContainer* metRFC       = new xAOD::MissingETContainer;
-  xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
-  metRFC->setStore(metRFCAux);
-
-
-
-  //--- Analysis Code 
-  //--- 
-  RunNumber         = eventInfo->runNumber();
+  RunNumber = eventInfo->runNumber();
   mc_channel_number = (isMC ? eventInfo->mcChannelNumber() : 0); 
-  EventNumber       = eventInfo->eventNumber();
+  EventNumber = eventInfo->eventNumber();
 
-  
   //EventList
   if(m_eventList.size()){
-    if( !inEventList(RunNumber, EventNumber) ){
-      output->setFilterPassed (false);    
+    if(isMC && !inEventList(mc_channel_number, EventNumber) ){
+      return nextEvent();
+    } 
+    if(!isMC && !inEventList(RunNumber, EventNumber) ){
       return nextEvent();
     } 
   }
+   
 
+  //--- Analysis Code 
+  //--- 
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
-
-  int lb = eventInfo->lumiBlock();
-  averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
-
-  //PURW
-  if(isMC && applyPURW)
-    tool_purw->apply(eventInfo);  //it does already the filling in 'ConfigMode'
   
+  lb = eventInfo->lumiBlock();
+  bcid = eventInfo->bcid();
+  averageIntPerXing = ( isMC ? eventInfo->averageInteractionsPerCrossing() : tool_purw->getLumiBlockMu( *eventInfo ) );
+
+  
+  //PURW
+  // if(isMC && applyPURW)
+  //   CHECK( tool_purw->apply(*eventInfo) );  //it does already the filling in 'ConfigMode'
   //--- Generate Pileup file??
   if (genPUfile && isMC){
     if (RunNumber==0){
       Info("loop()", Form("Skipping event %d because RunNumber=0 !!", EventNumber));
-      output->setFilterPassed(false);
       return nextEvent();
     }
     
     if (!doPUTree)         
-      return nextEvent(); //just leave!
-    
-    pileup_w = acc_PUweight(*eventInfo);
-    
-    output->setFilterPassed (true);
+      return nextEvent();
+    //if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(222500, 410000, averageIntPerXing);    
+    if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);      
     return nextEvent();
   }
 
-  //--- Weights for MC
+  //  -- Retrieve Truth containers
+  m_truthE= 0;
+  m_truthP= 0;
+  m_truth_jets= 0;
   if (isMC){
 
+    CHECK( m_event->retrieve( m_truthE,     "TruthEvents" ) );
+    CHECK( m_event->retrieve( m_truthP,     "TruthParticles" ) );
+
+    //--- Weights for MC
+    
     //--- Weigths for Sherpa, MC@NLO, Acer, ...
     MC_w = eventInfo->mcEventWeight();
-
+    
     //--- PDF reweighting
     xAOD::TruthEventContainer::const_iterator truthE_itr = m_truthE->begin();
     int id1=0; int id2=0;
@@ -1942,16 +2339,19 @@ EL::StatusCode chorizo :: loop ()
     //pdf reweighting
     if(doPDFrw){
       
-      //incompatible pdfInfoAccessot for DC14! hacked for now...
-      id1 = (*truthE_itr)->auxdata< int >( "id1" ); 
-      id2 = (*truthE_itr)->auxdata< int >( "id2" ); 
-      x1  = (*truthE_itr)->auxdata< float >( "id1" ); 
-      x2  = (*truthE_itr)->auxdata< float >( "id2" ); 
-      pdfId1 = (*truthE_itr)->auxdata< int >( "pdfId1" ); 
-      pdfId2 = (*truthE_itr)->auxdata< int >( "pdfId2" ); 
-      pdf1 = (*truthE_itr)->auxdata< int >( "pdf1" ); 
-      pdf2 = (*truthE_itr)->auxdata< int >( "pdf2" ); 
-      scalePDF = (*truthE_itr)->auxdata< float >( "scalePDF" ); 
+      //** For newer tags when they come...
+      ( *truthE_itr )->pdfInfoParameter(id1, xAOD::TruthEvent::PDGID1);
+      ( *truthE_itr )->pdfInfoParameter(id2, xAOD::TruthEvent::PDGID2);
+      ( *truthE_itr )->pdfInfoParameter(x1, xAOD::TruthEvent::X1);
+      ( *truthE_itr )->pdfInfoParameter(x2, xAOD::TruthEvent::X2);
+      ( *truthE_itr )->pdfInfoParameter(pdfId1, xAOD::TruthEvent::PDFID1);
+      ( *truthE_itr )->pdfInfoParameter(pdfId2, xAOD::TruthEvent::PDFID2);
+      ( *truthE_itr )->pdfInfoParameter(pdf1, xAOD::TruthEvent::PDF1);
+      ( *truthE_itr )->pdfInfoParameter(pdf2, xAOD::TruthEvent::PDF2);
+      ( *truthE_itr )->pdfInfoParameter(scalePDF, xAOD::TruthEvent::SCALE);
+      // ( *truthE_itr )->pdfInfoParameter(pdf_Q, xAOD::TruthEvent::Q);
+      // ( *truthE_itr )->pdfInfoParameter(pdf_xf1, xAOD::TruthEvent::XF1);
+      // ( *truthE_itr )->pdfInfoParameter(pdf_xf2, xAOD::TruthEvent::XF2);
             
       PDF_w *= getPdfRW((double)beamE_to/beamE_from, (double)(scalePDF*scalePDF), (double)x1, (double)x2, id1, id2);     
       
@@ -1969,31 +2369,29 @@ EL::StatusCode chorizo :: loop ()
 	cout << "-------------------------------------" << endl;
       }
     }
-    
+
     //Find Hard Process particles
     int pdgid1 = 0;
     int pdgid2 = 0;
     CHECK(tool_st->FindSusyHP(m_truthP, pdgid1, pdgid2) );
     
     //procID
-    if(!isDerived() && pdgid1!=0 && pdgid2!=0) //(just to avoid warnings)
+    if(!m_isderived && pdgid1!=0 && pdgid2!=0) //(just to avoid warnings)
       procID = SUSY::finalState(id1, id2); // get prospino proc ID
 
-  
     //--- Get sum of the weigths from the slimmed samples //FIX_ME
     this->w_average = this->GetAverageWeight();
-    this->w         = 1/w_average;
+    this->w = 1/w_average;
 
     //---pileup weight 
     if(applyPURW)
-      pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
-
+       if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
+       //if (isMC) pileup_w = tool_purw->GetCombinedWeight(222510.5, 410000, averageIntPerXing);
     //--- For histograms : combine all the weights in a single variable //CHECK_ME
     if (!doAnaTree) 
       w *= (MC_w*pileup_w);     
 
   }
-  
   //--- Generator level uncertainites for Znunu+jet Sherpa 
   //    --> scaleVariationWeight
   this->w *= GetGeneratorUncertaintiesSherpa();
@@ -2001,22 +2399,20 @@ EL::StatusCode chorizo :: loop ()
   //--- MC vetoes
   if(vetoMCevent() ){
     //vetoed MC event! Just leave...
-    output->setFilterPassed(false);
     return nextEvent();
   }
 
   if(! passMCor() ){ //remove overlap among filtered samples
     //vetoed MC event! Just leave...
-    output->setFilterPassed(false);
     return nextEvent();
-  }
-
+  }  
+    
   //------------------------ ttbar reweighting ---------------------------
   if (isMC) {
     if (mc_channel_number==117050 || mc_channel_number==110401) {
       ttbar_weight = this->GetTTbarReweight(Top_truth_pt, Topbar_truth_pt, avTop_truth_pt);
-    } 
-    truth_n_leptons = this->GetNTruthLeptons();        
+    }     
+    truth_n_leptons = this->GetNTruthLeptons();
     
     truth_met_noEle = this->GetTruthEtmiss_noEleTau();	
     truth_n_bjets   = this->GetNTruthB();	
@@ -2034,28 +2430,51 @@ EL::StatusCode chorizo :: loop ()
   //----------------------------------------------------------
 
   //--- Vertex selection   (Note: It might not be needed at all in Run2!)
-  const xAOD::VertexContainer* vertices = 0;
+  const xAOD::VertexContainer* vertices(0);
   CHECK( m_event->retrieve( vertices, "PrimaryVertices") );
 
-  for( const auto& vx : *vertices ) {       
-    if(vx->vertexType() == xAOD::VxType::PriVtx){                                                                    
-      nVertex++;  
+  for( const auto& vx : *vertices ) {
+    if(vx->vertexType() == xAOD::VxType::PriVtx){
+      this->isVertexOk = true;
     }
-  }                                                                                                                                  
-                 
-  this->isVertexOk = (nVertex > 0); 
+    nVertex++;
+  }
+  //  this->isVertexOk = (nVertex > 0);
 
 
-  //trigger debugging (check all MET triggers in menu)
+  //--- trigger debugging (check all MET triggers in menu)
 #ifdef TRIGGERTEST
   if(m_eventCounter<2){
+    //save Trigger metadata
+    std::string trigchains="";
+    std::vector<string> trigtmp; trigtmp.clear();
+    for(const auto& s : TriggerNames){
+      auto chainGroup = tool_trigdec->getChainGroup(s);
+      for(auto &trig : chainGroup->getListOfTriggers()) {
+	trigtmp.push_back(trig);
+	trigchains += (trig+",");
+      }
+    }
+    TriggerNames = trigtmp; //overwrite it with fully expanded list
+    meta_triggers->SetTitle( trigchains.c_str() );
     
     if(debug){
-      Info("loop()", " ");
-      Info("loop()", "  MET TRIGGERS IN MENU ");
+      Info("loop()", "  ");
+      //      Info("loop()", "  MET TRIGGERS IN MENU ");
+      Info("loop()", "  TRIGGER MENU ");
       Info("loop()", "--------------------------------");
-      auto chainGroup = tool_trigdec->getChainGroup("HLT_xe*");
-      for(auto &trig : chainGroup->getListOfTriggers()) {
+      Info("loop()", "  L1 ");      
+      Info("loop()", "--------------------------------");
+      //      auto chainGroup = tool_trigdec->getChainGroup("HLT_xe.*");
+      auto chainGroupL1 = tool_trigdec->getChainGroup("L1_.*");
+      for(auto &trig : chainGroupL1->getListOfTriggers()) {
+	Info("loop()", trig.c_str()); 
+      }
+      Info("loop()", "--------------------------------");
+      Info("loop()", "  HLT ");      
+      Info("loop()", "--------------------------------");
+      auto chainGroupHLT = tool_trigdec->getChainGroup("HLT_.*");
+      for(auto &trig : chainGroupHLT->getListOfTriggers()) {
 	Info("loop()", trig.c_str()); 
       }
       Info("loop()", "--------------------------------");
@@ -2073,224 +2492,206 @@ EL::StatusCode chorizo :: loop ()
       this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
       oktrig |= this->isTrigger.back();
     }
-    if(!oktrig){
-      output->setFilterPassed(false);
+    if(!oktrig)
       return nextEvent();  //skip event
-    }
   }
 #endif
-
 
   //--- GRL
   if( !this->isMC )
     this->isGRL = tool_grl->passRunLB(RunNumber, lb);
 
-  //---   preselection for QCD jet smearing data (GRL on data) [time saver]
+  //---   preselection1 for QCD jet smearing data (GRL on data) [time saver]
   if( this->isQCD && !this->isGRL){
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent(); //skip event
-  } 
+  }
 
   //--- Quality cuts applied only on data
   if (!this->isMC) {
-    this->isLarGood = (eventInfo->errorState(xAOD::EventInfo::LAr)!=xAOD::EventInfo::Error);
-    this->isTileGood = (eventInfo->errorState(xAOD::EventInfo::Tile)!=xAOD::EventInfo::Error);
+    this->isLarGood = (eventInfo->errorState(xAOD::EventInfo::LAr) != xAOD::EventInfo::Error);
+    this->isTileGood = (eventInfo->errorState(xAOD::EventInfo::Tile) != xAOD::EventInfo::Error);
     this->isTileTrip = !tool_tileTrip->checkEvent(RunNumber,  lb,  EventNumber); //--- Does not depend on the definition of the objects.
-    this->isCoreFlag = (eventInfo->isEventFlagBitSet(xAOD::EventInfo::Core, 18));
+    this->isCoreFlag = !(eventInfo->eventFlags(xAOD::EventInfo::Core) & 0x40000);
   }
 
-  //fill cutflow
-  // if(this->isGRL){
-  //   h_presel_flow->Fill(0.5);
-  //   if(this->isTrigger){
-  //     h_presel_flow->Fill(1.5);
-  //     if(this->isVertexOk){
-  // 	h_presel_flow->Fill(2.5);
-  // 	if(this->isLarGood){
-  // 	  h_presel_flow->Fill(3.5);
-  // 	  if(this->isTileGood){
-  // 	    h_presel_flow->Fill(4.5);
-  // 	    if(this->isCoreFlag){
-  // 	      h_presel_flow->Fill(5.5);
-  // 	      if(!this->isBadID){
-  // 		h_presel_flow->Fill(6.5);
-  // 		if(!this->isFakeMet){
-  // 		  h_presel_flow->Fill(7.5);
-  // 		  if(this->isMetCleaned){
-  // 		    h_presel_flow->Fill(8.5);
-  // 		    if(!this->isTileTrip){
-  // 		      h_presel_flow->Fill(9.5);
-  // 		    }
-  // 		  }
-  // 		}
-  // 	      }
-  // 	    }
-  // 	  }
-  // 	}
-  //     }
-  //   }
-  // }
+  //--- Preselection flag
+  this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
+ 
 
-this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood && this->isTileGood && !this->isCoreFlag && this->isMetCleaned && !this->isTileTrip;
-
-
-  //skip event no-preselected events for smearing                                       
+  //---   preselection2 for QCD jet smearing data (GRL on data) [time saver]
   if ( this->isQCD  && (!this->passPreselectionCuts) ){ 
-    output->setFilterPassed(false);
+    //    output->setFilterPassed(false);
     return nextEvent();
   }
+
+  //--- add Trigger requirement to preselection (if not pseudo-data)
+  // if(this->isTrigger.size())
+  //   this->passPreselectionCuts &= this->isTrigger[0];
 
   //--- Non-collision background selection
   if ( this->isNCBG ){
     if ( ! isBeamHalo(RunNumber,EventNumber) ){
-      output->setFilterPassed(false);
       return nextEvent(); // select only events spotted by the beam halo tool
     }
-    Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
+    if(debug) Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
   }
 
+
+  //-- Retrieve objects Containers
+  const xAOD::MissingETContainer* cmet_truth;    
+  const xAOD::MissingET* mtruth_inv;
+  const xAOD::MissingET* mtruth_vis;
+  if(this->isMC){
+        
+    if(useTrueJets)    CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+    CHECK( m_event->retrieve( cmet_truth,   "MET_Truth") );//PROBLEM!!!!!!
+
+    mtruth_inv = (*cmet_truth)["Int"];
+    mtruth_vis = (*cmet_truth)["NonInt"];
+
+    sumET_truth     = (*cmet_truth)["Int"]->sumet()*0.001;
+    sumET_truth_vmu = (*cmet_truth)["NonInt"]->sumet()*0.001;
+  }
+  
+
+  // View container provides access to selected jets   (for MET recalculation and JetSmearing)
+  m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
+  m_smdJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
+
+  m_inv_el = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
+  m_inv_mu = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
+  m_inv_ph = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
+
+  // MET container (general)
+  xAOD::MissingETContainer* metRFC       = new xAOD::MissingETContainer;
+  xAOD::MissingETAuxContainer* metRFCAux = new xAOD::MissingETAuxContainer;
+  metRFC->setStore(metRFCAux);
+
   //--- Get Electrons
-  xAOD::ElectronContainer* electrons_sc(0);                                                                                       
-  xAOD::ShallowAuxContainer* electrons_scaux(0);                                                                              
-  CHECK( tool_st->GetElectrons(electrons_sc, electrons_scaux, false, El_PreselPtCut, El_PreselEtaCut ) ); //'baseline' decoration     
+  xAOD::ElectronContainer* electrons_sc(0);
+  xAOD::ShallowAuxContainer* electrons_scaux(0);
+  CHECK( tool_st->GetElectrons(electrons_sc, electrons_scaux, false, El_PreselPtCut, El_PreselEtaCut ) ); //'baseline' decoration
 
   for(const auto& el_itr : *electrons_sc){
 
-    //decorate electron with final pt requirements ('final')
-    elIsoArgs->_etcut = El_RecoPtCut;
-    tool_st->IsSignalElectronExp( (*el_itr), *elIsoArgs);
-    dec_final(*el_itr) = dec_signal(*el_itr);
+    //redefine iso decoration if needed
+    if(noElIso) dec_isol(*el_itr) = true;
 
     //decorate electron with baseline pt requirements ('signal')
-    elIsoArgs->_etcut = El_PreselPtCut;
-    tool_st->IsSignalElectronExp( (*el_itr), *elIsoArgs);
+    tool_st->IsSignalElectron( (*el_itr), El_PreselPtCut, El_d0sigcut, El_z0cut);
+    //tool_st->IsSignalElectron( (*el_itr));    
+    
+    //decorate electron with final pt requirements ('final')
+    if( (*el_itr).p4().Perp2() > El_RecoPtCut * El_RecoPtCut )
+      dec_final(*el_itr) = dec_signal(*el_itr);
+    
   }
 
-
   //--- Get Muons
-  xAOD::MuonContainer* muons_sc(0);                                                                                       
-  xAOD::ShallowAuxContainer* muons_scaux(0);                                                                              
-  CHECK( tool_st->GetMuons(muons_sc, muons_scaux, false, Mu_PreselPtCut, Mu_PreselEtaCut ) ); //'baseline' decoration     
-
-  for(const auto& mu_itr : *muons_sc){                                                                                    
-    if(debug){                             
-      cout << "AFTER FillMuon" << endl;
-      cout << "pt = " << (*mu_itr).pt() << endl;
-      cout << "eta = " << (*mu_itr).eta() << endl;
-      cout << "Quality = " << (*mu_itr).quality() << endl;
-      cout << "baseline = " << (int) dec_baseline(*mu_itr) << endl;
-      cout << "baseline = " << (int) (*mu_itr).auxdata< char >("baseline") << endl;
-      if( dec_baseline(*mu_itr) )
-	cout << "is baseline " << endl;
-    }
-
+  xAOD::MuonContainer* muons_sc(0);
+  xAOD::ShallowAuxContainer* muons_scaux(0);
+  CHECK( tool_st->GetMuons(muons_sc, muons_scaux, false, Mu_PreselPtCut, Mu_PreselEtaCut ) ); //'baseline' decoration
+  for(const auto& mu_itr : *muons_sc){
+        
+    //redefine iso decoration if needed
+    if(noMuIso) dec_isol(*mu_itr) = true;
 
     //decorate muon with final pt requirements ('final')
-    muIsoArgs->_ptcut = Mu_RecoPtCut;
-    tool_st->IsSignalMuonExp( *mu_itr, *muIsoArgs);  //'signal' decoration.
-    dec_final(*mu_itr) = dec_signal(*mu_itr);
+    tool_st->IsSignalMuon( *mu_itr, Mu_PreselPtCut, Mu_d0sigcut, Mu_z0cut);  //'signal' decoration.
+    //tool_st->IsSignalMuon( *mu_itr);  //'signal' decoration.
 
     //decorate muon with final pt requirements ('final')
-    muIsoArgs->_ptcut = Mu_PreselPtCut;
-    tool_st->IsSignalMuonExp( *mu_itr, *muIsoArgs);  //'signal' decoration.
+    if( (*mu_itr).p4().Perp2() > Mu_RecoPtCut * Mu_RecoPtCut )
+      dec_final(*mu_itr) = dec_signal(*mu_itr); 
 
-    if(debug)
-      if( dec_signal(*mu_itr) ) 
-	cout << "is signal " << endl;
   }
 
   //--- Get Photons
   xAOD::PhotonContainer* photons_sc(0);
   xAOD::ShallowAuxContainer* photons_scaux(0);
-  CHECK( tool_st->GetPhotons(photons_sc, photons_scaux, false, Ph_PreselPtCut, Ph_PreselEtaCut ) ); //'baseline' decoration                                            
-
-  for(const auto& ph_itr : *photons_sc){ 
-
-    //decorate photon with final pt requirements ('final')
-    //    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut, phIsoType);
-    tool_st->IsSignalPhoton( (*ph_itr), Ph_RecoPtCut);
-    dec_final(*ph_itr) = dec_signal(*ph_itr);
+  if (usePhotons){
+    CHECK( tool_st->GetPhotons(photons_sc, photons_scaux, false, Ph_PreselPtCut, Ph_PreselEtaCut ) ); //'baseline' decoration
     
-    //decorate photon with baseline pt requirements ('signal')
-    //    tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut, phIsoType);
-    tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
-  }
+    for(const auto& ph_itr : *photons_sc){ 
+      
+      //redefine iso decoration if needed
+      if(noPhIso) dec_isol(*ph_itr) = true;
+      
+      //decorate photon with baseline pt requirements ('signal')
+      tool_st->IsSignalPhoton( (*ph_itr), Ph_PreselPtCut);
+      //tool_st->IsSignalPhoton( (*ph_itr));    
+      
+      //decorate photon with final pt requirements ('final')
+      if( (*ph_itr).pt() > Ph_RecoPtCut )
+	dec_final(*ph_itr) = dec_signal(*ph_itr);
+      
+    }
+  }//usephotons
+
   
   //--- Get Jets
   std::vector<Particles::Jet> jetCandidates; //intermediate selection jets
-  
+
   xAOD::JetContainer* jets_sc(0);
   xAOD::ShallowAuxContainer* jets_scaux(0);
-  CHECK( tool_st->GetJets(jets_sc, jets_scaux, false, Jet_PreselPtCut, Jet_PreselEtaCut) ); //'baseline' and 'bad' decoration   . no eta cut for cleaning!
+  CHECK( tool_st->GetJets(jets_sc, jets_scaux) ); //'baseline' and 'bad' decoration
   
   xAOD::Jet jet;
-  for( const auto& jet_itr : *jets_sc){    
+  for( const auto& jet_itr : *jets_sc ){
     
-    dec_ptraw(*jet_itr) = (*jet_itr).pt();
+//#ifdef TILETEST
+//    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
+//      Error("loop()", "Failed to apply JetTileCorrection!");
+//#endif
 
-    TLorentzVector TruthJetdec=MatchTruthJet(*jet_itr);
-    dec_truthpt(*jet_itr)=TruthJetdec.Pt();
-    dec_trutheta(*jet_itr)=TruthJetdec.Eta();
-    dec_truthphi(*jet_itr)=TruthJetdec.Phi();
-    dec_truthe(*jet_itr)=TruthJetdec.E();
-
-#ifdef TILETEST
-    cout << "*** BEFORE TILE CORRECTION = " << (jet_itr)->pt() << endl;
-    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
-      Error("loop()", "Failed to apply JetTileCorrection!");
-    cout << "*** AFTER TILE CORRECTION = " << (jet_itr)->pt() << endl;
-#endif
-    
-    //** Bjet decoration
-    if (fabs((*jet_itr).eta()) < 2.5){
-      if(Jet_Tagger=="MV1")
-	tool_st->IsBJet( *jet_itr, true, Jet_TaggerOp.Atof() );  
-      else if(Jet_Tagger=="IP3DSV1")
-	tool_st->IsBJet( *jet_itr, false, Jet_TaggerOp.Atof() ); 
-    }
-
-   //dec_baseline(*jet_itr) &= (fabs((*jet_itr).eta()) < Jet_PreselEtaCut); //NEW . select only jets with |eta|<2.8 before OR for sbottom analysis. //SILVIA //CHECK_ME
+    //book jets for smearing method
+    if(dec_baseline(*jet_itr))
+      m_smdJets->push_back(jet_itr);
   }
 
   //--- Do overlap removal   
   if(doOR){
-    if(doORphotons)
+    if(doORphotons && usePhotons)
       CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
     else
       CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
   }
 
   // Apply the overlap removal to all objects (dumb example)
-  CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
+  if (usePhotons) CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
+  else CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, 0) );
+
   
   //-- Pre-book baseline electrons (after OR)
-  //std::vector<Particle> electronCandidates; //intermediate selection electrons
   bool IsElectron = false; // any good not-overlapping electron in the event?
   int iEl = -1;
   for(const auto& el_itr : *electrons_sc ){
 
     iEl++;
-
     if(! dec_baseline(*el_itr)) continue;
-      
+    
     //define preselected electron                
     Particle recoElectron;
     recoElectron.SetVector( getTLV( &(*el_itr) ));
-    
+
+/*    
     if (doCutFlow){
-      myfile << "baseline electron before OR: \n pt: " << recoElectron.Pt() << " \n eta: " << recoElectron.Eta() << " \n phi: " << recoElectron.Phi() << " \n";   
-      myfile << "passOR     : " << (((!doOR) || dec_passOR(*el_itr)) ? 1 : 0 ) << "\n";
-      myfile << "passSignal : " << (dec_signal(*el_itr) ? 1 : 0 ) << "\n"; //save signal muons (after OR and no-cosmic already)      
-    }
-
+      myfile << "baseline electron before OR: \n";      
+      myfile << "pt: " << recoElectron.Pt() << " \n";    
+      myfile << "eta: " << recoElectron.Eta() << " \n";          
+      myfile << "phi: " << recoElectron.Phi() << " \n"; 
+    }    
+    
+    */
     //TEST NEW OR tool
-    if(dec_passOR(*el_itr) && dec_failOR(*el_itr))
-      Info("loop()"," Electron passed STor but not ORtool");
-
-    //book not-overlapping electrons only
+    if(dec_passOR(*el_itr) && dec_failOR(*el_itr)) 
+      if(debug) Info("loop()"," Electron passed STor but not ORtool");
+    //book not-overlapping electrons
     if (! ((!doOR) || dec_passOR(*el_itr) )) continue;
 
     eb_N++;  //baseline electrons
+    
 
     recoElectron.index = iEl;
     recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
@@ -2298,34 +2699,44 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     recoElectron.ptcone30 = acc_ptcone30(*el_itr) * 0.001;
     recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
     
+    if(iso_1->accept(*el_itr)) recoElectron.isoGradientLoose = 1.0;
+    if(iso_2->accept(*el_itr)) recoElectron.isoLoose = 1.0;
+    if(iso_3->accept(*el_itr)) recoElectron.isoLooseTrackOnly = 1.0;
+    if(iso_4->accept(*el_itr)) recoElectron.isoGradient= 1.0;
+    if(iso_5->accept(*el_itr)) recoElectron.isoTight = 1.0;
+
+    (*el_itr).passSelection(recoElectron.isTight, "Tight");
     
     const xAOD::TrackParticle* track =  (*el_itr).trackParticle();
-    
     if (track){
-         
       const xAOD::Vertex* pv = tool_st->GetPrimVtx();
       double primvertex_z = pv ? pv->z() : 0;
-      recoElectron.d0_sig = fabs(track->d0()) /  Amg::error(track->definingParametersCovMatrix(),0);
+      recoElectron.d0_sig = fabs(track->d0()) / Amg::error(track->definingParametersCovMatrix(),0);
       recoElectron.z0 = track->z0() + track->vz() - primvertex_z;
-           
     }
-    
-    (*el_itr).passSelection(recoElectron.isTight, "Tight");
 
-    if(iso_1->accept(*el_itr)) recoElectron.isoTight = 1.0;
-    if(iso_2->accept(*el_itr)) recoElectron.isoGradient = 1.0;
-    if(iso_3->accept(*el_itr)) recoElectron.isoLoose = 1.0;
- 
-    recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-    recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
+    recoElectron.type   = xAOD::TruthHelpers::getParticleTruthType( *el_itr );
+    recoElectron.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *el_itr );
+    //trigger matching
+    std::vector<bool> el_trig_pass;
+    for(const auto& t : ElTriggers){
+      if(t.substr(0, 4) == "HLT_"){ 
+	std::string tsub = t.substr(4);
+	el_trig_pass.push_back( tool_trig_match_el->matchHLT( el_itr, tsub ));
+      }
+      else
+	el_trig_pass.push_back( false ); //only check for HLT items at the moment
+     
+      recoElectron.isTrigMatch |= el_trig_pass.back();
+    }
     
     //get electron scale factors
     if(this->isMC){
       //nominal
       recoElectron.SF = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF );
       
-      //reset back to requested systematic!
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
+      //+1 sys up
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
 	Error("loop()", "Cannot configure SUSYTools for default systematics");
       }
       if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
@@ -2341,14 +2752,19 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
       }
       recoElectron.SFd = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
-	
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
+      
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for default systematics");
       }
+      
+      eb_SF *= recoElectron.SF;
+      eb_SFu *= recoElectron.SFu;
+      eb_SFd *= recoElectron.SFd;
+     
     }
     
     //save signal electrons
-    if( dec_final(*el_itr) ){
+    if( dec_signal(*el_itr) ){
       recoElectrons.push_back(recoElectron);
       e_N++;
       IsElectron=true;
@@ -2361,77 +2777,62 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     else{
       electronCandidates.push_back(recoElectron);
     }
-      
+
   }//electron loop
 
-  
   //sort the electrons in Pt
-  if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end());   //non-signal electrons
-  if (recoElectrons.size()>0)      std::sort(recoElectrons.begin(), recoElectrons.end());             //signal electrons
+  if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end()); //non-signal electrons
+  if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end()); //signal electrons
 
-  
-  //Signal muons map
-  lepmap = {};
-  lepmap[::LepSig::Base] = 0;
 
   //-- Pre-book baseline muons (after OR)
-  //  std::vector<Particle> muonCandidates; //intermediate selection muons
   bool IsMuon = false; // any good not-overlapping muon in the event?
   int iMu=-1;
+  auto nCosmicMuons = 0;
+  auto nBadMuons = 0;  
   for(const auto& mu_itr : *muons_sc){
 
     iMu++;  //to keep in sync even if we continue below
-    
-    if(debug)
-      cout << "Muon pre-sel\n pt = " << (*mu_itr).pt() << endl;
-    
+
     if(isStopTL){
       dec_baseline(*mu_itr) &= ((*mu_itr).muonType() == xAOD::Muon::Combined || (*mu_itr).muonType() == xAOD::Muon::SegmentTagged); //for Sbottom as well?
       dec_signal(*mu_itr)   &= dec_baseline(*mu_itr); //update signal decoration too!
       dec_final(*mu_itr )   &= dec_baseline(*mu_itr); //update final decoration too!
     }
 
-
-    if(debug && dec_baseline(*mu_itr)) 	cout << "Muon baseline " << endl; 
-
     if(! dec_baseline(*mu_itr) ) continue; //keep baseline objects only
 
+    tool_st->IsCosmicMuon( *mu_itr );  //'cosmic'   decoration  //now after overlap removal!
 
+    this->isCosmic |= dec_cosmic(*mu_itr); //check if at least one cosmic in the event
+    
     bool muonok=true;
     if(tool_st->IsBadMuon( *mu_itr )){ //any bad muon before OR? 
       nBadMuons+=1;     
       muonok=false;
     }
 
-    if(debug){
-      cout << "Muon bad = " << muonok << endl;
-      cout << "Muon passor = " << dec_passOR(*mu_itr) << endl;    
-    }
-
-
     Particle recoMuon;
     recoMuon.SetVector( getTLV( &(*mu_itr) ));	
-
+/*    
     if (doCutFlow){
       myfile << "baseline muon before OR: \n pt: " << recoMuon.Pt() << " \n eta: " << recoMuon.Eta() << 
       myfile << "passOR     : " << (((!doOR) || dec_passOR(*mu_itr)) ? 1 : 0 ) << "\n";
       myfile << "passSignal : " << (dec_signal(*mu_itr) ? 1 : 0 ) << "\n"; //save signal muons (after OR and no-cosmic already)      
     }
-
+*/
     if(doOR && !dec_passOR(*mu_itr)) continue; //pass OR    
 
     if(tool_st->IsCosmicMuon( *mu_itr )){  //'cosmic' decoration
       nCosmicMuons+=1;  
       muonok=false;
     }
-    if(debug)       cout << "Muon cosmic = " << muonok << endl;
-
+    
     if(!muonok) continue;
 
-    //save number of baseline muons
-    lepmap[::LepSig::Base]++;   //under-development...
     mb_N++;
-    
+   
+
     recoMuon.index = iMu;
     recoMuon.ptcone20 = acc_ptcone20(*mu_itr) * 0.001;
     recoMuon.etcone20 = acc_etcone20(*mu_itr) * 0.001;
@@ -2448,20 +2849,35 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     recoMuon.charge   = (float) (*mu_itr).charge();
     //(float)input.primaryTrackParticle()->charge()  in SUSYTools.  //same thing!
 
-    if(iso_1->accept(*mu_itr)) recoMuon.isoTight = 1.0;
-    if(iso_2->accept(*mu_itr)) recoMuon.isoGradient = 1.0;
-    if(iso_3->accept(*mu_itr)) recoMuon.isoLoose = 1.0;
+    if(iso_1->accept(*mu_itr)) recoMuon.isoGradientLoose = 1.0;
+    if(iso_2->accept(*mu_itr)) recoMuon.isoLoose = 1.0;
+    if(iso_3->accept(*mu_itr)) recoMuon.isoLooseTrackOnly = 1.0;
+    if(iso_4->accept(*mu_itr)) recoMuon.isoGradient= 1.0;
+    if(iso_5->accept(*mu_itr)) recoMuon.isoTight = 1.0;
+
+    recoMuon.type   = xAOD::TruthHelpers::getParticleTruthType( *mu_itr );
+    recoMuon.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *mu_itr );
     
-    recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( mu_itr );
-    recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( mu_itr );
-    
+    //trigger matching
+    std::vector<bool> mu_trig_pass;
+    for(const auto& t : MuTriggers){
+      if(t.substr(0, 4) == "HLT_"){ 
+	std::string tsub = t;
+	mu_trig_pass.push_back( tool_trig_match_mu->match( mu_itr, tsub ));
+      }
+      else
+	mu_trig_pass.push_back( false ); //only check for HLT items at the moment
+     
+      recoMuon.isTrigMatch |= mu_trig_pass.back();
+    }
+
     //get muon scale factors
     if(this->isMC){
       //nominal 
       recoMuon.SF = tool_st->GetSignalMuonSF(*mu_itr);
       
       //+1 sys up
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
 	Error("loop()", "Cannot configure SUSYTools for default systematics");
       }
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
@@ -2470,7 +2886,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       recoMuon.SFu = tool_st->GetSignalMuonSF(*mu_itr);
       
       //+1 sys down
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
 	Error("loop()", "Cannot configure SUSYTools for default systematics");
       }
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
@@ -2478,14 +2894,18 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       }
       recoMuon.SFd = tool_st->GetSignalMuonSF(*mu_itr);
       
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
 	Error("loop()", "Cannot configure SUSYTools for default systematics");
       }
+   
+      mb_SF *= recoMuon.SF;
+      mb_SFu *= recoMuon.SFu;
+      mb_SFd *= recoMuon.SFd;
+   
     }
     
-    
     //save signal muons
-    if( dec_final(*mu_itr) ){ 
+    if( dec_signal(*mu_itr) ){ 
       recoMuons.push_back(recoMuon);
       m_N++;
       IsMuon = true;
@@ -2498,126 +2918,202 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     else{
       muonCandidates.push_back(recoMuon);
     }
-    
+
   }//muon loop
-    
+  
   //sort the muon candidates in Pt
-  if (muonCandidates.size()>0) std::sort(muonCandidates.begin(), muonCandidates.end());      //not signal muons!
-  if (recoMuons.size()>0)      std::sort(recoMuons.begin(), recoMuons.end());                //signal muons!
+  if (muonCandidates.size()>0) std::sort(muonCandidates.begin(), muonCandidates.end());
+  if (recoMuons.size()>0) std::sort(recoMuons.begin(), recoMuons.end());
 
   this->isCosmic  = (nCosmicMuons>0);
   this->isBadMuon = (nBadMuons>0);
 
-  
+
   //-- Pre-book baseline photons (after OR)
   std::vector<Particle> photonCandidates; //intermediate selection photons
   int iPh = 0;
   ph_N=0; //signal photons
-  for(const auto& ph_itr : *photons_sc){
-    if( dec_baseline(*ph_itr) &&
-	((!doOR) || (!doORphotons) || dec_passOR(*ph_itr))){
-      
-      //define preselected photon                
-      Particle recoPhoton;
-      recoPhoton.SetVector( getTLV( &(*ph_itr) ));
-      if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
-      if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
-
-      recoPhoton.index = iPh;
-      recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
-      recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
-      recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
-      recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
-      (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
-
-      recoPhoton.type   = xAOD::EgammaHelpers::getParticleTruthType( ph_itr );
-      recoPhoton.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( ph_itr );
-
-      //get photon scale factors
-      if(this->isMC){
-	//nominal
-	recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
-
-	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
-	  Error("loop()", "Cannot configure SUSYTools for default systematics");
+  if (usePhotons){
+    for(const auto& ph_itr : *photons_sc ){
+      if( dec_baseline(*ph_itr) &&
+	  ((!doOR) || (!doORphotons) || dec_passOR(*ph_itr))){
+	
+	//define preselected photon                
+	Particle recoPhoton;
+	recoPhoton.SetVector( getTLV( &(*ph_itr) ));
+	if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
+	if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
+	
+	recoPhoton.id = iPh;
+	recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
+	recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
+	recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
+	recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
+	(*ph_itr).passSelection(recoPhoton.isTight, "Tight");
+	
+	if(iso_1->accept(*ph_itr)) recoPhoton.isoCone20 = 1.0;
+	if(iso_2->accept(*ph_itr)) recoPhoton.isoCone40CaloOnly = 1.0;
+	if(iso_3->accept(*ph_itr)) recoPhoton.isoCone40= 1.0;
+	
+	
+	recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
+	recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
+	
+	//trigger matching
+	std::vector<bool> ph_trig_pass;
+	for(const auto& t : PhTriggers){
+	  if(t.substr(0, 4) == "HLT_"){ 
+	    std::string tsub = t.substr(4);
+	    ph_trig_pass.push_back( tool_trig_match_ph->matchHLT( ph_itr, tsub ));
+	  }
+	  else
+	    ph_trig_pass.push_back( false ); //only check for HLT items at the moment
+	  
+	  recoPhoton.isTrigMatch |= ph_trig_pass.back();
 	}
-	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
-	}
-	recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-
-	//+1 sys down
-	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
-	  Error("loop()", "Cannot configure SUSYTools for default systematics");
-	}
-	if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	  Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
-	}
-	recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-
-	if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
-	  Error("loop()", "Cannot configure SUSYTools for default systematics");
-	}
-      }
-
-      photonCandidates.push_back(recoPhoton);
-
-      //save signal photons
-      if( dec_final(*ph_itr) ){
-	recoPhotons.push_back(recoPhoton);
-	ph_N++;
+	//get photon scale factors
 	if(this->isMC){
-	  ph_SF  *= recoPhoton.SF;
-	  ph_SFu *= recoPhoton.SFu;
-	  ph_SFd *= recoPhoton.SFd;
+	  //nominal
+	  recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
+	  
+	  //+1 sys up
+	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	    Error("loop()", "Cannot configure SUSYTools for default systematics");
+	  }
+	  if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	    Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
+	  }
+	  recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+	  
+	  //+1 sys down
+	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	    Error("loop()", "Cannot configure SUSYTools for default systematics");
+	  }
+	  if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	    Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
+	  }
+	  recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+	  
+	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	    Error("loop()", "Cannot configure SUSYTools for default systematics");
+	  }
 	}
-      }
-
-      iPh++;
-    }//if baseline 
-  }//electron loop
-
-  //sort the photons in Pt
-  if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
-  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+	
+	photonCandidates.push_back(recoPhoton);
+	
+	//save signal electrons
+	if( dec_signal(*ph_itr) ){
+	  recoPhotons.push_back(recoPhoton);
+	  ph_N++;
+	  if(this->isMC){
+	    ph_SF *= recoPhoton.SF;
+	    ph_SFu *= recoPhoton.SFu;
+	    ph_SFd *= recoPhoton.SFd;
+	  }
+	}
+	
+	iPh++;
+      }//if baseline 
+    }//photon loop
+    
+    //sort the photons in Pt
+    if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
+    if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+  }//usephotons
 
   //-- pre-book good jets now (after OR)
   auto jet_itr = jets_sc->begin();
   auto jet_end = jets_sc->end();
   Particles::Jet recoJet;
   int iJet = 0;
-  for( ; jet_itr != jet_end; ++jet_itr ){   
-	
+  for( ; jet_itr != jet_end; ++jet_itr ){
+    
     if( doOR && !dec_passOR(**jet_itr) ) continue;
+
+    bool isbadjet = tool_st->IsBadJet( **jet_itr, Jet_RecoJVTCut); // Change preselEta to recoEta    
+    bool isgoodjet = tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut); // Change preselEta to recoEta
+
+    //** Bjet decoration  
+    tool_st->IsBJet( **jet_itr );  //rel20 0.77 eff value from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks#MV2c20_tagger_antikt4topoem_jets
 
     //flag event if bad jet is found
     this->isBadID |= dec_badjet(**jet_itr);
 
-    if( dec_badjet(**jet_itr) ) continue; //just book good jets!
+    if(isStopTL) {
+      if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue; 
+    }
 
-    if( !dec_baseline(**jet_itr)) continue;
-
-    if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue;
+    if( !isgoodjet ) continue; //just book good jets!
 
     m_goodJets->push_back (*jet_itr);
 
-    
     recoJet.SetVector( getTLV( &(**jet_itr) ) );
-    recoJet.index = iJet;
-   
+    recoJet.id = iJet;
+
+    TLorentzVector p4c;
+    p4c.SetPtEtaPhiE( (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).pt()*0.001,
+		      (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).eta(),
+		      (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).phi(),
+		      (*jet_itr)->jetP4(xAOD::JetConstitScaleMomentum).e()*0.001 );
+    recoJet.p4const = p4c;
+
     //--- Flavor-tagging    
-    //from SUSYTools (based on MV1 (70%) at the moment!)
+    //from SUSYTools 
     recoJet.isbjet = dec_bjet(**jet_itr);
 
-    int local_truth_flavor=0;         //for bjets ID
-    if ( this->isMC )
-      local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID");
-    //local_truth_flavor = (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
+    if(isMC){
+      tool_btag_truth1->setRandomSeed(int( 1e5 + 5000 * fabs((*jet_itr)->eta()))); //set a unique seed for each jet                                                             
+      tool_btag_truth2->setRandomSeed(int( 1e5 + 5000 * fabs((*jet_itr)->eta())));
+      tool_btag_truth3->setRandomSeed(int( 1e5 + 5000 * fabs((*jet_itr)->eta())));
 
+      recoJet.isbjet_t70 = tool_btag_truth1->performTruthTagging(*jet_itr);
+      recoJet.isbjet_t77 = tool_btag_truth2->performTruthTagging(*jet_itr);
+      recoJet.isbjet_t80 = tool_btag_truth3->performTruthTagging(*jet_itr);
+    }
+
+    //new flat b-tagging eff
+    recoJet.isbjet_fb70 = tool_bsel70->accept(*jet_itr);
+    recoJet.isbjet_fb77 = tool_bsel77->accept(*jet_itr);
+    recoJet.isbjet_fb85 = tool_bsel85->accept(*jet_itr);
+
+    int local_truth_flavor=0;         //for bjets ID
+    if ( this->isMC ){
+      try{
+	local_truth_flavor = (*jet_itr)->getAttribute<int>("PartonTruthLabelID"); 
+      }
+      catch(...){
+	try{
+	  local_truth_flavor = (*jet_itr)->getAttribute<int>("TruthLabelID"); 
+	}
+	catch(...){
+	  // try{
+	  //   local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
+	  // }
+	  // catch(...){ //else 
+	    Warning("loop()","Impossible to get truth label ID. (Set to 0)");
+	    local_truth_flavor = 0;
+	    //	  }
+	}
+      }
+    }
+      
+    //local_truth_flavor = (*jet_itr)->getAttribute<int>("PartonTruthLabelID");
+    //      local_truth_flavor = (*jet_itr)->getAttribute(xAOD::JetAttribute::JetLabel, local_truth_flavor); //CHECK_ME //zero always . To be fixed in the future?
+    //   local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
+    // }    
+  
     const xAOD::BTagging* btag =(*jet_itr)->btagging();
     recoJet.MV1 = btag->MV1_discriminant(); 
+    double wmv2=-1;
+    if ( !btag->MVx_discriminant("MV2c20", wmv2)) {
+      Error(APP_NAME, "Failed to retrieve MV2c20 weight!");
+    }
+    else{
+      recoJet.MV2c20 = wmv2;
+    }
+    
     recoJet.SV1plusIP3D = btag->SV1plusIP3D_discriminant();
-
+    
     recoJet.IP3D_pb = btag->IP3D_pb(); 
     // recoJet.IP3D_pc = btag->IP3D_pc();    //IP3D_pc not in p187*
     // recoJet.IP3D_pu = btag->IP3D_pu(); 
@@ -2627,24 +3123,23 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     // recoJet.SV1_pu = btag->SV1_pu(); 
 
     recoJet.FlavorTruth = local_truth_flavor;
-    recoJet.bTagOPw = Jet_TaggerOp.Atof();
+    recoJet.bTagOPw = Jet_TaggerOp77.Atof();
+
     
+
     //--- Get some other jet attributes
     std::vector<float> sumpttrk_vec;                                                   
-    (*jet_itr)->getAttribute(xAOD::JetAttribute::SumPtTrkPt500, sumpttrk_vec); //SumPtTrkPt1000? //CHECK_ME                                                                     
+    (*jet_itr)->getAttribute(xAOD::JetAttribute::SumPtTrkPt500, sumpttrk_vec); //SumPtTrkPt1000? //CHECK_ME                      
+
     recoJet.sumPtTrk = ( sumpttrk_vec.size() ? sumpttrk_vec[0]*0.001 : 0.); // assume the 0th vertex is the primary one (in GeV)
-        
+    recoJet.chf = recoJet.sumPtTrk/recoJet.Pt(); 
+    
     std::vector<int> ntrk_vec;
     (*jet_itr)->getAttribute(xAOD::JetAttribute::NumTrkPt500, ntrk_vec); //NumTrkPt1000? CHECK_ME
     recoJet.nTrk = (ntrk_vec.size() ? ntrk_vec[0] : 0); // assume the 0th vertex is the primary one (in GeV)
-    recoJet.chf  = recoJet.sumPtTrk/recoJet.Pt(); 
-
-    //JVF
-    float jvfsum = 0;
-    std::vector<float> v_jvf = (*jet_itr)->getAttribute< std::vector<float> >(xAOD::JetAttribute::JVF);
-    for(unsigned int ii=0; ii < v_jvf.size()-1; ++ii)
-      jvfsum += v_jvf[ii];
-    recoJet.jvtxf = (v_jvf.size() ? v_jvf[0] : 0.);
+    
+    //JVT
+    recoJet.jvt = acc_jvt(**jet_itr);
 
     (*jet_itr)->getAttribute(xAOD::JetAttribute::EMFrac, recoJet.emf);
     (*jet_itr)->getAttribute(xAOD::JetAttribute::Timing, recoJet.time);
@@ -2657,22 +3152,43 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
     recoJet.Pt_up = recoJet.Pt();
     recoJet.Pt_down = recoJet.Pt();
+    
+    if(dumpTile){
 
-    recoJet.ptraw = dec_ptraw(**jet_itr);
+      //TopoClusters constituents 
+      xAOD::JetConstituentVector vec = (*jet_itr)->getConstituents();                                                                                                                                                                                                   
+      xAOD::JetConstituentVector::iterator it = vec.begin();                                                                                                                                                                                                           
+      xAOD::JetConstituentVector::iterator itE = vec.end();                                                                                                                                                                                                        
+      for( ; it != itE; it++){                                               
+	Cluster cl;
+	cl.SetVector( getTLV( &(**it) ) );
+                                                                                                                                                                                           
+	double eEM0 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(0);                                                                                                                                                      
+	double eEM1 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(1);                                                                                                                                                           
+	double eEM2 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(2);                                                                                                                                                           
+	double eEM3 = static_cast<const xAOD::CaloCluster*>((*it)->rawConstituent())->energyBE(3);                                                                                                                                                           
 
-    TLorentzVector Truth;
-    Truth.SetPtEtaPhiE(dec_truthpt(**jet_itr),dec_trutheta(**jet_itr),dec_truthphi(**jet_itr),dec_truthe(**jet_itr));
-    recoJet.TruthJet = Truth;
+	cl.emf = ((*it)->pt()>0. ? (eEM0+eEM1+eEM2+eEM3)/(*it)->e() : 0.);
+	recoJet.clusters.push_back(cl);
+      }
+    }
+
+    //** ANDREA
+    //    recoJet.ptraw = dec_ptraw(**jet_itr);
+    //
+    // TLorentzVector Truth;
+    // Truth.SetPtEtaPhiE(dec_truthpt(**jet_itr),dec_trutheta(**jet_itr),dec_truthphi(**jet_itr),dec_truthe(**jet_itr));
+    // recoJet.TruthJet = Truth;
 
     jetCandidates.push_back(recoJet);
-    
+/*    
     if (doCutFlow){
       myfile << "baseline jet after OR: \n";      
       myfile << "pt: " <<  recoJet.Pt() << " \n"; 
       myfile << "eta: " << recoJet.Eta() << " \n";          
       myfile << "phi: " << recoJet.Phi() << " \n"; 
     }    
-
+*/
     if(this->printJet){
       std::cout << "Jet " << iJet << ":" << endl;
       recoJet.PrintInfo();
@@ -2681,31 +3197,28 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     iJet++;
 
   }  //jet loop
-  
-  if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
-  
+ // if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
+    
   //sort the jet candidates in Pt
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
-    
+
   //--- Jet cleaning
   //  Reject events with at least one looser bad jet.
   //  *after lepton overlap removal*
-  //  from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
+  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SusyObjectDefinitionsr178TeV
   this->passPreselectionCuts &= (!this->isBadID);
-    
+  
 
   //--- Get truth electrons 
   if ( this->isMC && !this->isSignal ){
 
     //truth particles loop
-    truthP_itr = m_truthP->begin();
-    truthP_end = m_truthP->end();
-    for( ; truthP_itr != truthP_end; ++truthP_itr ) {
+    for(const xAOD::TruthParticle* tp : *m_truthP) {
       
-      if( !isStable( *truthP_itr ) || !isElectron(*truthP_itr) ) continue;  //->isElectron() ? 
-
+      if( !isStable(tp) || !isElectron(tp) ) continue;  //->isElectron() ? 
+      
       Particle electron;
-      electron.SetVector( getTLV( *truthP_itr ) ); 
+      electron.SetVector( getTLV(tp) ); 
       truthElectrons.push_back(electron);
 
     }
@@ -2714,7 +3227,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   } 
   //--- Get Tracks
   if(tVeto_Enable)
-    doTrackVeto(electronCandidates, muonCandidates);  //NEEDS UPDATE!!
+    doTrackVeto(electronCandidates, muonCandidates);
 
 
   //--- Print some info if requested!   
@@ -2730,31 +3243,23 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   }
 
   //Get truth jets vectors
-  std::vector<TLorentzVector> truthJetsJVF;
-  if(isMC){
-    xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
-    xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
-    
-    //loop over truth jets & save 'high-pt' jets for later use 
-    n_tjets=0;
-    truth_pt1=0.;
-    for( ; tjet_itr != tjet_end; ++tjet_itr ) {
-      if ( (*tjet_itr)->pt()/1000.0 > truth_pt1 ){
-	truth_pt1 = (*tjet_itr)->pt()/1000.0;
-	truth_eta1 = (*tjet_itr)->eta();
-      }
-      if ( (*tjet_itr)->pt() < 10000. ) continue;
-      
-      if ( (*tjet_itr)->pt() > 20000. )
-	n_tjets++;
-      if ((*tjet_itr)->pt() > 50000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets50++;
-      if ((*tjet_itr)->pt() > 40000. && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets40++;
-      if ((*tjet_itr)->pt() > Jet_RecoPtCut && fabs((*tjet_itr)->eta()) < Jet_RecoEtaCut ) truth_n_jets++;
+  if(isMC && useTrueJets){
 
-      TLorentzVector truthJet;
-      truthJet.SetPtEtaPhiE( ( *tjet_itr )->pt()*0.001, ( *tjet_itr )->eta(), ( *tjet_itr )->phi(), ( *tjet_itr )->e()*0.001 ); 
-      
-      truthJetsJVF.push_back( truthJet );
+    //loop over truth jets & save 'high-pt' jets for later use 
+    jb_truth_N=0;
+    j_truth_pt1=0.;
+    for(const xAOD::Jet* tj : *m_truth_jets) {    
+
+      if ( tj->pt()/1000.0 > j_truth_pt1 ){
+	j_truth_pt1 = tj->pt()/1000.0;
+	j_truth_eta1 = tj->eta();
+      }
+      if ( tj->pt() < 10000. ) continue;
+     
+      if ( tj->pt() > 20000. )
+	jb_truth_N++;
+      if ( tj->pt() > 50000. && fabs(tj->eta()) < Jet_RecoEtaCut ) j_truth_N++;
+
     }
   }
   
@@ -2764,54 +3269,60 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   std::vector<float> calibJets_MV1;
   std::vector<int> calibJets_flavor;
 
+  int bjet_counter_70fc=0;
+  int bjet_counter_77fc=0;
+  int bjet_counter_85fc=0;
+  
   int bjet_counter=0;
-  int bjet_counter_80eff=0;
 
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
 
-    if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue;
-    if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue;
-
-    //--- jvf cut   //CHECK_ME
-    if (jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta()) < 2.4) {
-
-      float jvfCut = 0.5;
-      
-      if(isMC){
-	bool isPileUp = tool_jvf->isPileUpJet(jetCandidates.at(iJet).GetVector(), truthJetsJVF);
-	//--- Check if the RecoJet is a muon. If so, isPileUp=false !
-	if (isPileUp && (syst_JVF==JvfUncErr::JvfUncHigh || syst_JVF==JvfUncErr::JvfUncLow) ){
-	  TLorentzVector truthMuon(0, 0, 0, 0);
-	  truthP_itr = m_truthP->begin();
-	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	    
-	    if ( ! isHard( (*truthP_itr) ) ) continue; //CHECK_ME
-	    if ( ! isMuon( (*truthP_itr) ) ) continue;
-	    fillTLV(truthMuon, (*truthP_itr));
-	    if ( truthMuon.DeltaR(jetCandidates.at(iJet))<0.2 ) {
-	      isPileUp = false;
-	      break;
+    //if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
+    //if ( fabs(jetCandidates.at(iJet).Eta()) > Jet_RecoEtaCut ) continue; // comment
+    
+    //if ( jetCandidates.at(iJet).isBTagged_70eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 )
+    if ( jetCandidates.at(iJet).isBTagged_70fc(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 )   
+      bjet_counter_70fc++;        
+    if ( jetCandidates.at(iJet).isBTagged_77fc(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
+      bjet_counter_77fc++;
+    if ( jetCandidates.at(iJet).isBTagged_85fc(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
+      bjet_counter_85fc++;	
+    
+    if( jetCandidates.at(iJet).isbjet_t70  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt70++;
+    if( jetCandidates.at(iJet).isbjet_t77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt77++;
+    if( jetCandidates.at(iJet).isbjet_t80  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nt80++;
+    
+    if( jetCandidates.at(iJet).isbjet_fb70  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf70++;
+    //if( jetCandidates.at(iJet).isbjet_fb77  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf77++;
+    if( jetCandidates.at(iJet).isbjet_fb85  && fabs(jetCandidates.at(iJet).Eta())<2.5) bj_Nf85++;    
+    
+    if( jetCandidates.at(iJet).isbjet && fabs(jetCandidates.at(iJet).Eta())<2.5) 
+      bjet_counter++;
+    
+    //recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
+    
+    //count high pt jet multiplicity
+    if(jetCandidates.at(iJet).Pt()>30.){
+      j_N30++;
+      if(jetCandidates.at(iJet).Pt()>40.){
+	j_N40++;
+	if(jetCandidates.at(iJet).Pt()>50.){
+	  j_N50++; 
+	  if(jetCandidates.at(iJet).Pt()>60.){
+	    j_N60++;
+	    if(jetCandidates.at(iJet).Pt()>80.){
+	      j_N80++;
 	    }
 	  }
 	}
-	
-	if (syst_JVF==JvfUncErr::JvfUncHigh) jvfCut = tool_jvf->getJVFcut(0.5, isPileUp, jetCandidates.at(iJet).Pt(), jetCandidates.at(iJet).Eta(), true );
-	else if (syst_JVF==JvfUncErr::JvfUncLow) jvfCut = tool_jvf->getJVFcut(0.5, isPileUp, jetCandidates.at(iJet).Pt(), jetCandidates.at(iJet).Eta(), false );
       }
-      
-      // if ( jetCandidates.at(iJet).jvtxf < jvfCut) {  //MARTIN PUT THIS BACK!!
-      // 	JVF_min = false;
-      // 	continue;          
-      // }
     }
-
-    if ( jetCandidates.at(iJet).isBTagged(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5) 
-      bjet_counter++;
-    if ( jetCandidates.at(iJet).isBTagged_80eff(Jet_Tagger.Data()) && fabs(jetCandidates.at(iJet).Eta())<2.5 ) 
-      bjet_counter_80eff++;	
     
+    if (isStopTL){
+      if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
+    }
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
-    
+/*    
     if (doCutFlow){
       myfile << "signal jet: \n";      
       myfile << "pt: "  << jetCandidates.at(iJet).Pt() << " \n"; 
@@ -2819,9 +3330,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       myfile << "phi: " << jetCandidates.at(iJet).Phi() << " \n"; 
     } 
 
-    // //Save jet candidates for razor 
-    // VectorJets_Razor.push_back(JetCandidates.at(iJet).GetVector());
-    
+*/
     calibJets_pt.push_back(jetCandidates.at(iJet).Pt()*1000.);
     calibJets_eta.push_back( BtagEta( jetCandidates.at(iJet).Eta() ) ); //eta to be defined in [-2.5,2.5]
     calibJets_MV1.push_back(jetCandidates.at(iJet).MV1);
@@ -2829,48 +3338,29 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 
   }//end of jets loop
 
-  n_jets = recoJets.size();
+  j_N  = recoJets.size();
+  bj_N = bjet_counter;
+  bj_N_77fc = bjet_counter_77fc; 
+  bj_N_85fc = bjet_counter_85fc; 
+  bj_N_70fc = bjet_counter_70fc;   
   
-  if (doCutFlow) myfile << "n of signal jets: " << n_jets << " \n"; 
-
-
-  //check for higher pt jet multiplicity
-  for (unsigned int ij=0; ij<recoJets.size(); ij++){
-    
-    if(recoJets.at(ij).Pt()>40.){
-      n_jets40++;
-      if(recoJets.at(ij).Pt()>50.){
-        n_jets50++;
-        if(recoJets.at(ij).Pt()>60.){
-	  n_jets60++;
-	  if(recoJets.at(ij).Pt()>80.){
-	    n_jets80++;
-	  }
-        }
-      }
-    }
-  }
-
-  n_bjets = bjet_counter; 
-  n_bjets_80eff = bjet_counter_80eff; 
-  
-  if (doCutFlow) myfile << "n of signal b-jets: " << n_bjets << " \n"; 
+  //if (doCutFlow) myfile << "n of signal jets: " << j_N << " \n"; 
+  //if (doCutFlow) myfile << "n of signal b-jets: " << bj_N << " \n"; 
 
   //** btagging weights
-  // if(isMC){
-  //btag_weight_total = GetBtagSF(m_goodJets, tool_btag); 
-  //btag_weight_total_80eff = GetBtagSF(m_goodJets, tool_btag2);
-   
-  //}
+  if(isMC){
+    btag_weight_total_70fc       = GetBtagSF(m_goodJets, tool_btag70, -0.0436);   
+    btag_weight_total_77fc       = GetBtagSF(m_goodJets, tool_btag77, -0.4434);
+    btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85, -0.7887); //CHECK! not to trust for now
+  }
   
   //the list of jets to smear for qcd are not the jet-candidates!
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
     if ( jetCandidates.at(iJet).Pt() < QCD_JetsPtPreselection/1000.0/*20.*/ ) continue;
     if ( fabs(jetCandidates.at(iJet).Eta()) > QCD_JetsEtaSelection/*2.8*/ ) continue;
-    if ( jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta())<2.4 && jetCandidates.at(iJet).jvtxf < 0.5) continue;
+    if ( jetCandidates.at(iJet).Pt() < 50. && fabs(jetCandidates.at(iJet).Eta())<2.4 && jetCandidates.at(iJet).jvf < 0.5) continue;
     seedJets.push_back( jetCandidates.at(iJet) );
   }
-
 
   //--- Get MET
   // For the moment only the official flavors are available.
@@ -2880,23 +3370,23 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   const xAOD::MissingETContainer* cmet_lhtopo;
   const xAOD::MissingETContainer* cmet_track;
 
+  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4EMTopo") ); 
+  //  CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4LCTopo") ); //??
+  const xAOD::MissingET* mrf    = (*cmet_reffinal)["FinalClus"];
 
-  //  CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") );   //not in p1872?
-  //  CHECK( m_event->retrieve( cmet_track, "MET_Track") );         //not in p1872?
-  if(isDerived()){
-    CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinalFix") );
-    CHECK( m_event->retrieve( cmet_track, "MET_TrackFix") );       
-  }
-  else{ 
-    CHECK( m_event->retrieve( cmet_reffinal, "MET_RefFinal") );
-    CHECK( m_event->retrieve( cmet_track, "MET_Track") );        
-  }
+  const xAOD::MissingET* mtopo(0);
+  const xAOD::MissingET* mtrack(0);
 
-  const xAOD::MissingET* mrf    = (*cmet_reffinal)["Final"];
-  //const xAOD::MissingET* mtopo  = (*cmet_lhtopo)["LocHadTopo"];   //not in p1872?
-  const xAOD::MissingET* mtrack = (*cmet_track)["PVTrack"];       //not in p1872?
-  //const xAOD::MissingET* mtrack = (*cmet_track)["Track"];
+  if(!m_isderived){
+    CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") ); //not in MC15??
+    mtopo  = (*cmet_lhtopo)["LocHadTopo"];
+                  
 
+    CHECK( m_event->retrieve( cmet_track, "MET_Track") );
+    mtrack = (*cmet_track)["PVTrack_vx0"];
+    // mtrack = (*cmet_track)["Track"];
+  }                 
+         
   //** Met components
   //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
 
@@ -2911,71 +3401,48 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 			 muons_sc,
 			 0,
 			 0,
-			 false));
+			 false,  //calo ST
+			 true)); //JVT
   TVector2 v_met_ST_vmu = getMET( metRFC, "Final");
   met_obj.SetVector(v_met_ST_vmu,"met_vmu");  //- Copy met vector to the met data member
   sumET_cst_vmu = (*metRFC)["Final"]->sumet()*0.001;
 
-  // soft terms:
-  soft_met_cst = (*metRFC)["SoftClus"]->met()*0.001;
+  //Calo soft terms
+  met_cst = (*metRFC)["SoftClus"]->met()*0.001;
 
-  // //--NEW CHECK------------------------
-  // // Create new jet container and its auxiliary store for MET recalculation
-  // xAOD::JetContainer* jetsForMET = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
-  // xAOD::JetAuxContainer* jetsForMETAux = 0; 
-  // jetsForMET->setStore( jetsForMETAux ); //< Connect the two
+  //(OLD WAY)
+  //  TVector2 v_met_ST_vmu_MU = getMET( metRFC, "Muons"); //Muon visible Term
+  //  float sumEt_cst_muons    = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt 
+  //
+  //  TVector2 v_met_ST = v_met_ST_vmu;
+  //  v_met_ST -= v_met_ST_vmu_MU; //subtract muon term
+  //  sumET_cst = sumET_cst_vmu - sumEt_cst_muons;    
   
-  // for (int i=0; i < (int) jets_sc->size(); ++i) {
-  //   xAOD::Jet* jet = (*jets_sc)[i];
-  //   jetsForMET->push_back(jet);
+  // if(muons_sc->size()){
+  //   cout << "-----------------------------------" << endl;
+  //   cout << "N muons = " << muons_sc->size() << endl;
+  //   cout << "OLD MET  = " << v_met_ST.Mod() << endl;
+  //   cout << "NEW MET  = " << v_met_ST_vmu_NEW.Mod() << endl;
   // }
-  
-  // xAOD::ElectronContainer* electronsForMET = new xAOD::ElectronContainer(SG::VIEW_ELEMENTS);
-  // xAOD::ElectronAuxContainer* electronsForMETAux = 0;
-  // electronsForMET->setStore(electronsForMETAux);
-  
-  // for (int i=0; i < (int) electrons_sc->size(); ++i) {
-  //   xAOD::Electron* electron = (*electrons_sc)[i];
-  //   electronsForMET->push_back(electron);
-  // }
-  
-  // xAOD::MuonContainer* muonsForMET = new xAOD::MuonContainer(SG::VIEW_ELEMENTS);
-  // xAOD::MuonAuxContainer* muonsForMETAux = 0;
-  // muonsForMET->setStore(muonsForMETAux);
-  
-  // for (int i=0; i<(int) (muons_sc)->size(); ++i) {
-  //   xAOD::Muon* muon = (*muons_sc)[i];
-  //   muonsForMET->push_back(muon);
-  // }
-  // //-----------------------------------
-  // CHECK( tool_st->GetMET(*metRFC,
-  // 			 jetsForMET,
-  // 			 electronsForMET,
-  // 			 muonsForMET,
-  // 			 0,
-  // 			 0));
-  // TVector2 v_met_all = getMET( metRFC, "Final");
+    
 
-  // if(v_met_ST_vmu.X()!=v_met_all.X() || v_met_ST_vmu.Y()!=v_met_all.Y())
-  //   cout << "MET CHECK :: DIFF FOUND ::  Def(" << v_met_ST_vmu.X() <<"," <<v_met_ST_vmu.Y() << ")    ALL(" <<v_met_all.X()<<","<<v_met_all.Y()<<")"<<endl; 
-
-  // if (jetsForMET) jetsForMET->clear();
-  // if (electronsForMET) electronsForMET->clear();
-  // if (muonsForMET) muonsForMET->clear();
-  // if (jetsForMETAux) delete jetsForMETAux;
-  // if (electronsForMETAux) delete electronsForMETAux;
-  // if (muonsForMETAux) delete muonsForMETAux;
-  // //-----------------------------------
-
-  TVector2 v_met_ST_vmu_MU = getMET( metRFC, "Muons"); //Muon visible Term
-  float sumEt_cst_muons    = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt
-  
   // MET (cluster soft term) -- invisible muons
-  TVector2 v_met_ST = v_met_ST_vmu;
-  v_met_ST -= v_met_ST_vmu_MU; //subtract muon term
+  metRFC->clear(); 
+  CHECK( tool_st->GetMET(*metRFC,
+  			 jets_sc,
+  			 electrons_sc,
+  			 muons_sc,
+  			 0,
+  			 0,
+  			 false,      //calo ST
+			 true,       //JVT
+			 muons_sc)); //invisible particles
+  TVector2 v_met_ST = getMET( metRFC, "Final"); //Muon visible Term 
+
   met_obj.SetVector(v_met_ST,"met_imu");  //- Copy met vector to the met data member
-  sumET_cst = sumET_cst_vmu - sumEt_cst_muons;
-  
+  sumET_cst = (*metRFC)["Final"]->sumet()*0.001;
+
+
 
   //- Recomputed MET via SUSYTools (Track Soft Term (TST))
   if(this->isVertexOk){   //protect against crash in Data from METRebuilder  ///FIX_ME
@@ -2988,39 +3455,61 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 			   muons_sc,
 			   0,
 			   0,
-			   true));
+			   true,    //track ST
+			   true));  //JVT
     TVector2 v_met_ST_vmu_tst = getMET( metRFC, "Final"); 
     met_obj.SetVector( v_met_ST_vmu_tst, "met_tst_vmu");  //- Copy met vector to the met data member
     sumET_tst_vmu = (*metRFC)["Final"]->sumet()*0.001;
-    
-    v_met_ST_vmu_MU       = getMET( metRFC, "Muons");          //Muon visible Term
-    float sumEt_tst_muons = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt
 
-    // soft terms:
-    soft_met_tst = (*metRFC)["PVSoftTrk"]->met()*0.001;
+    // track soft term
+    met_tst = (*metRFC)["PVSoftTrk"]->met()*0.001;
+
+    //(OLD WAY)
+    // v_met_ST_vmu_MU       = getMET( metRFC, "Muons");          //Muon visible Term
+    // float sumEt_tst_muons = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt
     
+    // // MET (track soft term) -- invisible muons
+    // TVector2 v_met_ST_tst = v_met_ST_vmu_tst;
+    // v_met_ST_tst -= v_met_ST_vmu_MU; //subtract muon term
+    // met_obj.SetVector(v_met_ST_tst,"met_tst_imu");  //- Copy met vector to the met data member
+    // sumET_tst = sumET_tst_vmu - sumEt_tst_muons;
+
     // MET (track soft term) -- invisible muons
-    TVector2 v_met_ST_tst = v_met_ST_vmu_tst;
-    v_met_ST_tst -= v_met_ST_vmu_MU; //subtract muon term
+    metRFC->clear(); 
+    CHECK( tool_st->GetMET(*metRFC,
+			   jets_sc,
+			   electrons_sc,
+			   muons_sc,
+			   0,
+			   0,
+			   true,      //calo ST
+			   true,       //JVT
+			   muons_sc)); //invisible particles
+    TVector2 v_met_ST_tst = getMET( metRFC, "Final"); //Muon visible Term 
+    
     met_obj.SetVector(v_met_ST_tst,"met_tst_imu");  //- Copy met vector to the met data member
-    sumET_tst = sumET_tst_vmu - sumEt_tst_muons;
- 
+    sumET_tst = (*metRFC)["Final"]->sumet()*0.001;
+    
   }
   else{
     met_obj.SetVector( met_obj.GetVector("met_imu"), "met_tst_imu", true );  //- Copy met vector to the met data member
     met_obj.SetVector( met_obj.GetVector("met_vmu"), "met_tst_vmu", true );  //- Copy met vector to the met data member
     Warning("loop()", "MET_CST assigned to MET_TST to avoid METRebuilder crash.");
   }
-
+  
   //- Track met
-  TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
-  met_obj.SetVector(v_met_trk, "met_trk");
-  
+  if(mtrack){
+    //cout << "checking MET track" << endl;
+    TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
+    met_obj.SetVector(v_met_trk, "met_trk");
+  }
+
   //--- Met LocHadTopo (from the branches)
-  // TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); //not in p1872? //CHECK_ME
-  TVector2 v_met_lochadtopo( 0., 0. ); 
-  met_obj.SetVector(v_met_lochadtopo, "met_locHadTopo");
-  
+  if(mtopo){
+     TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); 
+     met_obj.SetVector(v_met_lochadtopo, "met_locHadTopo");
+  }
+
   //--- Met RefFinal, visible muons (from the branches) [retrieved above]
   TVector2 v_met_rfinal_mu(mrf->mpx(), mrf->mpy());
   met_obj.SetVector(v_met_rfinal_mu, "met_refFinal_vmu");
@@ -3070,20 +3559,20 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   met_obj.SetVector(v_met_muinv_TST_vmu, "met_tst_vmu_mucorr", true); //already in GeV
   
   //--- Met with photons as invisible 
-  TVector2 v_met_phinv_ST = met_obj.GetVector("met_imu"); //== met_ST (GeV) 
-  TVector2 v_met_phinv_ST_vmu = met_obj.GetVector("met_vmu"); //== met_ST (GeV)   
+  TVector2 v_met_phinv_ST = met_obj.GetVector("met_tst_imu"); //== met_ST (GeV) 
+  TVector2 v_met_phinv_ST_vmu = met_obj.GetVector("met_tst_vmu"); //== met_ST (GeV)   
  
   TLorentzVector vphs(0.,0.,0.,0.);
   for (unsigned int iPh=0; iPh < recoPhotons.size(); iPh++){ 
     vphs += recoPhotons.at(iPh).GetVector();
   }
-  v_met_phinv_ST.Set( v_met_phinv_ST.Px() + vphs.Px(), v_met_phinv_ST.Py() + vphs.Py() );
-  v_met_phinv_ST_vmu.Set( v_met_phinv_ST_vmu.Px() + vphs.Px(), v_met_phinv_ST_vmu.Py() + vphs.Py() );  
+  v_met_phinv_ST.Set( v_met_phinv_ST.Px() + vphs.Px(), v_met_phinv_ST.Py() + vphs.Py() ); //met TST photon corrected
+  v_met_phinv_ST_vmu.Set( v_met_phinv_ST_vmu.Px() + vphs.Px(), v_met_phinv_ST_vmu.Py() + vphs.Py() );  //met TST photon corrected
 
   met_obj.SetVector(v_met_phinv_ST, "met_imu_phcorr", true); //already in GeV    
   met_obj.SetVector(v_met_phinv_ST_vmu, "met_vmu_phcorr", true); //already in GeV  
   
-
+  
   // truth met
   if(this->isMC){
     TVector2 v_met_truth_imu(mtruth_inv->mpx(), mtruth_inv->mpy()); 
@@ -3092,7 +3581,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     met_obj.SetVector(v_met_truth_imu, "met_truth_imu");  //- Copy met vector to the met data member
     met_obj.SetVector(v_met_truth_vmu, "met_truth_vmu");  //- Copy met vector to the met data member 
   }
-  
+
   //*** CONFIG
   // book MET flavours
   metmap={};
@@ -3103,19 +3592,38 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   metmap[::MetDef::VisMuMuCorr] = met_obj.GetVector("met_vmu_mucorr");  
   metmap[::MetDef::InvMuPhCorr] = met_obj.GetVector("met_imu_phcorr");
   metmap[::MetDef::VisMuPhCorr] = met_obj.GetVector("met_vmu_phcorr");
-  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  if(mtrack)
+    metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  else 
+    metmap[::MetDef::Track] = TVector2((float)DUMMYDN, (float)DUMMYDN);
   metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
   metmap[::MetDef::VisMuRef] = met_obj.GetVector("met_refFinal_vmu");  
   metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst_imu");
   metmap[::MetDef::VisMuTST] = met_obj.GetVector("met_tst_vmu");
-
+  
   metmap[::MetDef::InvMuTSTECorr] = met_obj.GetVector("met_tst_imu_ecorr");
   metmap[::MetDef::VisMuTSTECorr] = met_obj.GetVector("met_tst_vmu_ecorr");
   metmap[::MetDef::VisMuTSTMuCorr] = met_obj.GetVector("met_tst_vmu_mucorr");
-
+  
   metmap[::MetDef::InvMuTruth] = met_obj.GetVector("met_truth_imu");
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");  
-  metmap[::MetDef::locHadTopo] = met_obj.GetVector("met_locHadTopo");    
+  
+  if(mtopo)
+    metmap[::MetDef::locHadTopo] = met_obj.GetVector("met_locHadTopo");  
+  else  
+    metmap[::MetDef::locHadTopo] = TVector2((float)DUMMYDN, (float)DUMMYDN);
+  
+  
+  //meta data (fill it once)
+  if(smetmap==""){ 
+    for (auto& mk : metmap){ 
+      smetmap += sMetDef[(unsigned int)mk.first];
+      smetmap += ",";
+    }
+    meta_metmap->SetTitle( smetmap.c_str() );
+  }
+
+  //***
 
 
   if (printMet){
@@ -3125,19 +3633,20 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     cout<<"MET from D3PD = " << v_met_rfinal_mu.Mod()*0.001 << endl;
     cout<<endl;
   }
-  
+
+
   //*** Event Skimming (if requested)
-  if(m_skim){
+  if(m_skim_met || m_skim_btag){
     
-    bool SK_passBtagging = (n_bjets>0);
+    bool SK_passBtagging = (bj_N>0);
     
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
-			  || metmap[::MetDef::VisMu].Mod() > 100. );
+		       || metmap[::MetDef::VisMu].Mod() > 100. );
     
     bool SK_passSR = ( ((eb_N+mb_N)==0) &&  (metmap[::MetDef::InvMu].Mod() > 250. 
-					   || metmap[::MetDef::VisMu].Mod() > 250. 
-					   || metmap[::MetDef::VisMuTST].Mod() > 250. 
-					   || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
+					  || metmap[::MetDef::VisMu].Mod() > 250. 
+					  || metmap[::MetDef::InvMuTST].Mod() > 250. 
+					  || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
     
     bool SK_passCRe = ( (e_N>0) &&  (SK_passMETdef
 				     || metmap[::MetDef::InvMuECorr].Mod() > 100. 
@@ -3146,14 +3655,25 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 				     || metmap[::MetDef::VisMuTSTECorr].Mod() > 100.)); 
     
     bool SK_passCRmu = ( (m_N>0) &&  ( SK_passMETdef
-					|| metmap[::MetDef::VisMuMuCorr].Mod() > 100.
-					|| metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.));
+				       || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
+				       || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.));
     
     bool SK_passCRph = ( (ph_N>0) &&  ( SK_passMETdef
-					|| metmap[::MetDef::VisMuPhCorr].Mod() > 100.));
+				        || metmap[::MetDef::VisMuPhCorr].Mod() > 100.));
 
 
-    bool keep_event = (SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph));
+    bool SK_passAnyMet = (metmap[::MetDef::InvMu].Mod() > 100.
+                       || metmap[::MetDef::VisMu].Mod() > 100. 
+                       || metmap[::MetDef::InvMuTST].Mod() > 100. 
+                       || metmap[::MetDef::VisMuTST].Mod() > 100. 
+                       || metmap[::MetDef::InvMuECorr].Mod() > 100. 
+                       || metmap[::MetDef::VisMuECorr].Mod() > 100. 
+                       || metmap[::MetDef::InvMuTSTECorr].Mod() > 100. 
+                       || metmap[::MetDef::VisMuTSTECorr].Mod() > 100. 
+                       || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
+                       || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.);
+    
+    bool keep_event = ( (m_skim_btag && SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph)) || (m_skim_met && SK_passAnyMet) );
 
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;
@@ -3167,6 +3687,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       return nextEvent();
     }
   }
+
 
   //- Met Cleaning
   if (Met_doMetCleaning){
@@ -3191,6 +3712,15 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
   }    
 
+
+  if (printMet){
+    cout<<"Info for MET "<<endl;
+    met_obj.PrintInfo();
+    cout<<"met_ST.Mod() = " << v_met_ST.Mod()*0.001 << endl;
+    cout<<"MET from D3PD = " << v_met_rfinal_mu.Mod()*0.001 << endl;
+    cout<<endl;
+  }
+
   //--- Additional jet cleaning 
   //  To remove events with fake missing Et due to non operational cells in the Tile and the HEC.
   //  *before lepton overlap removal*
@@ -3211,8 +3741,9 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   }
 
   TVector2 sjet2(sjet.Px(), sjet.Py());
-  
-  //Z(ll) candidate                                                                                                                                                                                                                                                      
+
+
+  //Z(ll) candidate
   Zll_candidate();
 
   //--- Fill MET related variables  -  vectorized now!
@@ -3236,12 +3767,14 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     tr_thrust.push_back( Calc_Thrust(thrust_jets) );
 
     thrust_jets.pop_back(); //remove met from jet vectors
+    
+    dPhi_met_mettrk.push_back( deltaPhi( metmap[MetDef::Track].Phi(), mk.second.Phi()) );	
 
     //some extra variables
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
-    auto dphi_min_4jets_tmp=-1.;
-    auto dphi_min_tmp=-1.;  
+    auto dphi_min_4j_tmp=-1.;
+    auto dphi_min_tmp=-1.;
     int ibcl=-1;  //closest bjet to met
     int ibfar=-1; //most faraway bjet from met
     int ilcl=-1;  //closest light jet to met
@@ -3262,48 +3795,52 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       float dphi_jm = deltaPhi( jet.Phi(), mk.second.Phi() );
       
       if(dphi_min_allj_tmp < 0 || dphi_min_allj_tmp > deltaPhi(jet.Phi(), mk.second.Phi()) ) //closest jet to met (all)
-	dphi_min_allj_tmp = deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
+	dphi_min_allj_tmp = dphi_jm; //deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
       
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
-     
-	dphi_min_tmp = dphi_jm;     
-     
-      if( ijet < 4 && (dphi_min_4jets_tmp < 0 || dphi_min_4jets_tmp > dphi_jm) ) //closest jet to met (4-leading only)
+	dphi_min_tmp = dphi_jm;
 
-	dphi_min_4jets_tmp = dphi_jm;
-
+      if( ijet < 4 && (dphi_min_4j_tmp < 0 || dphi_min_4j_tmp > dphi_jm) ) //closest jet to met (4-leading only)
+	dphi_min_4j_tmp = dphi_jm;
 
       //--- look for min MT(jet,MET)
       float mt_jm = Calc_MT( jet, mk.second );
       if(mt_jm < min_mt_jm){
 	min_mt_jm = mt_jm;
       }
+            
 
+ 
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged(Jet_Tagger) ){
+        if( jet.isbjet && fabs(jet.Eta())<2.5){
 	
-	if( dphi_jm < min_dphi_bm){ //closest bjet
-	  min_dphi_bm = dphi_jm;
-	  ibcl = ijet;
-	}
+	  if( dphi_jm < min_dphi_bm){ //closest bjet
+	    min_dphi_bm = dphi_jm;
+	    ibcl = ijet;
+	  }
 	
-	if( dphi_jm > max_dphi_bm){ //most faraway bjet
-	  max_dphi_bm = dphi_jm;
-	  ibfar = ijet;
-	}
+	  if( dphi_jm > max_dphi_bm){ //most faraway bjet
+	    max_dphi_bm = dphi_jm;
+	    ibfar = ijet;
+	  }
 	
-      }
-      else{
-	if( dphi_jm < min_dphi_lm){ //closest light-jet
-	  min_dphi_lm = dphi_jm;
-	  ilcl = ijet;
-	}
-      }
+        }
+        else{
+	  if( dphi_jm < min_dphi_lm){ //closest light-jet
+	    min_dphi_lm = dphi_jm;
+	    ilcl = ijet;
+	  }
+        }
+      
+   
+      
+      
+      
       
       ijet++;
     }
     dPhi_min_alljets.push_back(dphi_min_allj_tmp);
-    dPhi_min_4jets.push_back(dphi_min_4jets_tmp);    
+    dPhi_min_4jets.push_back(dphi_min_4j_tmp);    
     dPhi_min.push_back(dphi_min_tmp);
 
     if( min_mt_jm==999999. )
@@ -3316,18 +3853,17 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     MT_lcl_met.push_back( (ilcl >= 0 ? Calc_MT( recoJets.at(ilcl), mk.second ) : 0.) );
     MT_jsoft_met.push_back( (recoJets.size() > 0 ? Calc_MT( recoJets.back(), mk.second ) : 0.) ); //it assumes jets are pt ordered!
 
-
     //dphi(jet_i, met+j) ,  MT(j_i, met_j)
-    if (n_jets>0){
+    if (j_N>0){
       dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );	
       j1_mT.push_back( Calc_MT( recoJets.at(0), mk.second ));
-      if (n_jets>1){
+      if (j_N>1){
 	dPhi_met_j2.push_back( deltaPhi( mk.second.Phi(), recoJets.at(1).Phi()) );	
 	j2_mT.push_back( Calc_MT( recoJets.at(1), mk.second ));
-	if (n_jets>2){
+	if (j_N>2){
 	  dPhi_met_j3.push_back( deltaPhi( mk.second.Phi(), recoJets.at(2).Phi()) );	
 	  j3_mT.push_back( Calc_MT( recoJets.at(2), mk.second ));
-	  if (n_jets>3){
+	  if (j_N>3){
 	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );	
 	    j4_mT.push_back( Calc_MT( recoJets.at(3), mk.second ));
 	  }
@@ -3351,30 +3887,39 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       j1_mT.push_back( DUMMYUP );
     }
 
-    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(),mk.second.Phi()));
+
     //meff = HT + met
     meff.push_back( HT + mk.second.Mod() );
     
     //tau jet candidates
-    n_taujets.push_back( ntaujs );
+    j_tau_N.push_back( ntaujs );
 
     //==== Razor ====
     fillRazor( makeV3( mk.second ) );
-    
-    if (n_jets>1) {
+
+    //==== Corrected mct ====
+    if (j_N>1) 
       mct_corr.push_back(Calc_mct_corr(recoJets.at(0), recoJets.at(1), mk.second));
-    }
-    else {
+    else 
       mct_corr.push_back(DUMMYUP);
-    }    
-    //==== Z-related vars                                                                                                                                                                                                                            
-    Zll_extra(mk.second); //be sure to call Zll_candidate() before!                                                                                                                                                                                                      
-        
+    
+    //==== Z-related vars
+    Zll_extra(mk.second); //be sure to call Zll_candidate() before!
+
   }//end of met flavor loop
 
-  met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
+  //MET LocHadTopo
+  if(mtopo)
+    met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
 
+  //Truth Filter MET (all neutrinos from top)
 
+  UInt_t MET_ids[] = {410000, 410013, 410014}; //, 407012, 407019, 407021}; //nominal   //filtered : 407012, 407019, 407021;
+  if ( this->isMC && count(MET_ids, MET_ids+84, this->mc_channel_number) ){
+    met_top = (float) Calc_TruthNuMET()*0.001;  // this cast is actually needed to reproduce what the filter does
+
+  }
+  
 
   //--- Track Veto
   //init vars
@@ -3418,20 +3963,20 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
   } 
   //--- Some other event variables
-  
   //fill info for truth b-sb decay
   findBparton();  //FIX_ME  //needed?
-  //*** otherwise t_b_*** variables are not filled otherwise!
+  //*** otherwise t_b_*** variables are not filled !
   
   //--- Invariant mass of the 2 first jets (M12)
-  if(n_jets>1){
+  if(j_N>1){
     TLorentzVector jet_M = (recoJets[0].GetVector() + recoJets[1].GetVector());
     M12 = jet_M.M();
   }
   
   //- dPhi & dR
+  //dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
   
-  if (n_jets>0){
+  if (j_N>0){
 
     dPhi_j1_bp1 = deltaPhi(recoJets.at(0).Phi(), t_b_phi1);
     dPhi_j1_bp2 = deltaPhi(recoJets.at(0).Phi(), t_b_phi2);
@@ -3444,7 +3989,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	dR_j1_m2 = recoJets.at(0).DeltaR(recoMuons.at(1));
     }
     
-    if (n_jets>1){
+    if (j_N>1){
       
       dPhi_j1_j2  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(1).Phi());
       dPhi_j2_bp1 = deltaPhi(recoJets.at(1).Phi(), t_b_phi1);
@@ -3480,7 +4025,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       }
       
       
-      if (n_jets>2){
+      if (j_N>2){
 	dPhi_j1_j3  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(2).Phi());
 	dPhi_j2_j3  = deltaPhi(recoJets.at(1).Phi(), recoJets.at(2).Phi());
 	dPhi_j3_bp1 = deltaPhi(recoJets.at(2).Phi(), t_b_phi1);
@@ -3499,7 +4044,6 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
       }
     }
   }    
-
   //Do we need this?? //CHECK_ME
   float dPhi_bp1_bp2     = deltaPhi(t_b_phi1, t_b_phi2);
   float dPhi_bp1_met     = deltaPhi(t_b_phi1, met_obj.Phi("met"));
@@ -3514,51 +4058,52 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   
     
   
-  //Do we need this?? //CHECK_ME
+  //Do we need this??
   //- (truth) Tau veto for 3rd- and 4th leading jet
-  float dR_truthTau_j3, dR_truthTau_j4;
+  float dR_truthTau_j3=999.;
+  float dR_truthTau_j4=999.;
   
   if (this->isMC){
-    if (n_jets>2){
+    if (j_N>2){
       
-      TLorentzVector TruthTau3(0.,0.,0.,0.);
-      TLorentzVector TruthTau4(0.,0.,0.,0.);
+      TLorentzVector TruthTau(0.,0.,0.,0.);
       
       if(recoJets.at(2).nTrk>0 && recoJets.at(2).nTrk<5 && dPhi_met_j3[0] < TMath::Pi()/5. && j3_mT[0]<100.){
 	
-	truthP_itr = m_truthP->begin();
-	for( ; truthP_itr != truthP_end; ++truthP_itr ) {
+	for(const xAOD::TruthParticle* tp : *m_truthP) {
 	  
-	  if ( isHard((*truthP_itr)) && isTau((*truthP_itr)) ){
-	    fillTLV(TruthTau3, (*truthP_itr));
+	  if ( isHard(tp) && isTau(tp) ){
+	    fillTLV(TruthTau, tp);
 	    
-	    dR_truthTau_j3 = TruthTau3.DeltaR(recoJets.at(2));
+ 	    float tmpDR = TruthTau.DeltaR(recoJets.at(2));
+	    if(dR_truthTau_j3 > tmpDR)
+	      dR_truthTau_j3 = tmpDR;
+	    
+	  }
+
+	  if (j_N>3){
+	    if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4[0] < TMath::Pi()/5. && j4_mT[0]<100.){
+
+	      float tmpDR = TruthTau.DeltaR(recoJets.at(3));
+	      if(dR_truthTau_j4 > tmpDR)
+		dR_truthTau_j4 = tmpDR;
+	      
+	    }
 	  }
 	}
       } 
       
-      if (n_jets>3){
-	if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4[0] < TMath::Pi()/5. && j4_mT[0]<100.){
-	  
-	  truthP_itr = m_truthP->begin();
-	  for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	    
-	    if ( isHard((*truthP_itr)) && isTau((*truthP_itr)) ){
-	      fillTLV(TruthTau4, (*truthP_itr));
-	      
-	      dR_truthTau_j4 = TruthTau4.DeltaR(recoJets.at(3));
-	    }
-	  }
-	}            
-      }
     }
   }
-  
+   
   //Dijet Mass
-  if (n_jets>1){  
-    DiJet_Mass = Calc_dijetMass();
-    if( recoJets.at(0).isBTagged(Jet_Tagger) && recoJets.at(1).isBTagged(Jet_Tagger) )
-      DiBJet_Mass = DiJet_Mass;
+  if (j_N>1){  
+    mjj = Calc_Mjj();
+
+      if( recoJets.at(0).isbjet && recoJets.at(1).isbjet && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
+        mbb = mjj;
+    
+	
   }
 
   //Mct
@@ -3573,21 +4118,20 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   float maxbw2=-99;
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
-
-    //    if( jet.isBTagged(Jet_Tagger) ){
-    if( jet.isbjet ){
+    
+    if( jet.isbjet && fabs(jet.Eta())<2.5){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
 	else if(iblead2<0)
 	  iblead2=ijet;
 
-	float locbw = jet.getBweight(Jet_Tagger); //book high bweight jets
+	float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
 	if(locbw > maxbw1){
-	  //	  if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
-	  maxbw2 = maxbw1;
-	  ibtop2 = ibtop1;
-	  // }
+	  if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
+	    maxbw2 = maxbw1;
+	    ibtop2 = ibtop1;
+	  }
 	  ibtop1 = ijet;
 	  maxbw1 = locbw;
 	}
@@ -3595,14 +4139,44 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 	  ibtop2 = ijet;
 	  maxbw2 = locbw;
 	}
-    }
-    
-    ijet++;
+      }
+
+      ijet++;
+ 
   }
+
   
   RecoHadTops(ibtop1, ibtop2);
+
+  // ------ Max bb-system variables  
+  if (ibtop1!=-1 && ibtop2!=-1)
+  {
+    std::vector<unsigned int> leadB_index;
+    leadB_index.push_back(ibtop1);
+    leadB_index.push_back(ibtop2);  
+
+    std::vector<pair<unsigned int, double> > dR_Max;
+    std::vector<pair<unsigned int, double> > dR_pt_Max;
+    TLorentzVector refVector;  
   
-  //------------------------------------- (BEFORE JUST CALL RECOHADTOPS)
+    refVector = recoJets.at(ibtop1).GetVector() + recoJets.at(ibtop2).GetVector();           
+    dR_Max = GetOrderedJetIndexdR(refVector, leadB_index);
+    dR_pt_Max = GetOrderedJetIndexAntiKtd(refVector, leadB_index);      
+
+    for (unsigned int i=0; i<dR_Max.size(); i++)
+    {
+	  index_min_dR_bb.push_back(dR_Max.at(i).first);
+	  min_dR_bb.push_back(dR_Max.at(i).second);
+	  
+    } 
+
+    for (unsigned int i=0; i<dR_pt_Max.size(); i++)
+    {
+	  index_min_dR_pt_bb.push_back(dR_pt_Max.at(i).first);
+	  min_dR_pt_bb.push_back(dR_pt_Max.at(i).second);
+    }   
+  }
+  // -----------------------------  
 
   //dPhi_b1_b2  
   dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
@@ -3645,37 +4219,37 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     m_EM = inv_EM.M();
   }
   
-
   //--- Define the transverse mass e_MT - we recompute the MET with the electron in order to have the pt of the nu
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
     TVector2 met_electron = met_obj.GetVector("met_imu"); 
-    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");    
-    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu");  
-    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); 
-
+    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");
+    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu"); 
+    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu");
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
     e_MT_tst = Calc_MT( recoElectrons.at(0), met_tst_electron);
-    e_MT_tst_vmu = Calc_MT( recoElectrons.at(0), met_tst_electron_vmu);
+    e_MT_tst_vmu = Calc_MT( recoElectrons.at(0), met_tst_electron_vmu);    
   }
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
     //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
-    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1;
+    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; 
     TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); 
-    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1; 
-    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu"); 
+    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1;
+    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu");
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
     m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);  
     m_MT_tst = Calc_MT( recoMuons.at(0), met_tst_muon);
     m_MT_tst_vmu = Calc_MT( recoMuons.at(0), met_tst_muon_vmu);  
+  
   }
  
 
+  
   //--- Boson Pt   <---  V(lv).Pt()
   TVector2 V_lnu = met_obj.GetVector("met_imu");
   TVector2 V_lnu_vmu = met_obj.GetVector("met_vmu");  
@@ -3711,19 +4285,153 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
     }
   }
   
+  //Extended trigger info (if requested)
+  if(doTrigExt){
+    const xAOD::EnergySumRoI*           cmet_l1_roi = 0;
+    const xAOD::TrigMissingETContainer* cmet_hlt_EFJetEtSum = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_T2MissingET = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigL2MissingET_FEB = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_mht = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_FEB = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_topocl = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_topocl_PS = 0;    
+    const xAOD::TrigMissingETContainer* cmet_hlt_TrigEFMissingET_topocl_PUC = 0;    
+
+    if(!m_isderived){
+      
+      CHECK( m_event->retrieve( cmet_l1_roi, "LVL1EnergySumRoI"));
+      if(cmet_l1_roi){
+	trig_l1_sumet    =  (cmet_l1_roi->energyT())*0.001;
+	trig_l1_ex    =  - (cmet_l1_roi->energyX())*0.001;
+	trig_l1_ey    =  - (cmet_l1_roi->energyY())*0.001;
+	trig_l1_et =	 sqrt(trig_l1_ex*trig_l1_ex + trig_l1_ey*trig_l1_ey);
+	trig_l1_phi   =	 atan2(trig_l1_ey, trig_l1_ex);
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_EFJetEtSum, "HLT_xAOD__TrigMissingETContainer_EFJetEtSum") );
+      if(cmet_hlt_EFJetEtSum->size()){
+	trig_hlt_EFJetEtSum_ex = cmet_hlt_EFJetEtSum->at(0)->ex()*0.001;
+	trig_hlt_EFJetEtSum_ey = cmet_hlt_EFJetEtSum->at(0)->ey()*0.001;
+	trig_hlt_EFJetEtSum_et = TMath::Hypot(cmet_hlt_EFJetEtSum->at(0)->ex(), cmet_hlt_EFJetEtSum->at(0)->ey())*0.001;
+	trig_hlt_EFJetEtSum_sumet = cmet_hlt_EFJetEtSum->at(0)->sumEt()*0.001;
+	trig_hlt_EFJetEtSum_phi = atan2(cmet_hlt_EFJetEtSum->at(0)->ey(), cmet_hlt_EFJetEtSum->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_T2MissingET, "HLT_xAOD__TrigMissingETContainer_T2MissingET") );
+      if(cmet_hlt_T2MissingET->size()){
+	trig_hlt_T2MissingET_ex = cmet_hlt_T2MissingET->at(0)->ex()*0.001;
+	trig_hlt_T2MissingET_ey = cmet_hlt_T2MissingET->at(0)->ey()*0.001;
+	trig_hlt_T2MissingET_et = TMath::Hypot(cmet_hlt_T2MissingET->at(0)->ex(), cmet_hlt_T2MissingET->at(0)->ey())*0.001;
+	trig_hlt_T2MissingET_sumet = cmet_hlt_T2MissingET->at(0)->sumEt()*0.001;
+	trig_hlt_T2MissingET_phi = atan2(cmet_hlt_T2MissingET->at(0)->ey(), cmet_hlt_T2MissingET->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC, "HLT_xAOD__TrigMissingETContainer_EFMissingET_Fex_2sidednoiseSupp_PUC") );
+      if(cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->size()){
+	trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex = cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ex()*0.001;
+	trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey = cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ey()*0.001;
+	trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et = TMath::Hypot(cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ex(), cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ey())*0.001;
+	trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet = cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->sumEt()*0.001;
+	trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi = atan2(cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ey(), cmet_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_TrigL2MissingET_FEB, "HLT_xAOD__TrigMissingETContainer_TrigL2MissingET_FEB") );
+      if(cmet_hlt_TrigL2MissingET_FEB->size()){
+        trig_hlt_TrigL2MissingET_FEB_ex = cmet_hlt_TrigL2MissingET_FEB->at(0)->ex()*0.001;
+        trig_hlt_TrigL2MissingET_FEB_ey = cmet_hlt_TrigL2MissingET_FEB->at(0)->ey()*0.001;
+        trig_hlt_TrigL2MissingET_FEB_et = TMath::Hypot(cmet_hlt_TrigL2MissingET_FEB->at(0)->ex(), cmet_hlt_TrigL2MissingET_FEB->at(0)->ey())*0.001;
+        trig_hlt_TrigL2MissingET_FEB_sumet = cmet_hlt_TrigL2MissingET_FEB->at(0)->sumEt()*0.001;
+        trig_hlt_TrigL2MissingET_FEB_phi = atan2(cmet_hlt_TrigL2MissingET_FEB->at(0)->ey(), cmet_hlt_TrigL2MissingET_FEB->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_FEB, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_FEB") );
+      if(cmet_hlt_TrigEFMissingET_FEB->size()){
+	trig_hlt_TrigEFMissingET_FEB_ex = cmet_hlt_TrigEFMissingET_FEB->at(0)->ex()*0.001;
+	trig_hlt_TrigEFMissingET_FEB_ey = cmet_hlt_TrigEFMissingET_FEB->at(0)->ey()*0.001;
+	trig_hlt_TrigEFMissingET_FEB_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_FEB->at(0)->ex(), cmet_hlt_TrigEFMissingET_FEB->at(0)->ey())*0.001;
+	trig_hlt_TrigEFMissingET_FEB_sumet = cmet_hlt_TrigEFMissingET_FEB->at(0)->sumEt()*0.001;
+	trig_hlt_TrigEFMissingET_FEB_phi = atan2(cmet_hlt_TrigEFMissingET_FEB->at(0)->ey(), cmet_hlt_TrigEFMissingET_FEB->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET") );
+      if(cmet_hlt_TrigEFMissingET->size()){
+	trig_hlt_TrigEFMissingET_ex = cmet_hlt_TrigEFMissingET->at(0)->ex()*0.001;
+	trig_hlt_TrigEFMissingET_ey = cmet_hlt_TrigEFMissingET->at(0)->ey()*0.001;
+	trig_hlt_TrigEFMissingET_et = TMath::Hypot(cmet_hlt_TrigEFMissingET->at(0)->ex(), cmet_hlt_TrigEFMissingET->at(0)->ey())*0.001;
+	trig_hlt_TrigEFMissingET_sumet = cmet_hlt_TrigEFMissingET->at(0)->sumEt()*0.001;
+	trig_hlt_TrigEFMissingET_phi = atan2(cmet_hlt_TrigEFMissingET->at(0)->ey(), cmet_hlt_TrigEFMissingET->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_mht, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_mht") );
+      if(cmet_hlt_TrigEFMissingET_mht->size()){
+	trig_hlt_TrigEFMissingET_mht_ex = cmet_hlt_TrigEFMissingET_mht->at(0)->ex()*0.001;
+	trig_hlt_TrigEFMissingET_mht_ey = cmet_hlt_TrigEFMissingET_mht->at(0)->ey()*0.001;
+	trig_hlt_TrigEFMissingET_mht_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_mht->at(0)->ex(), cmet_hlt_TrigEFMissingET_mht->at(0)->ey())*0.001;
+	trig_hlt_TrigEFMissingET_mht_sumet = cmet_hlt_TrigEFMissingET_mht->at(0)->sumEt()*0.001;
+	trig_hlt_TrigEFMissingET_mht_phi = atan2(cmet_hlt_TrigEFMissingET_mht->at(0)->ey(), cmet_hlt_TrigEFMissingET_mht->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_topocl, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_topocl") );
+      if(cmet_hlt_TrigEFMissingET_topocl->size()){
+	trig_hlt_TrigEFMissingET_topocl_ex = cmet_hlt_TrigEFMissingET_topocl->at(0)->ex()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_ey = cmet_hlt_TrigEFMissingET_topocl->at(0)->ey()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl->at(0)->ex(), cmet_hlt_TrigEFMissingET_topocl->at(0)->ey())*0.001;
+	trig_hlt_TrigEFMissingET_topocl_sumet = cmet_hlt_TrigEFMissingET_topocl->at(0)->sumEt()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_phi = atan2(cmet_hlt_TrigEFMissingET_topocl->at(0)->ey(), cmet_hlt_TrigEFMissingET_topocl->at(0)->ex());
+	
+	
+	//DEBUGGING
+	// cout << "- DEBUG -------------------------------------------" << endl;
+	// for(auto ii=0; ii < cmet_hlt_TrigEFMissingET_topocl->at(0)->getNumberOfComponents(); ii++){
+	// 	cout << "MET component (" << ii << "/" << cmet_hlt_TrigEFMissingET_topocl->at(0)->getNumberOfComponents() << ") = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->nameOfComponent(ii) <<  endl;
+	// 	cout << "-------------------------------------------------" << endl;
+	// 	cout << " MEtx  = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->exComponent(ii)*0.001 << endl;
+	// 	cout << " MEty  = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->eyComponent(ii)*0.001 << endl;
+	// 	cout << " MEt   = " << TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl->at(0)->exComponent(ii), cmet_hlt_TrigEFMissingET_topocl->at(0)->eyComponent(ii))*0.001 << endl;
+	// 	cout << " SumEt = " << cmet_hlt_TrigEFMissingET_topocl->at(0)->sumEtComponent(ii)*0.001 << endl;
+	// 	cout << " phi   = " << atan2(cmet_hlt_TrigEFMissingET_topocl->at(0)->eyComponent(ii), cmet_hlt_TrigEFMissingET_topocl->at(0)->exComponent(ii)) << endl;
+	// }
+	
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_topocl_PS, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_topocl_PS") );
+      if(cmet_hlt_TrigEFMissingET_topocl_PS->size()){
+	trig_hlt_TrigEFMissingET_topocl_PS_ex = cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ex()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PS_ey = cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ey()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PS_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ex(), cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ey())*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PS_sumet = cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->sumEt()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PS_phi = atan2(cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ey(), cmet_hlt_TrigEFMissingET_topocl_PS->at(0)->ex());
+      }
+      
+      CHECK( m_event->retrieve( cmet_hlt_TrigEFMissingET_topocl_PUC, "HLT_xAOD__TrigMissingETContainer_TrigEFMissingET_topocl_PUC") );
+      if(cmet_hlt_TrigEFMissingET_topocl_PUC->size()){
+	trig_hlt_TrigEFMissingET_topocl_PUC_ex = cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ex()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PUC_ey = cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ey()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PUC_et = TMath::Hypot(cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ex(), cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ey())*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PUC_sumet = cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->sumEt()*0.001;
+	trig_hlt_TrigEFMissingET_topocl_PUC_phi = atan2(cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ey(), cmet_hlt_TrigEFMissingET_topocl_PUC->at(0)->ex());
+      }
+    }
+  }
 
   //QCD Trigger stuff...  //FIX_ME    once we have access to trigger decision!
-  //...
-  
-  //---Fill missing data members 
-  this->dumpLeptons();  
-  this->dumpPhotons();  
-  this->dumpJets();  
-  
+  if ( this->isQCD  && ! isQCDSeedEvent(0., 0., QCD_METSig) ){ //FIX !! ( met, sumet, QCD_METSig) ){
+    //    output->setFilterPassed(false);
+    return nextEvent();
+  }
 
+
+  //---Fill missing data members 
+  this->dumpLeptons();
+  this->dumpPhotons();
+  this->dumpJets();
+  
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
   if(isMC) RunNumber = mc_channel_number;
   
+  // The containers created by the shallow copy are owned by you. Remember to delete them
   // The containers created by the shallow copy are owned by you. Remember to delete them
   delete jets_sc;              delete jets_scaux;
   delete muons_sc;             delete muons_scaux;
@@ -3734,7 +4442,8 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
   if(myfile.is_open())
     myfile.close();
 
-  output->setFilterPassed (true);
+  //output->setFilterPassed (true);
+  m_atree->Fill();
   return nextEvent(); //SUCCESS + cleaning
 }
 
@@ -3746,6 +4455,7 @@ this->passPreselectionCuts = this->isGRL && this->isVertexOk && this->isLarGood 
 //****************************//
 EL::StatusCode chorizo :: loop_truth()
 {
+  //  Info("loop_truth()", "Inside loop_truth");
 
   InitVars();
 
@@ -3753,17 +4463,28 @@ EL::StatusCode chorizo :: loop_truth()
     printf("\r %6d/%lld\t[%3.0f]",m_eventCounter,m_event->getEntries(),100*m_eventCounter/float(m_event->getEntries()));
     fflush(stdout);
   }
-  
 
   m_eventCounter++;
+  
+  //save dummy meta_data
+  if(m_eventCounter<2){
+    //save Trigger metadata
+    std::string trigchains="";
+    for(const auto& s : TriggerNames){
+      trigchains += (s+",");
+    }
+    meta_triggers = new TNamed("Triggers", trigchains.c_str());
+    wk()->addOutput(meta_triggers);     
+  }
+
 
   //----------------------------
   // Event information
-  //--------------------------- 
+  //---------------------------- 
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
-  loadMetaData();
+  //  loadMetaData();
 
   //--- Weigths for Sherpa, MC@NLO, Acer, ...
   MC_w = eventInfo->mcEventWeight();
@@ -3772,75 +4493,66 @@ EL::StatusCode chorizo :: loop_truth()
   m_truthE= 0;
   m_truthP= 0;
   m_truth_jets= 0;
-  
+
+  //  -- Event presel  
+  isVertexOk = true; //dummy 
+
  
   //  -- Truth Particles
-  CHECK( m_event->retrieve( m_truthE, "TruthEvent" ) );
-  CHECK( m_event->retrieve( m_truthP, "TruthParticle" ) );
-  CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
+  //  CHECK( m_event->retrieve( m_truthE, "TruthEvents" ) );
+  //  CHECK( m_event->retrieve( m_truthP, "TruthParticles" ) );
 
   // -- Find Signal Subprocess
-  int id1=0; int id2=0;
 
-  //Find Hard Process particles
-  findSusyHP(id1, id2);
+  //find Hard Process particles
+  int id1=0; int id2=0;
+  //  bool spOK = ST::SUSYObjDef_xAOD::FindSusyHardProc(m_truthP, id1, id2);  //CHECK :   what we can do with this without TruthParticles (TRUTH3)??
+  bool spOK = false;
   
-  //procID
-  if(id1!=0 && id2!=0) //(just to avoid warnings)
+  //get procID
+  if(spOK && id1!=0 && id2!=0) //(just to avoid warnings)
     procID = SUSY::finalState(id1, id2); // get prospino proc ID
   
- 
+
   //Truth Electrons 
   CHECK( m_event->retrieve( m_truthEl, "TruthElectrons" ) );
-  xAOD::TruthParticleContainer::const_iterator truthEl_itr = m_truthEl->begin();
-  xAOD::TruthParticleContainer::const_iterator truthEl_end = m_truthEl->end();
 
-  //  std::vector<Particle> electronCandidates; //intermediate selection electrons
-  for( ; truthEl_itr != truthEl_end; ++truthEl_itr ) {
+  std::vector<Particle> electronCandidates; //intermediate selection electrons
+
+  for(const xAOD::TruthParticle* tEl : *m_truthEl) {
 
       // FS selection
-      if( !isStable( *truthEl_itr ) ) continue; 
+      if( !isStable( tEl ) ) continue; 
       
       //define preselected electron                
       Particle recoElectron;
 
-      // if(( *truthEl_itr )->pt()*0.001 > 100.){ //TESTING
-      // 	cout << "   pt = " << ( *truthEl_itr )->pt()*0.001 
-      // 	     << ",  eta = " << ( *truthEl_itr )->eta() 
-      // 	     << ",  phi = " << ( *truthEl_itr )->phi() 
-      // 	     << ",  barcode = " << ( *truthEl_itr )->barcode() 
-      // 	     << ",  status  = " << ( *truthEl_itr )->status() << endl;
-      // }
-
       TLorentzVector tlv_d;
       if( dressLeptons ){
-	tlv_d.SetPtEtaPhiE( ( *truthEl_itr )->auxdata< float >( "pt_dressed" )*0.001,
-			    ( *truthEl_itr )->auxdata< float >( "eta_dressed" ),
-			    ( *truthEl_itr )->auxdata< float >( "phi_dressed" ),
-			    ( *truthEl_itr )->auxdata< float >( "e_dressed" )*0.001);
+	tlv_d.SetPtEtaPhiE( tEl->auxdata< float >( "pt_dressed" )*0.001,
+			    tEl->auxdata< float >( "eta_dressed" ),
+			    tEl->auxdata< float >( "phi_dressed" ),
+			    tEl->auxdata< float >( "e_dressed" )*0.001);
       }
       else{
-	tlv_d.SetPtEtaPhiE( ( *truthEl_itr )->pt()*0.001,
-			    ( *truthEl_itr )->eta(),
-			    ( *truthEl_itr )->phi(),
-			    ( *truthEl_itr )->e()*0.001);
+	tlv_d.SetPtEtaPhiE( tEl->pt()*0.001,
+			    tEl->eta(),
+			    tEl->phi(),
+			    tEl->e()*0.001);
       }
 
       recoElectron.SetVector( tlv_d, true );
 
       if (recoElectron.Pt() < El_PreselPtCut/1000.)   continue;
       if (fabs(recoElectron.Eta()) > El_PreselEtaCut) continue;
-              
-      // recoElectron.index = 0;
-      // recoElectron.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
-      recoElectron.etcone20 = ( *truthEl_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthEl_itr) * 0.001;
-      recoElectron.ptcone30 = ( *truthEl_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthEl_itr) * 0.001;
-      // recoElectron.etcone30 = acc_etcone30(*el_itr) * 0.001;
-      // (*el_itr).passSelection(recoElectron.isTight, "Tight");
+         
+
+      recoElectron.etcone20 = (tEl->isAvailable<float>("etcone20") ? tEl->auxdata< float >( "etcone20" )*0.001 : -999.);
+      recoElectron.ptcone30 = (tEl->isAvailable<float>("ptcone30") ? tEl->auxdata< float >( "ptcone30" )*0.001 : -999.);
       
-      // recoElectron.type   = xAOD::EgammaHelpers::getParticleTruthType( *truthEl_itr );
-      // recoElectron.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( *truthEl_itr );
-      
+      recoElectron.type   = (tEl->isAvailable<unsigned int>("particleType")   ? tEl->auxdata<unsigned int>("particleType")   : tEl->auxdata<unsigned int>("classifierParticleType"));
+      recoElectron.origin = (tEl->isAvailable<unsigned int>("particleOrigin") ? tEl->auxdata<unsigned int>("particleOrigin") : tEl->auxdata<unsigned int>("classifierParticleOrigin"));
+            
       electronCandidates.push_back(recoElectron);
       
   }//electron loop
@@ -3851,47 +4563,40 @@ EL::StatusCode chorizo :: loop_truth()
 
   //Truth Muons 
   CHECK( m_event->retrieve( m_truthMu, "TruthMuons" ) );
-  xAOD::TruthParticleContainer::const_iterator truthMu_itr = m_truthMu->begin();
-  xAOD::TruthParticleContainer::const_iterator truthMu_end = m_truthMu->end();
 
-  //  std::vector<Particle> muonCandidates; //intermediate selection muons
-  for( ; truthMu_itr != truthMu_end; ++truthMu_itr ) {
+  std::vector<Particle> muonCandidates; //intermediate selection muons
+  for(const xAOD::TruthParticle* tMu : *m_truthMu) {
 
     // FS selection
-    if( !isStable( *truthMu_itr ) ) continue; 
+    if( !isStable( tMu ) ) continue; 
 
     //define preselected muon                
     Particle recoMuon;
     
     TLorentzVector tlv_d;
     if( dressLeptons ){
-      tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->auxdata< float >( "pt_dressed" )*0.001,
-			  ( *truthMu_itr )->auxdata< float >( "eta_dressed" ),
-			  ( *truthMu_itr )->auxdata< float >( "phi_dressed" ),
-			  ( *truthMu_itr )->auxdata< float >( "e_dressed" )*0.001);
+      tlv_d.SetPtEtaPhiE( tMu->auxdata< float >( "pt_dressed" )*0.001,
+			  tMu->auxdata< float >( "eta_dressed" ),
+			  tMu->auxdata< float >( "phi_dressed" ),
+			  tMu->auxdata< float >( "e_dressed" )*0.001);
     }
     else{
-      tlv_d.SetPtEtaPhiE( ( *truthMu_itr )->pt()*0.001,
-			  ( *truthMu_itr )->eta(),
-			  ( *truthMu_itr )->phi(),
-			  ( *truthMu_itr )->e()*0.001);
+      tlv_d.SetPtEtaPhiE( tMu->pt()*0.001,
+			  tMu->eta(),
+			  tMu->phi(),
+			  tMu->e()*0.001);
     }
     
     recoMuon.SetVector( tlv_d, true );
     if (recoMuon.Pt() < Mu_PreselPtCut/1000.)   continue;
     if (fabs(recoMuon.Eta()) > Mu_PreselEtaCut) continue;
     
-    
-    // recoMuon.index = 0;
-    // recoMuon.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
-    recoMuon.etcone20 = ( *truthMu_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthMu_itr) * 0.001;
-    recoMuon.ptcone30 = ( *truthMu_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthMu_itr) * 0.001;
-    // recoMuon.etcone30 = acc_etcone30(*el_itr) * 0.001;
-    // (*el_itr).passSelection(recoMuon.isTight, "Tight");
-    
-    // recoMuon.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-    // recoMuon.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
-    
+    recoMuon.etcone20 = (tMu->isAvailable<float>("etcone20") ? tMu->auxdata< float >( "etcone20" )*0.001 : -999.);
+    recoMuon.ptcone30 = (tMu->isAvailable<float>("ptcone30") ? tMu->auxdata< float >( "ptcone30" )*0.001 : -999.);
+
+    recoMuon.type   = (tMu->isAvailable<unsigned int>("particleType")   ? tMu->auxdata< unsigned int >("particleType")   : tMu->auxdata<unsigned int>("classifierParticleType"));
+    recoMuon.origin = (tMu->isAvailable<unsigned int>("particleOrigin") ? tMu->auxdata< unsigned int >("particleOrigin") : tMu->auxdata<unsigned int>("classifierParticleOrigin"));
+            
     muonCandidates.push_back(recoMuon);
         
   }//muon loop
@@ -3901,95 +4606,170 @@ EL::StatusCode chorizo :: loop_truth()
 
 
   //Truth Photons 
-  CHECK( m_event->retrieve( m_truthPh, "TruthPhotons" ) );
-  xAOD::TruthParticleContainer::const_iterator truthPh_itr = m_truthPh->begin();
-  xAOD::TruthParticleContainer::const_iterator truthPh_end = m_truthPh->end();
-
+  if (usePhotons){
+    if( !m_event->retrieve( m_truthPh, "TruthPhotons").isSuccess() ){
+      if( !m_event->retrieve( m_truthPh, "Truth3Photons").isSuccess() ){
+	Error("loop_truth()", "Failed to retrieve Truth(3)Photon container. Exiting." );
+	return EL::StatusCode::FAILURE;
+      }
+    }
+    //CHECK( m_event->retrieve( m_truthPh, "TruthPhotons" ) );
+    //CHECK( m_event->retrieve( m_truthPh, "Truth3Photons" ) );
+  }//usephotons
+  
   std::vector<Particle> photonCandidates; //intermediate selection photons
-  for( ; truthPh_itr != truthPh_end; ++truthPh_itr ) {
+  if (usePhotons){
+  for(const xAOD::TruthParticle* tPh : *m_truthPh) {
 
       // FS selection
-      if( !isStable( *truthPh_itr ) ) continue; 
+      if( !isStable( tPh ) ) continue; 
 
       //define preselected photon                
       Particle recoPhoton;
-      recoPhoton.SetVector( getTLV( (*truthPh_itr) ));
+      recoPhoton.SetVector( getTLV( tPh ) );
       if (recoPhoton.Pt() < El_PreselPtCut/1000.)   continue;
       if (fabs(recoPhoton.Eta()) > El_PreselEtaCut) continue;
 
-      // recoPhoton.index = 0;
-      // recoPhoton.ptcone20 = acc_ptcone20(*el_itr) * 0.001;
-      recoPhoton.etcone20 = ( *truthPh_itr )->auxdata< float >( "EtCone20" )*0.001; //acc_truth_etcone20(*truthPh_itr) * 0.001;
-      recoPhoton.ptcone30 = ( *truthPh_itr )->auxdata< float >( "PtCone30" )*0.001; //acc_truth_ptcone300(*truthPh_itr) * 0.001;
-      // recoPhoton.etcone30 = acc_etcone30(*el_itr) * 0.001;
-      // (*el_itr).passSelection(recoPhoton.isTight, "Tight");
-      
-      // recoPhoton.type   = xAOD::EgammaHelpers::getParticleTruthType( el_itr );
-      // recoPhoton.origin = xAOD::EgammaHelpers::getParticleTruthOrigin( el_itr );
-      
+
+      recoPhoton.etcone20 = (tPh->isAvailable<float>("etcone20") ? tPh->auxdata< float >( "etcone20" )*0.001 : -999.);
+      recoPhoton.ptcone30 = (tPh->isAvailable<float>("ptcone30") ? tPh->auxdata< float >( "ptcone30" )*0.001 : -999.);
+
+      recoPhoton.type   = (tPh->isAvailable<unsigned int>("particleType")   ? tPh->auxdata<unsigned int>("particleType")   : tPh->auxdata<unsigned int>("classifierParticleType"));
+      recoPhoton.origin = (tPh->isAvailable<unsigned int>("particleOrigin") ? tPh->auxdata<unsigned int>("particleOrigin") : tPh->auxdata<unsigned int>("classifierParticleOrigin"));
+            
       photonCandidates.push_back(recoPhoton);
             
   }//photon loop
 
   //sort the photons in Pt
   if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
+  }//usephotons
 
 
   //Truth Jets
-  xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
-  xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
+  CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
   
   std::vector<Particles::Jet> jetCandidates; //intermediate selection photons
-  for( ; tjet_itr != tjet_end; ++tjet_itr ) {
+  for(const xAOD::Jet* tJet : *m_truth_jets) {
     
     Particles::Jet recoJet;
-    recoJet.SetVector( getTLV( (*tjet_itr) ));
+    recoJet.SetVector( getTLV( tJet ));
     if (recoJet.Pt() < Jet_PreselPtCut/1000.)   continue;
     if (fabs(recoJet.Eta()) > Jet_PreselEtaCut) continue;
-
+    
     try{
-      recoJet.FlavorTruth = (*tjet_itr)->getAttribute<int>("TruthLabelID"); 
+      recoJet.FlavorTruth = tJet->getAttribute<int>("HadronConeExclTruthLabelID"); 
     }
     catch(...){
-      bool matched = tool_jetlabel->matchJet(**tjet_itr);
-      if(matched)
-	recoJet.FlavorTruth = tool_jetlabel->pdgCode();
-      else
+      try{
+	recoJet.FlavorTruth = tJet->getAttribute<int>("PartonTruthLabelID"); 
+      }
+      catch(...){
 	recoJet.FlavorTruth = 0;
+      }
     }
-
-    //CHECK
-    // int label = xAOD::jetFlavourLabel(*tjet_itr);
-    // cout << "label = " << label << "   ,   pdg = " << recoJet.FlavorTruth << endl;
-    //
-
-    recoJet.isbjet = recoJet.isBTagged("Truth");
-
+    
+    //hack for cutflow afterwards
+    if(recoJet.FlavorTruth==5){
+      recoJet.MV1 = 99.;
+      recoJet.MV2c20 = 99.;
+    }
+    else{
+      recoJet.MV1 = -99.;
+      recoJet.MV2c20 = -99.;
+    }
+    
+    // tool_btag_truth1->setRandomSeed(int( 1e5 + 5000 * fabs(tJet->eta()))); //set a unique seed for each jet                                                             
+    // tool_btag_truth2->setRandomSeed(int( 1e5 + 5000 * fabs(tJet->eta())));
+    // tool_btag_truth3->setRandomSeed(int( 1e5 + 5000 * fabs(tJet->eta())));
+    
+    // recoJet.isbjet_t70 = tool_btag_truth1->performTruthTagging(tJet);
+    // recoJet.isbjet_t77 = tool_btag_truth2->performTruthTagging(tJet);
+    // recoJet.isbjet_t80 = tool_btag_truth3->performTruthTagging(tJet);
+    
+    //emulate btagging efficiency! (77% here)
+    if( simBtagging ){
+      float bprob = gRandom->Rndm(1);
+      if(recoJet.FlavorTruth==5){
+	if(bprob<0.77){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 0;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else if (recoJet.FlavorTruth==4){
+	if(bprob<0.22){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 4;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else if (recoJet.FlavorTruth==15){
+	if(bprob<0.1){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 15;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else{
+	if(bprob<0.007){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 0;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+    }
+    
+    recoJet.isbjet = recoJet.isBTagged_77fc("Truth");
+    
     jetCandidates.push_back(recoJet);
-
+    
     //apply signal cuts...
     if ( recoJet.Pt() < (Jet_RecoPtCut/1000.) ) continue;
     if ( fabs(recoJet.Eta()) > Jet_RecoEtaCut ) continue;
-
+    
     if ( recoJet.isbjet ){
-      n_bjets++;
-      n_bjets_80eff++;
+      bj_N_77fc++;
+      bj_N_85fc++;
+      bj_N_70fc++;      
     }
-
+    
     //check for higher pt jet multiplicity
-    if(recoJet.Pt() > 40.){
-      n_jets40++;
-      if(recoJet.Pt() > 50.){
-	n_jets50++;
-	if(recoJet.Pt() > 60.){
-	  n_jets60++;
-	  if(recoJet.Pt() > 80.){
-	    n_jets80++;
+    if(recoJet.Pt() > 30.){
+      j_N30++;
+      if(recoJet.Pt() > 40.){
+	j_N40++;
+	if(recoJet.Pt() > 50.){
+	  j_N50++;
+	  if(recoJet.Pt() > 60.){
+	    j_N60++;
+	    if(recoJet.Pt() > 80.){
+	      j_N80++;
+	    }
 	  }
-        }
+	}
       }
     }
-
 
     //check for overlapping jets
     if(doOR){
@@ -4002,17 +4782,19 @@ EL::StatusCode chorizo :: loop_truth()
       }
       if(overlap) continue;
       
-      for(const auto& c_ph : photonCandidates){
-	if(recoJet.GetVector().DeltaR(c_ph) < 0.2){
-	  overlap=true;
-	  break;
+      if (usePhotons){
+	for(const auto& c_ph : photonCandidates){
+	  if(recoJet.GetVector().DeltaR(c_ph) < 0.4){
+	    overlap=true;
+	    break;
+	  }
 	}
-      }
+      }//usephoton
       if(overlap) continue;
     }
-
+    
     recoJets.push_back(recoJet);
-    n_jets++;
+    j_N++;
   }
 
   //sort the jet candidates in Pt
@@ -4044,28 +4826,30 @@ EL::StatusCode chorizo :: loop_truth()
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end());
 
 
-  for(const auto& c_ph : photonCandidates){
-
-    if(doOR){    
-      bool overlap=false;
-      for(const auto& c_jet : recoJets){
-	if( c_ph.GetVector().DeltaR(c_jet) < 0.4 ){
-	  overlap=true;
-	  break;
+  if (usePhotons){
+    for(const auto& c_ph : photonCandidates){
+      
+      if(doOR){    
+	bool overlap=false;
+	for(const auto& c_jet : recoJets){
+	  if( c_ph.GetVector().DeltaR(c_jet) < 0.4 ){
+	    overlap=true;
+	    break;
+	  }
 	}
+	if(overlap) continue;
       }
-      if(overlap) continue;
-    }
-
-    //apply signal cuts...
-    //if(...)
-    
-    recoPhotons.push_back(c_ph);
-    ph_N++;
-  }  
-  //sort the photons in Pt (they should be already, but anyways)
-  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
-
+      
+      //apply signal cuts...
+      //if(...)
+      
+      recoPhotons.push_back(c_ph);
+      ph_N++;
+    }  
+    //sort the photons in Pt (they should be already, but anyways)
+    if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+  }//usephoton
+  
   //just to TEST directHG thing
   // if(recoPhotons.size()>1){
   //   double mgg = (recoPhotons.at(0).GetVector()+recoPhotons.at(1).GetVector()).M();
@@ -4113,12 +4897,16 @@ EL::StatusCode chorizo :: loop_truth()
   metmap={};
   metmap[::MetDef::InvMuTruth] = met_obj.GetVector("met_truth_imu");
   metmap[::MetDef::VisMuTruth] = met_obj.GetVector("met_truth_vmu");
-  metmap[::MetDef::InvMuECorr] = met_obj.GetVector("met_ecorr_imu");
-  metmap[::MetDef::InvMuPhCorr] = met_obj.GetVector("met_phcorr_imu");
-  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
-  metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
-  metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst_imu");
 
+  //meta data (fill it once)
+  if(smetmap==""){ 
+    for (auto& mk : metmap){ 
+      smetmap += sMetDef[(unsigned int)mk.first];
+      smetmap += ",";
+    }
+    meta_metmap = new TNamed("METmap", smetmap.c_str());
+    wk()->addOutput(meta_metmap);     
+  }
 
   //Recoiling system against MET (prebooking)
   TLorentzVector sjet(0.,0.,0.,0.);
@@ -4138,7 +4926,9 @@ EL::StatusCode chorizo :: loop_truth()
 
     met.push_back(mk.second.Mod());
     met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
-  
+    
+    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(), mk.second.Phi())); 
+    
     //Recoiling system against MET (prebooking)
     rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) ); //leading jet only
     rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
@@ -4158,8 +4948,8 @@ EL::StatusCode chorizo :: loop_truth()
 
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
+    auto dphi_min_4j_tmp=-1.;    
     auto dphi_min_tmp=-1.;
-    auto dphi_min_4jets_tmp=-1.;    
     int ibcl=-1;  //closest bjet to met
     int ibfar=-1; //most faraway bjet from met
     int ilcl=-1;  //closest light jet to met
@@ -4179,14 +4969,13 @@ EL::StatusCode chorizo :: loop_truth()
       float dphi_jm = deltaPhi( jet.Phi(), mk.second.Phi() );
       
       if(dphi_min_allj_tmp < 0 || dphi_min_allj_tmp > deltaPhi(jet.Phi(), mk.second.Phi()) ) //closest jet to met (all)
-	dphi_min_allj_tmp = deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
-     
-      if( ijet < 4 && (dphi_min_4jets_tmp < 0 || dphi_min_4jets_tmp > dphi_jm) ) //closest jet to met (3-leading only)
-	dphi_min_4jets_tmp = dphi_jm;      
-
+	dphi_min_allj_tmp =  dphi_jm;   //deltaPhi(recoJets.at(ijet).Phi(), met_phi[0]);
+      
       if( ijet < 3 && (dphi_min_tmp < 0 || dphi_min_tmp > dphi_jm) ) //closest jet to met (3-leading only)
 	dphi_min_tmp = dphi_jm;
 
+      if( ijet < 4 && (dphi_min_4j_tmp < 0 || dphi_min_4j_tmp > dphi_jm) ) //closest jet to met (3-leading only)
+	dphi_min_4j_tmp = dphi_jm;
 
       //--- look for min MT(jet,MET)
       float mt_jm = Calc_MT( jet, mk.second );
@@ -4196,7 +4985,7 @@ EL::StatusCode chorizo :: loop_truth()
       
       
       //--- look for closest/faraway bjet and closer light jet to MET
-      if( jet.isBTagged(Jet_Tagger) ){
+      if( jet.isbjet && fabs(jet.Eta())<2.5){
 	
 	if( dphi_jm < min_dphi_bm){ //closest bjet
 	  min_dphi_bm = dphi_jm;
@@ -4219,7 +5008,7 @@ EL::StatusCode chorizo :: loop_truth()
       ijet++;
     }
     dPhi_min_alljets.push_back(dphi_min_allj_tmp);
-    dPhi_min_4jets.push_back(dphi_min_4jets_tmp);    
+    dPhi_min_4jets.push_back(dphi_min_4j_tmp);    
     dPhi_min.push_back(dphi_min_tmp);
 
     if( min_mt_jm==999999. )
@@ -4234,35 +5023,35 @@ EL::StatusCode chorizo :: loop_truth()
 
 
     //dphi(jet_i, met+j) ,  MT(j_i, met_j)
-    if (n_jets>0){
+    if (j_N>0){
       dPhi_met_j1.push_back( deltaPhi( mk.second.Phi(), recoJets.at(0).Phi()) );	
       j1_mT.push_back( Calc_MT( recoJets.at(0), mk.second ));
-      if (n_jets>1){
+      if (j_N>1){
 	dPhi_met_j2.push_back( deltaPhi( mk.second.Phi(), recoJets.at(1).Phi()) );	
 	j2_mT.push_back( Calc_MT( recoJets.at(1), mk.second ));
-	if (n_jets>2){
+	if (j_N>2){
 	  dPhi_met_j3.push_back( deltaPhi( mk.second.Phi(), recoJets.at(2).Phi()) );	
 	  j3_mT.push_back( Calc_MT( recoJets.at(2), mk.second ));
-	  if (n_jets>3){
+	  if (j_N>3){
 	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );	
 	    j4_mT.push_back( Calc_MT( recoJets.at(3), mk.second ));
 	  }
 	}
       }
     }
-    dPhi_met_mettrk.push_back(deltaPhi(metmap[MetDef::Track].Phi(),mk.second.Phi()));
+
     //meff = HT + met
     meff.push_back( HT + mk.second.Mod() );
     
     //tau jet candidates
-    n_taujets.push_back( ntaujs );
+    j_tau_N.push_back( ntaujs );
 
     //==== Razor ====
     fillRazor( makeV3( mk.second ) );
 
   }//end of met flavor loop
 
-  met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();
+  //  met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();
 
 
   //--- Some other event variables
@@ -4272,15 +5061,15 @@ EL::StatusCode chorizo :: loop_truth()
   //*** otherwise t_b_*** variables are not filled otherwise!
   
   //--- Invariant mass of the 2 first jets (M12)
-  if(n_jets>1){
+  if(j_N>1){
     TLorentzVector jet_M = (recoJets[0].GetVector() + recoJets[1].GetVector());
     M12 = jet_M.M();
   }
   
   //- dPhi & dR
-
+  //dPhi_met_mettrk = deltaPhi(metmap[MetDef::Track].Phi(), metmap[MetDef::InvMu].Phi());
   
-  if (n_jets>0){
+  if (j_N>0){
 
     dPhi_j1_bp1 = deltaPhi(recoJets.at(0).Phi(), t_b_phi1);
     dPhi_j1_bp2 = deltaPhi(recoJets.at(0).Phi(), t_b_phi2);
@@ -4293,7 +5082,7 @@ EL::StatusCode chorizo :: loop_truth()
 	dR_j1_m2 = recoJets.at(0).DeltaR(recoMuons.at(1));
     }
     
-    if (n_jets>1){
+    if (j_N>1){
       
       dPhi_j1_j2  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(1).Phi());
       dPhi_j2_bp1 = deltaPhi(recoJets.at(1).Phi(), t_b_phi1);
@@ -4310,7 +5099,7 @@ EL::StatusCode chorizo :: loop_truth()
 	  dR_j2_m2=recoJets.at(1).DeltaR(recoMuons.at(1));
       }
 
-      if (n_jets>2){
+      if (j_N>2){
 	dPhi_j1_j3  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(2).Phi());
 	dPhi_j2_j3  = deltaPhi(recoJets.at(1).Phi(), recoJets.at(2).Phi());
 	dPhi_j3_bp1 = deltaPhi(recoJets.at(2).Phi(), t_b_phi1);
@@ -4329,29 +5118,32 @@ EL::StatusCode chorizo :: loop_truth()
       }
     }
   }
+  
 
   
   //Dijet Mass
-  if (n_jets>1){  
-    DiJet_Mass = Calc_dijetMass();
-    if( recoJets.at(0).isBTagged(Jet_Tagger) && recoJets.at(1).isBTagged(Jet_Tagger) )
-      DiBJet_Mass = DiJet_Mass;
+  if (j_N>1){  
+    mjj = Calc_Mjj();
+    if( recoJets.at(0).isbjet && recoJets.at(1).isbjet && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
+      mbb = mjj;
   }
 
   //Mct
   mct = Calc_mct();
+
 
   //==== Hadronic top reconstruction ====
   int ibtop1=-1; //book two highest btag-weight jets for later use
   int ibtop2=-1;
   int iblead1=-1;
   int iblead2=-1;
-  float maxbw1=-99;
-  float maxbw2=-99;
+  float maxbw1=-999;
+  float maxbw2=-999;
   auto ijet=0;
   for( auto jet : recoJets ){  //jet loop
+        
+    if( jet.isbjet && fabs(jet.Eta())<2.5){
 
-    if( jet.isBTagged(Jet_Tagger) ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -4360,7 +5152,7 @@ EL::StatusCode chorizo :: loop_truth()
 
 	float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
 	if(locbw > maxbw1){
-	  if(maxbw1 > -99){ //if already filled, the old max1 becomes the new max2
+	  if(maxbw1 > -999){ //if already filled, the old max1 becomes the new max2
 	    maxbw2 = maxbw1;
 	    ibtop2 = ibtop1;
 	  }
@@ -4375,7 +5167,7 @@ EL::StatusCode chorizo :: loop_truth()
 
       ijet++;
   }
-  RecoHadTops(ibtop1, ibtop2);
+  //RecoHadTops(ibtop1, ibtop2);
 
 
   //dPhi_b1_b2  
@@ -4424,29 +5216,20 @@ EL::StatusCode chorizo :: loop_truth()
   if(recoElectrons.size()){
     TVector2 v_e1(recoElectrons.at(0).Px(), recoElectrons.at(0).Py());
     //TVector2 met_electron = met_obj.GetVector("met") - v_e1; //CHECK_ME  - o + ?
-    TVector2 met_electron = met_obj.GetVector("met_imu"); 
-    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu");    
-    TVector2 met_tst_electron = met_obj.GetVector("met_tst_imu");  
-    TVector2 met_tst_electron_vmu = met_obj.GetVector("met_tst_vmu"); 
-
+    TVector2 met_electron = met_obj.GetVector("met_imu"); //arely
+    TVector2 met_electron_vmu = met_obj.GetVector("met_vmu"); //arely    
     e_MT = Calc_MT( recoElectrons.at(0), met_electron);
     e_MT_vmu = Calc_MT( recoElectrons.at(0), met_electron_vmu);    
-    e_MT_tst = Calc_MT( recoElectrons.at(0), met_tst_electron);
-    e_MT_tst_vmu = Calc_MT( recoElectrons.at(0), met_tst_electron_vmu);
-  }  
+  }
   
   //--- Define m_MT - we recompute the MET with the muon in order to have the pt of the nu
   if(recoMuons.size()>0){ //--- Careful: Optimized for Etmiss without muons!
     TVector2 v_m1(recoMuons.at(0).Px(), recoMuons.at(0).Py());
     //TVector2 met_muon = met_obj.GetVector("met") - v_m1; //CHECK_ME  - o + ? met has inv muons already o.O
-    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1;
-    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); 
-    TVector2 met_tst_muon = met_obj.GetVector("met_tst_imu") - v_m1; 
-    TVector2 met_tst_muon_vmu = met_obj.GetVector("met_tst_vmu"); 
+    TVector2 met_muon = met_obj.GetVector("met_imu") - v_m1; //arely
+    TVector2 met_muon_vmu = met_obj.GetVector("met_vmu"); //arely    
     m_MT = Calc_MT( recoMuons.at(0), met_muon);
-    m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);  
-    m_MT_tst = Calc_MT( recoMuons.at(0), met_tst_muon);
-    m_MT_tst_vmu = Calc_MT( recoMuons.at(0), met_tst_muon_vmu);  
+    m_MT_vmu = Calc_MT( recoMuons.at(0), met_muon_vmu);    
   }
   
   
@@ -4476,7 +5259,8 @@ EL::StatusCode chorizo :: loop_truth()
   
   //Z decay mode 
   TLorentzVector Ztlv(0.,0.,0.,0.);
-  std::vector<int> zdecays =  this->GetTruthZDecay(Ztlv);
+  std::vector<int> zdecays;
+  if(m_truthP) zdecays = this->GetTruthZDecay(Ztlv);
   if(zdecays.size()){
     Z_decay  = zdecays.at(0);
     Z_pt     = Ztlv.Pt();
@@ -4488,259 +5272,269 @@ EL::StatusCode chorizo :: loop_truth()
 
 
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
-  if(isMC) RunNumber = mc_channel_number;
+  RunNumber = mc_channel_number;
   
-
   //---Fill missing data members 
   this->dumpLeptons();
   this->dumpPhotons();
   this->dumpJets();
 
 
-  output->setFilterPassed (true);
+  m_atree->Fill();
+  //  output->setFilterPassed (true);
   return nextEvent(); //SUCCESS + cleaning
 }
 
 //Fill lepton data members
 void chorizo :: dumpLeptons(){
+    
+  bool fill=false;
 
   //--- Dump Electrons
   //-baseline
-  for(unsigned int iel = 0; iel < TMath::Min((int)electronCandidates.size(), BookElBase); iel++){
+  //  for(unsigned int iel = 0; iel < TMath::Min((int)electronCandidates.size(), BookElBase); iel++){
+  for(unsigned int iel = 0; iel < BookElBase; iel++){
     
-    eb_pt.push_back( electronCandidates.at(iel).Pt() );
-    eb_eta.push_back( electronCandidates.at(iel).Eta() );
-    eb_phi.push_back( electronCandidates.at(iel).Phi() );
+    fill = (iel < electronCandidates.size() );
+    eb_pt.push_back( fill ? electronCandidates.at(iel).Pt() : DUMMYDN );
+    eb_eta.push_back( fill ? electronCandidates.at(iel).Eta() : DUMMYDN );
+    eb_phi.push_back( fill ? electronCandidates.at(iel).Phi() : DUMMYDN );
   }
 
   //-signal
-  for(unsigned int iel = 0; iel < TMath::Min((int)recoElectrons.size(), BookElSignal); iel++){
+  //  for(unsigned int iel = 0; iel < TMath::Min((int)recoElectrons.size(), BookElSignal); iel++){
+  for(unsigned int iel = 0; iel < BookElSignal; iel++){
     
-    e_pt.push_back( recoElectrons.at(iel).Pt() );
-    e_eta.push_back( recoElectrons.at(iel).Eta() );
-    e_phi.push_back( recoElectrons.at(iel).Phi() );
-    e_type.push_back( recoElectrons.at(iel).type );   
-    e_origin.push_back( recoElectrons.at(iel).origin );        
-    e_etiso30.push_back( recoElectrons.at(iel).etcone30 );
-    e_ptiso30.push_back( recoElectrons.at(iel).ptcone30 );
-    e_etiso20.push_back( recoElectrons.at(iel).etcone20 );
-    e_ptiso20.push_back( recoElectrons.at(iel).ptcone20 );
-    e_isoTight.push_back( recoElectrons.at(iel).isoTight );
-    e_isoGradient.push_back( recoElectrons.at(iel).isoGradient );
-    e_isoLoose.push_back( recoElectrons.at(iel).isoLoose );
-    e_id.push_back(  recoElectrons.at(iel).id );
-    e_d0_sig.push_back( recoElectrons.at(iel).d0_sig );
-    e_z0.push_back( recoElectrons.at(iel).z0 );
+    fill = (iel < recoElectrons.size() );
+    e_pt.push_back( fill ?  recoElectrons.at(iel).Pt()  : DUMMYDN );
+    e_eta.push_back( fill ?  recoElectrons.at(iel).Eta()  : DUMMYDN );
+    e_phi.push_back( fill ?  recoElectrons.at(iel).Phi()  : DUMMYDN );
+    e_type.push_back( fill ?  recoElectrons.at(iel).type  : DUMMYDN );   
+    e_origin.push_back( fill ?  recoElectrons.at(iel).origin  : DUMMYDN );        
+    e_etiso30.push_back( fill ?  recoElectrons.at(iel).etcone30  : DUMMYDN );
+    e_ptiso30.push_back( fill ?  recoElectrons.at(iel).ptcone30  : DUMMYDN );
+    e_etiso20.push_back( fill ?  recoElectrons.at(iel).etcone20  : DUMMYDN );
+    e_ptiso20.push_back( fill ?  recoElectrons.at(iel).ptcone20  : DUMMYDN );
+    e_isoTight.push_back( fill ?  recoElectrons.at(iel).isoTight  : DUMMYDN );
+    e_isoLoose.push_back( fill ?  recoElectrons.at(iel).isoLoose  : DUMMYDN );
+    e_isoLooseTrackOnly.push_back( fill ?  recoElectrons.at(iel).isoLooseTrackOnly  : DUMMYDN );
+    e_isoGradient.push_back( fill ?  recoElectrons.at(iel).isoGradient  : DUMMYDN );
+    e_isoGradientLoose.push_back( fill ?  recoElectrons.at(iel).isoGradientLoose  : DUMMYDN );
+    e_id.push_back( fill ?   recoElectrons.at(iel).id  : DUMMYDN );
+    e_d0_sig.push_back( fill ?  recoElectrons.at(iel).d0_sig  : DUMMYDN );
+    e_z0.push_back( fill ?  recoElectrons.at(iel).z0  : DUMMYDN );
+    e_trigger.push_back( fill ?  (int)recoElectrons.at(iel).isTrigMatch : DUMMYDN );
   }
-    
-  if (truthElectrons.size()>0){
-    e_truth_pt = truthElectrons.at(0).Pt();
-    e_truth_eta = truthElectrons.at(0).Eta();
-    e_truth_phi = truthElectrons.at(0).Phi();
-  }  
-
-
+  
+  e_truth_pt  = (truthElectrons.size()>0) ? truthElectrons.at(0).Pt()  : DUMMYDN;
+  e_truth_eta = (truthElectrons.size()>0) ? truthElectrons.at(0).Eta() : DUMMYDN;
+  e_truth_phi = (truthElectrons.size()>0) ? truthElectrons.at(0).Phi() : DUMMYDN;
+  
+  
   //--- Dump Muons 
   //-baseline
-  for(unsigned int imu = 0; imu < TMath::Min((int)muonCandidates.size(), BookMuBase); imu++){
+  //for(unsigned int imu = 0; imu < TMath::Min((int)muonCandidates.size(), BookMuBase); imu++){
+  for(unsigned int imu = 0; imu < BookMuBase; imu++){
     
-    mb_pt.push_back( muonCandidates.at(imu).Pt() );
-    mb_eta.push_back( muonCandidates.at(imu).Eta() );
-    mb_phi.push_back( muonCandidates.at(imu).Phi() );
-    // mb_etiso20.push_back( muonCandidates.at(imu).etcone20 );
-    // mb_ptiso20.push_back( muonCandidates.at(imu).ptcone20 );
-    // mb_etiso30.push_back( muonCandidates.at(imu).etcone30 );
-    // mb_ptiso30.push_back( muonCandidates.at(imu).ptcone30 );
+    fill = (imu < muonCandidates.size());
+    mb_pt.push_back(  fill ? muonCandidates.at(imu).Pt()  : DUMMYDN );
+    mb_eta.push_back( fill ? muonCandidates.at(imu).Eta() : DUMMYDN );
+    mb_phi.push_back( fill ? muonCandidates.at(imu).Phi() : DUMMYDN );
   }
   
   //-signal
-  for(unsigned int imu = 0; imu < TMath::Min((int)recoMuons.size(), BookMuSignal); imu++){
-    
-    m_pt.push_back( recoMuons.at(imu).Pt() );
-    m_eta.push_back( recoMuons.at(imu).Eta() );
-    m_phi.push_back( recoMuons.at(imu).Phi() );
-    m_type.push_back( recoMuons.at(imu).type ); 
-    m_origin.push_back( recoMuons.at(imu).origin );        
-    m_etiso20.push_back( recoMuons.at(imu).etcone20 );
-    m_ptiso20.push_back( recoMuons.at(imu).ptcone20 );
-    m_etiso30.push_back( recoMuons.at(imu).etcone30 );
-    m_ptiso30.push_back( recoMuons.at(imu).ptcone30 );
-    m_isoTight.push_back( recoMuons.at(imu).isoTight );
-    m_isoGradient.push_back( recoMuons.at(imu).isoGradient );
-    m_isoLoose.push_back( recoMuons.at(imu).isoLoose );
+  //  for(unsigned int imu = 0; imu < TMath::Min((int)recoMuons.size(), BookMuSignal); imu++){
+  for(unsigned int imu = 0; imu < BookMuSignal; imu++){
+
+    fill = (imu < recoMuons.size());    
+    m_pt.push_back( fill ?  recoMuons.at(imu).Pt()  : DUMMYDN );
+    m_eta.push_back( fill ?  recoMuons.at(imu).Eta()  : DUMMYDN );
+    m_phi.push_back( fill ?  recoMuons.at(imu).Phi()  : DUMMYDN );
+    m_type.push_back( fill ?  recoMuons.at(imu).type  : DUMMYDN ); 
+    m_origin.push_back( fill ?  recoMuons.at(imu).origin  : DUMMYDN );        
+    m_etiso20.push_back( fill ?  recoMuons.at(imu).etcone20  : DUMMYDN );
+    m_ptiso20.push_back( fill ?  recoMuons.at(imu).ptcone20  : DUMMYDN );
+    m_etiso30.push_back( fill ?  recoMuons.at(imu).etcone30  : DUMMYDN );
+    m_ptiso30.push_back( fill ?  recoMuons.at(imu).ptcone30  : DUMMYDN );
+    m_isoTight.push_back( fill ?  recoMuons.at(imu).isoTight  : DUMMYDN );
+    m_isoLoose.push_back( fill ?  recoMuons.at(imu).isoLoose  : DUMMYDN );
+    m_isoLooseTrackOnly.push_back( fill ?  recoMuons.at(imu).isoLooseTrackOnly  : DUMMYDN );
+    m_isoGradient.push_back( fill ?  recoMuons.at(imu).isoGradient  : DUMMYDN );
+    m_isoGradientLoose.push_back( fill ?  recoMuons.at(imu).isoGradientLoose  : DUMMYDN );
+    m_trigger.push_back( fill ?  (int)recoMuons.at(imu).isTrigMatch  : DUMMYDN );
   }
   
 }
+
 
 //Fill photon data members
 void chorizo :: dumpPhotons(){
 
-  if(ph_N>0){
-    ph_pt = recoPhotons.at(0).Pt();
-    ph_eta = recoPhotons.at(0).Eta();
-    ph_phi = recoPhotons.at(0).Phi();
-    ph_etiso30 = recoPhotons.at(0).etcone30;
-    ph_ptiso30 = recoPhotons.at(0).ptcone30;
-    ph_tight = recoPhotons.at(0).isTight;
-    ph_type = recoPhotons.at(0).type;
-    ph_origin = recoPhotons.at(0).origin;
+  bool fill=false;
+
+  //-signal
+  //  for(unsigned int iph = 0; iph < TMath::Min((int)recoPhotons.size(), BookPhSignal); iph++){
+  for(unsigned int iph = 0; iph < BookPhSignal; iph++){
+    
+    fill = (iph < recoPhotons.size());
+    ph_pt.push_back( fill ?  recoPhotons.at(iph).Pt()  : DUMMYDN );
+    ph_eta.push_back( fill ?  recoPhotons.at(iph).Eta()  : DUMMYDN );
+    ph_phi.push_back( fill ?  recoPhotons.at(iph).Phi()  : DUMMYDN );
+    ph_etiso30.push_back( fill ?  recoPhotons.at(iph).etcone30  : DUMMYDN );
+    ph_ptiso30.push_back( fill ?  recoPhotons.at(iph).ptcone30  : DUMMYDN );
+    ph_tight.push_back( fill ?  (int)recoPhotons.at(iph).isTight  : DUMMYDN );
+    ph_type.push_back( fill ?  recoPhotons.at(iph).type  : DUMMYDN );
+    ph_origin.push_back( fill ?  recoPhotons.at(iph).origin  : DUMMYDN );
+    ph_trigger.push_back( fill ?  (int)recoPhotons.at(iph).isTrigMatch  : DUMMYDN );
+    
   }
 }
-
 
 //Fill jet data members 
 void chorizo :: dumpJets(){
 
-  //jets + btagging  
-  if (n_jets>0){
-    tag_MV1_1 = recoJets.at(0).MV1;
-    tag_SV1_1 = recoJets.at(0).SV1plusIP3D;
-    // tag_JetFitterCOMBNN_1 = recoJets.at(0).JetFitterCOMBNN;
-    // tag_JetFitterCOMBNNc_1 = recoJets.at(0).JetFitterCOMBNNc;
-    tag_JetFitterCu_1 = recoJets.at(0).JetFitterCu;
-    tag_JetFitterCb_1 = recoJets.at(0).JetFitterCb;
-    pt1 = recoJets.at(0).Pt();
-    pt1raw = recoJets.at(0).ptraw*0.001;
+  bool fill=false;
 
-    eta1 = recoJets.at(0).Eta();
-    phi1 = recoJets.at(0).Phi();
+  //--- Dump Jets 
+  //-signal
+  //  for(unsigned int ijet = 0; ijet < TMath::Min((int)recoJets.size(), BookJetSignal); ijet++){
+  for(unsigned int ijet = 0; ijet < BookJetSignal; ijet++){
 
-    truthpt1= recoJets.at(0).TruthJet.Pt();
-    trutheta1= recoJets.at(0).TruthJet.Eta();
-    truthphi1= recoJets.at(0).TruthJet.Phi();
+    fill = (ijet < recoJets.size());
 
-    j1_E = recoJets.at(0).E();
-    j1_chf = recoJets.at(0).chf;
-    j1_emf = recoJets.at(0).emf;
-    j1_fsm = recoJets.at(0).fsm;
-    j1_time = recoJets.at(0).time;
-    j1_jvtxf = recoJets.at(0).jvtxf;
-    j1_tflavor = recoJets.at(0).FlavorTruth;
-    j1_nTrk = recoJets.at(0).nTrk;      
-    j1_sumPtTrk = recoJets.at(0).sumPtTrk;
+    j_pt.push_back(  fill ?  recoJets.at(ijet).Pt()   : DUMMYDN );
+    j_eta.push_back( fill ?  recoJets.at(ijet).Eta() : DUMMYDN );
+    j_phi.push_back( fill ?  recoJets.at(ijet).Phi() : DUMMYDN );
+    j_m.push_back(   fill ?  recoJets.at(ijet).M()   : DUMMYDN );
+
+    j_tag_MV1.push_back( fill ?  recoJets.at(ijet).MV1  : DUMMYDN );
+    j_tag_MV2c20.push_back( fill ?  recoJets.at(ijet).MV2c20  : DUMMYDN );
     
-    if (n_jets>1){
-      //Dijet Mass
-      DiJet_Mass = Calc_dijetMass();
-      if( recoJets.at(0).isBTagged(Jet_Tagger) && recoJets.at(1).isBTagged(Jet_Tagger) )
-	DiBJet_Mass = DiJet_Mass;
+    j_btruth_70.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t70  : DUMMYDN );
+    j_btruth_77.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t77  : DUMMYDN );
+    j_btruth_85.push_back( fill ?  (int) recoJets.at(ijet).isbjet_t80  : DUMMYDN ); 
+
+    j_bflat_70.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb70  : DUMMYDN );
+    j_bflat_77.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb77  : DUMMYDN );
+    j_bflat_85.push_back( fill ?  (int) recoJets.at(ijet).isbjet_fb85  : DUMMYDN ); 
+
+    j_chf.push_back( fill  ?  recoJets.at(ijet).chf  : DUMMYDN );
+    j_emf.push_back( fill  ?  recoJets.at(ijet).emf  : DUMMYDN );
+    j_fsm.push_back( fill  ?  recoJets.at(ijet).fsm  : DUMMYDN );
+    j_time.push_back( fill ?  recoJets.at(ijet).time : DUMMYDN );
+    j_jvf.push_back( fill  ?  recoJets.at(ijet).jvf  : DUMMYDN );
+    j_jvt.push_back( fill  ?  recoJets.at(ijet).jvt  : DUMMYDN );
+    j_tflavor.push_back( fill ?  recoJets.at(ijet).FlavorTruth  : DUMMYDN );
+    j_nTrk.push_back( fill ?  recoJets.at(ijet).nTrk  : DUMMYDN );
+    j_sumPtTrk.push_back( fill ?  recoJets.at(ijet).sumPtTrk  : DUMMYDN );
+
+    if(dumpTile){
+      j_const_pt.push_back(  fill ?  recoJets.at(ijet).p4const.Pt()  : DUMMYDN );
+      j_const_eta.push_back( fill ?  recoJets.at(ijet).p4const.Eta() : DUMMYDN );
+      j_const_phi.push_back( fill ?  recoJets.at(ijet).p4const.Phi() : DUMMYDN );
+      j_const_m.push_back(   fill ?  recoJets.at(ijet).p4const.M()   : DUMMYDN );
       
-      //btagging
-      tag_MV1_2 = recoJets.at(1).MV1;
-      tag_SV1_2 = recoJets.at(1).SV1plusIP3D;
-      // tag_JetFitterCOMBNN_2 = recoJets.at(1).JetFitterCOMBNN;
-      // tag_JetFitterCOMBNNc_2 = recoJets.at(1).JetFitterCOMBNNc;
-      tag_JetFitterCu_2 = recoJets.at(1).JetFitterCu;
-      tag_JetFitterCb_2 = recoJets.at(1).JetFitterCb;
-      //if (!isTruth) btageffSF2 = recoJets.at(1).TagEffSF;
-      //if (!isTruth) btagineffSF2 = recoJets.at(1).TagIneffSF;
-      pt2raw = recoJets.at(1).ptraw*0.001;
-      pt2 = recoJets.at(1).Pt();
-      eta2 = recoJets.at(1).Eta();
-      phi2 = recoJets.at(1).Phi();
-      j2_E = recoJets.at(1).E();      
-      j2_chf = recoJets.at(1).chf;
-      j2_emf = recoJets.at(1).emf;
-      j2_fsm = recoJets.at(1).fsm;
-      j2_time = recoJets.at(1).time;
-      j2_jvtxf = recoJets.at(1).jvtxf;
-      j2_tflavor = recoJets.at(1).FlavorTruth;
-      j2_nTrk = recoJets.at(1).nTrk;      
-      j2_sumPtTrk = recoJets.at(1).sumPtTrk;
-        
-      if (n_jets>2){
-	tag_MV1_3 = recoJets.at(2).MV1;
-	tag_SV1_3 = recoJets.at(2).SV1plusIP3D;
-	// tag_JetFitterCOMBNN_3 = recoJets.at(2).JetFitterCOMBNN;
-	// tag_JetFitterCOMBNNc_3 = recoJets.at(2).JetFitterCOMBNNc;
-	tag_JetFitterCu_3 = recoJets.at(2).JetFitterCu;
-	tag_JetFitterCb_3 = recoJets.at(2).JetFitterCb;
-	//if (!isTruth) btageffSF3 = recoJets.at(2).TagEffSF;
-	//if (!isTruth) btagineffSF3 = recoJets.at(2).TagIneffSF;
-	pt3 = recoJets.at(2).Pt();
-	eta3 = recoJets.at(2).Eta();
-	phi3 = recoJets.at(2).Phi();
-	j3_E = recoJets.at(2).E();	
-	j3_chf = recoJets.at(2).chf;
-	j3_emf = recoJets.at(2).emf;
-	j3_fsm = recoJets.at(2).fsm;
-	j3_time = recoJets.at(2).time;
-	j3_jvtxf = recoJets.at(2).jvtxf;
-	j3_tflavor = recoJets.at(2).FlavorTruth;
-	j3_nTrk = recoJets.at(2).nTrk;      
-	j3_sumPtTrk = recoJets.at(2).sumPtTrk; 
-          
-	if (n_jets>3){
-	  tag_MV1_4 = recoJets.at(3).MV1;
-	  tag_SV1_4 = recoJets.at(3).SV1plusIP3D;
-	  // tag_JetFitterCOMBNN_4 = recoJets.at(3).JetFitterCOMBNN;
-	  // tag_JetFitterCOMBNNc_4 = recoJets.at(3).JetFitterCOMBNNc;
-	  tag_JetFitterCu_4 = recoJets.at(3).JetFitterCu;
-	  tag_JetFitterCb_4 = recoJets.at(3).JetFitterCb;
-	  //if (!isTruth) btageffSF4 = recoJets.at(3).TagEffSF;
-	  //if (!isTruth) btagineffSF4 = recoJets.at(3).TagIneffSF;
-	  pt4 = recoJets.at(3).Pt();
-	  eta4 = recoJets.at(3).Eta();
-	  phi4 = recoJets.at(3).Phi();
-	  j4_E = recoJets.at(3).E();	  
-	  j4_chf = recoJets.at(3).chf;
-	  j4_emf = recoJets.at(3).emf;
-	  j4_fsm = recoJets.at(3).fsm;
-	  j4_time = recoJets.at(3).time;
-	  j4_jvtxf = recoJets.at(3).jvtxf;
-	  j4_tflavor = recoJets.at(3).FlavorTruth;
-	  j4_nTrk = recoJets.at(3).nTrk;      
-	  j4_sumPtTrk = recoJets.at(3).sumPtTrk; 	    
-	    
-
-	  if (n_jets>4){
-	    pt5 = recoJets.at(4).Pt();
-	    eta5 = recoJets.at(4).Eta();
-	    phi5 = recoJets.at(4).Phi();
-	    j5_E = recoJets.at(4).E();	    
-
-	    if (n_jets>5){
-	      pt6 = recoJets.at(5).Pt();
-	      eta6 = recoJets.at(5).Eta();
-	      phi6 = recoJets.at(5).Phi();
-	      j6_E = recoJets.at(5).E();	      
-	    } // end n_jets>5 
-	  } // end n_jets>4
-	} // end n_jets>3
-      } // end n_jets>2
-    } // end n_jets>1
-  } // end n_jets>0
-
+      if(ijet==0 ){
+	if(fill){
+	  j1_cl_N = recoJets.at(ijet).clusters.size();
+	  for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
+	    j1_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
+	    j1_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
+	    j1_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
+	    j1_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+	  }
+	}
+	else{
+	  j1_cl_N = DUMMYDN;
+	  j1_cl_pt.push_back(  DUMMYDN );
+	  j1_cl_eta.push_back( DUMMYDN );
+	  j1_cl_phi.push_back( DUMMYDN );
+	  j1_cl_emf.push_back( DUMMYDN );
+	}
+      }
+      else if(ijet==1){
+	if(fill){
+	  j2_cl_N = recoJets.at(ijet).clusters.size();
+	  for(unsigned int icl=0; icl < recoJets.at(ijet).clusters.size(); icl++){
+	    j2_cl_pt.push_back( recoJets.at(ijet).clusters.at(icl).Pt() );
+	    j2_cl_eta.push_back( recoJets.at(ijet).clusters.at(icl).Eta() );
+	    j2_cl_phi.push_back( recoJets.at(ijet).clusters.at(icl).Phi() );
+	    j2_cl_emf.push_back( recoJets.at(ijet).clusters.at(icl).emf );
+	  }
+	}
+	else{
+	  j2_cl_N = DUMMYDN;
+	  j2_cl_pt.push_back(  DUMMYDN );
+	  j2_cl_eta.push_back( DUMMYDN );
+	  j2_cl_phi.push_back( DUMMYDN );
+	  j2_cl_emf.push_back( DUMMYDN );
+	}
+      }
+    }
+  }
+  
 } //end filling jet data members
 
 
 
 EL::StatusCode chorizo :: postExecute ()
 {
+  if(debug)  Info("postExecute()","HERE");
   return EL::StatusCode::SUCCESS;
 }
 
 
 EL::StatusCode chorizo :: finalize ()
 {
+  if(debug)  Info("finalize()","HERE");
+
+  h_presel_flow->Fill(0.5, meta_nsim);
+  h_presel_wflow->Fill(0.5, meta_nwsim);
+
   //VIEW containers
   if(m_goodJets)
     delete m_goodJets;
+  if(m_smdJets)
+    delete m_smdJets;
+  if(m_inv_el)
+    delete m_inv_el;
+  if(m_inv_mu)
+    delete m_inv_mu;
+  if(m_inv_ph)
+    delete m_inv_ph;
 
-  //OverlapRemoval                                                                                                                  
+  //OverlapRemoval
   if(tool_or){
     delete tool_or;
     tool_or=0;
   }
 
-  //B-tagging                                                                                                                    
-  if(tool_btag){
-    delete tool_btag;
-    tool_btag=0;
+  //B-tagging
+  if(tool_btag70){
+    delete tool_btag70;
+    tool_btag70=0;
   }
-  if(tool_btag2){
-    delete tool_btag2;
-    tool_btag2=0;
+  if(tool_btag77){
+    delete tool_btag77;
+    tool_btag77=0;
+  }
+  if(tool_btag85){
+    delete tool_btag85;
+    tool_btag85=0;
+  }  
+  
+  
+  if(tool_btag_truth1){
+    delete tool_btag_truth1;
+    tool_btag_truth1=0;
+  }
+  if(tool_btag_truth2){
+    delete tool_btag_truth2;
+    tool_btag_truth2=0;
+  }
+  if(tool_btag_truth3){
+    delete tool_btag_truth3;
+    tool_btag_truth3=0;
   }
 
   //isolation tool
@@ -4756,6 +5550,15 @@ EL::StatusCode chorizo :: finalize ()
     delete iso_3;
     iso_3=0;
   }
+  if(iso_4){
+    delete iso_4;
+    iso_4=0;
+  }
+  if(iso_5){
+    delete iso_5;
+    iso_5=0;
+  }
+
 
   //PURW
   if(tool_purw){
@@ -4766,14 +5569,35 @@ EL::StatusCode chorizo :: finalize ()
     tool_purw=0;
   }
 
+  //SUSYTools
+  if( tool_st ){
+    delete tool_st;
+    tool_st = 0;
+  }
+
   //Trigger
   if(tool_trigdec){
     delete tool_trigdec;
     tool_trigdec=0;
   }
+
   if(tool_trigconfig){
     delete tool_trigconfig;
     tool_trigconfig=0;
+  }
+
+  if(tool_trig_match_el){
+    delete tool_trig_match_el;
+    tool_trig_match_el=0;
+  }
+
+  if(tool_trig_match_mu){
+    delete tool_trig_match_mu;
+    tool_trig_match_mu=0;
+  }
+  if(tool_trig_match_ph){
+    delete tool_trig_match_ph;
+    tool_trig_match_ph=0;
   }
 
   //GRL
@@ -4787,13 +5611,13 @@ EL::StatusCode chorizo :: finalize ()
     delete tool_tileTrip;
     tool_tileTrip = 0;
   }
-  
-   //jet tile recovery
+
+  //jet tile recovery
 #ifdef TILETEST
-   if( tool_jettile ) {
-     delete tool_jettile;
-     tool_jettile = 0;
-   }
+  if( tool_jettile ) {
+    delete tool_jettile;
+    tool_jettile = 0;
+  }
 #endif 
 
   //jet smearing
@@ -4802,28 +5626,16 @@ EL::StatusCode chorizo :: finalize ()
     tool_jsmear = 0;
   }
 
-  //jet jvf                                                                                                                                                                     
-  if( tool_jvf ) {
-    delete tool_jvf;
-    tool_jvf = 0;
+  //MCTruthClassifier
+  if( tool_mcc ) {
+    delete tool_mcc;
+    tool_mcc = 0;
   }
-
-  //jet label                                                                                                                                                                  
-  if( tool_jetlabel ) {
-    delete tool_jetlabel;
-    tool_jetlabel = 0;
-  }
-
+  
   //mct corrected
   if( tool_mct ) {
     delete tool_mct;
     tool_mct = 0;
-  }
-
-  //SUSYTools
-  if( tool_st ){
-    delete tool_st;
-    tool_st = 0;
   }
 
   //Stop clock
@@ -4842,6 +5654,7 @@ EL::StatusCode chorizo :: finalize ()
   xAOD::IOStats::instance().stats().printSmartSlimmingBranchList();
 #endif
 
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -4849,6 +5662,7 @@ EL::StatusCode chorizo :: finalize ()
 
 EL::StatusCode chorizo :: histFinalize ()
 {
+  if(debug)  Info("histFinalize()","HERE");
   return EL::StatusCode::SUCCESS;
 }
 
@@ -4968,20 +5782,25 @@ bool chorizo :: passMCor(){
   if (!this->isMC) //it only obviously applies to MC
     return true;
 
-  //to loop over  
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
-  
+  //--- to take into account new MET filtered samples  (don't apply it by default (yet))
+  // UInt_t MET_ids[] = {410000, 410013, 410014};   //filtered : 407012, 407019, 407021;
+  // if ( count(MET_ids, MET_ids+84, this->mc_channel_number) ){
+    
+  //   double nuMET = Calc_TruthNuMET();
+  //   if( nuMET.Pt() > 200000. ) //nominal samples
+  //     return false;
+  //   else
+  //     return true;
+  // }
+
+
   double cutting_var=0.;
+  //to loop over  
   if (this->mc_channel_number>=156803 && this->mc_channel_number<=156828){ //Znunu AlpGen
 
-    //truth particles loop                                                              
-    truthP_itr = m_truthP->begin();
-    truthP_end = m_truthP->end();
-    for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-
-      if(( *truthP_itr )->status()==124 && ( *truthP_itr )->absPdgId()==23){ //Z boson
-	cutting_var = ( *truthP_itr )->pt();
+    for(const xAOD::TruthParticle* tp : *m_truthP) {
+      if(tp->status()==124 && tp->absPdgId()==23){ //Z boson
+	cutting_var = tp->pt();
 	this->bos_pt = cutting_var;
       }
     } 
@@ -5008,18 +5827,16 @@ bool chorizo :: passMCor(){
       vector<float> mc_phi(mcall_n);
       vector<float> mc_m(mcall_n);
       
-      truthP_itr = m_truthP->begin();
-      truthP_end = m_truthP->end();
-      for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	if( !isHard( *truthP_itr ) ) continue; //look at ME particles only
-	if( !isLepNeut( *truthP_itr) ) continue; //look for leptons only
+      for(const xAOD::TruthParticle* tp : *m_truthP) {
+	if( !isHard( tp ) ) continue; //look at ME particles only
+	if( !isLepNeut( tp ) ) continue; //look for leptons only
 	mc3_n++;
-	mc_status[mc3_n] = ( *truthP_itr )->status();
-	mc_pdgId[mc3_n] = ( *truthP_itr )->pdgId();
-	mc_pt[mc3_n] =  ( *truthP_itr )->pt();
-	mc_eta[mc3_n] = ( *truthP_itr )->eta();
-	mc_phi[mc3_n] = ( *truthP_itr )->phi();
-	mc_m[mc3_n] = ( *truthP_itr )->m();
+	mc_status[mc3_n] = tp->status();
+	mc_pdgId[mc3_n]  = tp->pdgId();
+	mc_pt[mc3_n]     = tp->pt();
+	mc_eta[mc3_n]    = tp->eta();
+	mc_phi[mc3_n]    = tp->phi();
+	mc_m[mc3_n]      = tp->m();
       }
       mc3_n++;  // index --> size
       const int mc_n = static_cast< const int >( mc3_n );
@@ -5038,18 +5855,16 @@ bool chorizo :: passMCor(){
       TLorentzVector v1(0.,0.,0.,0.);
       TLorentzVector v2(0.,0.,0.,0.);
 
-      //reinitialize iterators
-      truthP_itr = m_truthP->begin();
-      for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-	
-	if( isLepNeut( (*truthP_itr) ) && isStable( (*truthP_itr) ) ){
-	  bos_pdgId = (*truthP_itr)->pdgId(); //CHECK_ME
+      for(const xAOD::TruthParticle* tp : *m_truthP) {
+      
+	if( isLepNeut( tp ) && isStable( tp ) ){
+	  bos_pdgId = tp->pdgId(); //CHECK_ME
 	  lep_count++;
 	  if(lep_count==1){
-	    fillTLV(v1, (*truthP_itr));
+	    fillTLV(v1, tp);
 	  }
 	  else if(lep_count==2){
-	    fillTLV(v2, (*truthP_itr));
+	    fillTLV(v2, tp);
 	    break;
 	  }
 	}//if                                                                                   
@@ -5109,8 +5924,9 @@ bool chorizo :: passMCor(){
   if( count(check_ids, check_ids+84, this->mc_channel_number) ){
     TVector2 met(0.,0.);
     xAOD::MissingETContainer* metRFcutvar = 0; // = new xAOD::MissingETContainer;
-    CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
-
+    //    CHECK( m_event->retrieve( metRFcutvar, "MET_RefFinal") );
+    CHECK( m_event->retrieve( metRFcutvar, "MET_Reference_AntiKt4EMTopo")); //??
+    //    CHECK( m_event->retrieve( metRFcutvar, "LocHadTopo") );
     met = getMET( metRFcutvar, "Final"); //METRefFinal for now... //FIX_ME !! Reco MET??
 
     bos_pt = met.Mod();
@@ -5389,8 +6205,6 @@ std::vector<int> chorizo::GetTruthZDecay(TLorentzVector &ztlv){
 	  // PowhegPythia6 has Z's with no real descendants
 	  if( kid->status() != 1 && !(kid->decayVtx()) ) badZ = true;
 	  
-	  if(badZ) continue;
-
 	  // Find Z decay mode
 	  nuZ  += (int) is_Neutrino(kidIda);
 	  hadZ += (int) is_Parton(kidIda);
@@ -5489,8 +6303,6 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
   }
 
   truth_shat = V.M();//magnitude or V.M()
-  //  cout << "-----------------------truth_shat: " << V.M() << endl;
-  //cout << "-----------------------truth_shat_pt: " << V.Pt() << endl;
   truth_shat_pt = V.Pt();//some sort of truth met
 
 }
@@ -5543,27 +6355,19 @@ double chorizo :: GetGeneratorUncertaintiesSherpa(){
   int nTruthJets=0;
   int sampleId=0;
 
-  xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
-  xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
-
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
-
   //loop over truth jets
   TLorentzVector truthJet;
-  for( ; tjet_itr != tjet_end; ++tjet_itr ) {
+  for(const xAOD::Jet* tjet : *m_truth_jets) {
   
-    fillTLV( truthJet, (*tjet_itr), true);
+    fillTLV( truthJet, tjet, true);
     
     //look for overlapping electron
     bool isElectronFakingJet = false;
-    truthP_itr = m_truthP->begin();
-    truthP_end = m_truthP->end();
-    for( ; truthP_itr != truthP_end; ++truthP_itr ) {
+    for(const xAOD::TruthParticle* tp : *m_truthP) {
       
       TLorentzVector truthPart;
-      if ( isElectron( *truthP_itr ) && isStable( *truthP_itr ) ){
-  	fillTLV( truthPart, ( *truthP_itr ), true);
+      if ( isElectron(tp) && isStable(tp) ){
+  	fillTLV( truthPart, tp, true);
   	if (truthPart.DeltaR(truthJet) < 0.1) {
   	  isElectronFakingJet = true;
   	  break;
@@ -5633,40 +6437,68 @@ float chorizo :: GetAverageWeight(){
 }
 
 
-float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool)
+float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool, float btag_op)
 {
   float totalSF = 1.;
-  
-  if (!this->isMC && !this->isSignal) return totalSF;
-    
-  xAOD::JetContainer::const_iterator jet_itr = goodJets->begin();
-  xAOD::JetContainer::const_iterator jet_end = goodJets->end();
-  
-  for( ; jet_itr != jet_end; ++jet_itr ) {
-    
+  for ( const auto& jet : *goodJets ) {
+
     float sf = 1.;
     
-    CP::CorrectionCode result;
+    const xAOD::BTagging* btag =jet->btagging();
+    double wmv2=-1;
+    btag->MVx_discriminant("MV2c20",wmv2);
     
-    if ( dec_bjet(**jet_itr))
-      {
-	result = btagTool->getScaleFactor(**jet_itr, sf);
-	
-	if (result != CP::CorrectionCode::Ok)
-	  Error("BTagSF", " Failed to retrieve eff SF for b-tagged jet!" );
+    if ( fabs(jet->eta()) > 2.5 ) {
+      ATH_MSG_VERBOSE( " Trying to retrieve b-tagging SF for jet with |eta|>2.5 (jet eta=" << jet->eta() << "), jet will be skipped");
+    } else if ( jet->pt() < 20e3 && jet->pt() < 1e6 ) {
+      ATH_MSG_VERBOSE( " Trying to retrieve b-tagging SF for jet with invalid pt (jet pt=" << jet->pt() << "), jet will be skipped");
+    } else {
+
+      CP::CorrectionCode result;
+      int truthlabel(-1);
+      if (!jet->getAttribute("ConeTruthLabelID", truthlabel)) {
+        ATH_MSG_ERROR("Failed to get jet truth label!");
       }
-    else
-      {
-	result = btagTool->getInefficiencyScaleFactor(**jet_itr, sf);
-	
-	if (result != CP::CorrectionCode::Ok)
-	  Error("BTagSF", " Failed to retrieve Ineff SF for b-tagged jet!" );
+      ATH_MSG_VERBOSE("This jet is " << (dec_bjet(*jet) ? "" : "not ") << "b-tagged.");
+      ATH_MSG_VERBOSE("This jet's truth label is " << truthlabel);
+
+      if ( wmv2>btag_op ) {  //FIX_ME !!
+
+        result = btagTool->getScaleFactor(*jet, sf);
+
+        switch (result) {
+        case CP::CorrectionCode::Error:
+          ATH_MSG_ERROR( " Failed to retrieve SF for jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        case CP::CorrectionCode::OutOfValidityRange:
+          ATH_MSG_VERBOSE( " No valid SF for jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        default:
+          ATH_MSG_VERBOSE( " Retrieve SF for b-tagged jet in SUSYTools_xAOD::BtagSF with value " << sf );
+        }
+      } else {
+
+        result = btagTool->getInefficiencyScaleFactor(*jet, sf);
+
+        switch (result) {
+        case CP::CorrectionCode::Error:
+          ATH_MSG_ERROR( " Failed to retrieve SF for non-b-tagged jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        case CP::CorrectionCode::OutOfValidityRange:
+          ATH_MSG_VERBOSE( " No valid inefficiency SF for non-b-tagged jet in SUSYTools_xAOD::BtagSF" );
+          break;
+        default:
+          ATH_MSG_VERBOSE( " Retrieve SF for non-b-tagged jet in SUSYTools_xAOD::BtagSF with value " << sf );
+        }
       }
-    
+    }
+
+    //dec_effscalefact(*jet) = sf;
+
     totalSF *= sf;
-    
+
   }
-  
+
   return totalSF;
   
 }
@@ -5715,6 +6547,114 @@ float chorizo::GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* b
 
 // };
 
+
+//Trigger matching
+bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double dR){
+
+  //check if at least the event passed this trigger
+  if(!tool_trigdec->isPassed(item))  return false;
+
+  TLorentzVector eloff;
+  eloff.SetPtEtaPhiE(el.pt(), el.trackParticle()->eta(), el.trackParticle()->phi(), el.e());
+
+  // Get the container of online electrons associated to passed item
+
+  // auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
+  // auto eleFeatureContainers = fc.containerFeature<TrigElectronContainer>(); 
+  // bool matched=false;
+  // for(auto elfeat : eleFeatureContainers){
+  //   cout << "taking new online electron..." << endl;
+  //   //const xAOD::ElectronContainer *elCont = elfeat.cptr();
+  //   for(const auto& eg : *elfeat.cptr()){
+  //     cout << "trying to match..." << endl;
+  //     TLorentzVector elLV;
+  //     elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
+  //     cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+  //     cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+  //     if(elLV.DeltaR(eloff) < dR) 
+  // 	return true;
+  //   }
+  // }
+
+  // auto cg = tool_trigdec->getChainGroup(item);
+  // auto fc = cg->features();
+  // auto elFeatureContainers = fc.containerFeature<ElectronContainer>();
+  // for(auto elcont : elFeatureContainers) {
+  //   TLorentzVector elLV;
+  //   for (auto el : *elcont.cptr()) {
+  //     elLV.SetPtEtaPhiE(el->pt(), el->trackParticle()->eta(), el->trackParticle()->phi(), el->e());
+  //     if(elLV.DeltaR(muoff) < dR) 
+  // 	return true;
+  //   }
+  // }
+
+
+  //ElectronContainer
+  //TrigElectronContainer
+  //TrigEMCluster
+
+  // auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
+  // auto vec_el = fc.get<xAOD::ElectronContainer>("",TrigDefs::alsoDeactivateTEs);
+  // bool matched=false;
+  // //cout << "Electron containers : " << vec_el.size() << endl;
+  // for(auto elfeat : vec_el){
+  //   //    cout << "taking new online electron..." << endl;
+  //   for(const auto& eg : *elfeat.cptr()){
+  //     cout << "trying to match..." << endl;
+  //     TLorentzVector elLV;
+  //     elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
+  //     //elLV.SetPtEtaPhiE(eg->pt(), eg->eta(), eg->phi(), eg->e());
+  //     // cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+  //     // cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+  //     if(elLV.DeltaR(eloff) < dR) 
+  // 	return true;
+  //   }
+  // }
+
+
+  Trig::FeatureContainer fc = tool_trigdec->features(item);
+  const std::vector< Trig::Feature<xAOD::ElectronContainer> > vec_el = fc.get<xAOD::ElectronContainer>();
+  for(auto elfeat : vec_el){
+    const xAOD::ElectronContainer *elCont = elfeat.cptr();
+    TLorentzVector elLV;
+    for(const auto& eg : *elCont){
+      elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());                                                                                                                                                                          
+      // cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
+      // cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
+      if(elLV.DeltaR(eloff) < dR) 
+  	return true;
+    }
+  }
+
+  return false;
+}
+
+
+bool chorizo :: hasTrigMatch(const xAOD::Muon& mu, std::string item, double dR){
+
+  //check if at least the event passed this trigger
+  if(!tool_trigdec->isPassed(item))   return false;
+  
+  TLorentzVector muoff;
+  muoff.SetPtEtaPhiE(mu.pt(), mu.eta(), mu.phi(), mu.e());
+
+  auto cg = tool_trigdec->getChainGroup(item);
+  auto fc = cg->features();
+  auto muFeatureContainers = fc.containerFeature<MuonContainer>();
+  for(auto mucont : muFeatureContainers){
+    TLorentzVector muLV;
+    for (auto mu : *mucont.cptr()){
+      muLV.SetPtEtaPhiE(mu->pt(), mu->eta(), mu->phi(), mu->e());
+      if(muLV.DeltaR(muoff) < dR) 
+	return true;
+    }
+  }
+
+  return false;
+}
+
+
+
 //Calculation of extra variables
 float chorizo :: Calc_MT(Particles::Particle p, TVector2 met){
 
@@ -5724,7 +6664,7 @@ float chorizo :: Calc_MT(Particles::Particle p, TVector2 met){
 
 float chorizo :: Calc_mct(){
 
-  if(n_jets<2) return -1;
+  if(j_N<2) return -1;
 
   return Calc_mct(recoJets.at(0), recoJets.at(1));
 };
@@ -5747,10 +6687,52 @@ float chorizo :: Calc_mct_corr(Particle p1, Particle p2, TVector2 met){
 };
 
 
+double chorizo :: Calc_TruthNuMET(){
+
+  TLorentzVector nuMET;
+  for(const xAOD::TruthParticle* tp1 : *m_truthP) {
+    if (!tp1->isNeutrino()) continue;
+
+    std::pair<MCTruthPartClassifier::ParticleType,MCTruthPartClassifier::ParticleOrigin> res;
+    res = tool_mcc->particleTruthClassifier(tp1);
+    MCTruthPartClassifier::ParticleOrigin iPartOrig = res.second;
+
+    switch (iPartOrig) {
+    case MCTruthPartClassifier::PhotonConv:
+    case MCTruthPartClassifier::DalitzDec:
+    case MCTruthPartClassifier::ElMagProc:
+    case MCTruthPartClassifier::Mu:
+    case MCTruthPartClassifier::TauLep:
+    case MCTruthPartClassifier::LightMeson:
+    case MCTruthPartClassifier::StrangeMeson:
+    case MCTruthPartClassifier::CharmedMeson:
+    case MCTruthPartClassifier::BottomMeson:
+    case MCTruthPartClassifier::CCbarMeson:
+    case MCTruthPartClassifier::JPsi:
+    case MCTruthPartClassifier::BBbarMeson:
+    case MCTruthPartClassifier::LightBaryon:
+    case MCTruthPartClassifier::StrangeBaryon:
+    case MCTruthPartClassifier::CharmedBaryon:
+    case MCTruthPartClassifier::BottomBaryon:
+    case MCTruthPartClassifier::PionDecay:
+    case MCTruthPartClassifier::KaonDecay:
+
+    case MCTruthPartClassifier::NonDefined:
+      continue;
+    default:
+      break;
+    }
+    nuMET += tp1->p4();
+
+  }
+  return nuMET.Pt();
+
+}
+
 
 float chorizo :: TopTransvMass(){
 
-  if (n_jets < 3) return -10.;
+  if (j_N < 3) return -10.;
   float m12 = (recoJets.at(0).GetVector() + recoJets.at(1).GetVector()).M();
   float m23 = (recoJets.at(1).GetVector() + recoJets.at(2).GetVector()).M();
   float m13 = (recoJets.at(0).GetVector() + recoJets.at(2).GetVector()).M();
@@ -5770,7 +6752,7 @@ float chorizo :: TopTransvMass(){
 
 }
 
-void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
+void chorizo :: RecoHadTops(int ibtop1, int ibtop2){     
 
   //==== Hadronic top reconstruction ====
   // DRmin implemented as in https://cds.cern.ch/record/1570992/files/ATL-COM-PHYS-2013-1092.pdf
@@ -5782,6 +6764,11 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
   //         in the SRs (since we apply lepton veto), it is needed for the 1-lepton CR afterwards.
   //         This way we avoid doubling the number of variables.
   //
+  
+  int Wjet1, Wjet2;
+  int Wjet3, Wjet4;
+  int bjet1 = -1;
+  int bjet2 = -1;
   
   //add leading leptons to jet collection
   Particles::Jet ElJet, MuJet;
@@ -5798,83 +6785,122 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
     muadded=true;
   }
 
-  if(ibtop1<0 || ibtop2<0 || (recoJets.size()<4) ){ //at least two bjets and 4 jets  (to build at least the first top)
-    m_top_had1=-1;
-    m_top_had2=-1;
-    return;
-  }
-    
-  int W1j1 = -1;
-  int W1j2 = -1;
-  int W1dr = 999.;
-  int W2j1 = -1;
-  int W2j2 = -1;
-  int W2dr = 999.;
-  //       tuple<int, int, float> Whad1(-1, -1, 999.);  //requires C++0x
-  //       tuple<int, int, float> Whad2(-1, -1, 999.);
+  if (bj_N>=1 && recoJets.size()>=3)
+    {
 
-  for(int ij1=0; ij1 < n_jets; ij1++){
-    if(ij1==ibtop1  || ij1==ibtop2) continue; //skip btags
-    for(int ij2=ij1+1; ij2 < n_jets; ij2++){
-      if(ij2==ibtop1  || ij2==ibtop2) continue; //skip btags
-      float locdr = recoJets.at(ij1).DeltaR( recoJets.at(ij2).GetVector() );
-      
-      if(locdr < W1dr){
-	if(W1dr<999 && ij1!=W1j1 && ij1!=W1j2 && ij2!=W1j1 && ij2!=W1j2){
-	  W2j1 = W1j1;
-	  W2j2 = W1j2;
-	  W2dr = W1dr;
+      Wjet1=Wjet2=-1;
+       
+      double mindr = 1000.;
+       
+      for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	for (unsigned int j = i+1 ; j < recoJets.size() ; j++)
+	  {
+	    
+	   if(recoJets.size()==3){
+	    if(i!=ibtop1 && j!=ibtop1){
+	      double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+
+	      if (curr_dr<mindr)
+		{
+		  Wjet1 = i;
+		  Wjet2 = j;
+		  mindr = curr_dr;
+		}
+	    }
+	   } 
+	   else{
+	    if(i!=ibtop1 && j!=ibtop1 && i!=ibtop2 && j!=ibtop2){
+	      double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+
+	      if (curr_dr<mindr)
+		{
+		  Wjet1 = i;
+		  Wjet2 = j;
+		  mindr = curr_dr;
+		}
+	    }
+	   } 	    
+	    
+	  }
+      }
+      mindr = 1000.;
+
+      //book first W
+      TLorentzVector W1candidate = recoJets.at(Wjet1).GetVector()+recoJets.at(Wjet2).GetVector();
+
+      for (unsigned int i = 0 ; i < recoJets.size() ; i++)
+	{
+	  if(i==ibtop1 || i==ibtop2 ){	      
+	    double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W1candidate);
+    	     
+	    if (curr_dr<mindr)
+	      {
+		bjet1 = i;
+		mindr = curr_dr;
+	      }
+	  }
 	}
-	W1j1 = ij1;
-	W1j2 = ij2;
-	W1dr = locdr;
-      }
-      else if(locdr < W2dr &&
-	      ij1 != W1j1 &&
-	      ij1 != W1j2 &&
-	      ij2 != W1j1 &&
-	      ij2 != W1j2 ){
-	W2j1 = ij1;
-	W2j2 = ij2;
-	W2dr = locdr;
-      }
-    }
-  }
- 
-  //top1 mass
-  bool b1used=false;
-  if(W1j1>=0 && W1j2>=0){
-    TLorentzVector vW1 = (recoJets.at(W1j1).GetVector() + recoJets.at(W1j2).GetVector());
-    if( vW1.DeltaR( recoJets.at(ibtop1).GetVector()) < vW1.DeltaR(recoJets.at(ibtop2).GetVector() ) ){
-      m_top_had1 = ( vW1 + recoJets.at(ibtop1).GetVector() ).M();
-      b1used=true;
-    }
-    else{
-      m_top_had1 = ( vW1 + recoJets.at(ibtop2).GetVector() ).M();
-    }
-  }
-  else{
-    m_top_had1 = -1;
-  }
-  
-  //top2 mass
-  if(W2j1>=0 && W2j2>=0){
-    TLorentzVector vW2 = (recoJets.at(W2j1).GetVector() + recoJets.at(W2j2).GetVector());
-    if( !b1used ) //I think it is enough!
-      m_top_had2 = ( vW2 + recoJets.at(ibtop1).GetVector() ).M();
-    else 
-      m_top_had2 = ( vW2 + recoJets.at(ibtop2).GetVector() ).M();
-  }
-  else{
-    m_top_had2 = -1;
-  }
 
+      //book first top
+      TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
+      
+      if (bj_N>=2 && recoJets.size()>=6)
+      {     
+        Wjet3=Wjet4=-1;
+        mindr = 1000.;
+        for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	  for (unsigned int j = i+1 ; j < recoJets.size() ; j++){
+	    
+	    if(i!=ibtop1 && i!=ibtop2 && j!=ibtop1 && j!=ibtop2){	    
+	      if ((int)i!=Wjet1 && (int)i!=Wjet2 && (int)j!=Wjet1 && (int)j!=Wjet2)
+	        {
+		  double curr_dr = (recoJets.at(i).GetVector()).DeltaR(recoJets.at(j).GetVector());
+
+		  if (curr_dr<mindr)
+		    {
+		      Wjet3 = i;
+		      Wjet4 = j;
+		      mindr = curr_dr;
+		    }
+	      }
+	  }
+		
+	}	
+      }	
+      mindr = 1000.;
+
+      //book second W
+      TLorentzVector W2candidate = recoJets.at(Wjet3).GetVector()+recoJets.at(Wjet4).GetVector();
+
+      for (unsigned int i = 0 ; i < recoJets.size() ; i++){
+	if ((int)i!=bjet1 && ((int)i==ibtop1 || (int)i==ibtop2))
+	  {
+	    double curr_dr = (recoJets.at(i).GetVector()).DeltaR(W2candidate);
+	    	    
+	    if (curr_dr<mindr)
+	      {
+		bjet2 = i;
+		mindr = curr_dr;
+	      }
+	  }
+      }
+
+      //book second top
+      TLorentzVector top2candidate = recoJets.at(bjet2).GetVector()+W2candidate;
+            
+      //m_top_had1 = top1candidate.M();
+      m_top_had2 = top2candidate.M();
+   
+    }
+      m_top_had1 = top1candidate.M();    
+    }
   //recover original jet vector
   if(eladded)
     recoJets.pop_back();
   if(muadded)
     recoJets.pop_back();
-};
+ 
+}
 
 
 std::vector<TLorentzVector> chorizo :: getFatJets(double R, double fcut) {
@@ -5948,13 +6974,13 @@ std::vector<TLorentzVector> chorizo :: getFatJets(double R, double fcut) {
   return new_jets_tlv;
 } 
 
-float chorizo::Calc_dijetMass(TLorentzVector ja,TLorentzVector jb){
+float chorizo::Calc_Mjj(TLorentzVector ja,TLorentzVector jb){
   return (ja + jb).M();
 }
 
-float chorizo :: Calc_dijetMass(){
-  if(n_jets<2) return -1.;
-  return Calc_dijetMass(recoJets.at(0).GetVector(), recoJets.at(1).GetVector());
+float chorizo :: Calc_Mjj(){
+  if(j_N < 2) return -1.;
+  return Calc_Mjj(recoJets.at(0).GetVector(), recoJets.at(1).GetVector());
 }
 
 
@@ -6065,16 +7091,16 @@ double chorizo::thrustService(TVector2 &n, std::vector<TVector2> &obj){
 }
 
 //Main function where the thrust axis which maximize the transverse thrust value is computed
-float chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
+double chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
   
-  if(pvectors.size()==1) return 0.;
+  if(pvectors.size()==1) return 0;
 
   //transform to TVector2
   std::vector<TVector2> obj;
   for(const auto& tlv : pvectors)
     obj.push_back( tlv.Vect().XYvector() );
 
-  if(obj.size()==0) return -99.; //?
+  if(obj.size()==0) return -99; //?
 
   TVector2 n;
   TVector2 np1(obj[0]);
@@ -6155,7 +7181,7 @@ float chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 	  std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
 	}
       }
-      return -99.;
+      return -99;
     }
     //to accept the thrust value we require:
     //1- it has to be into [2/pi,1] which is the range for the transverse thrust
@@ -6173,10 +7199,10 @@ float chorizo::Calc_Thrust(std::vector<TLorentzVector> pvectors) {
 	std::cout<<i<<"  "<<pvectors[i].Pt()<<"    "<<pvectors[i].Px()<<"    "<<pvectors[i].Py()<<"    "<<obj[i].X()<<"        "<<obj[i].Y()<<std::endl;
       }
     }
-    return -99.;
+    return -99;
   }
 
-  return (float)T;
+  return T;
  
 }
 
@@ -6202,7 +7228,6 @@ void chorizo :: fillRazor(TVector3 mymet){
 
   if(MR > 0.) 
     R.push_back( tmp_MTR / MR );
-  else R.push_back(0.0); //arelycg: to keep same size
   
   //new super-razor variables
   float sr1=0.;
@@ -6235,11 +7260,9 @@ vector<TLorentzVector> chorizo :: CombineJets(vector<TLorentzVector> myjets){
   int N_comb = 1;
   unsigned int size =0;
 
-  //*** at most loop over 5 jets (otherwise problem for data events)
-  // if (myjets.size() < 5) size = myjets.size();
-  // else size = 5;
- 
-  size = myjets.size();
+  //at most loop over 5 jets (otherwise problem for data events)
+  if (myjets.size() < 5) size = myjets.size();
+  else size = 5;
  
   for(unsigned int i = 0; i < size; i++){
     N_comb *= 2;
@@ -6326,31 +7349,13 @@ void chorizo :: Calc_SuperRazor(TLorentzVector J1, TLorentzVector J2, TVector3 m
   // Matthew R. Buckley, Joseph D. Lykken, Christopher Rogan, Maria Spiropulu
   ////////////////////////////////
 
-
-  ////////////////////////////////
-  //
-  // DI-MEGAJET BASIS of VARIABLES CALCULATION 
-  //
-  // Code written by Christopher Rogan <crogan@cern.ch>, 23-09-14
-  //
-  ////////////////////////////////
-  //
-  // NOTE: observables that may be useful are denoted with:
-  // //********************************
-  // above them
-  //
-  // The list of observables calculated in this code:
-  // 
   /////////////
-  //
   // LAB frame
-  //
   /////////////
+  //Reconstructed mega-jets and missing transverse energy (from somewhere else...)
 
-  //
-  // from these inputs the relevant variables will be calculated - the proposed
-  // triggers will be based on shatR, gaminvR and cosptR (defined below)
-  //
+  J1.SetVectM(J1.Vect(),0.0);
+  J2.SetVectM(J2.Vect(),0.0);
 
   TVector3 vBETA_z = (1./(J1.E()+J2.E()))*(J1+J2).Vect();
   vBETA_z.SetX(0.0);
@@ -6363,10 +7368,12 @@ void chorizo :: Calc_SuperRazor(TLorentzVector J1, TLorentzVector J2, TVector3 m
   TVector3 pT_CM = (J1+J2).Vect() + met;
   pT_CM.SetZ(0.0); //should be redundant...
 
-  double Minv2 = (J1+J2).M2() - 4.*J1.M()*J2.M();
-  double Einv = sqrt(met.Mag2()+Minv2);
+  float Minv2 = (J1+J2).M2();
+  float Einv = sqrt(met.Mag2()+Minv2);
 
-  //****************************************
+  //////////////////////
+  // definition of shatR
+  //////////////////////
   shatR = sqrt( ((J1+J2).E()+Einv)*((J1+J2).E()+Einv) - pT_CM.Mag2() );
 
   TVector3 vBETA_R = (1./sqrt(pT_CM.Mag2() + shatR*shatR))*pT_CM;
@@ -6376,56 +7383,28 @@ void chorizo :: Calc_SuperRazor(TLorentzVector J1, TLorentzVector J2, TVector3 m
   J2.Boost(-vBETA_R);
 
   /////////////
-  //
   // R-frame
-  //
   /////////////
- 
-  //****************************************
-  gaminvR = sqrt(1.-vBETA_R.Mag2());
- 
-  //****************************************
-  mdeltaR = shatR*gaminvR;
+  TVector3 vBETA_Rp1 = (1./(J1.E()+J2.E()))*(J1.Vect() - J2.Vect());
 
+  ////////////////////////
+  // definition of gaminvR
+  gaminvR = sqrt(1.-vBETA_Rp1.Mag2());
+
+  //transformation from R frame to R+1 frames
+  J1.Boost(-vBETA_Rp1);
+  J2.Boost(vBETA_Rp1);
+
+  //////////////
+  // R+1-frames
+  //////////////
+  ///////////////////////
+  // definition of mdeltaR
+  mdeltaR = J1.E()+J2.E();
 
   ///////////////////////
   // definition of cosptR
   cosptR = pT_CM.Mag()/sqrt(pT_CM.Mag2()+mdeltaR*mdeltaR);
-  //****************************************
-  //double dphi_BETA_R = fabs(((J1+J2).Vect()).DeltaPhi(vBETA_R));
-
-  //****************************************
-  //double dphi_J1_J2_R = fabs(J1.Vect().DeltaPhi(J2.Vect()));
-
-  //TVector3 vBETA_Rp1 = (1./(J1.E()+J2.E()))*(J1.Vect() - J2.Vect());
-
-  //****************************************
-  // double gamma_Rp1 = 1./sqrt(1.-vBETA_Rp1.Mag2());
-
-  //****************************************
-  //double gaminvRp1 = sqrt(pow(J1.P()+J2.P(),2.)-(J1.Vect()-J2.Vect()).Mag2())/(J1.P()+J2.P());
-
-  //****************************************
-  //double costhetaR = vBETA_Rp1.Unit().Dot(vBETA_R.Unit());
-
-  //****************************************
-  //double dphi_R_Rp1 = fabs(vBETA_R.DeltaPhi(vBETA_Rp1));
-
-  //****************************************
-  //double Rpt = pT_CM.Mag()/(pT_CM.Mag()+ shatR/4.);
-
-  //transformation from R frame to R+1 frames
-  //J1.Boost(-vBETA_Rp1);
-  //J2.Boost(vBETA_Rp1);
-
-  //////////////
-  //
-  // R+1-frames
-  //
-  //////////////
-  //****************************************
-  //double costhetaRp1 = vBETA_Rp1.Unit().Dot(J1.Vect().Unit());
-
 
 }
 
@@ -6506,6 +7485,14 @@ void chorizo :: findBparton(){
   */
 }
 
+bool chorizo :: isQCDSeedEvent(float MissingET, float sumET, float etMissSigCut){
+    
+  const double etMissSig = MissingET / sqrt(sumET);
+  if (etMissSig < etMissSigCut) return true;
+  
+  return false;
+}
+
 void chorizo :: Zll_candidate(){
   
   float m_ll_tmp = 0.;  
@@ -6556,7 +7543,7 @@ void chorizo :: Zll_candidate(){
      
      for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
        
-       if(Z_flav==0 && (Z_lep1==(int)iEl || Z_lep2==(int)iEl)) continue; 
+       if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
        extra_lep.push_back(recoElectrons.at(iEl));
        
      } 	
@@ -6564,7 +7551,7 @@ void chorizo :: Zll_candidate(){
      
      for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
        
-       if(Z_flav==1 && (Z_lep1==(int)iMu || Z_lep2==(int)iMu)) continue;	      
+       if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
        extra_lep.push_back(recoMuons.at(iMu));
        
      }  
@@ -6583,19 +7570,20 @@ void chorizo :: Zll_extra(TVector2 met){
     
     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
       
-      if(Z_flav==0 && (Z_lep1==(int)iEl || Z_lep2==(int)iEl)) continue; 
+      if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
       lep3_MT.push_back( Calc_MT(recoElectrons.at(iEl), met) );
       
     } 	
     
     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
       
-      if(Z_flav==1 && (Z_lep1==(int)iMu || Z_lep2==(int)iMu)) continue;	      
+      if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
       lep3_MT.push_back( Calc_MT(recoMuons.at(iMu), met) );
       
     }  
   }
 } 
+
 
 TVector2 chorizo :: getMET( const xAOD::MissingETContainer* METcon, TString name ) {
   
@@ -6706,6 +7694,108 @@ TLorentzVector chorizo :: getTLV( xAODPart* p, bool inGeV ){
 
   return v;
 }
+
+
+template<class T, class V> bool SortBySecond(std::pair<T, V> pair1, std::pair<T, V> pair2)
+{
+	return pair1.second < pair2.second;
+}
+
+
+/// <summary>
+/// Gets the jet incidices ordered by delta R to the refVector.
+/// </summary>
+/// <param name="lcJetReader">The lcJetReader.</param>
+/// <param name="refVector">The reference vector.</param>
+/// <param name="skipIndices">The indices to skip.</param>
+/// <returns>vector of pairs (JetIndex, dR) to the refVector</returns>
+std::vector<pair<unsigned int, double> > chorizo :: GetOrderedJetIndexdR(TLorentzVector refVector, std::vector<unsigned int> skipIndices)
+{
+	std::vector<pair<unsigned int, double> > jetIndexdRPairVector;
+        for (unsigned int jetIndex = 0 ; jetIndex < recoJets.size() ; jetIndex++)
+	//for (size_t jetIndex = 0; jetIndex < lcJetReader.NJets(); jetIndex++)
+	{
+		if (find(skipIndices.begin(), skipIndices.end(), jetIndex) != skipIndices.end())
+		{
+			//Found the index in skip list, skipping.
+			continue;
+		}
+		
+		TLorentzVector jet;
+		jet.SetPtEtaPhiM(
+			recoJets.at(jetIndex).Pt(),
+			recoJets.at(jetIndex).Eta(),
+			recoJets.at(jetIndex).Phi(),
+			recoJets.at(jetIndex).M()
+			);
+
+		jetIndexdRPairVector.push_back(make_pair(jetIndex, refVector.DeltaR(jet)));		
+	}
+
+	sort(jetIndexdRPairVector.begin(), jetIndexdRPairVector.end(), SortBySecond<unsigned int, double>);
+
+	return jetIndexdRPairVector;
+}
+
+/// <summary>
+/// Gets the jet incidices ordered by delta R/pT to the refVector.
+/// </summary>
+/// <param name="lcJetReader">The lcJetReader.</param>
+/// <param name="refVector">The reference vector.</param>
+/// <param name="skipIndices">The indices to skip.</param>
+/// <returns>vector of pairs (JetIndex, dR) to the refVector</returns>
+std::vector<pair<unsigned int, double> > chorizo :: GetOrderedJetIndexAntiKtd(TLorentzVector refVector, std::vector<unsigned int> skipIndices)
+{
+
+     enum dAlgorithm
+     { 
+	JETPT,
+	REFPT,
+	MAXJETBBPT,
+     };
+        
+	dAlgorithm d_algorithm;
+        	
+	std::vector<pair<unsigned int, double> > jetIndexdRPairVector;
+        for (unsigned int jetIndex = 0 ; jetIndex < recoJets.size() ; jetIndex++)
+	//for (size_t jetIndex = 0; jetIndex < lcJetReader.NJets(); jetIndex++)
+	{
+		if (find(skipIndices.begin(), skipIndices.end(), jetIndex) != skipIndices.end())
+		{
+			//Found the index in skip list, skipping.
+			continue;
+		}
+		TLorentzVector jet;
+		jet.SetPtEtaPhiM(
+			recoJets.at(jetIndex).Pt(),
+			recoJets.at(jetIndex).Eta(),
+			recoJets.at(jetIndex).Phi(),
+			recoJets.at(jetIndex).M()
+			);
+
+		double d;
+		switch (d_algorithm)
+		{
+			case JETPT:
+				d = refVector.DeltaR(jet)/recoJets.at(jetIndex).Pt();
+				break;
+			case REFPT:
+				d = refVector.DeltaR(jet)/refVector.Pt();
+				break;
+			case MAXJETBBPT:
+			default:
+				d = refVector.DeltaR(jet)/max(recoJets.at(jetIndex).Pt(), refVector.Pt());
+				break;
+		}
+		jetIndexdRPairVector.push_back(make_pair(jetIndex, d));
+	}
+
+	sort(jetIndexdRPairVector.begin(), jetIndexdRPairVector.end(), SortBySecond<unsigned int, double>);
+
+	return jetIndexdRPairVector;
+}
+
+
 
 EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, std::vector<Particle> muonCandidates){
   
@@ -6910,115 +8000,3 @@ EL::StatusCode chorizo :: doTrackVeto(std::vector<Particle> electronCandidates, 
   return EL::StatusCode::SUCCESS; 
 }
 
-void chorizo :: findSusyHP(int& pdgid1, int& pdgid2){
-  findSusyHP(m_truthP, pdgid1, pdgid2);
-}
-
-void chorizo :: findSusyHP(const xAOD::TruthParticleContainer *truthP, int& pdgid1, int& pdgid2){
-
-  pdgid1=0;
-  pdgid2=0;
-
-  xAOD::TruthParticleContainer::const_iterator tpItr = truthP->begin();
-  xAOD::TruthParticleContainer::const_iterator tpBeg = truthP->begin();
-  xAOD::TruthParticleContainer::const_iterator tpEnd = truthP->end();
-  
-  int first=0;
-  const xAOD::TruthParticle* firstsp = *tpItr;
-  const xAOD::TruthParticle* secondsp = *tpItr;
-
-  if(tpBeg == tpEnd)    Error("findSusyHP()", " Empty TruthParticleContainer!!");
-
-  for(tpItr = tpBeg; tpItr != tpEnd; ++ tpItr){
-    
-    //check if SUSY particle
-    if ((abs((*tpItr)->pdgId())>1000000 && abs((*tpItr)->pdgId())<1000007) || // squarkL
-	(abs((*tpItr)->pdgId())>1000010 && abs((*tpItr)->pdgId())<1000017) || // sleptonL
-	(abs((*tpItr)->pdgId())>2000000 && abs((*tpItr)->pdgId())<2000007) || // squarkR
-	(abs((*tpItr)->pdgId())>2000010 && abs((*tpItr)->pdgId())<2000017) || // sleptonR
-	(abs((*tpItr)->pdgId())>1000020 && abs((*tpItr)->pdgId())<1000040)) { // gauginos
-      
-      if((*tpItr)->nParents()!=0) {
-	if( (*((*tpItr)->parent(0))).absPdgId()  < 1000000) {
-	  if(first==0) {
-	    firstsp = *tpItr;
-	    first=1;
-	  }
-	  else if(first==1){
-	    secondsp = *tpItr;
-	    first=2;
-	  }
-	  else {
-	    if(firstsp->nChildren()!=0 && (*tpItr)->barcode()==(*(firstsp->child(0))).barcode()) {
-	      firstsp=*tpItr;
-	    }
-	    else if(secondsp->nChildren()!=0 && (*tpItr)->barcode()==(*(secondsp->child(0))).barcode()) { 
-	      secondsp=*tpItr;
-	    }
-	    else if(firstsp->nChildren()!=0 && (*(firstsp->child(0))).barcode()==secondsp->barcode()) {
-	      firstsp=secondsp;
-	      secondsp=*tpItr;				
-	    }
-	    else if(secondsp->nChildren()!=0 && (*(secondsp->child(0))).barcode()==firstsp->barcode()) {
-	      secondsp=firstsp;
-	      firstsp=*tpItr;
-	    }					
-	  }
-	}
-      }
-    }      
-  }
-
-  if(firstsp->nChildren()==1){
-    for(tpItr = tpBeg; tpItr != tpEnd; ++tpItr){
-      if((*tpItr)->barcode()==(*(firstsp->child(0))).barcode() && (*tpItr)->pdgId()!=firstsp->pdgId()){
-	firstsp=*tpItr;
-	break;
-      }
-    }
-  }
-  
-  if(secondsp->nChildren()==1){
-    for(tpItr = tpBeg; tpItr != tpEnd; ++tpItr){
-      if((*tpItr)->barcode()==(*(secondsp->child(0))).barcode() && (*tpItr)->pdgId()!=secondsp->pdgId()){
-	secondsp=*tpItr;
-	break;
-      }
-    }
-  }
-  
-  if(abs(firstsp->pdgId())>1000000) pdgid1 = firstsp->pdgId();
-  if(abs(secondsp->pdgId())>1000000) pdgid2 = secondsp->pdgId();
-
-}//end of findSusyHP()
-
-
-TLorentzVector chorizo::MatchTruthJet(xAOD:: Jet &jet){
-
-  xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
-  xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
-    
-    //loop over truth jets & save 'high-pt' jets for later use 
-
-  double truthpt=0.;
-  double trutheta=0;
-  double truthphi=0;
-  double truthEner=0;
-
-  for( ; tjet_itr != tjet_end; ++tjet_itr ) {
-    if(deltaR(jet.phi(),jet.eta(),(*tjet_itr)->phi(),(*tjet_itr)->eta())<0.4){
-      if ( (*tjet_itr)->pt()/1000.0 > truthpt ){
-	truthpt = (*tjet_itr)->pt()/1000.0;
-	trutheta = (*tjet_itr)->eta();
-	truthphi= (*tjet_itr)->phi();
-	truthEner= (*tjet_itr)->e()*0.001;
-      }
-
-    }
-  }
-  TLorentzVector truthJet;
-  truthJet.SetPtEtaPhiE( truthpt, trutheta, truthphi, truthEner );
-
-  return truthJet;
-
-}
