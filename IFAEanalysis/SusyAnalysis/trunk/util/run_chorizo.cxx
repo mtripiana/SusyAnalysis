@@ -483,7 +483,8 @@ int main( int argc, char* argv[] ) {
     //override name with 'provenance' name (weal attempt to allow for user-skimmed and partially-transfered samples)
     //save original name in a new meta field
     (*iter)->setMetaString( "inputName", (*iter)->getMetaString( MetaFields::sampleName) ); //no longer needed?
-    (*iter)->setMetaString( MetaFields::gridName, (stripName( TString( (*iter)->getMetaString( MetaFields::sampleName)))+"/").Data() );
+    if(!userDir)
+      (*iter)->setMetaString( MetaFields::gridName, (stripName( TString( (*iter)->getMetaString( MetaFields::sampleName)))+"/").Data() );
 
     //get the number of events of the primary AOD (relevant for running on derivations)
     (*iter)->setMetaDouble( MetaFields::numEvents, getNPrimary(*iter) );

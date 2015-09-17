@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <EventLoop/StatusCode.h>
+
 #include "NewMT2/MT2.h"
 
 //Jet Cleaning
@@ -103,6 +104,7 @@ static SG::AuxElement::Accessor<double> acc_PUweight("PileupWeight");
 
 chorizo :: chorizo ()
   : m_MetaData(0), 
+    debug(false),
     tool_st(0),
     tool_trigdec(0), 
     tool_trigconfig(0), 
@@ -4514,6 +4516,10 @@ EL::StatusCode chorizo :: loop_truth()
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
+  RunNumber = eventInfo->runNumber();
+  mc_channel_number = (isMC ? eventInfo->mcChannelNumber() : 0); 
+  EventNumber = eventInfo->eventNumber();
+
   //  loadMetaData();
 
   //--- Weigths for Sherpa, MC@NLO, Acer, ...
@@ -4582,9 +4588,14 @@ EL::StatusCode chorizo :: loop_truth()
       
       recoElectron.type   = (tEl->isAvailable<unsigned int>("particleType")   ? tEl->auxdata<unsigned int>("particleType")   : tEl->auxdata<unsigned int>("classifierParticleType"));
       recoElectron.origin = (tEl->isAvailable<unsigned int>("particleOrigin") ? tEl->auxdata<unsigned int>("particleOrigin") : tEl->auxdata<unsigned int>("classifierParticleOrigin"));
+
+
+    //get only real electrons ( ! (bkg || noniso) )
+    if( recoElectron.type != MCTruthPartClassifier::BkgElectron && recoElectron.type != MCTruthPartClassifier::NonIsoElectron ){
             
       electronCandidates.push_back(recoElectron);
-      
+    }
+
   }//electron loop
 
   //sort the electrons in Pt
@@ -4626,8 +4637,13 @@ EL::StatusCode chorizo :: loop_truth()
 
     recoMuon.type   = (tMu->isAvailable<unsigned int>("particleType")   ? tMu->auxdata< unsigned int >("particleType")   : tMu->auxdata<unsigned int>("classifierParticleType"));
     recoMuon.origin = (tMu->isAvailable<unsigned int>("particleOrigin") ? tMu->auxdata< unsigned int >("particleOrigin") : tMu->auxdata<unsigned int>("classifierParticleOrigin"));
-            
-    muonCandidates.push_back(recoMuon);
+
+
+    //get only real muons ( ! (bkg || noniso) )
+    if( recoMuon.type != MCTruthPartClassifier::BkgMuon && recoMuon.type != MCTruthPartClassifier::NonIsoMuon ){
+      
+      muonCandidates.push_back(recoMuon);
+    }
         
   }//muon loop
   
@@ -4649,33 +4665,42 @@ EL::StatusCode chorizo :: loop_truth()
   
   std::vector<Particle> photonCandidates; //intermediate selection photons
   if (usePhotons){
-  for(const xAOD::TruthParticle* tPh : *m_truthPh) {
-
+    for(const xAOD::TruthParticle* tPh : *m_truthPh) {
+      
       // FS selection
       if( !isStable( tPh ) ) continue; 
-
+      
       //define preselected photon                
       Particle recoPhoton;
       recoPhoton.SetVector( getTLV( tPh ) );
       if (recoPhoton.Pt() < El_PreselPtCut/1000.)   continue;
       if (fabs(recoPhoton.Eta()) > El_PreselEtaCut) continue;
-
-
+      
+      
       recoPhoton.etcone20 = (tPh->isAvailable<float>("etcone20") ? tPh->auxdata< float >( "etcone20" )*0.001 : -999.);
       recoPhoton.ptcone30 = (tPh->isAvailable<float>("ptcone30") ? tPh->auxdata< float >( "ptcone30" )*0.001 : -999.);
 
       recoPhoton.type   = (tPh->isAvailable<unsigned int>("particleType")   ? tPh->auxdata<unsigned int>("particleType")   : tPh->auxdata<unsigned int>("classifierParticleType"));
       recoPhoton.origin = (tPh->isAvailable<unsigned int>("particleOrigin") ? tPh->auxdata<unsigned int>("particleOrigin") : tPh->auxdata<unsigned int>("classifierParticleOrigin"));
-            
-      photonCandidates.push_back(recoPhoton);
-            
-  }//photon loop
 
-  //sort the photons in Pt
-  if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
+      //get only real photons (prompt+brem+ISR/FSR)
+      if(recoPhoton.type == MCTruthPartClassifier::BremPhot   ||
+	 recoPhoton.type == MCTruthPartClassifier::PromptPhot ||
+	 recoPhoton.type == MCTruthPartClassifier::UndrPhot   ||
+	 recoPhoton.type == MCTruthPartClassifier::ISRPhot    ||
+	 recoPhoton.type == MCTruthPartClassifier::FSRPhot){
+      
+	photonCandidates.push_back(recoPhoton);
+
+      }
+      
+    }//photon loop
+    
+    //sort the photons in Pt
+    if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
   }//usephotons
-
-
+  
+  
   //Truth Jets
   CHECK( m_event->retrieve( m_truth_jets, "AntiKt4TruthJets" ) );
   
@@ -4812,7 +4837,7 @@ EL::StatusCode chorizo :: loop_truth()
       }
       if(overlap) continue;
       
-      if (usePhotons){
+      if (usePhotons && doORphotons){
 	for(const auto& c_ph : photonCandidates){
 	  if(recoJet.GetVector().DeltaR(c_ph) < 0.4){
 	    overlap=true;
@@ -4820,6 +4845,7 @@ EL::StatusCode chorizo :: loop_truth()
 	  }
 	}
       }//usephoton
+
       if(overlap) continue;
     }
     
@@ -4856,7 +4882,7 @@ EL::StatusCode chorizo :: loop_truth()
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end());
 
 
-  if (usePhotons){
+  if (usePhotons && doORphotons){
     for(const auto& c_ph : photonCandidates){
       
       if(doOR){    
@@ -7646,22 +7672,22 @@ float chorizo :: amt2_calc(TLorentzVector b1v, TLorentzVector b2v, TLorentzVecto
   else if ((lepb1.M()<cut)&&(lepb2.M()>cut))  // if lepb1 is the 'top'
     {
       mycalc = new ComputeMT2(lepb1,b2v,EtMissVec,0,0);
-      amt2=mycalc->Compute();
+      amt2 = mycalc->Compute();
       delete mycalc;
     }
   else if ((lepb1.M()>cut)&&(lepb2.M()<cut)) // if lepb2 is the 'top'
     {
       mycalc = new ComputeMT2(lepb2,b1v,EtMissVec,0,0);
-      amt2=mycalc->Compute();
+      amt2 = mycalc->Compute();
       delete mycalc;
     }
   else  // if both lepb1 and lepb2 are the 'top' calculate minimum of mt2
     {
       mycalc = new ComputeMT2(lepb1,b2v,EtMissVec,0,0);
-      double tmp1=mycalc->Compute();
+      double tmp1 = mycalc->Compute();
       mycalc = new ComputeMT2(lepb2,b1v,EtMissVec,0,0);
-      double tmp2=mycalc->Compute();
-      amt2=min(tmp1,tmp2);
+      double tmp2 = mycalc->Compute();
+      amt2 = min(tmp1,tmp2);
       delete mycalc;
     }
   return amt2;
