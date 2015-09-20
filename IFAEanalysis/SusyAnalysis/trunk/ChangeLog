@@ -1,3 +1,11 @@
+2015-09-20 Martin <tripiana@cern.ch>
+	* New python/ folder
+	* Move RegionIdentifierUtil.py there
+
+2015-09-20 Martin <tripiana@cern.ch>
+	* Move to SUSY,2.3.28  (ST-00-06-24-01)
+	* Remove obsolete OR config options
+
 2015-09-17 Martin <tripiana@cern.ch>
 	* Updated truth code and cutflow.
 
