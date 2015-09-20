@@ -43,8 +43,6 @@
 
     <OverlapRemoval>
       <Enable>false</Enable>
-      <useSignalLeptons>false</useSignalLeptons>
-      <useIsoLeptons>false</useIsoLeptons>
       <doBjetOR>true</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 

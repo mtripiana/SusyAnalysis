@@ -1567,8 +1567,6 @@ void chorizo :: ReadXML(){
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$Enable");
-  m_or_useSigLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$useSignalLeptons");
-  m_or_useIsoLep = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$useIsoLeptons");
   m_or_bjetOR = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doBjetOR");
   doORphotons = xmlReader->retrieveBool("AnalysisOptions$ObjectDefinition$OverlapRemoval$doPhotons");
   
@@ -1844,6 +1842,10 @@ EL::StatusCode chorizo :: initialize ()
       CHECK( tool_st->setProperty("PhotonIsoWP",Ph_isoWP) );
     }
 
+    //overlap removal
+    CHECK( tool_st->setProperty("DoBjetOR", m_or_bjetOR));
+    
+    //use isolation for signal decoration?
     CHECK( tool_st->setProperty("RequireIsoSignal", isoSignalLep));
     
     // Set Btagging WPs
@@ -2666,9 +2668,9 @@ EL::StatusCode chorizo :: loop ()
   //--- Do overlap removal   
   if(doOR){
     if(doORphotons && usePhotons)
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, 0) );
     else
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, 0, 0) );
   }
 
   // Apply the overlap removal to all objects (dumb example)
