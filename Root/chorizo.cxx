@@ -846,7 +846,7 @@ CutflowInfo chorizo :: getNinfo(){
       Error("initializeEvent()","Found incomplete Bookkeepers! Check file for corruption.");
       return sinfo;
     }
-
+    
     //Read the CutBookkeeper container
     const xAOD::CutBookkeeperContainer* completeCBC = 0;
     if (!m_event->retrieveMetaInput(completeCBC, "CutBookkeepers").isSuccess()) {
@@ -854,23 +854,26 @@ CutflowInfo chorizo :: getNinfo(){
       return sinfo;
     }
 
+    
     //for DEBUGGING
     cout << " CBK CICLES ::   AMI\t" << wk()->metaData()->getDouble( SH::MetaFields::numEvents ) << endl; 
-
+    
     // First, let's find the smallest cycle number,
     // i.e., the original first processing step/cycle
     int minCycle = 10000;
     for ( auto cbk : *completeCBC ) {
       if ( ! cbk->name().empty()  && minCycle > cbk->cycle() ){ minCycle = cbk->cycle(); }
-
+      
       //for DEBUGGING
       cout << " CBK CICLES ::   " << cbk->cycle() << "\t" <<  cbk->name() << "\t" << cbk->nAcceptedEvents() << "\t" << cbk->sumOfEventWeights() << "\t" << cbk->sumOfEventWeightsSquared() << endl;
+      
     }
-
+  
+  
     // Now, let's actually find the right one that contains all the needed info...
     const xAOD::CutBookkeeper* allEventsCBK=0;
     const xAOD::CutBookkeeper* DxAODEventsCBK=0;
-    std::string derivationName = "SUSY1Kernel"; //need to replace by appropriate name
+    std::string derivationName = "SUSY7Kernel"; //need to replace by appropriate name
     for ( auto cbk :  *completeCBC ) {
       if ( minCycle == cbk->cycle() && cbk->name() == "AllExecutedEvents" ) {
 	allEventsCBK = cbk;
@@ -880,7 +883,7 @@ CutflowInfo chorizo :: getNinfo(){
 	DxAODEventsCBK = cbk;
       }
     }
-
+    
     if(allEventsCBK){    
       sinfo.nEvents    = allEventsCBK->nAcceptedEvents();
       sinfo.weightSum  = allEventsCBK->sumOfEventWeights();
@@ -1858,11 +1861,7 @@ EL::StatusCode chorizo :: initialize ()
     CHECK(tool_st->setProperty("DoJetGSCCalib",m_isderived) );
     // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                   
     CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) ); 
-    
-    // if(!Met_doMuons)      CHECK(tool_st->setProperty("METMuonTerm", "")); //No MuonTerm default
-    // if(!Met_doRefGamma)   CHECK(tool_st->setProperty("METGammaTerm","")); //No GammaTerm default
-    // if(!Met_doRefTau)     CHECK(tool_st->setProperty("METTauTerm", "")); //No TauTerm default
-    
+        
     CHECK( tool_st->SUSYToolsInit() );
     CHECK( tool_st->initialize() );
     tool_st->msg().setLevel( MSG::ERROR ); //set message level 
@@ -1917,6 +1916,12 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_bsel85->setProperty("OperatingPoint","FlatBEff_85") );
   CHECK( tool_bsel85->setProperty("JetAuthor",JetTagCollection.Data()) );
   CHECK( tool_bsel85->initialize() );
+
+  // std::string BtagWP_eff = "";
+  // if (m_BtagWP == "FixedCutBEff_85") BtagWP_eff = "-0_7887";
+  // else if (m_BtagWP == "FixedCutBEff_77") BtagWP_eff = "-0_4434";
+  // else if (m_BtagWP == "FixedCutBEff_70") BtagWP_eff = "-0_0436";
+  // else if (m_BtagWP == "FixedCutBEff_60") BtagWP_eff = "0_4496";
 
   tool_btag70 = new BTaggingEfficiencyTool("BTagSF70_EMTopoJets");
   CHECK( tool_btag70->setProperty("TaggerName",          Jet_Tagger.Data()) );
@@ -3196,14 +3201,14 @@ EL::StatusCode chorizo :: loop ()
     // recoJet.TruthJet = Truth;
 
     jetCandidates.push_back(recoJet);
-/*    
+    /*    
     if (doCutFlow){
       myfile << "baseline jet after OR: \n";      
       myfile << "pt: " <<  recoJet.Pt() << " \n"; 
       myfile << "eta: " << recoJet.Eta() << " \n";          
       myfile << "phi: " << recoJet.Phi() << " \n"; 
     }    
-*/
+    */
     if(this->printJet){
       std::cout << "Jet " << iJet << ":" << endl;
       recoJet.PrintInfo();
@@ -3907,18 +3912,30 @@ EL::StatusCode chorizo :: loop ()
 	else{
 	  dPhi_met_j3.push_back( DUMMYUP );
 	  j3_mT.push_back( DUMMYUP );
+	  dPhi_met_j4.push_back( DUMMYUP ); 
+	  j4_mT.push_back( DUMMYUP ); 
 	}
       }
       else{
 	dPhi_met_j2.push_back( DUMMYUP );
 	j2_mT.push_back( DUMMYUP );
+	dPhi_met_j3.push_back( DUMMYUP );
+	j3_mT.push_back( DUMMYUP );
+	dPhi_met_j4.push_back( DUMMYUP ); 
+	j4_mT.push_back( DUMMYUP ); 
       }
     }
     else{
       dPhi_met_j1.push_back( DUMMYUP );
       j1_mT.push_back( DUMMYUP );
+      dPhi_met_j2.push_back( DUMMYUP );
+      j2_mT.push_back( DUMMYUP );
+      dPhi_met_j3.push_back( DUMMYUP );
+      j3_mT.push_back( DUMMYUP );
+      dPhi_met_j4.push_back( DUMMYUP ); 
+      j4_mT.push_back( DUMMYUP ); 
     }
-
+    
 
     //meff = HT + met
     meff.push_back( HT + mk.second.Mod() );
@@ -4043,7 +4060,7 @@ EL::StatusCode chorizo :: loop ()
 	
 	
 	if (recoMuons.size()>1) 
-	  dR_j2_m2=recoJets.at(1).DeltaR(recoMuons.at(1));
+	  dR_j2_m2 = recoJets.at(1).DeltaR(recoMuons.at(1));
       }
       
       if (recoElectrons.size()>0){      
@@ -4076,6 +4093,7 @@ EL::StatusCode chorizo :: loop ()
       }
     }
   }    
+
   //Do we need this?? //CHECK_ME
   float dPhi_bp1_bp2     = deltaPhi(t_b_phi1, t_b_phi2);
   float dPhi_bp1_met     = deltaPhi(t_b_phi1, met_obj.Phi("met"));
@@ -4088,15 +4106,14 @@ EL::StatusCode chorizo :: loop ()
   float dR_bp1_bp2       = deltaR(t_b_phi1,t_b_eta1,t_b_phi2,t_b_eta2);
   float dR_sbp1_sbp2     = deltaR(t_sb_phi1,t_sb_eta1,t_sb_phi2,t_sb_eta2);
   
-    
-  
+      
   //Do we need this??
   //- (truth) Tau veto for 3rd- and 4th leading jet
-  float dR_truthTau_j3=999.;
-  float dR_truthTau_j4=999.;
+  float dR_truthTau_j3 = 999.;
+  float dR_truthTau_j4 = 999.;
   
   if (this->isMC){
-    if (j_N>2){
+    if (j_N > 2){
       
       TLorentzVector TruthTau(0.,0.,0.,0.);
       
@@ -4129,13 +4146,12 @@ EL::StatusCode chorizo :: loop ()
   }
    
   //Dijet Mass
-  if (j_N>1){  
+  if (j_N > 1){  
     mjj = Calc_Mjj();
 
       if( recoJets.at(0).isbjet && recoJets.at(1).isbjet && fabs(recoJets.at(0).Eta())<2.5 && fabs(recoJets.at(1).Eta())<2.5)
         mbb = mjj;
     
-	
   }
 
   //Mct
@@ -4151,11 +4167,11 @@ EL::StatusCode chorizo :: loop ()
   auto ijet=0;
   for( auto& jet : recoJets ){  //jet loop
     
-    if( jet.isbjet && fabs(jet.Eta())<2.5){
+    if( jet.isbjet && fabs(jet.Eta()) < 2.5 ){
 	
-	if(iblead1<0)//leadings
+	if(iblead1 < 0)//leadings
 	  iblead1=ijet;
-	else if(iblead2<0)
+	else if(iblead2 < 0)
 	  iblead2=ijet;
 
 	float locbw = recoJets.at(ijet).getBweight(Jet_Tagger); //book high bweight jets
@@ -4173,9 +4189,7 @@ EL::StatusCode chorizo :: loop ()
 	}
       }
 
-
       ijet++;
- 
   }
 
   
@@ -4200,7 +4214,6 @@ EL::StatusCode chorizo :: loop ()
     {
 	  index_min_dR_bb.push_back(dR_Max.at(i).first);
 	  min_dR_bb.push_back(dR_Max.at(i).second);
-	  
     } 
 
     for (unsigned int i=0; i<dR_pt_Max.size(); i++)
@@ -5019,6 +5032,12 @@ EL::StatusCode chorizo :: loop_truth()
       amt2_2.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 180));
       amt2_3.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 200));
     }
+    else{
+      amt2_0.push_back(DUMMYUP);
+      amt2_1.push_back(DUMMYUP);
+      amt2_2.push_back(DUMMYUP);
+      amt2_3.push_back(DUMMYUP);
+    }
 
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
@@ -5110,9 +5129,38 @@ EL::StatusCode chorizo :: loop_truth()
 	    dPhi_met_j4.push_back( deltaPhi( mk.second.Phi(), recoJets.at(3).Phi()) );	
 	    j4_mT.push_back( Calc_MT( recoJets.at(3), mk.second ));
 	  }
+	  else{
+	    dPhi_met_j4.push_back( DUMMYUP );
+	    j4_mT.push_back( DUMMYUP );
+	  }
+	}
+	else{
+	    dPhi_met_j3.push_back( DUMMYUP );
+	    j3_mT.push_back( DUMMYUP );
+	    dPhi_met_j4.push_back( DUMMYUP );
+	    j4_mT.push_back( DUMMYUP );
 	}
       }
+      else{
+	dPhi_met_j2.push_back( DUMMYUP );
+	j2_mT.push_back( DUMMYUP );
+	dPhi_met_j3.push_back( DUMMYUP );
+	j3_mT.push_back( DUMMYUP );
+	dPhi_met_j4.push_back( DUMMYUP );
+	j4_mT.push_back( DUMMYUP );
+      }
     }
+    else{
+	dPhi_met_j1.push_back( DUMMYUP );
+	j1_mT.push_back( DUMMYUP );
+	dPhi_met_j2.push_back( DUMMYUP );
+	j2_mT.push_back( DUMMYUP );
+	dPhi_met_j3.push_back( DUMMYUP );
+	j3_mT.push_back( DUMMYUP );
+	dPhi_met_j4.push_back( DUMMYUP );
+	j4_mT.push_back( DUMMYUP );
+    }
+
 
     //meff = HT + met
     meff.push_back( HT + mk.second.Mod() );
@@ -5596,7 +5644,22 @@ EL::StatusCode chorizo :: finalize ()
     delete tool_btag85;
     tool_btag85=0;
   }  
+
+
+  if(tool_bsel70){
+    delete tool_bsel70;
+    tool_bsel70=0;
+  }
+  if(tool_bsel77){
+    delete tool_bsel77;
+    tool_bsel77=0;
+  }
+  if(tool_bsel85){
+    delete tool_bsel85;
+    tool_bsel85=0;
+  }  
   
+
   
   if(tool_btag_truth1){
     delete tool_btag_truth1;
@@ -7661,7 +7724,7 @@ void chorizo :: Zll_extra(TVector2 met){
 
 float chorizo :: amt2_calc(TLorentzVector b1v, TLorentzVector b2v, TLorentzVector lepton,TVector2 EtMissVec, double cut) {
 
-  ComputeMT2* mycalc;
+  ComputeMT2* mycalc=0;
    
   TLorentzVector lepb1 = b1v + lepton;
   TLorentzVector lepb2 = b2v + lepton;
