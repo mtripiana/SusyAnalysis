@@ -2459,13 +2459,12 @@ EL::StatusCode chorizo :: loop ()
       
      } 
     if (isMC && applyPURW) { 
-      if (mc_channel_number>=387003 && mc_channel_number<=387127) pileup_w = tool_purw->GetCombinedWeight(222525, 410000, averageIntPerXing);
-      else { 
-            pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);  
+
+            pileup_w = tool_purw->getCombinedWeight(*eventInfo);  
             //CHECK (tool_purw->apply(*eventInfo));            
             sumwPURW = tool_purw->GetSumOfEventWeights(mc_channel_number);
             nsimPURW = tool_purw->GetNumberOfEvents(mc_channel_number);
-	}    
+	    
     }
 
 
