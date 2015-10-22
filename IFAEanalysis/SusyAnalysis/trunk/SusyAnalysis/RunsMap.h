@@ -130,6 +130,12 @@ m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SU
   m_map["data15_25ns_SUSY7_280977"] = rlist( Rpair(280977, "data15_13TeV.00280977.physics_Main.merge.DAOD_SUSY7.f629_m1504_p2425/"));
   m_map["data15_25ns_SUSY7_281070"] = rlist( Rpair(281070, "data15_13TeV.00281070.physics_Main.merge.DAOD_SUSY7.f629_m1504_p2425/"));
   m_map["data15_25ns_SUSY7_281075"] = rlist( Rpair(281075, "data15_13TeV.00281075.physics_Main.merge.DAOD_SUSY7.f629_m1504_p2425/"));
+  m_map["data15_25ns_SUSY7_280950"] = rlist( Rpair(280950, "data15_13TeV.00280950.physics_Main.merge.DAOD_SUSY7.f629_m1504_p2425/"));
+  m_map["data15_25ns_SUSY7_281074"] = rlist( Rpair(281074, "data15_13TeV.00281074.physics_Main.merge.DAOD_SUSY7.f629_m1504_p2425/"));
+  m_map["data15_25ns_SUSY7_281317"] = rlist( Rpair(281317, "data15_13TeV.00281317.physics_Main.merge.DAOD_SUSY7.f629_m1504_p2425/"));
+  m_map["data15_25ns_SUSY7_281385"] = rlist( Rpair(281385, "data15_13TeV.00281385.physics_Main.merge.DAOD_SUSY7.f629_m1504_p2425/"));
+
+
 
   //50ns
   m_map["data15_50ns_SUSY7_270806"] = rlist( Rpair(270806, "data15_13TeV.00270806.physics_Main.merge.DAOD_SUSY7.r6943_p2410_p2411/"));
@@ -481,42 +487,46 @@ m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SU
     m_map["25ns_MadGraphPythia8EvtGen_A14NNPDF23LO_ttZnnqq_Np1"] = rlist( Rpair(410074, "mc15_13TeV.410074.MadGraphPythia8EvtGen_A14NNPDF23LO_ttZnnqq_Np1.merge.DAOD_SUSY7.e4143_s2608_s2183_r6869_r6282_p2419/"));
 
     m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419/"));    
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451172_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451172_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451178_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451178_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451180_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451180_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451188_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451188_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451171_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451171_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451184_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451184_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451182_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451182_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451190_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451190_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451186_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451186_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad_tid06451176_00"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419_tid06451176_00"));   
+           
     m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
     m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop"] = rlist( Rpair(410012, "mc15_13TeV.410012.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
+    
+    m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top_tid06510753_00"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419_tid06510753_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top_tid06510754_00"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419_tid06510754_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top_tid06510755_00"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419_tid06510755_00"));  
+
+    m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop_tid06515057_00"] = rlist( Rpair(410012, "mc15_13TeV.410012.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419_tid06515057_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop_tid06515059_00"] = rlist( Rpair(410012, "mc15_13TeV.410012.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419_tid06515059_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop_tid06515060_00"] = rlist( Rpair(410012, "mc15_13TeV.410012.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419_tid06515060_00"));
+
+    
     m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop"] = rlist( Rpair(410014, "mc15_13TeV.410014.PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop_tid06511137_00"] = rlist( Rpair(410014, "mc15_13TeV.410014.PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419_tid06511137_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop_tid06511132_00"] = rlist( Rpair(410014, "mc15_13TeV.410014.PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419_tid06511132_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop_tid06511135_00"] = rlist( Rpair(410014, "mc15_13TeV.410014.PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419_tid06511135_00"));
+
     m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_top"] = rlist( Rpair(410013, "mc15_13TeV.410013.PowhegPythiaEvtGen_P2012_Wt_inclusive_top.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/")); 
+    m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_top_tid06513748_00"] = rlist( Rpair(410013, "mc15_13TeV.410013.PowhegPythiaEvtGen_P2012_Wt_inclusive_top.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419_tid06513748_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_top_tid06513746_00"] = rlist( Rpair(410013, "mc15_13TeV.410013.PowhegPythiaEvtGen_P2012_Wt_inclusive_top.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419_tid06513746_00"));
+    m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_inclusive_top_tid06513745_00"] = rlist( Rpair(410013, "mc15_13TeV.410013.PowhegPythiaEvtGen_P2012_Wt_inclusive_top.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419_tid06513745_00"));
+
 
     m_map["25ns_PowhegPythiaEvtGen_P2012CT10_Wt_inclusive_top_MET200"] = rlist( Rpair(407019, "mc15_13TeV.407019.PowhegPythiaEvtGen_P2012CT10_Wt_inclusive_top_MET200.merge.DAOD_SUSY7.e4024_s2608_r6765_r6282_p2419/"));
     m_map["25ns_PowhegPythiaEvtGen_P2012CT10_Wt_inclusive_tbar_MET200"] = rlist( Rpair(407021, "mc15_13TeV.407021.PowhegPythiaEvtGen_P2012CT10_Wt_inclusive_tbar_MET200.merge.DAOD_SUSY7.e4024_s2608_r6765_r6282_p2419/"));
    
     m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_DS_inclusive_top"] = rlist( Rpair(410062, "mc15_13TeV.410062.PowhegPythiaEvtGen_P2012_Wt_DS_inclusive_top.merge.DAOD_SUSY7.e4132_s2608_s2183_r6869_r6282_p2419/"));
     m_map["25ns_PowhegPythiaEvtGen_P2012_Wt_DS_inclusive_antitop"] = rlist( Rpair(410063, "mc15_13TeV.410063.PowhegPythiaEvtGen_P2012_Wt_DS_inclusive_antitop.merge.DAOD_SUSY7.e4132_s2608_s2183_r6869_r6282_p2419/"));
-
-    m_map["25ns_ttbar1_PowhegPythia"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419/"));    
-    m_map["25ns_ttbar2_PowhegPythia"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419/"));    
-    m_map["25ns_ttbar3_PowhegPythia"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419/"));    
-    m_map["25ns_ttbar4_PowhegPythia"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2419/"));    
-
-    m_map["25ns_ST_tchan_top1_PowhegPythia"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_ST_tchan_top2_PowhegPythia"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_ST_tchan_top2_PowhegPythia"] = rlist( Rpair(410011, "mc15_13TeV.410011.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_top.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_ST_tchan_antitop1_PowhegPythia"] = rlist( Rpair(410012, "mc15_13TeV.410012.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_ST_tchan_antitop2_PowhegPythia"] = rlist( Rpair(410012, "mc15_13TeV.410012.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_ST_tchan_antitop3_PowhegPythia"] = rlist( Rpair(410012, "mc15_13TeV.410012.PowhegPythiaEvtGen_P2012_singletop_tchan_lept_antitop.merge.DAOD_SUSY7.e3824_s2608_s2183_r6869_r6282_p2419/"));
-
-    
-    m_map["25ns_ST_Wtchan_top1_PowhegPythia"] = rlist( Rpair(410013, "mc15_13TeV.410013.PowhegPythiaEvtGen_P2012_Wt_inclusive_top.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/")); 
-    m_map["25ns_ST_Wtchan_top2_PowhegPythia"] = rlist( Rpair(410013, "mc15_13TeV.410013.PowhegPythiaEvtGen_P2012_Wt_inclusive_top.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/")); 
-    m_map["25ns_ST_Wtchan_top2_PowhegPythia"] = rlist( Rpair(410013, "mc15_13TeV.410013.PowhegPythiaEvtGen_P2012_Wt_inclusive_top.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/")); 
-    m_map["25ns_ST_Wtchan_antitop1_PowhegPythia"] = rlist( Rpair(410014, "mc15_13TeV.410014.PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_ST_Wtchan_antitop2_PowhegPythia"] = rlist( Rpair(410014, "mc15_13TeV.410014.PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_ST_Wtchan_antitop3_PowhegPythia"] = rlist( Rpair(410014, "mc15_13TeV.410014.PowhegPythiaEvtGen_P2012_Wt_inclusive_antitop.merge.DAOD_SUSY7.e3753_s2608_s2183_r6869_r6282_p2419/"));
-
-    
-    m_map["25ns_ttbarMET2001_PowhegPythia"] = rlist( Rpair(407012, "mc15_13TeV.407012.PowhegPythiaEvtGen_P2012CT10_ttbarMET200_hdamp172p5_nonAH.merge.DAOD_SUSY7.e4023_s2608_r6765_r6282_p2419/"));
-    m_map["25ns_ttbarMET2002_PowhegPythia"] = rlist( Rpair(407012, "mc15_13TeV.407012.PowhegPythiaEvtGen_P2012CT10_ttbarMET200_hdamp172p5_nonAH.merge.DAOD_SUSY7.e4023_s2608_r6765_r6282_p2419/"));
-    m_map["25ns_ttbarMET2003_PowhegPythia"] = rlist( Rpair(407012, "mc15_13TeV.407012.PowhegPythiaEvtGen_P2012CT10_ttbarMET200_hdamp172p5_nonAH.merge.DAOD_SUSY7.e4023_s2608_r6765_r6282_p2419/"));
-
+   
     m_map["25ns_ttbarGen"] = rlist( Rpair(410004, "mc15_13TeV.410004.PowhegHerwigppEvtGen_UEEE5_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3836_a766_a777_r6282_p2419/"));
     m_map["25ns_ttbarPS"] = rlist( Rpair(410006, "mc15_13TeV.410006.PowhegPythia8EvtGen_A14_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3836_a766_a777_r6282_p2419/"));
 
