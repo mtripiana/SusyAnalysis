@@ -303,7 +303,7 @@ private:
   OverlapRemovalTool* tool_or; //!
 
   CP::PileupReweightingTool *tool_purw; //! 
-
+  
   GoodRunsListSelectionTool *tool_grl; //!
 
   LHAPDF::PDF* m_PDF; //!
@@ -409,6 +409,7 @@ private:
   virtual float amt2_calc(TLorentzVector b1v, TLorentzVector b2v, TLorentzVector lepton,TVector2 EtMissVec, double cut);
   
   virtual double Calc_TruthNuMET();
+  virtual double Calc_TruthNuMET_fix();  
 
   virtual double epsilon(double x);
   virtual double thrustService(TVector2 &n, std::vector<TVector2> &obj);
@@ -521,7 +522,8 @@ private:
   bool isStopTL; //!  
   bool m_skim_btag; //! 
   bool m_skim_met; //!
-
+  bool is25ns; //!
+  bool isSig; //!
 
   TString GRLxmlFile; //!
   bool    applyPURW;
@@ -724,6 +726,8 @@ private:
   UInt_t  procID;
   UInt_t  mc_channel_number;//!
   float   averageIntPerXing;
+  float   sumwPURW;
+  float   nsimPURW;
   
   //- Weights  
   double   w;
@@ -731,6 +735,7 @@ private:
   double   MC_w;
   float    PDF_w;
   float    pileup_w;
+  unsigned long long PRWHash;
   float    bosonVect_w;
   float    Trigger_w;
   float    Trigger_w_avg;
@@ -752,7 +757,52 @@ private:
   float   eb_SFd;
   float   mb_SFd;
   float   phb_SFd;
+  float   eb_trigSF;
+  float   mb_trigSF;
+  float   e_trigSF;
+  float   m_trigSF;
 
+  float   e_SFIDu;
+  float   e_SFIDd;
+  float   e_SFIsou;
+  float   e_SFIsod;
+  float   e_SFRecou;
+  float   e_SFRecod;
+  float   e_SFTrigu;
+  float   e_SFTrigd;
+  float   eb_SFIDu;
+  float   eb_SFIDd;
+  float   eb_SFIsou;
+  float   eb_SFIsod;
+  float   eb_SFRecou;
+  float   eb_SFRecod;
+  float   eb_SFTrigu;
+  float   eb_SFTrigd;
+
+  float   m_SFStatu;
+  float   m_SFStatd;
+  float   m_SFSysu;
+  float   m_SFSysd;
+  float   m_SFTrigStatu;
+  float   m_SFTrigStatd;
+  float   m_SFTrigSysu;
+  float   m_SFTrigSysd;
+  float   m_SFIsoStatu;
+  float   m_SFIsoStatd;
+  float   m_SFIsoSysu;
+  float   m_SFIsoSysd; 
+  float   mb_SFStatu;   
+  float   mb_SFStatd;  
+  float   mb_SFSysu;   
+  float   mb_SFSysd;  
+  float   mb_SFTrigStatu;
+  float   mb_SFTrigStatd;
+  float   mb_SFTrigSysu;
+  float   mb_SFTrigSysd;
+  float   mb_SFIsoStatu;
+  float   mb_SFIsoStatd;
+  float   mb_SFIsoSysu;
+  float   mb_SFIsoSysd;
 
   //- ttbar reweighting
   float ttbar_weight;
@@ -824,6 +874,7 @@ private:
   VFloat e_phi;
   VFloat e_type;    
   VFloat e_origin;
+  VFloat e_charge;
   VFloat e_ptiso30;
   VFloat e_etiso30;
   VFloat e_ptiso20;
@@ -846,7 +897,7 @@ private:
   float  e_truth_eta;
   float  e_truth_phi;
 
-  VInt   e_trigger; 
+  int   e_trigger; 
 
   //- Muon Info
   int    m_N;
@@ -855,6 +906,7 @@ private:
   VFloat m_phi;
   VFloat m_type;
   VFloat m_origin;
+  VFloat m_charge;
   VFloat m_ptiso20;
   VFloat m_etiso20;
   VFloat m_ptiso30;
@@ -870,7 +922,7 @@ private:
   VFloat mb_eta;
   VFloat mb_phi;
 
-  VInt   m_trigger; 
+  int   m_trigger; 
 
   // Max bb-system  
   VInt index_min_dR_bb;
@@ -972,7 +1024,17 @@ private:
   float btag_weight_total_70fc;  
   float btag_weight_total_77fc;
   float btag_weight_total_85fc;
-
+  float btag_weight_total_77fc_effBu;  
+  float btag_weight_total_77fc_effBd;  
+  float btag_weight_total_77fc_effCu;  
+  float btag_weight_total_77fc_effCd;  
+  float btag_weight_total_77fc_effLu;  
+  float btag_weight_total_77fc_effLd;  
+  float btag_weight_total_77fc_extru;  
+  float btag_weight_total_77fc_extrd;  
+  float btag_weight_total_77fc_extrchu;  
+  float btag_weight_total_77fc_extrchd;
+  
   int bj_Nt70;
   int bj_Nt77;
   int bj_Nt80;

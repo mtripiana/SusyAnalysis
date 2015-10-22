@@ -51,6 +51,8 @@ namespace Particles{
     float  SF;
     float  SFu;
     float  SFd;
+    
+    float  trigSF;
 
     float  Pt_up;
     float  Pt_down;

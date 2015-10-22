@@ -39,6 +39,7 @@ Particle::Particle(){
   SF = 1;
   SFu = 0;
   SFd = 0;
+  trigSF = 1;
 }
 
 Particle::~Particle(){}
