@@ -110,7 +110,7 @@ void AddNewBranch(TString fileName, Float_t FileWeight, float nsimAOD, float sum
 
   TTree *t3 = (TTree*)f->Get("AnalysisTree");
   Int_t nentries = (Int_t)t3->GetEntries();
-
+  
   if(nentries){
     //TBranch *newBranch = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
     TBranch *b_nsimAOD = t3-> Branch("nsimAOD",&nsimAOD,"nsimAOD/F"); 
@@ -188,24 +188,26 @@ void ComputeNewBranch(TString fileName, float nsimAOD, float sumwAOD){
 
   TFile *f4= new TFile(fileName.Data(),"update");
   TTree *t3 = (TTree*)f4->Get("AnalysisTree");
-
+   
   TBranch *b_xsec;
   TBranch *b_feff;
-  TBranch *b_kfactor;
+  TBranch *b_kfactor; 
 
   float xsec = 0.0;
   float feff = 0.0;
   float kfactor = 1.0;
- 
+  unsigned long long PRWHash =0; 
+  
   t3->SetBranchAddress("xsec",&xsec,&b_xsec);
   t3->SetBranchAddress("feff",&feff,&b_feff);
   t3->SetBranchAddress("kfactor",&kfactor,&b_kfactor);
- 
+  
   //float FileWeight = 1.;
 
   //TBranch *b_FileWeight = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
   TBranch *b_nsimAOD = t3-> Branch("nsimAOD",&nsimAOD,"nsimAOD/F");  
-  TBranch *b_sumwAOD = t3-> Branch("sumwAOD",&sumwAOD,"sumwAOD/F"); 
+  TBranch *b_sumwAOD = t3-> Branch("sumwAOD",&sumwAOD,"sumwAOD/F");
+  TBranch *b_PRWHash = t3-> Branch("PRWHash",&PRWHash);   
 
   b_xsec->GetEntry(0);
   b_feff->GetEntry(0);
@@ -216,7 +218,8 @@ void ComputeNewBranch(TString fileName, float nsimAOD, float sumwAOD){
   for (int i = 0; i< t3->GetEntries();i++){  
     //b_FileWeight->Fill();
     b_sumwAOD->Fill();    
-    b_nsimAOD->Fill();    
+    b_nsimAOD->Fill();   
+    b_PRWHash->Fill();        
   }
   t3->Write("",TObject::kOverwrite);
   f4->Close();
@@ -233,10 +236,16 @@ void addAntiWeightToTree(TString fileName, bool isData){
   float eb_antiSF=1.;
   float mb_antiSF=1.;
   float ph_antiSF=1.;
+  
+  //float eb_antitrigSF=1.;
+  //float mb_antitrigSF=1.;  
 
   TBranch *b_eb_antiSF = t3-> Branch("eb_antiSF",&eb_antiSF,"eb_antiSF/F");
   TBranch *b_mb_antiSF = t3-> Branch("mb_antiSF",&mb_antiSF,"mb_antiSF/F");
   TBranch *b_ph_antiSF = t3-> Branch("ph_antiSF",&ph_antiSF,"ph_antiSF/F");
+  
+  //TBranch *b_eb_antitrigSF = t3-> Branch("eb_antitrigSF",&eb_antitrigSF,"eb_antitrigSF/F");
+  //TBranch *b_mb_antitrigSF = t3-> Branch("mb_antitrigSF",&mb_antitrigSF,"mb_antitrigSF/F");  
 
   TBranch *b_eb_SF;
   TBranch *b_mb_SF;
@@ -247,6 +256,9 @@ void addAntiWeightToTree(TString fileName, bool isData){
   TBranch *b_w;
   //TBranch *b_MC_w;
   TBranch *b_pileup_w;
+  
+  //TBranch *b_eb_trigSF;
+  //TBranch *b_mb_trigSF;  
 
   float eb_SF_loc=1.;
   float mb_SF_loc=1.;
@@ -257,7 +269,9 @@ void addAntiWeightToTree(TString fileName, bool isData){
   float w_loc=1.;
   //float MC_w_loc=1.;
   float pileup_w_loc=1.;
-
+  //float eb_trigSF_loc=1.;
+  //float mb_trigSF_loc=1.;
+  
   t3->SetBranchAddress("eb_SF", &eb_SF_loc, &b_eb_SF);
   t3->SetBranchAddress("mb_SF", &mb_SF_loc, &b_mb_SF);
   t3->SetBranchAddress("ph_SF", &ph_SF_loc, &b_ph_SF);
@@ -267,6 +281,9 @@ void addAntiWeightToTree(TString fileName, bool isData){
   t3->SetBranchAddress("w", &w_loc, &b_w);
   //t3->SetBranchAddress("MC_w", &MC_w_loc, &b_MC_w);
   t3->SetBranchAddress("pileup_w", &pileup_w_loc, &b_pileup_w);
+ 
+  //t3->SetBranchAddress("eb_trigSF", &eb_trigSF_loc, &b_eb_trigSF);
+  //t3->SetBranchAddress("mb_trigSF", &mb_trigSF_loc, &b_mb_trigSF);
 
   Float_t EventsWithElec = 0.;
   Float_t EventsWithMuon = 0.;
@@ -281,7 +298,7 @@ void addAntiWeightToTree(TString fileName, bool isData){
     b_w->GetEntry(i);
     //b_MC_w->GetEntry(i);
     b_pileup_w->GetEntry(i);
-
+    
     TotalEvents += w_loc*pileup_w_loc; //--- It's done independently for each NPx (so same FileWeight), and the luminosity is global.                                      
     if(eb_N_loc>0){
       //EventsWithElec += w_loc*MC_w_loc*pileup_w_loc;
@@ -307,9 +324,15 @@ void addAntiWeightToTree(TString fileName, bool isData){
   Float_t eb_SF_mean=0.;
   Float_t mb_SF_mean=0.;
   Float_t ph_SF_mean=0.;
+  //Float_t eb_trigSF_mean=0.;
+  //Float_t mb_trigSF_mean=0.;  
+ 
   TH1F *h_eb_SF_loc = new TH1F("h_eb_SF_loc", "h_eb_SF_loc", 400,0.0,2.0);
   TH1F *h_mb_SF_loc = new TH1F("h_mb_SF_loc", "h_mb_SF_loc", 400,0.0,2.0);
   TH1F *h_ph_SF_loc = new TH1F("h_ph_SF_loc", "h_ph_SF_loc", 400,0.0,2.0);
+  
+  //TH1F *h_eb_trigSF_loc = new TH1F("h_eb_trigSF_loc", "h_eb_trigSF_loc", 400,0.0,2.0);
+  //TH1F *h_mb_trigSF_loc = new TH1F("h_mb_trigSF_loc", "h_mb_trigSF_loc", 400,0.0,2.0);  
 
   for (Int_t i = 0; i < nentries; i++){
     b_eb_SF->GetEntry(i);
@@ -321,38 +344,55 @@ void addAntiWeightToTree(TString fileName, bool isData){
     b_w->GetEntry(i);
     //b_MC_w->GetEntry(i);
     b_pileup_w->GetEntry(i);
+    //b_eb_trigSF->GetEntry(i);
+    //b_mb_trigSF->GetEntry(i);    
 
     //if(eb_N_loc>0) {h_eb_SF_loc->Fill(eb_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
     //if(mb_N_loc>0) {h_mb_SF_loc->Fill(mb_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
     //if(ph_N_loc>0) {h_ph_SF_loc->Fill(ph_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
-    if(eb_N_loc>0) {h_eb_SF_loc->Fill(eb_SF_loc, w_loc*pileup_w_loc);}
-    if(mb_N_loc>0) {h_mb_SF_loc->Fill(mb_SF_loc, w_loc*pileup_w_loc);}
+    if(eb_N_loc>0) {
+      h_eb_SF_loc->Fill(eb_SF_loc, w_loc*pileup_w_loc);
+      //h_eb_trigSF_loc->Fill(eb_trigSF_loc, w_loc*pileup_w_loc);      
+    }
+    if(mb_N_loc>0) {
+      h_mb_SF_loc->Fill(mb_SF_loc, w_loc*pileup_w_loc);    
+      //h_mb_trigSF_loc->Fill(mb_trigSF_loc, w_loc*pileup_w_loc);
+    }
     if(ph_N_loc>0) {h_ph_SF_loc->Fill(ph_SF_loc, w_loc*pileup_w_loc);}	 
   }
   eb_SF_mean = h_eb_SF_loc->GetMean(); //--- Both have w, so it cancels.                                                                                                              
   mb_SF_mean = h_mb_SF_loc->GetMean();
   ph_SF_mean = h_ph_SF_loc->GetMean();
+  
+  //eb_trigSF_mean = h_eb_trigSF_loc->GetMean(); //--- Both have w, so it cancels.                                                                                                              
+  //mb_trigSF_mean = h_mb_trigSF_loc->GetMean();  
 
   h_eb_SF_loc->Delete();
   h_mb_SF_loc->Delete();
   h_ph_SF_loc->Delete();
+  //h_eb_trigSF_loc->Delete();
+  //h_mb_trigSF_loc->Delete();  
 
   if(eb_SF_mean==0.) { eb_SF_mean=1.;} //--- Just in case                                                                                                                              
   if(mb_SF_mean==0.) { mb_SF_mean=1.;}
   if(ph_SF_mean==0.) { ph_SF_mean=1.;}
-
+  //if(eb_trigSF_mean==0.) { eb_trigSF_mean=1.;} //--- Just in case                                                                                                                              
+  //if(mb_trigSF_mean==0.) { mb_trigSF_mean=1.;}
   std::cout<<"Mean electron SF : "<<eb_SF_mean<<std::endl;
   std::cout<<"Mean muon SF     : "<<mb_SF_mean<<std::endl;
   std::cout<<"Mean photon SF   : "<<ph_SF_mean<<std::endl;
 
-  std::cout<<"Mean electron SF : "<<eb_SF_mean<<std::endl;
-  std::cout<<"Mean muon SF     : "<<mb_SF_mean<<std::endl;
-  std::cout<<"Mean photon SF   : "<<ph_SF_mean<<std::endl;
+  //std::cout<<"Mean electron trigger SF : "<<eb_trigSF_mean<<std::endl;
+  //std::cout<<"Mean muon trigger SF     : "<<mb_trigSF_mean<<std::endl;
 
   if (!isData){
     eb_antiSF = 1 + (1-eb_SF_mean)*((Float_t)EventsWithElec/((Float_t)TotalEvents-(Float_t)EventsWithElec));
     mb_antiSF = 1 + (1-mb_SF_mean)*((Float_t)EventsWithMuon/((Float_t)TotalEvents-(Float_t)EventsWithMuon));
     ph_antiSF = 1 + (1-ph_SF_mean)*((Float_t)EventsWithPhoton/((Float_t)TotalEvents-(Float_t)EventsWithPhoton));
+    
+    //eb_antitrigSF = 1 + (1-eb_trigSF_mean)*((Float_t)EventsWithElec/((Float_t)TotalEvents-(Float_t)EventsWithElec));
+    //mb_antitrigSF = 1 + (1-mb_trigSF_mean)*((Float_t)EventsWithMuon/((Float_t)TotalEvents-(Float_t)EventsWithMuon));
+    
 
     if((eb_antiSF < -1000 || eb_antiSF > 1000) || (TotalEvents-EventsWithElec==0)) {
       eb_antiSF=1; //--- To avoid nan or inf                                                                                                                                          
@@ -366,21 +406,38 @@ void addAntiWeightToTree(TString fileName, bool isData){
       ph_antiSF=1;
       std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
+    /*
+    if((eb_antitrigSF < -1000 || eb_antitrigSF > 1000) || (TotalEvents-EventsWithElec==0)) {
+      eb_antitrigSF=1; //--- To avoid nan or inf                                                                                                                                          
+      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
+    }
+    if((mb_antitrigSF < -1000 || mb_antitrigSF > 1000) || (TotalEvents-EventsWithMuon==0)) {
+      mb_antitrigSF=1;
+      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
+    }    
+    
+   */ 
   }
   else{
     eb_antiSF = 1;
     mb_antiSF = 1;
     ph_antiSF = 1;
+    //eb_antitrigSF = 1;
+    //mb_antitrigSF = 1;    
   }
 
   std::cout<<"Electron anti-SF : "<<eb_antiSF<<std::endl;
   std::cout<<"Muon anti-SF     : "<<mb_antiSF<<std::endl;
   std::cout<<"Photon anti-SF   : "<<ph_antiSF<<std::endl;
+  //std::cout<<"Electron trigger anti-SF : "<<eb_antitrigSF<<std::endl;
+  //std::cout<<"Muon trigger anti-SF     : "<<mb_antitrigSF<<std::endl;  
 
   for (Int_t i = 0; i < nentries; i++){
     b_eb_antiSF->Fill();
     b_mb_antiSF->Fill();
     b_ph_antiSF->Fill();
+    //b_eb_antitrigSF->Fill();
+    //b_mb_antitrigSF->Fill();    
   }
 
   t3->Write("",TObject::kOverwrite);

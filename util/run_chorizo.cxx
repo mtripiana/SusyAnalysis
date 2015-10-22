@@ -455,6 +455,28 @@ int main( int argc, char* argv[] ) {
 	scanDir( sh, run_pattern[p].Data() );// , wildcard);
       }else{//PIC samples
 	scanDQ2 (sh, run_pattern[p].Data() );
+        /*
+	if(args[0].Contains("25ns_ttbar1_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00000*.pool.root*"); 
+	if(args[0].Contains("25ns_ttbar2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00001*.pool.root*"); 	 
+	if(args[0].Contains("25ns_ttbar3_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00002*.pool.root*"); 
+	if(args[0].Contains("25ns_ttbar4_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00003*.pool.root*"); 
+        if(args[0].Contains("25ns_ST_tchan_top1_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*0753._00*.pool.root*"); 
+	if(args[0].Contains("25ns_ST_tchan_top2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*0754._00*.pool.root*"); 
+	if(args[0].Contains("25ns_ST_tchan_top2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*0755._00*.pool.root*"); 	     
+	if(args[0].Contains("25ns_ST_tchan_antitop1_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*057._000*.pool.root*"); 
+	if(args[0].Contains("25ns_ST_tchan_antitop2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*059._000*.pool.root*");     
+	if(args[0].Contains("25ns_ST_tchan_antitop3_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*060._000*.pool.root*");     
+        if(args[0].Contains("25ns_ST_Wtchan_top1_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*745._000*.pool.root*"); 
+	if(args[0].Contains("25ns_ST_Wtchan_top2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*746._000*.pool.root*"); 
+	if(args[0].Contains("25ns_ST_Wtchan_top2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*748._000*.pool.root*"); 	     
+	if(args[0].Contains("25ns_ST_Wtchan_antitop1_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*132._00*.pool.root*"); 
+	if(args[0].Contains("25ns_ST_Wtchan_antitop2_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*135._00*.pool.root*");     
+	if(args[0].Contains("25ns_ST_Wtchan_antitop3_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*137._00*.pool.root*");     
+        if(args[0].Contains("25ns_ttbarMET2001_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00000*.pool.root*"); 
+	if(args[0].Contains("25ns_ttbarMET2002_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00001*.pool.root*"); 	 
+	if(args[0].Contains("25ns_ttbarMET2003_PowhegPythia")) sh.setMetaString ("nc_grid_filter", "*00002*.pool.root*"); 
+	*/
+		    
 	mgd=true;
       }
     }
@@ -671,7 +693,9 @@ int main( int argc, char* argv[] ) {
       Tdriver.submit( job, tmpdir );
     }
     else if(runPrun){ //Prun mode
-
+      if (systematic[isys].Contains("__1up")) vTag = systematic[isys].ReplaceAll("__1up","up")+"_"+vTag;
+      else if (systematic[isys].Contains("__1down")) vTag = systematic[isys].ReplaceAll("__1down","do")+"_"+vTag;  
+      else vTag = systematic[isys]+"_"+vTag;            
       //** prun
       std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%.%in:name[3]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);

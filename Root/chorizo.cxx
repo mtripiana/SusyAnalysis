@@ -115,6 +115,7 @@ chorizo :: chorizo ()
     tool_tileTrip(0), 
     tool_or(0), 
     tool_purw(0), 
+    //tool_m_trig_sf(0),
     tool_grl(0),
     iso_1(0),
     iso_2(0),
@@ -229,9 +230,11 @@ void chorizo :: bookTree(){
     m_atree->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
     m_atree->Branch ("nVertex", &nVertex, "nVertex/I");                        
     //common vars
-    m_atree->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
-    m_atree->Branch ("MC_w", &MC_w, "MC_w/D");                       
-
+    m_atree->Branch ("pileup_w", &pileup_w, "pileup_w/F"); 
+    m_atree->Branch ("PRWHash", &PRWHash);                      
+    m_atree->Branch ("MC_w", &MC_w, "MC_w/D");     
+    m_atree->Branch ("sumwPURW", &sumwPURW, "sumwPURW/F");                           
+    m_atree->Branch ("nsimPURW", &nsimPURW, "nsimPURW/F"); 
     //presel
     m_atree->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
     m_atree->Branch("isTrigger",&isTrigger);
@@ -276,20 +279,52 @@ void chorizo :: bookTree(){
       m_atree->Branch ("eb_SF", &eb_SF,"eb_SF/F");
       m_atree->Branch ("mb_SF", &mb_SF,"mb_SF/F");
       m_atree->Branch ("phb_SF", &phb_SF,"phb_SF/F");      
-      m_atree->Branch ("e_SFu", &e_SFu,"e_SFu/F");
-      m_atree->Branch ("m_SFu", &m_SFu,"m_SFu/F");
-      m_atree->Branch ("ph_SFu", &ph_SFu,"ph_SFu/F");
-      m_atree->Branch ("e_SFd", &e_SFd,"e_SFd/F");
-      m_atree->Branch ("m_SFd", &m_SFd,"m_SFd/F");
-      m_atree->Branch ("ph_SFd", &ph_SFd,"ph_SFd/F");
-      m_atree->Branch ("eb_SFu", &eb_SFu,"eb_SFu/F");
-      m_atree->Branch ("mb_SFu", &mb_SFu,"mb_SFu/F");
-      m_atree->Branch ("phb_SFu", &phb_SFu,"phb_SFu/F");
-      m_atree->Branch ("eb_SFd", &eb_SFd,"eb_SFd/F");
-      m_atree->Branch ("mb_SFd", &mb_SFd,"mb_SFd/F");
-      m_atree->Branch ("phb_SFd", &phb_SFd,"phb_SFd/F");      
-      
-      
+      m_atree->Branch ("e_SFIDu", &e_SFIDu,"e_SFIDu/F");
+      m_atree->Branch ("e_SFIDd", &e_SFIDd,"e_SFIDd/F");
+      m_atree->Branch ("e_SFIsou", &e_SFIsou,"e_SFIsou/F");
+      m_atree->Branch ("e_SFIsod", &e_SFIsod,"e_SFIsod/F");
+      m_atree->Branch ("e_SFRecou", &e_SFRecou,"e_SFRecou/F");
+      m_atree->Branch ("e_SFRecod", &e_SFRecod,"e_SFRecod/F");
+      m_atree->Branch ("e_SFTrigu", &e_SFTrigu,"e_SFTrigu/F");
+      m_atree->Branch ("e_SFTrigd", &e_SFTrigd,"e_SFTrigd/F");
+      m_atree->Branch ("eb_SFIDu", &eb_SFIDu,"eb_SFIDu/F");
+      m_atree->Branch ("eb_SFIDd", &eb_SFIDd,"eb_SFIDd/F");
+      m_atree->Branch ("eb_SFIsou", &eb_SFIsou,"eb_SFIsou/F");
+      m_atree->Branch ("eb_SFIsod", &eb_SFIsod,"eb_SFIsod/F");
+      m_atree->Branch ("eb_SFRecou", &eb_SFRecou,"eb_SFRecou/F");
+      m_atree->Branch ("eb_SFRecod", &eb_SFRecod,"eb_SFRecod/F");
+      m_atree->Branch ("eb_SFTrigu", &eb_SFTrigu,"eb_SFTrigu/F");
+      m_atree->Branch ("eb_SFTrigd", &eb_SFTrigd,"eb_SFTrigd/F");
+
+      m_atree->Branch ("m_SFStatu", &m_SFStatu,"m_SFStatu/F");      
+      m_atree->Branch ("m_SFStatd", &m_SFStatd,"m_SFStatd/F");      
+      m_atree->Branch ("m_SFSysu", &m_SFSysu,"m_SFSysu/F");      
+      m_atree->Branch ("m_SFSysd", &m_SFSysd,"m_SFSysd/F");  
+      m_atree->Branch ("m_SFTrigStatu", &m_SFTrigStatu,"m_SFTrigStatu/F");      
+      m_atree->Branch ("m_SFTrigStatd", &m_SFTrigStatd,"m_SFTrigStatd/F");      
+      m_atree->Branch ("m_SFTrigSysu", &m_SFTrigSysu,"m_SFTrigSysu/F");      
+      m_atree->Branch ("m_SFTrigSysd", &m_SFTrigSysd,"m_SFTrigSysd/F");  
+      m_atree->Branch ("m_SFIsoStatu", &m_SFIsoStatu,"m_SFIsoStatu/F");      
+      m_atree->Branch ("m_SFIsoStatd", &m_SFIsoStatd,"m_SFIsoStatd/F");      
+      m_atree->Branch ("m_SFIsoSysu", &m_SFIsoSysu,"m_SFIsoSysu/F");      
+      m_atree->Branch ("m_SFIsoSysd", &m_SFIsoSysd,"m_SFIsoSysd/F");  
+      m_atree->Branch ("mb_SFStatu", &mb_SFStatu,"mb_SFStatu/F");      
+      m_atree->Branch ("mb_SFStatd", &mb_SFStatd,"mb_SFStatd/F");      
+      m_atree->Branch ("mb_SFSysu", &mb_SFSysu,"mb_SFSysu/F");      
+      m_atree->Branch ("mb_SFSysd", &mb_SFSysd,"mb_SFSysd/F");  
+      m_atree->Branch ("mb_SFTrigStatu", &mb_SFTrigStatu,"mb_SFTrigStatu/F");      
+      m_atree->Branch ("mb_SFTrigStatd", &mb_SFTrigStatd,"mb_SFTrigStatd/F");      
+      m_atree->Branch ("mb_SFTrigSysu", &mb_SFTrigSysu,"mb_SFTrigSysu/F");      
+      m_atree->Branch ("mb_SFTrigSysd", &mb_SFTrigSysd,"mb_SFTrigSysd/F");  
+      m_atree->Branch ("mb_SFIsoStatu", &mb_SFIsoStatu,"mb_SFIsoStatu/F");      
+      m_atree->Branch ("mb_SFIsoStatd", &mb_SFIsoStatd,"mb_SFIsoStatd/F");      
+      m_atree->Branch ("mb_SFIsoSysu", &mb_SFIsoSysu,"mb_SFIsoSysu/F");      
+      m_atree->Branch ("mb_SFIsoSysd", &mb_SFIsoSysd,"mb_SFIsoSysd/F");  
+
+      //m_atree->Branch ("eb_trigSF", &eb_trigSF,"eb_trigSF/F");
+      //m_atree->Branch ("mb_trigSF", &mb_trigSF,"mb_trigSF/F");      
+      //m_atree->Branch ("e_trigSF", &e_trigSF,"e_trigSF/F");
+      //m_atree->Branch ("m_trigSF", &m_trigSF,"m_trigSF/F");      
 
       //boson 
       m_atree->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
@@ -335,24 +370,24 @@ void chorizo :: bookTree(){
 
       //photons
       m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
-      m_atree->Branch("ph_pt",&ph_pt);
-      m_atree->Branch("ph_eta",&ph_eta);
-      m_atree->Branch("ph_phi",&ph_phi);
+      //m_atree->Branch("ph_pt",&ph_pt);
+      //m_atree->Branch("ph_eta",&ph_eta);
+      //m_atree->Branch("ph_phi",&ph_phi);
       //m_atree->Branch("ph_etiso30",&ph_etiso30);
       //m_atree->Branch("ph_ptiso30",&ph_ptiso30);
-      m_atree->Branch("ph_tight",&ph_tight);
-      m_atree->Branch("ph_type",&ph_type);
-      m_atree->Branch("ph_origin",&ph_origin);
-      m_atree->Branch("ph_Cone20",&ph_Cone20);      
-      m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
-      m_atree->Branch("ph_Cone40",&ph_Cone40);     
+      //m_atree->Branch("ph_tight",&ph_tight);
+      //m_atree->Branch("ph_type",&ph_type);
+      //m_atree->Branch("ph_origin",&ph_origin);
+      //m_atree->Branch("ph_Cone20",&ph_Cone20);      
+      //m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
+      //m_atree->Branch("ph_Cone40",&ph_Cone40);     
       
 
       m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
-      m_atree->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
-      m_atree->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
+      //m_atree->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
+      //m_atree->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
       
-      m_atree->Branch("ph_trigger",&ph_trigger);
+      //m_atree->Branch("ph_trigger",&ph_trigger);
 
       //electrons
       m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -364,16 +399,17 @@ void chorizo :: bookTree(){
       m_atree->Branch("e_eta",&e_eta);
       m_atree->Branch("e_phi",&e_phi);
       m_atree->Branch("e_type",&e_type);
-      m_atree->Branch("e_origin",&e_origin);            
+      m_atree->Branch("e_origin",&e_origin);   
+      m_atree->Branch("e_charge",&e_charge);               
       //m_atree->Branch("e_etiso30",&e_etiso30);
       //m_atree->Branch("e_ptiso30",&e_ptiso30);
       //m_atree->Branch("e_etiso20",&e_etiso20);
       //m_atree->Branch("e_ptiso20",&e_ptiso20);
-      m_atree->Branch("e_isoT",&e_isoTight);
-      m_atree->Branch("e_isoL",&e_isoLoose);
-      m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
-      m_atree->Branch("e_isoG",&e_isoGradient);
-      m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
+      //m_atree->Branch("e_isoT",&e_isoTight);
+      //m_atree->Branch("e_isoL",&e_isoLoose);
+      //m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
+      //m_atree->Branch("e_isoG",&e_isoGradient);
+      //m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
       m_atree->Branch("e_id",&e_id);
       //m_atree->Branch("e_d0_sig",&e_d0_sig);  
       //m_atree->Branch("e_z0",&e_z0);      
@@ -383,8 +419,8 @@ void chorizo :: bookTree(){
       m_atree->Branch("eb_eta",&eb_eta);
       m_atree->Branch("eb_phi",&eb_phi);
 
-      m_atree->Branch("e_trigger",&e_trigger);
-
+      m_atree->Branch("e_trigger",&e_trigger,"e_trigger/I", 10000);
+      
       m_atree->Branch("e_MT",&e_MT,"e_MT/F", 10000);
       m_atree->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
       m_atree->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
@@ -400,22 +436,23 @@ void chorizo :: bookTree(){
       m_atree->Branch("m_phi",&m_phi);      
       m_atree->Branch("m_type",&m_type);
       m_atree->Branch("m_origin",&m_origin);
+      m_atree->Branch("m_charge",&m_charge);      
       //m_atree->Branch("m_etiso20",&m_etiso20);          
       //m_atree->Branch("m_ptiso20",&m_ptiso20);          
       //m_atree->Branch("m_etiso30",&m_etiso30);          
       //m_atree->Branch("m_ptiso30",&m_ptiso30);          
-      m_atree->Branch("m_isoTight",&m_isoTight);
-      m_atree->Branch("m_isoLoose",&m_isoLoose);
-      m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
-      m_atree->Branch("m_isoGradient",&m_isoGradient);
-      m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
+      //m_atree->Branch("m_isoTight",&m_isoTight);
+      //m_atree->Branch("m_isoLoose",&m_isoLoose);
+      //m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
+      //m_atree->Branch("m_isoGradient",&m_isoGradient);
+      //m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
 
       m_atree->Branch("mb_N",&mb_N,"mb_N/I",10000);
       m_atree->Branch("mb_pt",&mb_pt);
       m_atree->Branch("mb_eta",&mb_eta);
       m_atree->Branch("mb_phi",&mb_phi);
 
-      m_atree->Branch("m_trigger",&m_trigger);
+      m_atree->Branch("m_trigger",&m_trigger,"m_trigger/I", 10000);
 
       m_atree->Branch("m_M",&m_M,"m_M/F", 10000);                            
       m_atree->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
@@ -487,6 +524,18 @@ void chorizo :: bookTree(){
      
       m_atree->Branch("btag_weight_total_70fc",&btag_weight_total_70fc,"btag_weight_total_70fc/F", 10000);
       m_atree->Branch("btag_weight_total_77fc",&btag_weight_total_77fc,"btag_weight_total_77fc/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effBu",&btag_weight_total_77fc_effBu,"btag_weight_total_77fc_effBu/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effBd",&btag_weight_total_77fc_effBd,"btag_weight_total_77fc_effBd/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effCu",&btag_weight_total_77fc_effCu,"btag_weight_total_77fc_effCu/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effCd",&btag_weight_total_77fc_effCd,"btag_weight_total_77fc_effCd/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effLu",&btag_weight_total_77fc_effLu,"btag_weight_total_77fc_effLu/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effLd",&btag_weight_total_77fc_effLd,"btag_weight_total_77fc_effLd/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_extru",&btag_weight_total_77fc_extru,"btag_weight_total_77fc_extru/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_extrd",&btag_weight_total_77fc_extrd,"btag_weight_total_77fc_extrd/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_extrchu",&btag_weight_total_77fc_extrchu,"btag_weight_total_77fc_extrchu/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_extrchd",&btag_weight_total_77fc_extrchd,"btag_weight_total_77fc_extrchd/F", 10000);
+          
+      
       m_atree->Branch("btag_weight_total_85fc",&btag_weight_total_85fc,"btag_weight_total_85fc/F", 10000);
 
 
@@ -530,10 +579,10 @@ void chorizo :: bookTree(){
       //m_atree->Branch("tr_spher",&tr_spher); 
       //m_atree->Branch("tr_thrust",&tr_thrust); 
 
-      m_atree->Branch("amt2_0",&amt2_0);
-      m_atree->Branch("amt2_1",&amt2_1);
-      m_atree->Branch("amt2_2",&amt2_2);      
-      m_atree->Branch("amt2_3",&amt2_3);      
+      //m_atree->Branch("amt2_0",&amt2_0);
+      //m_atree->Branch("amt2_1",&amt2_1);
+      //m_atree->Branch("amt2_2",&amt2_2);      
+      //m_atree->Branch("amt2_3",&amt2_3);      
 
       //event variables
       //dphi
@@ -543,12 +592,12 @@ void chorizo :: bookTree(){
       //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
       
       // Max bb-system
-      m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
-      m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
-      m_atree->Branch("min_dR_bb",&min_dR_bb); 
-      m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
+      //m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
+      //m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
+      //m_atree->Branch("min_dR_bb",&min_dR_bb); 
+      //m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
       
-      m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
+      //m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
       m_atree->Branch("dPhi_min",&dPhi_min);
       m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
       m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
@@ -586,11 +635,11 @@ void chorizo :: bookTree(){
 
 
       //MTs
-      m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
-      m_atree->Branch("MT_bcl_met",&MT_bcl_met);
-      m_atree->Branch("MT_bfar_met",&MT_bfar_met);
-      m_atree->Branch("MT_lcl_met",&MT_lcl_met);
-      m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
+      //m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
+      //m_atree->Branch("MT_bcl_met",&MT_bcl_met);
+      //m_atree->Branch("MT_bfar_met",&MT_bfar_met);
+      //m_atree->Branch("MT_lcl_met",&MT_lcl_met);
+      //m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
 
       //Misc
       m_atree->Branch("mjj",&mjj,"mjj/F", 10000);  
@@ -603,29 +652,30 @@ void chorizo :: bookTree(){
 //       m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
 //       
 //       //Razor
-      m_atree->Branch("MR",&MR,"MR/F", 10000);
-      m_atree->Branch("MTR",&MTR);
-      m_atree->Branch("R",&R);
+      //m_atree->Branch("MR",&MR,"MR/F", 10000);
+      //m_atree->Branch("MTR",&MTR);
+      //m_atree->Branch("R",&R);
              
-      m_atree->Branch("shatR",&shatR);
-      m_atree->Branch("gaminvR",&gaminvR);
-      m_atree->Branch("mdeltaR",&mdeltaR);
-      m_atree->Branch("cosptR",&cosptR);
+      //m_atree->Branch("shatR",&shatR);
+      //m_atree->Branch("gaminvR",&gaminvR);
+      //m_atree->Branch("mdeltaR",&mdeltaR);
+      //m_atree->Branch("cosptR",&cosptR);
       
       //Z candidate 
-      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
-      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
-      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
-      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
-      m_atree->Branch("lep3_MT",&lep3_MT);
-      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+      //m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      //m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+      //m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+      //m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+      //m_atree->Branch("lep3_MT",&lep3_MT);
+      //m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
 
 
       //top reconstruction
       m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
-      m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
-      m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
+      //m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
+      //m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
       //fat jets 
+      /*
       m_atree->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
       m_atree->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
       m_atree->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
@@ -636,7 +686,7 @@ void chorizo :: bookTree(){
       m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
       m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
       m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
-      
+     */ 
       //Extended trigger info
       if(doTrigExt){
 
@@ -965,7 +1015,9 @@ void chorizo :: InitVars()
   bcid = 0;
   procID = 0;
   averageIntPerXing = 0;
- 
+  sumwPURW=0.;
+  nsimPURW=0.;
+  
   //- Data Quality (event is good by default! (i.e. MC))
   isGRL = true; 
   isFakeMet = false;                 
@@ -987,7 +1039,8 @@ void chorizo :: InitVars()
   w_average = 1.;            
   MC_w = 1.;         
   PDF_w = 1.;        
-  pileup_w = 1.;        
+  pileup_w = 1.;   
+  PRWHash = 0;     
   bosonVect_w = 1.;  
   Trigger_w = 1.;    
   Trigger_w_avg = 1.;
@@ -997,19 +1050,54 @@ void chorizo :: InitVars()
   eb_SF = 1.;
   mb_SF = 1.;
   phb_SF = 1.;  
-  e_SFu = 1.;
-  m_SFu = 1.;
-  ph_SFu = 1.;
-  e_SFd = 1.;
-  m_SFd = 1.;
-  ph_SFd = 1.;
-  eb_SFu = 1.;
-  mb_SFu = 1.;
-  phb_SFu = 1.;
-  eb_SFd = 1.;
-  mb_SFd = 1.;
-  phb_SFd = 1.;
 
+  e_SFIDu = 1.;
+  e_SFIDd = 1.;
+  e_SFIsou = 1.;
+  e_SFIsod = 1.;
+  e_SFRecou = 1.;
+  e_SFRecod = 1.;
+  e_SFTrigu = 1.;
+  e_SFTrigd = 1.;
+  eb_SFIDu = 1.;
+  eb_SFIDd = 1.;
+  eb_SFIsou = 1.;
+  eb_SFIsod = 1.;
+  eb_SFRecou = 1.;
+  eb_SFRecod = 1.;
+  eb_SFTrigu = 1.;
+  eb_SFTrigd = 1.;
+
+  m_SFStatu   = 1.;
+  m_SFStatd   = 1.;
+  m_SFSysu  = 1.;
+  m_SFSysd  = 1.;
+  m_SFTrigStatu = 1.;
+  m_SFTrigStatd = 1.;
+  m_SFTrigSysu  = 1.;
+  m_SFTrigSysd  = 1.;
+  m_SFIsoStatu  = 1.;
+  m_SFIsoStatd  = 1.;
+  m_SFIsoSysu   = 1.;
+  m_SFIsoSysd  = 1.; 
+  mb_SFStatu = 1.;   
+  mb_SFStatd  = 1.;  
+  mb_SFSysu  = 1.;   
+  mb_SFSysd   = 1.;  
+  mb_SFTrigStatu  = 1.;
+  mb_SFTrigStatd  = 1.;
+  mb_SFTrigSysu  = 1.;
+  mb_SFTrigSysd  = 1.;
+  mb_SFIsoStatu  = 1.;
+  mb_SFIsoStatd  = 1.;
+  mb_SFIsoSysu   = 1.;
+  mb_SFIsoSysd   = 1.;
+
+  eb_trigSF = 1.;
+  mb_trigSF = 1.;
+  e_trigSF = 1.;
+  m_trigSF = 1.;
+  
   //- Top    
   ttbar_weight = 1.;                  
   Top_truth_pt = DUMMYDN;                  
@@ -1069,6 +1157,7 @@ void chorizo :: InitVars()
   e_phi.clear();
   e_type.clear();
   e_origin.clear();  
+  e_charge.clear();
   e_ptiso30.clear();
   e_etiso30.clear();
   e_ptiso20.clear();
@@ -1091,7 +1180,7 @@ void chorizo :: InitVars()
   e_truth_eta = DUMMYDN;       
   e_truth_phi = DUMMYDN;       
 
-  e_trigger.clear();
+  e_trigger=0;
   
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
@@ -1122,7 +1211,8 @@ void chorizo :: InitVars()
   m_eta.clear();               
   m_phi.clear();     
   m_type.clear();
-  m_origin.clear();            
+  m_origin.clear(); 
+  m_charge.clear();           
   m_ptiso30.clear();          
   m_etiso30.clear();          
   m_ptiso20.clear();          
@@ -1138,7 +1228,7 @@ void chorizo :: InitVars()
   mb_eta.clear();
   mb_phi.clear();
 
-  m_trigger.clear();
+  m_trigger = 0;
 
   m_M = DUMMYDN;                
   m_MT = DUMMYDN;  
@@ -1211,6 +1301,16 @@ void chorizo :: InitVars()
                                   
   btag_weight_total_70fc = 1.;
   btag_weight_total_77fc = 1.;
+  btag_weight_total_77fc_effBu = 1.;  
+  btag_weight_total_77fc_effBd = 1.;  
+  btag_weight_total_77fc_effCu = 1.;  
+  btag_weight_total_77fc_effCd = 1.;  
+  btag_weight_total_77fc_effLu = 1.;  
+  btag_weight_total_77fc_effLd = 1.;  
+  btag_weight_total_77fc_extru = 1.;  
+  btag_weight_total_77fc_extrd = 1.;  
+  btag_weight_total_77fc_extrchu = 1.;  
+  btag_weight_total_77fc_extrchd = 1.;    
   btag_weight_total_85fc = 1.;
 
   bj_Nt70 = 0;                               
@@ -1510,6 +1610,8 @@ void chorizo :: ReadXML(){
   m_skim_btag = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming_BTAG");  
   m_skim_met  = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/DoSkimming_MET");  
   dumpTile    = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/TileDump");  
+  is25ns    = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/is25ns");  
+  isSig    = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$Mode/name/isSig");  
 
   Info(whereAmI, Form(" - PDF reweighting") );
   doPDFrw = xmlReader->retrieveBool("AnalysisOptions$GeneralSettings$PdfRw$Enable");
@@ -1809,7 +1911,8 @@ EL::StatusCode chorizo :: initialize ()
     CHECK(tool_st->setProperty("DataSource", datasource) );
     //  CHECK(tool_st->setProperty("IsDerived", m_isderived) );
     //  CHECK(tool_st->setProperty("Is8TeV", this->is8TeV) );
-    CHECK(tool_st->setProperty("Is25ns", false));
+    if (is25ns) CHECK(tool_st->setProperty("Is25ns", true));
+    else CHECK(tool_st->setProperty("Is25ns", false));
 
     if(JetCollection.Contains("LCTopo"))
       CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::LCTopo ));
@@ -2037,14 +2140,17 @@ EL::StatusCode chorizo :: initialize ()
   // trick: path in the tool name so it gets saved to the desired place
   //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
   TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
+  if (!is25ns) purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW_50ns/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmod
   //if(PURW_Folder.IsWhitespace())
   PURW_Folder = maindir + "/SusyAnalysis/PURW/";
+  if (!is25ns) PURW_Folder = maindir + "/SusyAnalysis/PURW_50ns/";
 
   if(this->isMC && genPUfile){ 
     purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
   }
   tool_purw = new CP::PileupReweightingTool(purw_name.Data());
-  if (this->isMC){
+  //if (this->isMC){
+  if (1==1){  
     if(genPUfile && !doPUTree){ //--- Generate the pileup root files
       CHECK( tool_purw->initialize() );
     }
@@ -2053,20 +2159,25 @@ EL::StatusCode chorizo :: initialize ()
       std::vector<std::string> lumiFiles;	 
       
       //--- read the dataset number from the TTree
-      Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
-
-      TString prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+      if (is25ns) Info("initialize()", Form("Reading PileupReweighting file : %i.root",  eventInfo->mcChannelNumber()) );
+      else Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
+      
+      
+      TString prwfile=PURW_Folder+"merged_prw.root";
+      if (isSig) TString prwfile=PURW_Folder+"mergedSignals_prw.root";      
+      if (!is25ns) prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
       std::ifstream test_prwfile(prwfile);
       
-      if (test_prwfile.good()) {
+     // if (test_prwfile.good()) {
 	isPUfile=true;
 	prwFiles.push_back(prwfile.Data());
 	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
 	lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
 	CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
-	CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
-
+	//CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
+	//CHECK( tool_purw->EnableDebugging(true) );
 	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
+	CHECK( tool_purw->setProperty("DefaultChannel",410000) );   	
 	if (this->syst_PU == pileupErr::PileupLow)        
 	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
 	else if(this->syst_PU == pileupErr::PileupHigh) 
@@ -2074,11 +2185,11 @@ EL::StatusCode chorizo :: initialize ()
 	
 
 	CHECK( tool_purw->initialize() );
-      } 
-      
+    //  } 
+/*      
       else {
 	isPUfile=false;
-	prwfile=PURW_Folder+"410000.prw.root";
+	prwfile=PURW_Folder+"410000.root";
 	prwFiles.push_back(prwfile.Data());
 	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
 	CHECK( tool_purw->setProperty("DefaultChannel",410000) );      
@@ -2093,10 +2204,13 @@ EL::StatusCode chorizo :: initialize ()
 	  CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
 	
 	CHECK( tool_purw->initialize() );
-      }      
+      }    
+      
+      */  
     }
   }
 
+ 
   
   //--- GRL
   tool_grl = new GoodRunsListSelectionTool("GoodRunsListSelectionTool");
@@ -2230,6 +2344,16 @@ EL::StatusCode chorizo :: nextEvent(){
 
   if(m_smdJets)
     m_smdJets->clear();
+   
+  if(m_signalMuons)
+    m_signalMuons->clear();
+  if(m_baselineMuons)
+    m_baselineMuons->clear();
+    
+  if(m_signalElectrons)
+    m_signalElectrons->clear();
+  if(m_baselineElectrons)
+    m_baselineElectrons->clear();    
 
   if(m_inv_el)
     m_inv_el->clear();
@@ -2315,7 +2439,8 @@ EL::StatusCode chorizo :: loop ()
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
   
   lb = eventInfo->lumiBlock();
-  bcid = eventInfo->bcid();
+  bcid = eventInfo->bcid();              
+  CHECK (tool_purw->apply(*eventInfo));           
   averageIntPerXing = ( isMC ? eventInfo->averageInteractionsPerCrossing() : tool_purw->getLumiBlockMu( *eventInfo ) );
 
   
@@ -2331,10 +2456,18 @@ EL::StatusCode chorizo :: loop ()
     
     if (!doPUTree)         
       return nextEvent();
-    //if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(222500, 410000, averageIntPerXing);    
-    if (isMC && applyPURW) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);      
-    return nextEvent();
-  }
+      
+     } 
+    if (isMC && applyPURW) { 
+      if (mc_channel_number>=387003 && mc_channel_number<=387127) pileup_w = tool_purw->GetCombinedWeight(222525, 410000, averageIntPerXing);
+      else { 
+            pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);  
+            //CHECK (tool_purw->apply(*eventInfo));            
+            sumwPURW = tool_purw->GetSumOfEventWeights(mc_channel_number);
+            nsimPURW = tool_purw->GetNumberOfEvents(mc_channel_number);
+	}    
+    }
+
 
   //  -- Retrieve Truth containers
   m_truthE= 0;
@@ -2404,8 +2537,8 @@ EL::StatusCode chorizo :: loop ()
     this->w = 1/w_average;
 
     //---pileup weight 
-    if(applyPURW)
-       if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
+    //if(applyPURW)
+      // if (isMC) pileup_w = tool_purw->GetCombinedWeight(RunNumber, mc_channel_number, averageIntPerXing);
        //if (isMC) pileup_w = tool_purw->GetCombinedWeight(222510.5, 410000, averageIntPerXing);
     //--- For histograms : combine all the weights in a single variable //CHECK_ME
     if (!doAnaTree) 
@@ -2579,6 +2712,11 @@ EL::StatusCode chorizo :: loop ()
   m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
   m_smdJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
 
+  m_signalMuons = new xAOD::MuonContainer(SG::VIEW_ELEMENTS);
+  m_baselineMuons = new xAOD::MuonContainer(SG::VIEW_ELEMENTS);
+  m_signalElectrons = new xAOD::ElectronContainer(SG::VIEW_ELEMENTS);
+  m_baselineElectrons = new xAOD::ElectronContainer(SG::VIEW_ELEMENTS);  
+   
   m_inv_el = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
   m_inv_mu = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
   m_inv_ph = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
@@ -2734,65 +2872,26 @@ EL::StatusCode chorizo :: loop ()
       recoElectron.d0_sig = fabs(track->d0()) / Amg::error(track->definingParametersCovMatrix(),0);
       recoElectron.z0 = track->z0() + track->vz() - primvertex_z;
     }
+    recoElectron.charge   = (float) (*el_itr).charge();
 
     recoElectron.type   = xAOD::TruthHelpers::getParticleTruthType( *el_itr );
     recoElectron.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *el_itr );
-    //trigger matching
-    std::vector<bool> el_trig_pass;
-    for(const auto& t : ElTriggers){
-      if(t.substr(0, 4) == "HLT_"){ 
-	std::string tsub = t.substr(4);
-	el_trig_pass.push_back( tool_trig_match_el->matchHLT( el_itr, tsub ));
-      }
-      else
-	el_trig_pass.push_back( false ); //only check for HLT items at the moment
-     
-      recoElectron.isTrigMatch |= el_trig_pass.back();
-    }
     
-    //get electron scale factors
-    if(this->isMC){
-      //nominal
-      recoElectron.SF = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF );
-      
-      //+1 sys up
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
-      }
-      recoElectron.SFu = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
-      
-      //+1 sys down
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
-      }
-      recoElectron.SFd = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
-      
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      
-      eb_SF *= recoElectron.SF;
-      eb_SFu *= recoElectron.SFu;
-      eb_SFd *= recoElectron.SFd;
-     
-    }
+    m_baselineElectrons->push_back(el_itr);    
     
     //save signal electrons
     if( dec_signal(*el_itr) ){
-      recoElectrons.push_back(recoElectron);
+      recoElectrons.push_back(recoElectron);      
+      m_signalElectrons->push_back(el_itr);
       e_N++;
       IsElectron=true;
-      if(this->isMC){
-	e_SF *= recoElectron.SF;
-	e_SFu *= recoElectron.SFu;
-	e_SFd *= recoElectron.SFd;
-      } 
+//      if(this->isMC){
+//	e_SF *= recoElectron.SF;
+//	e_SFu *= recoElectron.SFu;
+//	e_SFd *= recoElectron.SFd;
+	
+//	e_trigSF *= recoElectron.trigSF;
+//      } 
     }
     else{
       electronCandidates.push_back(recoElectron);
@@ -2803,7 +2902,86 @@ EL::StatusCode chorizo :: loop ()
   //sort the electrons in Pt
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end()); //non-signal electrons
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end()); //signal electrons
+    
+    //get electron scale factors
+    if(this->isMC){
+      //nominal 
+      e_SF = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SF = tool_st->GetTotalElectronSF(*m_baselineElectrons,true,true,true,true);
+          
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_ID_TotalCorrUncertainty__1down");
+      }
+      e_SFIDd = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFIDd = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_ID_TotalCorrUncertainty__1up");
+      }
+      e_SFIDu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFIDu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      
 
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Iso_TotalCorrUncertainty__1down");
+      }
+      e_SFIsod = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFIsod = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Iso_TotalCorrUncertainty__1up");
+      }
+      e_SFIsou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFIsou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Reco_TotalCorrUncertainty__1down");
+      }
+      e_SFRecod = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFRecod = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Reco_TotalCorrUncertainty__1up");
+      }
+      e_SFRecou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFRecou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Trigger_TotalCorrUncertainty__1down");
+      }
+      e_SFTrigd = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFTrigd = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Trigger_TotalCorrUncertainty__1up");
+      }
+      e_SFTrigu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+      eb_SFTrigu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+
+
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	Error("loop()", "Cannot configure SUSYTools for default systematics");
+      } 
+
+
+   
+    }
+     
+     
+      std::string el_trig = "HLT_e24_lhtight_iloose || HLT_e60_lhmedium";
+      
+      for (unsigned int i=0; i<m_signalElectrons->size(); i++){
+	if (tool_st->IsTrigMatched(m_signalElectrons->at(i),el_trig) && m_signalElectrons->at(i)->pt()>26000.) e_trigger=1;
+      }
 
   //-- Pre-book baseline muons (after OR)
   bool IsMuon = false; // any good not-overlapping muon in the event?
@@ -2878,68 +3056,29 @@ EL::StatusCode chorizo :: loop ()
     recoMuon.type   = xAOD::TruthHelpers::getParticleTruthType( *mu_itr );
     recoMuon.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *mu_itr );
     
-    //trigger matching
-    std::vector<bool> mu_trig_pass;
-    for(const auto& t : MuTriggers){
-      if(t.substr(0, 4) == "HLT_"){ 
-	std::string tsub = t;
-	mu_trig_pass.push_back( tool_trig_match_mu->match( mu_itr, tsub ));
-      }
-      else
-	mu_trig_pass.push_back( false ); //only check for HLT items at the moment
-     
-      recoMuon.isTrigMatch |= mu_trig_pass.back();
-    }
-
-    //get muon scale factors
-    if(this->isMC){
-      //nominal 
-      recoMuon.SF = tool_st->GetSignalMuonSF(*mu_itr);
-      
-      //+1 sys up
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
-	Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
-      }
-      recoMuon.SFu = tool_st->GetSignalMuonSF(*mu_itr);
-      
-      //+1 sys down
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
-	Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
-      }
-      recoMuon.SFd = tool_st->GetSignalMuonSF(*mu_itr);
-      
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-   
-      mb_SF *= recoMuon.SF;
-      mb_SFu *= recoMuon.SFu;
-      mb_SFd *= recoMuon.SFd;
-   
-    }
+    m_baselineMuons->push_back(mu_itr);    
     
     //save signal muons
     if( dec_signal(*mu_itr) ){ 
       recoMuons.push_back(recoMuon);
+      m_signalMuons->push_back(mu_itr);      
       m_N++;
       IsMuon = true;
-      if(this->isMC){
-	m_SF *= recoMuon.SF;
-	m_SFu *= recoMuon.SFu;
-	m_SFd *= recoMuon.SFd;
-      }
+      //if(this->isMC){
+      // 	m_SF *= recoMuon.SF;
+//	m_SFu *= recoMuon.SFu;
+//	m_SFd *= recoMuon.SFd;
+        	
+//      }
     }
     else{
       muonCandidates.push_back(recoMuon);
+
     }
 
   }//muon loop
+
+
   
   //sort the muon candidates in Pt
   if (muonCandidates.size()>0) std::sort(muonCandidates.begin(), muonCandidates.end());
@@ -2947,8 +3086,126 @@ EL::StatusCode chorizo :: loop ()
 
   this->isCosmic  = (nCosmicMuons>0);
   this->isBadMuon = (nBadMuons>0);
+      
+  //tool_m_trig_sf->setRunNumber(RunNumber);
+  //std::string mu_trig = "HLT_mu24_imedium_OR_HLT_mu50";
+  //Double_t tmp_m_trigSF = 1;
+  //Double_t tmp_mb_trigSF = 1;
+    
+  //tool_m_trig_sf->getTriggerScaleFactor(*m_baselineMuons,tmp_mb_trigSF,mu_trig);
+  //tool_m_trig_sf->getTriggerScaleFactor(*m_signalMuons,tmp_m_trigSF,mu_trig);
+  
+  //mb_trigSF = tmp_mb_trigSF;
+  //m_trigSF = tmp_m_trigSF;  
+    
+    //get muon scale factors
+    if(this->isMC){
+      //nominal 
+      std::string mu_trig_sf = "HLT_mu24_imedium_OR_HLT_mu50";
+      m_SF = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SF = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+       
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_STAT__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_STAT__1down");
+      }
+      m_SFStatd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFStatd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_STAT__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_STAT__1up");
+      }
+      m_SFStatu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFStatu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_SYS__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_SYS__1down");
+      }
+      m_SFSysd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFSysd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_SYS__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_SYS__1up");
+      }
+      m_SFSysu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFSysu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigStatUncertainty__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigStatUncertainty__1down");
+      }
+      m_SFTrigStatd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFTrigStatd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigStatUncertainty__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigStatUncertainty__1up");
+      }
+      m_SFTrigStatu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFTrigStatu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigSystUncertainty__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigSystUncertainty__1down");
+      }
+      m_SFTrigSysd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFTrigSysd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigSystUncertainty__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigSystUncertainty__1up");
+      }
+      m_SFTrigSysu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFTrigSysu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
 
 
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_STAT__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_STAT__1down");
+      }
+      m_SFIsoStatd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFIsoStatd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_STAT__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_STAT__1up");
+      }
+      m_SFIsoStatu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFIsoStatu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_SYS__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_SYS__1down");
+      }
+      m_SFIsoSysd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFIsoSysd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_SYS__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_SYS__1up");
+      }
+      m_SFIsoSysu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+      mb_SFIsoSysu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+
+
+      
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	Error("loop()", "Cannot configure SUSYTools for default systematics");
+      }
+
+   
+    }
+     
+      std::string mu_trig = "HLT_mu24_imedium || HLT_mu50";
+      
+      for (unsigned int i=0; i<m_signalMuons->size(); i++){
+	if (tool_st->IsTrigMatched(m_signalMuons->at(i),mu_trig) && m_signalMuons->at(i)->pt()>26000.) m_trigger=1;
+
+      }
+  
   //-- Pre-book baseline photons (after OR)
   std::vector<Particle> photonCandidates; //intermediate selection photons
   int iPh = 0;
@@ -3370,7 +3627,85 @@ EL::StatusCode chorizo :: loop ()
   //** btagging weights
   if(isMC){
     btag_weight_total_70fc       = GetBtagSF(m_goodJets, tool_btag70, -0.0436);   
-    btag_weight_total_77fc       = GetBtagSF(m_goodJets, tool_btag77, -0.4434);
+    btag_weight_total_77fc       = tool_st->BtagSF(m_goodJets);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_B_systematics__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_B_systematics__1down");
+      }
+      
+      btag_weight_total_77fc_effBd       = tool_st->BtagSF(m_goodJets);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_B_systematics__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_B_systematics__1up");
+      }
+      
+      btag_weight_total_77fc_effBu       = tool_st->BtagSF(m_goodJets);
+      
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_C_systematics__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_C_systematics__1down");
+      }
+      
+      btag_weight_total_77fc_effCd       = tool_st->BtagSF(m_goodJets);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_C_systematics__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_C_systematics__1up");
+      }
+      
+      btag_weight_total_77fc_effCu       = tool_st->BtagSF(m_goodJets);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_Light_systematics__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_Light_systematics__1down");
+      }
+      
+      btag_weight_total_77fc_effLd       = tool_st->BtagSF(m_goodJets);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_Light_systematics__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_Light_systematics__1up");
+      }
+      
+      btag_weight_total_77fc_effLu       = tool_st->BtagSF(m_goodJets);
+
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation__1down");
+      }
+      
+      btag_weight_total_77fc_extrd       = tool_st->BtagSF(m_goodJets);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation__1up");
+      }
+      
+      btag_weight_total_77fc_extru       = tool_st->BtagSF(m_goodJets);
+
+      //+1 sys down
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation from charm__1down")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation from charm__1down");
+      }
+      
+      btag_weight_total_77fc_extrchd       = tool_st->BtagSF(m_goodJets);
+      
+      //+1 sys up
+      if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation from charm__1up")) != CP::SystematicCode::Ok){
+	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation from charm__1up");
+      }
+      
+      btag_weight_total_77fc_extrchu       = tool_st->BtagSF(m_goodJets);
+
+      
+      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
+	Error("loop()", "Cannot configure SUSYTools for default systematics");
+      }
+
+    
     btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85, -0.7887); //CHECK! not to trust for now
   }
   
@@ -3401,12 +3736,15 @@ EL::StatusCode chorizo :: loop ()
     CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") ); //not in MC15??
     mtopo  = (*cmet_lhtopo)["LocHadTopo"];
                   
-
+  } 
+  
+  if(isStopTL){
+ 
     CHECK( m_event->retrieve( cmet_track, "MET_Track") );
     mtrack = (*cmet_track)["PVTrack_vx0"];
     // mtrack = (*cmet_track)["Track"];
-  }                 
-         
+                    
+  }        
   //** Met components
   //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
 
@@ -3655,31 +3993,54 @@ EL::StatusCode chorizo :: loop ()
   }
 
 
+  mct = Calc_mct();
+
+
+
   //*** Event Skimming (if requested)
   if(m_skim_met || m_skim_btag){
     
     bool SK_passBtagging = (bj_N>0);
+            
+    bool SK_passCR1l = (((e_N==1 && recoElectrons.at(0).Pt()>20.) || (m_N==1 && recoMuons.at(0).Pt()>20.)) && metmap[::MetDef::VisMuTST].Mod() > 100.);
+    
+    bool SK_passSR_sbot = ( ((eb_N+mb_N)==0) &&  (metmap[::MetDef::VisMuTST].Mod() > 250. ) );
+ 
+    bool SK_passCRee = ( (e_N==2) &&  (metmap[::MetDef::VisMuTSTECorr].Mod() > 100.  &&  recoElectrons.at(0).Pt()>20.) );
+   
+    bool SK_passCRmm = ( (m_N==2) &&  (metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.  &&  recoMuons.at(0).Pt()>20.) );
+ 
+    bool SK_mct = (mct>150.);     
+    
+    
+    bool SK_jetpt = (j_N>1 && recoJets.at(0).Pt()>50. && recoJets.at(1).Pt()>50.);
+    
+    bool keep_event = true;
+    
+    if (m_skim_btag) keep_event = ( SK_passBtagging &&  SK_mct && SK_jetpt ) && (SK_passCR1l || SK_passSR_sbot || SK_passCRee || SK_passCRmm);
+    
+    
     
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
-		       || metmap[::MetDef::VisMu].Mod() > 100. );
+                       || metmap[::MetDef::VisMu].Mod() > 100. );
     
     bool SK_passSR = ( ((eb_N+mb_N)==0) &&  (metmap[::MetDef::InvMu].Mod() > 250. 
-					  || metmap[::MetDef::VisMu].Mod() > 250. 
-					  || metmap[::MetDef::InvMuTST].Mod() > 250. 
-					  || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
+                                          || metmap[::MetDef::VisMu].Mod() > 250. 
+                                          || metmap[::MetDef::InvMuTST].Mod() > 250. 
+                                          || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
     
     bool SK_passCRe = ( (e_N>0) &&  (SK_passMETdef
-				     || metmap[::MetDef::InvMuECorr].Mod() > 100. 
-				     || metmap[::MetDef::VisMuECorr].Mod() > 100. 
-				     || metmap[::MetDef::InvMuTSTECorr].Mod() > 100. 
-				     || metmap[::MetDef::VisMuTSTECorr].Mod() > 100.)); 
+                                     || metmap[::MetDef::InvMuECorr].Mod() > 100. 
+                                     || metmap[::MetDef::VisMuECorr].Mod() > 100. 
+                                     || metmap[::MetDef::InvMuTSTECorr].Mod() > 100. 
+                                     || metmap[::MetDef::VisMuTSTECorr].Mod() > 100.)); 
     
     bool SK_passCRmu = ( (m_N>0) &&  ( SK_passMETdef
-				       || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
-				       || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.));
+                                       || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
+                                       || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.));
     
     bool SK_passCRph = ( (ph_N>0) &&  ( SK_passMETdef
-				        || metmap[::MetDef::VisMuPhCorr].Mod() > 100.));
+                                        || metmap[::MetDef::VisMuPhCorr].Mod() > 100.));
 
 
     bool SK_passAnyMet = (metmap[::MetDef::InvMu].Mod() > 100.
@@ -3693,7 +4054,8 @@ EL::StatusCode chorizo :: loop ()
                        || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
                        || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.);
     
-    bool keep_event = ( (m_skim_btag && SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph)) || (m_skim_met && SK_passAnyMet) );
+     if (m_skim_met) keep_event = ( (m_skim_btag && SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph)) || (m_skim_met && SK_passAnyMet) );
+ 
 
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;
@@ -3801,10 +4163,10 @@ EL::StatusCode chorizo :: loop ()
       }
       
       
-      amt2_0.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 160));
-      amt2_1.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 170));
-      amt2_2.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 180));
-      amt2_3.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 200));
+      //amt2_0.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 160));
+      //amt2_1.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 170));
+      //amt2_2.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 180));
+      //amt2_3.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 200));
     }
     
     //some extra variables
@@ -3965,10 +4327,12 @@ EL::StatusCode chorizo :: loop ()
 
   UInt_t MET_ids[] = {410000, 410013, 410014}; //, 407012, 407019, 407021}; //nominal   //filtered : 407012, 407019, 407021;
   if ( this->isMC && count(MET_ids, MET_ids+84, this->mc_channel_number) ){
-    met_top = (float) Calc_TruthNuMET()*0.001;  // this cast is actually needed to reproduce what the filter does
-
+    //if (isStopTL) met_top = (float) Calc_TruthNuMET()*0.001;  // this cast is actually needed to reproduce what the filter does
+      if (is25ns) met_top = eventInfo->auxdata< float >("GenFiltMET")*0.001;	
+      else met_top = (float) Calc_TruthNuMET_fix()*0.001;                                                     
+       	//met_top = eventInfo->auxdata< float >("GenFiltMET")*0.001;                                                     
+     //met_top = (float) this->GenFiltMET*0.0001;
   }
-  
 
   //--- Track Veto
   //init vars
@@ -4155,7 +4519,7 @@ EL::StatusCode chorizo :: loop ()
   }
 
   //Mct
-  mct = Calc_mct();
+  //mct = Calc_mct();
   
   //==== Hadronic top reconstruction ====
   int ibtop1=-1; //book two highest btag-weight jets for later use
@@ -4193,7 +4557,7 @@ EL::StatusCode chorizo :: loop ()
   }
 
   
-  RecoHadTops(ibtop1, ibtop2);
+  //RecoHadTops(ibtop1, ibtop2);
 
   // ------ Max bb-system variables  
   if (ibtop1!=-1 && ibtop2!=-1)
@@ -4484,7 +4848,7 @@ EL::StatusCode chorizo :: loop ()
   delete muons_sc;             delete muons_scaux;
   delete electrons_sc;         delete electrons_scaux;
   delete photons_sc;           delete photons_scaux;
-  delete metRFC;               delete metRFCAux; 
+  delete metRFC;               delete metRFCAux;   
 
   if(myfile.is_open())
     myfile.close();
@@ -5027,18 +5391,19 @@ EL::StatusCode chorizo :: loop_truth()
       }
       
       
-      amt2_0.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 160));
-      amt2_1.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 170));
-      amt2_2.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 180));
-      amt2_3.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 200));
+      //amt2_0.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 160));
+      //amt2_1.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 170));
+      //amt2_2.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 180));
+      //amt2_3.push_back(amt2_calc(recoJets.at(0).GetVector(), recoJets.at(1).GetVector(), lead_lep,mk.second, 200));
     }
+    /*
     else{
       amt2_0.push_back(DUMMYUP);
       amt2_1.push_back(DUMMYUP);
       amt2_2.push_back(DUMMYUP);
       amt2_3.push_back(DUMMYUP);
     }
-
+      */
     auto ntaujs =0;
     auto dphi_min_allj_tmp=-1.;
     auto dphi_min_4j_tmp=-1.;    
@@ -5432,7 +5797,8 @@ void chorizo :: dumpLeptons(){
     e_eta.push_back( fill ?  recoElectrons.at(iel).Eta()  : DUMMYDN );
     e_phi.push_back( fill ?  recoElectrons.at(iel).Phi()  : DUMMYDN );
     e_type.push_back( fill ?  recoElectrons.at(iel).type  : DUMMYDN );   
-    e_origin.push_back( fill ?  recoElectrons.at(iel).origin  : DUMMYDN );        
+    e_origin.push_back( fill ?  recoElectrons.at(iel).origin  : DUMMYDN ); 
+    e_charge.push_back( fill ?  recoElectrons.at(iel).charge  : DUMMYDN );            
     e_etiso30.push_back( fill ?  recoElectrons.at(iel).etcone30  : DUMMYDN );
     e_ptiso30.push_back( fill ?  recoElectrons.at(iel).ptcone30  : DUMMYDN );
     e_etiso20.push_back( fill ?  recoElectrons.at(iel).etcone20  : DUMMYDN );
@@ -5445,7 +5811,7 @@ void chorizo :: dumpLeptons(){
     e_id.push_back( fill ?   recoElectrons.at(iel).id  : DUMMYDN );
     e_d0_sig.push_back( fill ?  recoElectrons.at(iel).d0_sig  : DUMMYDN );
     e_z0.push_back( fill ?  recoElectrons.at(iel).z0  : DUMMYDN );
-    e_trigger.push_back( fill ?  (int)recoElectrons.at(iel).isTrigMatch : DUMMYDN );
+    //e_trigger.push_back( fill ?  (int)recoElectrons.at(iel).isTrigMatch : DUMMYDN );
   }
   
   e_truth_pt  = (truthElectrons.size()>0) ? truthElectrons.at(0).Pt()  : DUMMYDN;
@@ -5474,6 +5840,7 @@ void chorizo :: dumpLeptons(){
     m_phi.push_back( fill ?  recoMuons.at(imu).Phi()  : DUMMYDN );
     m_type.push_back( fill ?  recoMuons.at(imu).type  : DUMMYDN ); 
     m_origin.push_back( fill ?  recoMuons.at(imu).origin  : DUMMYDN );        
+    m_charge.push_back( fill ?  recoMuons.at(imu).charge  : DUMMYDN );            
     m_etiso20.push_back( fill ?  recoMuons.at(imu).etcone20  : DUMMYDN );
     m_ptiso20.push_back( fill ?  recoMuons.at(imu).ptcone20  : DUMMYDN );
     m_etiso30.push_back( fill ?  recoMuons.at(imu).etcone30  : DUMMYDN );
@@ -5483,7 +5850,7 @@ void chorizo :: dumpLeptons(){
     m_isoLooseTrackOnly.push_back( fill ?  recoMuons.at(imu).isoLooseTrackOnly  : DUMMYDN );
     m_isoGradient.push_back( fill ?  recoMuons.at(imu).isoGradient  : DUMMYDN );
     m_isoGradientLoose.push_back( fill ?  recoMuons.at(imu).isoGradientLoose  : DUMMYDN );
-    m_trigger.push_back( fill ?  (int)recoMuons.at(imu).isTrigMatch  : DUMMYDN );
+    //m_trigger.push_back( fill ?  (int)recoMuons.at(imu).isTrigMatch  : DUMMYDN );
   }
   
 }
@@ -5618,6 +5985,10 @@ EL::StatusCode chorizo :: finalize ()
     delete m_goodJets;
   if(m_smdJets)
     delete m_smdJets;
+  if(m_signalMuons)
+    delete m_signalMuons;
+  if(m_baselineMuons)
+    delete m_baselineMuons;      
   if(m_inv_el)
     delete m_inv_el;
   if(m_inv_mu)
@@ -5706,6 +6077,7 @@ EL::StatusCode chorizo :: finalize ()
     tool_purw=0;
   }
 
+  
   //SUSYTools
   if( tool_st ){
     delete tool_st;
@@ -6822,6 +7194,43 @@ float chorizo :: Calc_mct_corr(Particle p1, Particle p2, TVector2 met){
 
   return mct_corr;
 };
+
+double chorizo :: Calc_TruthNuMET_fix() {
+  
+  double sumx = 0;
+  double sumy = 0;
+
+  for(const xAOD::TruthParticle* particle : *m_truthP) {
+    // find all status=1 neutrinos                                                                                                                                                                         
+    bool addpart = false;
+    if (particle->status() != 1)
+      continue;
+    if (!particle->isNeutrino())
+      continue;
+
+    // loop through the parents and see if its from a W, Z or |pdg|<9                                                                                                                                      
+    const xAOD::TruthParticle* par = particle->parent(0);
+    while ( par ) {
+      // when there is a hadron somewhere we are not interested                                                                                                                                            
+      if (par->isHadron() )
+        break;
+
+      if ( (par->isW() || par->isZ() || abs(par->pdgId())<9) ) {
+        addpart = true;
+        break;
+      }
+
+      par = par->parent(0);
+    }
+
+    if (addpart) {
+      sumx += particle->p4().Px();
+      sumy += particle->p4().Py();
+    }
+  }
+  const double truthMet = sqrt(sumx*sumx + sumy*sumy); 
+  return truthMet;
+ }
 
 
 double chorizo :: Calc_TruthNuMET(){

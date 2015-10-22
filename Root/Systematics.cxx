@@ -101,9 +101,20 @@ void Systematics::LoadList(){
   m_CP_list.push_back("FT_Eigen_Light_8__1down");
   m_CP_list.push_back("FT_Eigen_Light_8__1up");
   m_CP_list.push_back("FT_Eigen_Light_9__1down");  
-  m_CP_list.push_back("FT_Eigen_Light_9__1up");   
+  m_CP_list.push_back("FT_Eigen_Light_9__1up");  
+  m_CP_list.push_back("FT_EFF_B_systematics__1down");
+  m_CP_list.push_back("FT_EFF_B_systematics__1up");  
+  m_CP_list.push_back("FT_EFF_C_systematics__1down");   
+  m_CP_list.push_back("FT_EFF_C_systematics__1up");   
+  m_CP_list.push_back("FT_EFF_Light_systematics__1up");   
+  m_CP_list.push_back("FT_EFF_Light_systematics__1down");  
+  m_CP_list.push_back("FT_EFF_extrapolation__1up");   
+  m_CP_list.push_back("FT_EFF_extrapolation__1down"); 
+  m_CP_list.push_back("FT_EFF_extrapolation from charm__1up");   
+  m_CP_list.push_back("FT_EFF_extrapolation from charm__1down");     
+  
   //**JET
-  m_CP_list.push_back("JER__1up");    
+  m_CP_list.push_back("JET_JER_SINGLE_NP__1up");    
   m_CP_list.push_back("JET_GroupedNP_1__1up");    
   m_CP_list.push_back("JET_GroupedNP_1__1down");
   m_CP_list.push_back("JET_GroupedNP_2__1up");
@@ -288,7 +299,8 @@ void Systematics::LoadList(){
   m_ST_list.push_back("CJETLow");                                           
   m_ST_list.push_back("BMISTAGHigh");                                       
   m_ST_list.push_back("BMISTAGLow");                                        
-  m_ST_list.push_back("RESOST");                                            
+  m_ST_list.push_back("RESOST");    
+ 
  
 }
 
