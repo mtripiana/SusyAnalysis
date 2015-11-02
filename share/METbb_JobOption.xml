@@ -10,14 +10,14 @@
     <Mode name="StopTL">false</Mode>    
     <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming_MET">false</Mode>
-    <Mode name="DoSkimming_BTAG">false</Mode>
+    <Mode name="DoSkimming_BTAG">true</Mode>
     <Mode name="is25ns">true</Mode>       
     <Mode name="isSig">false</Mode>  
     <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path>
     <Path name="PartialRootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/CollateralRootFiles/</Path>
     <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v69-pro19-03_DQDefects-00-01-02_PHYS_StandardGRL_All_Good_25ns.xml</Path> <!-- 25ns -->
     <Pileup>
-      <Mode name="ApplyPileupReweighting">true</Mode>
+      <Mode name="ApplyPileupReweighting">false</Mode>
       <Path name="PileupReweightingConfigFolder">""</Path>  <!-- leave it empty to use default location -->
       <!--Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_270806-271744.root</Path-->
       <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_276262-281385.root</Path>    
