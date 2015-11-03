@@ -39,7 +39,6 @@ export ROOTENV_NO_HOME=1  #--- To be able to read correctly the TEnv class in RO
 echo "===============  Run the code  ================"
 
 source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up.sh
-run -l -j=$jop -s=$syst $1 
-#-y
+run -y -l -j=$jop -s=$syst $1 
 
 

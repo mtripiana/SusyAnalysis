@@ -24,23 +24,6 @@ namespace pileupErr
   } pileupSyste;
 }
 
-namespace JvfUncErr
-{
-  typedef enum  {
-    NONE,
-    JvfUncHigh,
-    JvfUncLow
-  } JvfSyste;
-}
-
-namespace BCHCorrMediumErr
-{
-  typedef enum  {
-    NONE,
-    BCHCorrHigh,
-    BCHCorrLow
-  } BCHSyste;
-}
 
 //ported (partially) from old SUSYObjDef class 
 //@todo get rid of this once we have the correspendent implementation in CP
@@ -62,9 +45,7 @@ public:
 		       CP::SystematicSet& syst_CP,
 		       SystErr::Syste &syst_ST,
 		       ScaleVariatioReweighter::variation &syst_Scale,
-		       pileupErr::pileupSyste &syst_PU,
-		       JvfUncErr::JvfSyste &syst_JVF,
-		       BCHCorrMediumErr::BCHSyste &syst_BCH );
+		       pileupErr::pileupSyste &syst_PU);
  
 
   void LoadList();

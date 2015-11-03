@@ -87,6 +87,11 @@ m_map["Zee_cutflow"] = rlist( Rpair(361404, "/nfs/at3/scratch/sfracchia/SUSY/zee
 m_map["ttbar_cutflow"] = rlist( Rpair(410000, "/nfs/at3/scratch/sfracchia/SUSY/ttbar_cutflow/"));
 m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SUSY/singletop_cutflow/"));
 
+
+//DEBUG STREAM
+ m_map["data15_25ns_SUSY7_debugrec"] = rlist(Rpair(100000, "/nfs/atlas-data07/tripiana/xAOD/data/13TeV/debugrec/"));
+
+
 // 25ns
   m_map["data15_25ns_SUSY7_276262"] = rlist( Rpair(276262, "data15_13TeV.00276262.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2425/"));
   m_map["data15_25ns_SUSY7_276329"] = rlist( Rpair(276329, "data15_13TeV.00276329.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2425/"));
@@ -258,38 +263,49 @@ m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SU
   //======================================================================================================================
 
 
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt35_70_BFilter"] = rlist( Rpair(361041, "mc15_13TeV.361041.Sherpa_CT10_SinglePhotonPt35_70_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));   
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt35_70_CVetoBVeto"] = rlist( Rpair(361039, "mc15_13TeV.361039.Sherpa_CT10_SinglePhotonPt35_70_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt35_70_CFilterBVeto"] = rlist( Rpair(361040, "mc15_13TeV.361040.Sherpa_CT10_SinglePhotonPt35_70_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));    
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt70_140_CVetoBVeto"] = rlist( Rpair(361042, "mc15_13TeV.361042.Sherpa_CT10_SinglePhotonPt70_140_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));       
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt70_140_CFilterBVeto"] = rlist( Rpair(361043, "mc15_13TeV.361043.Sherpa_CT10_SinglePhotonPt70_140_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt70_140_BFilter"] = rlist( Rpair(361044, "mc15_13TeV.361044.Sherpa_CT10_SinglePhotonPt70_140_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt140_280_CVetoBVeto"] = rlist( Rpair(361045, "mc15_13TeV.361045.Sherpa_CT10_SinglePhotonPt140_280_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));    
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt140_280_CFilterBVeto"] = rlist( Rpair(361046, "mc15_13TeV.361046.Sherpa_CT10_SinglePhotonPt140_280_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));       
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt140_280_BFilter"] = rlist( Rpair(361047, "mc15_13TeV.361047.Sherpa_CT10_SinglePhotonPt140_280_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt280_500_CVetoBVeto"] = rlist( Rpair(361048, "mc15_13TeV.361048.Sherpa_CT10_SinglePhotonPt280_500_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));    
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt280_500_CFilterBVeto"] = rlist( Rpair(361049, "mc15_13TeV.361049.Sherpa_CT10_SinglePhotonPt280_500_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));       
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt280_500_BFilter"] = rlist( Rpair(361050, "mc15_13TeV.361050.Sherpa_CT10_SinglePhotonPt280_500_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt500_1000_CVetoBVeto"] = rlist( Rpair(361051, "mc15_13TeV.361051.Sherpa_CT10_SinglePhotonPt500_1000_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt500_1000_CFilterBVeto"] = rlist( Rpair(361052, "mc15_13TeV.361052.Sherpa_CT10_SinglePhotonPt500_1000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt500_1000_BFilter"] = rlist( Rpair(361053, "mc15_13TeV.361053.Sherpa_CT10_SinglePhotonPt500_1000_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt1000_2000_CVetoBVeto"] = rlist( Rpair(361054, "mc15_13TeV.361054.Sherpa_CT10_SinglePhotonPt1000_2000_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt1000_2000_CFilterBVeto"] = rlist( Rpair(361055, "mc15_13TeV.361055.Sherpa_CT10_SinglePhotonPt1000_2000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt1000_2000_BFilter"] = rlist( Rpair(361056, "mc15_13TeV.361056.Sherpa_CT10_SinglePhotonPt1000_2000_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt2000_4000_CVetoBVeto"] = rlist( Rpair(361057, "mc15_13TeV.361057.Sherpa_CT10_SinglePhotonPt2000_4000_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt2000_4000_CFilterBVeto"] = rlist( Rpair(361058, "mc15_13TeV.361058.Sherpa_CT10_SinglePhotonPt2000_4000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_SinglePhotonPt4000_CFilterBVeto"] = rlist( Rpair(361061, "mc15_13TeV.361061.Sherpa_CT10_SinglePhotonPt4000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  //Test EOS (data) 900GeV
+  m_map["TestEOS"] = rlist( Rpair(264034, "/eos/atlas/atlastier0/rucio/data15_comm/physics_MinBias/00264034/data15_comm.00264034.physics_MinBias.merge.AOD.f577_m1420"));
+  
+  //======================================================================================================================
+  //                                                 Grid tests
+  //======================================================================================================================
+  
+  
+  m_map["TestGrid0"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY1.e3698_s2608_s2183_r6630_r6264_p2353/"));
 
-    m_map["25ns_Sherpa_CT10_WplvWmqq"] = rlist( Rpair(361081, "mc15_13TeV.361081.Sherpa_CT10_WplvWmqq.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_WpqqWmlv"] = rlist( Rpair(361082, "mc15_13TeV.361082.Sherpa_CT10_WpqqWmlv.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_WlvZqq"] = rlist( Rpair(361083, "mc15_13TeV.361083.Sherpa_CT10_WlvZqq.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_WqqZll"] = rlist( Rpair(361084, "mc15_13TeV.361084.Sherpa_CT10_WqqZll.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_WqqZvv"] = rlist( Rpair(361085, "mc15_13TeV.361085.Sherpa_CT10_WqqZvv.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_ZqqZll"] = rlist( Rpair(361086, "mc15_13TeV.361086.Sherpa_CT10_ZqqZll.merge.DAOD_SUSY7.e3926_s2608_s2183_r6869_r6282_p2419/"));
-    m_map["25ns_Sherpa_CT10_ZqqZvv"] = rlist( Rpair(361087, "mc15_13TeV.361087.Sherpa_CT10_ZqqZvv.merge.DAOD_SUSY7.e3926_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt35_70_BFilter"] = rlist( Rpair(361041, "mc15_13TeV.361041.Sherpa_CT10_SinglePhotonPt35_70_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));   
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt35_70_CVetoBVeto"] = rlist( Rpair(361039, "mc15_13TeV.361039.Sherpa_CT10_SinglePhotonPt35_70_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt35_70_CFilterBVeto"] = rlist( Rpair(361040, "mc15_13TeV.361040.Sherpa_CT10_SinglePhotonPt35_70_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));    
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt70_140_CVetoBVeto"] = rlist( Rpair(361042, "mc15_13TeV.361042.Sherpa_CT10_SinglePhotonPt70_140_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));       
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt70_140_CFilterBVeto"] = rlist( Rpair(361043, "mc15_13TeV.361043.Sherpa_CT10_SinglePhotonPt70_140_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt70_140_BFilter"] = rlist( Rpair(361044, "mc15_13TeV.361044.Sherpa_CT10_SinglePhotonPt70_140_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt140_280_CVetoBVeto"] = rlist( Rpair(361045, "mc15_13TeV.361045.Sherpa_CT10_SinglePhotonPt140_280_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));    
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt140_280_CFilterBVeto"] = rlist( Rpair(361046, "mc15_13TeV.361046.Sherpa_CT10_SinglePhotonPt140_280_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));       
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt140_280_BFilter"] = rlist( Rpair(361047, "mc15_13TeV.361047.Sherpa_CT10_SinglePhotonPt140_280_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt280_500_CVetoBVeto"] = rlist( Rpair(361048, "mc15_13TeV.361048.Sherpa_CT10_SinglePhotonPt280_500_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));    
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt280_500_CFilterBVeto"] = rlist( Rpair(361049, "mc15_13TeV.361049.Sherpa_CT10_SinglePhotonPt280_500_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));       
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt280_500_BFilter"] = rlist( Rpair(361050, "mc15_13TeV.361050.Sherpa_CT10_SinglePhotonPt280_500_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt500_1000_CVetoBVeto"] = rlist( Rpair(361051, "mc15_13TeV.361051.Sherpa_CT10_SinglePhotonPt500_1000_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt500_1000_CFilterBVeto"] = rlist( Rpair(361052, "mc15_13TeV.361052.Sherpa_CT10_SinglePhotonPt500_1000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt500_1000_BFilter"] = rlist( Rpair(361053, "mc15_13TeV.361053.Sherpa_CT10_SinglePhotonPt500_1000_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt1000_2000_CVetoBVeto"] = rlist( Rpair(361054, "mc15_13TeV.361054.Sherpa_CT10_SinglePhotonPt1000_2000_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt1000_2000_CFilterBVeto"] = rlist( Rpair(361055, "mc15_13TeV.361055.Sherpa_CT10_SinglePhotonPt1000_2000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt1000_2000_BFilter"] = rlist( Rpair(361056, "mc15_13TeV.361056.Sherpa_CT10_SinglePhotonPt1000_2000_BFilter.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt2000_4000_CVetoBVeto"] = rlist( Rpair(361057, "mc15_13TeV.361057.Sherpa_CT10_SinglePhotonPt2000_4000_CVetoBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt2000_4000_CFilterBVeto"] = rlist( Rpair(361058, "mc15_13TeV.361058.Sherpa_CT10_SinglePhotonPt2000_4000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_SinglePhotonPt4000_CFilterBVeto"] = rlist( Rpair(361061, "mc15_13TeV.361061.Sherpa_CT10_SinglePhotonPt4000_CFilterBVeto.merge.DAOD_SUSY7.e3587_s2608_s2183_r6869_r6282_p2419/"));
 
 
-    m_map["25ns_Sherpa_CT10_Wenu_Pt140_280_CVetoBVeto"] = rlist( Rpair(361306, "mc15_13TeV.361306.Sherpa_CT10_Wenu_Pt140_280_CVetoBVeto.merge.DAOD_SUSY7.e3651_s2586_s2174_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_WplvWmqq"] = rlist( Rpair(361081, "mc15_13TeV.361081.Sherpa_CT10_WplvWmqq.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_WpqqWmlv"] = rlist( Rpair(361082, "mc15_13TeV.361082.Sherpa_CT10_WpqqWmlv.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_WlvZqq"] = rlist( Rpair(361083, "mc15_13TeV.361083.Sherpa_CT10_WlvZqq.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_WqqZll"] = rlist( Rpair(361084, "mc15_13TeV.361084.Sherpa_CT10_WqqZll.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_WqqZvv"] = rlist( Rpair(361085, "mc15_13TeV.361085.Sherpa_CT10_WqqZvv.merge.DAOD_SUSY7.e3836_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_ZqqZll"] = rlist( Rpair(361086, "mc15_13TeV.361086.Sherpa_CT10_ZqqZll.merge.DAOD_SUSY7.e3926_s2608_s2183_r6869_r6282_p2419/"));
+  m_map["25ns_Sherpa_CT10_ZqqZvv"] = rlist( Rpair(361087, "mc15_13TeV.361087.Sherpa_CT10_ZqqZvv.merge.DAOD_SUSY7.e3926_s2608_s2183_r6869_r6282_p2419/"));
+
+
+  m_map["25ns_Sherpa_CT10_Wenu_Pt140_280_CVetoBVeto"] = rlist( Rpair(361306, "mc15_13TeV.361306.Sherpa_CT10_Wenu_Pt140_280_CVetoBVeto.merge.DAOD_SUSY7.e3651_s2586_s2174_r6869_r6282_p2419/"));
     m_map["25ns_Sherpa_CT10_Wenu_Pt140_280_CFilterBVeto"] = rlist( Rpair(361307, "mc15_13TeV.361307.Sherpa_CT10_Wenu_Pt140_280_CFilterBVeto.merge.DAOD_SUSY7.e3651_s2586_s2174_r6869_r6282_p2419/"));
     m_map["25ns_Sherpa_CT10_Wenu_Pt700_1000_CVetoBVeto"] = rlist( Rpair(361315, "mc15_13TeV.361315.Sherpa_CT10_Wenu_Pt700_1000_CVetoBVeto.merge.DAOD_SUSY7.e4133_s2608_s2183_r6869_r6282_p2419/"));
     m_map["25ns_Sherpa_CT10_Wenu_Pt700_1000_CFilterBVeto"] = rlist( Rpair(361316, "mc15_13TeV.361316.Sherpa_CT10_Wenu_Pt700_1000_CFilterBVeto.merge.DAOD_SUSY7.e4133_s2608_s2183_r6869_r6282_p2419/"));

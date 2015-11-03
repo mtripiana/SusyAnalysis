@@ -114,7 +114,11 @@ void Systematics::LoadList(){
   m_CP_list.push_back("FT_EFF_extrapolation from charm__1down");     
   
   //**JET
+  m_CP_list.push_back("JET_TILECORR_Uncertainty__1up");
+  m_CP_list.push_back("JET_TILECORR_Uncertainty__1down");
+  m_CP_list.push_back("JER__1up");    
   m_CP_list.push_back("JET_JER_SINGLE_NP__1up");    
+
   m_CP_list.push_back("JET_GroupedNP_1__1up");    
   m_CP_list.push_back("JET_GroupedNP_1__1down");
   m_CP_list.push_back("JET_GroupedNP_2__1up");
@@ -217,18 +221,11 @@ void Systematics::LoadList(){
   m_user_list.push_back("PileupHigh");
   m_user_list.push_back("PileupLow");
 
-  m_user_list.push_back("JvfUncHigh");
-  m_user_list.push_back("JvfUncLow");
-
   m_user_list.push_back("ktfacHigh");
   m_user_list.push_back("ktfacLow");
   m_user_list.push_back("qfacHigh");
   m_user_list.push_back("qfacLow");
 
-  m_user_list.push_back("BCHCorrHigh");
-  m_user_list.push_back("BCHCorrLow");
- 
-  
   //(old)SUSYTools systematics
   m_ST_list.push_back("JESHigh");                                           
   m_ST_list.push_back("JESLow");                                            
@@ -313,17 +310,13 @@ void Systematics::SystTranslate( TString syste,
 				 CP::SystematicSet &syst_CP,
 				 SystErr::Syste &syst_ST,
 				 ScaleVariatioReweighter::variation &syst_Scale,
-				 pileupErr::pileupSyste &syst_PU,
-				 JvfUncErr::JvfSyste &syst_JVF,
-				 BCHCorrMediumErr::BCHSyste &syst_BCH )
+				 pileupErr::pileupSyste &syst_PU )
 {
   //Init to Nominal per default
   syst_CP = CP::SystematicSet();
   syst_ST = SystErr::NONE;
   syst_Scale = ScaleVariatioReweighter::None;
   syst_PU = pileupErr::NONE;
-  syst_JVF = JvfUncErr::NONE;
-  syst_BCH = BCHCorrMediumErr::NONE;
 
   //Check implementation
   if(syste=="Nom")                                                    return;
@@ -407,20 +400,12 @@ void Systematics::SystTranslate( TString syste,
   else if(syste=="PileupHigh") {                                      syst_PU = pileupErr::PileupHigh;}
   else if(syste=="PileupLow")  {                                      syst_PU = pileupErr::PileupLow;}
 
-  //-- JVF
-  else if(syste=="JvfUncHigh") {                                      syst_JVF = JvfUncErr::JvfUncHigh;}
-  else if(syste=="JvfUncLow")  {                                      syst_JVF = JvfUncErr::JvfUncLow;}
-  
   //--- for Z/W+jet Sherpa                                                                                                 
   else if(syste=="ktfacHigh")  {                                      syst_Scale = ScaleVariatioReweighter::ktfacUP;}
   else if(syste=="ktfacLow")   {                                      syst_Scale = ScaleVariatioReweighter::ktfacDOWN;}
   else if(syste=="qfacHigh")   {                                      syst_Scale = ScaleVariatioReweighter::qfacUP;}
   else if(syste=="qfacLow")    {                                      syst_Scale = ScaleVariatioReweighter::qfacDOWN;}
   
-  //--- For BCH medium correction                                                                                                
-  else if(syste=="BCHCorrHigh") {                                     syst_BCH = BCHCorrMediumErr::BCHCorrHigh; }
-  else if(syste=="BCHCorrLow") {                                      syst_BCH = BCHCorrMediumErr::BCHCorrLow; }
-
   else Error("Systematics::SystTranslate()", Form("No systematic named like this: %s",syste.Data()));
 
 }

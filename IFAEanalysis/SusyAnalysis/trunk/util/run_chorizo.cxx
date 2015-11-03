@@ -582,8 +582,6 @@ int main( int argc, char* argv[] ) {
   SystErr::Syste syst_ST = SystErr::NONE;
   ScaleVariatioReweighter::variation syst_Scale = ScaleVariatioReweighter::None;
   pileupErr::pileupSyste syst_PU = pileupErr::NONE;
-  JvfUncErr::JvfSyste syst_JVF = JvfUncErr::NONE;
-  BCHCorrMediumErr::BCHSyste syst_BCH = BCHCorrMediumErr::NONE;
   
   Systematics Sobj;
   Sobj.LoadList();
@@ -592,7 +590,7 @@ int main( int argc, char* argv[] ) {
   for (unsigned int isys=0; isys  < systematic.size(); isys++){
 
     //fill systematics
-    Sobj.SystTranslate(systematic[isys], syst_CP, syst_ST, syst_Scale, syst_PU, syst_JVF, syst_BCH);
+    Sobj.SystTranslate(systematic[isys], syst_CP, syst_ST, syst_Scale, syst_PU);
     
     //Create an EventLoop job:
     EL::Job job;
@@ -636,8 +634,6 @@ int main( int argc, char* argv[] ) {
     alg->syst_ST    = syst_ST;      
     alg->syst_Scale = syst_Scale;
     alg->syst_PU    = syst_PU;
-    alg->syst_JVF   = syst_JVF;
-    //    alg->syst_BCH   = syst_BCH;
     alg->syst_JESNPset =  xmlReader->retrieveInt("AnalysisOptions$ObjectDefinition$Jet$JESNPset");
     
     
