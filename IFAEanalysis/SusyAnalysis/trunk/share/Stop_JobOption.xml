@@ -6,19 +6,22 @@
     <Mode name="debug">false</Mode>
     <Mode name="doTree">true</Mode>
     <Mode name="GeneratePileupFiles">false</Mode>
-    <Mode name="DoCutFlow">true</Mode>
+    <Mode name="DoCutFlow">false</Mode>
     <Mode name="StopTL">true</Mode>    
     <Mode name="TileDump">false</Mode>    
     <Mode name="DoSkimming_MET">false</Mode>
     <Mode name="DoSkimming_BTAG">false</Mode>
-    <Path name="RootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/</Path>
-    <Path name="PartialRootFilesFolder">/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/CollateralRootFiles/</Path>
-    <!--   <Path name="GRLxmlFile">SUSYTools/GRL/Moriond2013/data12_8TeV.periodAllYear_DetStatus-v58-pro14-01_DQDefects-00-00-33_PHYS_StandardGRL_All_Good.xml</Path> -->
-    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardGRL_All_Good.xml</Path>  <!-- updated periodB GRL. Due to some job failures, not all lumiblocks are complete. --> 
+    <Mode name="is25ns">true</Mode>       
+    <Mode name="isSig">false</Mode>  
+    <Path name="RootFilesFolder">/nfs/at3/scratch2/arodriguez/Outputs</Path>
+    <Path name="PartialRootFilesFolder">/nfs/at3/scratch2/arodriguez/basura</Path>
+    <Path name="GRLxmlFile">data15_13TeV.periodAllYear_DetStatus-v70-pro19-04_DQDefects-00-01-02_PHYS_StandardGRL_All_Good_25ns.xml</Path> <!-- 25ns -->
     <Pileup>
-      <Mode name="ApplyPileupReweighting">true</Mode>
-      <Path name="PileupReweightingConfigFolder">/nfs/at3/scratch/sfracchia/SUSY/pileup/</Path>  <!-- leave it empty to use default location -->
-      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_267638-267639.root</Path>
+      <Mode name="ApplyPileupReweighting">false</Mode>
+      <Path name="PileupReweightingConfigFolder">""</Path>  <!-- leave it empty to use default location -->
+      <!--Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_270806-271744.root</Path-->
+      <Path name="PileupReweightingIlumicalcFile">ilumicalc_histograms_None_276262-282712.root</Path>    
+    
     </Pileup>
 
     <LeptonEfficiency>
@@ -44,7 +47,7 @@
 
     <OverlapRemoval>
       <Enable>true</Enable>
-      <doBjetOR>true</doBjetOR>
+      <doBjetOR>false</doBjetOR>
       <doPhotons>false</doPhotons>
     </OverlapRemoval> 
 
@@ -56,7 +59,9 @@
     <Trigger>
       <SaveExtended>false</SaveExtended>
       <!--      <chains>HLT_xe.*,L1_XE.*,L1_MBTS.*,L1_EM.*,L1_MU.*,L1_J.*,L1_EM12,L1_MU10,L1_J50,L1_J12,L1_J15</chains>-->
-      <chains>L1_MBTS_1_1,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,HLT_xe100,HLT_e24_lhtight_iloose,HLT_e24_tight_iloose,HLT_mu26_imedium,L1_MBTS_1,L1_MBTS_2</chains>
+      <!--chains>L1_MBTS_1_1,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_J12,L1_J15,L1_J20,L1_J25,L1_J30,L1_J40,L1_J50,L1_J75,L1_J85,L1_J100,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,HLT_xe100,HLT_e24_lhtight_iloose,HLT_e24_tight_iloose,HLT_e60,HLT_mu24_imedium,HLT_mu50,HLT_mu40,HLT_mu26_imedium,L1_MBTS_1,L1_MBTS_2,HLT_mu20_iloose_L1MU15,HLT_mu50,HLT_e24_lhmedium_iloose_L1EM20VH,HLT_e60_lhmedium,HLT_e60_imedium</chains-->
+      <chains>L1_EM10,L1_EM12,L1_MU6,L1_MU10,L1_MU15,L1_MU20,L1_XE35,L1_XE40,L1_XE45,L1_XE50,L1_XE55,L1_XE60,L1_XE70,L1_XE80,HLT_xe35,HLT_xe35_tc_lcw,HLT_xe35_tc_em,HLT_xe60,HLT_xe60_tc_lcw,HLT_xe60_tc_em,HLT_xe80,HLT_xe80_tc_lcw,HLT_xe80_tc_em,HLT_xe100,HLT_e24_tight_iloose,HLT_mu24_imedium,HLT_mu50,HLT_mu40,HLT_mu26_imedium,HLT_mu20_iloose_L1MU15,HLT_e24_lhmedium_iloose_L1EM20VH,HLT_e60_lhmedium,HLT_e60_imedium,HLT_e24_lhtight_iloose,HLT_xe70,HLT_e24_lhmedium_L1EM20VH,HLT_e24_lhmedium_L1EM18VH,HLT_mu20_iloose_L1MU15</chains>
+
     </Trigger>
 
     <Vertex>
@@ -82,7 +87,7 @@
       <MuBase>2</MuBase>     <!-- number of (non-signal) baseline muons to be saved -->
       <MuSignal>2</MuSignal> <!-- number of signal muons to be saved -->
       <PhSignal>1</PhSignal> <!-- number of signal photons to be saved -->
-      <JetSignal>4</JetSignal> <!-- number of signal jets to be saved -->
+      <JetSignal>6</JetSignal> <!-- number of signal jets to be saved -->
     </Booking>
     
     <Objects>
@@ -97,8 +102,8 @@
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.47</RecoEtaCut>
 
-      <baseID>LooseLLH</baseID>
-      <ID>TightLLH</ID>
+      <baseID>LooseLH</baseID>
+      <ID>TightLH</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
       <d0sigcut>5.</d0sigcut><!-- default:5, none:-1 -->
       <z0cut>0.5</z0cut><!-- default:0.5, none:-1 -->
@@ -115,13 +120,11 @@
       <PreselEtaCut>2.4</PreselEtaCut>
       <RecoPtCut>10000.</RecoPtCut>
       <RecoEtaCut>2.4</RecoEtaCut>
-
       <ID>Medium</ID>
       <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
-      <d0sigcut>3.</d0sigcut><!-- default:3, none:-1 -->
+      <d0sigcut>3</d0sigcut><!-- default:3, none:-1 -->
       <z0cut>0.5</z0cut><!-- default:0.5, none:-1 -->
-
-      <triggers>HLT_mu26_imedium</triggers>
+      <triggers>HLT_mu24_imedium</triggers>
     </Muon>
 
     <Photon>
@@ -131,7 +134,7 @@
       <RecoEtaCut>2.37</RecoEtaCut>
       
       <ID>Tight</ID> <!-- None,Loose,Medium,Tight -->
-      <isoWP>GradientLoose</isoWP> <!-- None,Loose,Medium,Tight -->
+      <isoWP>Cone20</isoWP> <!-- None,Loose,Medium,Tight -->
 
       <triggers>HLT_g140_loose</triggers>
 
@@ -150,7 +153,7 @@
 
       <JESNPset>1</JESNPset>
 
-      <Tagger>MV2c20</Tagger> --> 
+      <Tagger>MV2c20</Tagger> 
       <BtagWP>FixedCutBEff_77</BtagWP>
       <BtagWP_OR>FixedCutBEff_80</BtagWP_OR>
     </Jet>
