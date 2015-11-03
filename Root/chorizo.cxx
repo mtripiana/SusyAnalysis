@@ -100,7 +100,9 @@ static SG::AuxElement::Accessor<float> acc_e_dressed("e_dressed");
 static SG::AuxElement::Accessor<unsigned char> acc_nPixHits("numberOfPixelHits");
 static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
-static SG::AuxElement::Accessor<double> acc_PUweight("PileupWeight");
+static SG::AuxElement::Accessor<float> acc_PUweight("PileupWeight");
+
+static SG::AuxElement::Accessor<unsigned int> acc_tileok("TileStatus");
 
 chorizo :: chorizo ()
   : m_MetaData(0), 
@@ -151,6 +153,8 @@ chorizo :: chorizo ()
   isTruth=false;
   leptonType="";
 
+  isNominal=true;
+
   isAtlfast=false;
   isQCD=false;
   isNCBG=false; 
@@ -173,7 +177,6 @@ chorizo :: chorizo ()
   syst_CPstr = "";
   syst_ST  = SystErr::NONE;
   syst_PU  = pileupErr::NONE; 
-  syst_JVF = JvfUncErr::NONE;
   syst_JESNPset = 1;
   
   systListOnly = false;
@@ -848,8 +851,10 @@ EL::StatusCode chorizo :: histInitialize ()
     h_presel_wflow->GetXaxis()->SetBinLabel(i,cutNames[i-1].Data());
   }
 
+
   //Systematics (override CP set if string is given) [tmp hack]
   if(!syst_CPstr.IsNull()){
+    isNominal = false; //not-nominal run
     syst_CP  = CP::SystematicSet(); //needed?
 
     TString ctag="";
@@ -1904,6 +1909,60 @@ EL::StatusCode chorizo :: initialize ()
   ST::SettingDataSource datasource = !this->isMC ? ST::Data : (this->isAtlfast ? ST::AtlfastII : ST::FullSim);
   //  m_isderived = isDerived(); //should be filled in already!
 
+
+  //--- Pileup Reweighting
+  std::vector<std::string> prwFiles;	 
+  std::vector<std::string> lumiFiles;	 
+
+  // trick: path in the tool name so it gets saved to the desired place
+  //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
+  TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
+  if (!is25ns) purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW_50ns/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmod
+  //if(PURW_Folder.IsWhitespace())
+  PURW_Folder = maindir + "/SusyAnalysis/PURW/";
+  if (!is25ns) PURW_Folder = maindir + "/SusyAnalysis/PURW_50ns/";
+
+  if(this->isMC && genPUfile){ 
+    purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
+  }
+  tool_purw = new CP::PileupReweightingTool(purw_name.Data());
+  if (this->isMC){
+    //if (1==1){  
+    if(genPUfile && !doPUTree){ //--- Generate the pileup root files
+      CHECK( tool_purw->initialize() );
+    }
+    else if(applyPURW || doPUTree){ //--- Apply the weights found after generating the pileup root files
+      
+      //--- read the dataset number from the TTree
+      if (is25ns) Info("initialize()", Form("Reading PileupReweighting file : %i.root",  eventInfo->mcChannelNumber()) );
+      else Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
+      
+      
+      TString prwfile = PURW_Folder+"merged_prw.root";
+      if (isSig) prwfile = PURW_Folder+"mergedSignals_prw.root";      
+      if (!is25ns) prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+      std::ifstream test_prwfile(prwfile);
+      
+      // if (test_prwfile.good()) {
+      isPUfile=true;
+      prwFiles.push_back(prwfile.Data());
+      CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
+      lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
+      CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
+      //CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
+      //CHECK( tool_purw->EnableDebugging(true) );
+      CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
+      CHECK( tool_purw->setProperty("DefaultChannel",410000) );   	
+      if (this->syst_PU == pileupErr::PileupLow)        
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
+      else if(this->syst_PU == pileupErr::PileupHigh) 
+	CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
+      
+      
+      CHECK( tool_purw->initialize() );
+    }
+  }
+
   //--- SUSYTools
   if(!this->isTruth){
     
@@ -1932,6 +1991,7 @@ EL::StatusCode chorizo :: initialize ()
       Ph_isoWP = "LooseTrackOnly";
       noPhIso = true;
     }
+    
     
     CHECK( tool_st->setProperty("EleIdBaseline",El_baseID) ); 
     CHECK( tool_st->setProperty("EleId",El_ID) ); 
@@ -1964,6 +2024,10 @@ EL::StatusCode chorizo :: initialize ()
     CHECK(tool_st->setProperty("DoJetGSCCalib",m_isderived) );
     // Set 0 for 14NP, 1,2,3,4 for 3NP sets                                                                                   
     CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) ); 
+
+    //PURW
+    CHECK(tool_st->setProperty("PRWConfigFiles", prwFiles));
+    CHECK(tool_st->setProperty("PRWLumiCalcFiles", lumiFiles));
         
     CHECK( tool_st->SUSYToolsInit() );
     CHECK( tool_st->initialize() );
@@ -2031,7 +2095,7 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_btag70->setProperty("OperatingPoint",      "-0_0436") ); //"FixedCutBEff_70") );
   CHECK( tool_btag70->setProperty("JetAuthor",           JetTagCollection.Data()) );
   CHECK( tool_btag70->setProperty("ScaleFactorFileName", FlvTagCutFN) );
-  //CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
+  CHECK( tool_btag70->setProperty("SystematicsStrategy","Envelope") );
   CHECK( tool_btag70->initialize() ); 
   tool_btag70->msg().setLevel( MSG::FATAL );  
   
@@ -2040,7 +2104,7 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_btag77->setProperty("OperatingPoint",      "-0_4434") ); //"FixedCutBEff_77") );
   CHECK( tool_btag77->setProperty("JetAuthor",           JetTagCollection.Data() ) );
   CHECK( tool_btag77->setProperty("ScaleFactorFileName", FlvTagCutFN) );
-  //CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag77->setProperty("SystematicsStrategy","Envelope") );  
   CHECK( tool_btag77->initialize() );
   tool_btag77->msg().setLevel( MSG::FATAL );  
   
@@ -2049,7 +2113,7 @@ EL::StatusCode chorizo :: initialize ()
   CHECK( tool_btag85->setProperty("OperatingPoint",      "-0_7887") ); //FixedCutBEff_85") );
   CHECK( tool_btag85->setProperty("JetAuthor",           JetTagCollection.Data() ) ); 
   CHECK( tool_btag85->setProperty("ScaleFactorFileName", FlvTagCutFN) );
-  //  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
+  CHECK( tool_btag85->setProperty("SystematicsStrategy","Envelope") );  
   CHECK( tool_btag85->initialize() );
   tool_btag85->msg().setLevel( MSG::FATAL );
 
@@ -2134,82 +2198,6 @@ EL::StatusCode chorizo :: initialize ()
 
 
 
-
-
-  //--- Pileup Reweighting
-  // trick: path in the tool name so it gets saved to the desired place
-  //  TString purw_name = Form("myPURWtool.%s/%d", PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" ));
-  TString purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmode
-  if (!is25ns) purw_name = Form("myPURWtool.%s/%d",   TString(maindir + "/SusyAnalysis/PURW_50ns/").Data(), (int)wk()->metaData()->getDouble( "DSID" )); //readmod
-  //if(PURW_Folder.IsWhitespace())
-  PURW_Folder = maindir + "/SusyAnalysis/PURW/";
-  if (!is25ns) PURW_Folder = maindir + "/SusyAnalysis/PURW_50ns/";
-
-  if(this->isMC && genPUfile){ 
-    purw_name = Form("myPURWtool.%s/%d",   PURW_Folder.Data(), (int)wk()->metaData()->getDouble( "DSID" )); //write mode
-  }
-  tool_purw = new CP::PileupReweightingTool(purw_name.Data());
-  //if (this->isMC){
-  if (1==1){  
-    if(genPUfile && !doPUTree){ //--- Generate the pileup root files
-      CHECK( tool_purw->initialize() );
-    }
-    else if(applyPURW || doPUTree){ //--- Apply the weights found after generating the pileup root files
-      std::vector<std::string> prwFiles;	 
-      std::vector<std::string> lumiFiles;	 
-      
-      //--- read the dataset number from the TTree
-      if (is25ns) Info("initialize()", Form("Reading PileupReweighting file : %i.root",  eventInfo->mcChannelNumber()) );
-      else Info("initialize()", Form("Reading PileupReweighting file : %i.prw.root",  eventInfo->mcChannelNumber()) );
-      
-      
-      TString prwfile=PURW_Folder+"merged_prw.root";
-      if (isSig) TString prwfile=PURW_Folder+"mergedSignals_prw.root";      
-      if (!is25ns) prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
-      std::ifstream test_prwfile(prwfile);
-      
-     // if (test_prwfile.good()) {
-	isPUfile=true;
-	prwFiles.push_back(prwfile.Data());
-	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
-	lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
-	CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
-	//CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
-	//CHECK( tool_purw->EnableDebugging(true) );
-	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
-	CHECK( tool_purw->setProperty("DefaultChannel",410000) );   	
-	if (this->syst_PU == pileupErr::PileupLow)        
-	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
-	else if(this->syst_PU == pileupErr::PileupHigh) 
-	  CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
-	
-
-	CHECK( tool_purw->initialize() );
-    //  } 
-/*      
-      else {
-	isPUfile=false;
-	prwfile=PURW_Folder+"410000.root";
-	prwFiles.push_back(prwfile.Data());
-	CHECK( tool_purw->setProperty("ConfigFiles",prwFiles) );
-	CHECK( tool_purw->setProperty("DefaultChannel",410000) );      
-	lumiFiles.push_back((PURW_Folder+PURW_IlumicalcFile).Data());      
-	CHECK( tool_purw->setProperty("LumiCalcFiles", lumiFiles) );
-	CHECK( tool_purw->setProperty("UnrepresentedDataAction",2) );
-	
-	CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.16) );
-	if (this->syst_PU == pileupErr::PileupLow)        
-	  CHECK( tool_purw->setProperty("DataScaleFactor", 1./1.23) );
-	else if(this->syst_PU == pileupErr::PileupHigh) 
-	  CHECK( tool_purw->setProperty("DataScaleFactor", 1.) );
-	
-	CHECK( tool_purw->initialize() );
-      }    
-      
-      */  
-    }
-  }
-
  
   
   //--- GRL
@@ -2235,14 +2223,35 @@ EL::StatusCode chorizo :: initialize ()
   //--- JetTileCorrectionTool
 #ifdef TILETEST
   tool_jettile = new CP::JetTileCorrectionTool("JetTileCorrectionTool");
-  std::string parfile="param_test.root";
+  std::string parfile="fit_hist.root"; //"param_test.root";
   // @param part tile partition: LBA=0, LBC=1, EBA=2, EBC=3
-  std::vector<std::string> dead_modules = {"0 1","0 10"};
+  std::vector<std::string> dead_modules = {"3 20","0 9"};
   
-  CHECK( tool_jettile->setProperty("ParFile",maindir+"JetTileCorrection/"+parfile) );
-  CHECK( tool_jettile->setProperty("DeadModules",dead_modules) );
+  CHECK( tool_jettile->setProperty("CorrectionFileName",maindir+"JetTileCorrection/"+parfile) );
+  CHECK( tool_jettile->setProperty("UserMaskedRegions",dead_modules) );
   CHECK( tool_jettile->initializeTool(tool_tileTrip) );
 #endif 
+
+  // for (const auto& sysItr : syst_CP) {
+  //   if (tool_jettile->isAffectedBySystematic(sysItr)){
+  //     cout << "JETTILETOOL IS AFFECTED BY (str)       " << syst_CPstr << endl;
+  //     cout << "JETTILETOOL IS AFFECTED BY (name)      " << syst_CP.name() << endl;
+  //     cout << "JETTILETOOL IS AFFECTED BY (basename)  " << sysItr.basename() << endl;
+  //   }
+  //   else{
+  //     cout << "JETTILETOOL IS NOT AFFECTED BY (str)       " << syst_CPstr << endl;
+  //     cout << "JETTILETOOL IS NOT AFFECTED BY (name)      " << syst_CP.name() << endl;
+  //     cout << "JETTILETOOL IS NOT AFFECTED BY (basename)  " << sysItr.basename() << endl;
+  //   }
+  // }
+
+  // CP::SystematicCode ret = tool_jettile->applySystematicVariation(syst_CP);
+  // if ( ret != CP::SystematicCode::Ok) {
+  //   ATH_MSG_ERROR("Cannot configure JetTileCorrectionTool for these systematic settings.");
+  // }
+  // else{
+  //   cout << " CONFIGURED JetTileCorrectionTool for " << syst_CPstr << endl;
+  // }
 
   
   //--- PDF reweighting
@@ -2460,11 +2469,11 @@ EL::StatusCode chorizo :: loop ()
      } 
     if (isMC && applyPURW) { 
 
-            pileup_w = tool_purw->getCombinedWeight(*eventInfo);  
-            //CHECK (tool_purw->apply(*eventInfo));            
-            sumwPURW = tool_purw->GetSumOfEventWeights(mc_channel_number);
-            nsimPURW = tool_purw->GetNumberOfEvents(mc_channel_number);
-	    
+      pileup_w = tool_purw->getCombinedWeight(*eventInfo);  
+      //CHECK (tool_purw->apply(*eventInfo));            
+
+      sumwPURW = tool_purw->GetSumOfEventWeights(mc_channel_number);
+      nsimPURW = tool_purw->GetNumberOfEvents(mc_channel_number);
     }
 
 
@@ -2797,11 +2806,17 @@ EL::StatusCode chorizo :: loop ()
   xAOD::Jet jet;
   for( const auto& jet_itr : *jets_sc ){
     
-//#ifdef TILETEST
-//    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
-//      Error("loop()", "Failed to apply JetTileCorrection!");
-//#endif
+    //    cout << "ORIG PT " << (*jet_itr).pt() << endl;
 
+#ifdef TILETEST
+    if ( tool_jettile->applyCorrection(*jet_itr) != CP::CorrectionCode::Ok )
+      Error("loop()", "Failed to apply JetTileCorrection!");
+
+    //    cout << "NEW PT " << (*jet_itr).pt() << endl;
+    //    cout << "TILE STATUS " << acc_tileok(*jet_itr) << endl;
+    
+#endif
+    
     //book jets for smearing method
     if(dec_baseline(*jet_itr))
       m_smdJets->push_back(jet_itr);
@@ -2832,13 +2847,13 @@ EL::StatusCode chorizo :: loop ()
     Particle recoElectron;
     recoElectron.SetVector( getTLV( &(*el_itr) ));
 
-/*    
-    if (doCutFlow){
-      myfile << "baseline electron before OR: \n";      
-      myfile << "pt: " << recoElectron.Pt() << " \n";    
-      myfile << "eta: " << recoElectron.Eta() << " \n";          
-      myfile << "phi: " << recoElectron.Phi() << " \n"; 
-    }    
+    /*    
+	  if (doCutFlow){
+	  myfile << "baseline electron before OR: \n";      
+	  myfile << "pt: " << recoElectron.Pt() << " \n";    
+	  myfile << "eta: " << recoElectron.Eta() << " \n";          
+	  myfile << "phi: " << recoElectron.Phi() << " \n"; 
+	  }    
     
     */
     //TEST NEW OR tool
@@ -2884,13 +2899,13 @@ EL::StatusCode chorizo :: loop ()
       m_signalElectrons->push_back(el_itr);
       e_N++;
       IsElectron=true;
-//      if(this->isMC){
-//	e_SF *= recoElectron.SF;
-//	e_SFu *= recoElectron.SFu;
-//	e_SFd *= recoElectron.SFd;
+      //      if(this->isMC){
+      //	e_SF *= recoElectron.SF;
+      //	e_SFu *= recoElectron.SFu;
+      //	e_SFd *= recoElectron.SFd;
 	
-//	e_trigSF *= recoElectron.trigSF;
-//      } 
+      //	e_trigSF *= recoElectron.trigSF;
+      //      } 
     }
     else{
       electronCandidates.push_back(recoElectron);
@@ -2902,13 +2917,18 @@ EL::StatusCode chorizo :: loop ()
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end()); //non-signal electrons
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end()); //signal electrons
     
-    //get electron scale factors
-    if(this->isMC){
-      //nominal 
-      e_SF = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
-      eb_SF = tool_st->GetTotalElectronSF(*m_baselineElectrons,true,true,true,true);
+  //get electron scale factors
+  if(this->isMC){
+
+    //nominal 
+    e_SF = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
+    eb_SF = tool_st->GetTotalElectronSF(*m_baselineElectrons,true,true,true,true);
           
+    //fill variations only if running in nominal mode!
+    if(isNominal){
+
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_ID_TotalCorrUncertainty__1down");
       }
@@ -2916,14 +2936,16 @@ EL::StatusCode chorizo :: loop ()
       eb_SFIDd = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_ID_TotalCorrUncertainty__1up");
       }
       e_SFIDu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       eb_SFIDu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       
-
+      
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Iso_TotalCorrUncertainty__1down");
       }
@@ -2931,14 +2953,16 @@ EL::StatusCode chorizo :: loop ()
       eb_SFIsod = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Iso_TotalCorrUncertainty__1up");
       }
       e_SFIsou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       eb_SFIsou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
-
-
+      
+      
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Reco_TotalCorrUncertainty__1down");
       }
@@ -2946,13 +2970,15 @@ EL::StatusCode chorizo :: loop ()
       eb_SFRecod = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Reco_TotalCorrUncertainty__1up");
       }
       e_SFRecou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       eb_SFRecou = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
-
+      
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Trigger_TotalCorrUncertainty__1down");
       }
@@ -2960,64 +2986,66 @@ EL::StatusCode chorizo :: loop ()
       eb_SFTrigd = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. EL_EFF_Trigger_TotalCorrUncertainty__1up");
       }
       e_SFTrigu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       eb_SFTrigu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
-
-
+      
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
+      Error("loop()", "Cannot configure SUSYTools for default systematics");
       } 
 
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
 
-   
-    }
+    } //if Nominal
+  } //if MC
      
      
-      std::string el_trig = "HLT_e24_lhtight_iloose || HLT_e60_lhmedium";
-      
-      for (unsigned int i=0; i<m_signalElectrons->size(); i++){
-	if (tool_st->IsTrigMatched(m_signalElectrons->at(i),el_trig) && m_signalElectrons->at(i)->pt()>26000.) e_trigger=1;
-      }
-
+  std::string el_trig = "HLT_e24_lhtight_iloose || HLT_e60_lhmedium";
+    
+  for (unsigned int i=0; i<m_signalElectrons->size(); i++){
+    if (tool_st->IsTrigMatched(m_signalElectrons->at(i),el_trig) && m_signalElectrons->at(i)->pt()>26000.) e_trigger=1;
+  }
+    
   //-- Pre-book baseline muons (after OR)
   bool IsMuon = false; // any good not-overlapping muon in the event?
   int iMu=-1;
   auto nCosmicMuons = 0;
   auto nBadMuons = 0;  
   for(const auto& mu_itr : *muons_sc){
-
+      
     iMu++;  //to keep in sync even if we continue below
-
+      
     if(isStopTL){
       dec_baseline(*mu_itr) &= ((*mu_itr).muonType() == xAOD::Muon::Combined || (*mu_itr).muonType() == xAOD::Muon::SegmentTagged); //for Sbottom as well?
       dec_signal(*mu_itr)   &= dec_baseline(*mu_itr); //update signal decoration too!
       dec_final(*mu_itr )   &= dec_baseline(*mu_itr); //update final decoration too!
     }
-
+      
     if(! dec_baseline(*mu_itr) ) continue; //keep baseline objects only
-
+      
     tool_st->IsCosmicMuon( *mu_itr );  //'cosmic'   decoration  //now after overlap removal!
-
+      
     this->isCosmic |= dec_cosmic(*mu_itr); //check if at least one cosmic in the event
-    
+      
     bool muonok=true;
     if(tool_st->IsBadMuon( *mu_itr )){ //any bad muon before OR? 
       nBadMuons+=1;     
       muonok=false;
     }
-
+      
     Particle recoMuon;
     recoMuon.SetVector( getTLV( &(*mu_itr) ));	
-/*    
-    if (doCutFlow){
-      myfile << "baseline muon before OR: \n pt: " << recoMuon.Pt() << " \n eta: " << recoMuon.Eta() << 
-      myfile << "passOR     : " << (((!doOR) || dec_passOR(*mu_itr)) ? 1 : 0 ) << "\n";
-      myfile << "passSignal : " << (dec_signal(*mu_itr) ? 1 : 0 ) << "\n"; //save signal muons (after OR and no-cosmic already)      
-    }
-*/
+    /*    
+	  if (doCutFlow){
+	  myfile << "baseline muon before OR: \n pt: " << recoMuon.Pt() << " \n eta: " << recoMuon.Eta() << 
+	  myfile << "passOR     : " << (((!doOR) || dec_passOR(*mu_itr)) ? 1 : 0 ) << "\n";
+	  myfile << "passSignal : " << (dec_signal(*mu_itr) ? 1 : 0 ) << "\n"; //save signal muons (after OR and no-cosmic already)      
+	  }
+    */
     if(doOR && !dec_passOR(*mu_itr)) continue; //pass OR    
 
     if(tool_st->IsCosmicMuon( *mu_itr )){  //'cosmic' decoration
@@ -3065,10 +3093,10 @@ EL::StatusCode chorizo :: loop ()
       IsMuon = true;
       //if(this->isMC){
       // 	m_SF *= recoMuon.SF;
-//	m_SFu *= recoMuon.SFu;
-//	m_SFd *= recoMuon.SFd;
+      //	m_SFu *= recoMuon.SFu;
+      //	m_SFd *= recoMuon.SFd;
         	
-//      }
+      //      }
     }
     else{
       muonCandidates.push_back(recoMuon);
@@ -3097,114 +3125,125 @@ EL::StatusCode chorizo :: loop ()
   //mb_trigSF = tmp_mb_trigSF;
   //m_trigSF = tmp_m_trigSF;  
     
-    //get muon scale factors
-    if(this->isMC){
-      //nominal 
-      std::string mu_trig_sf = "HLT_mu24_imedium_OR_HLT_mu50";
-      m_SF = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
-      mb_SF = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-       
+  //get muon scale factors
+  if(this->isMC){
+    //nominal 
+    std::string mu_trig_sf = "HLT_mu24_imedium_OR_HLT_mu50";
+    m_SF = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
+    mb_SF = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+
+    //fill variations only if running in nominal mode!
+    if(isNominal){
+
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_STAT__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_STAT__1down");
       }
       m_SFStatd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFStatd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-      
+	
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_STAT__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_STAT__1up");
       }
       m_SFStatu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFStatu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-
+	
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_SYS__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_SYS__1down");
       }
       m_SFSysd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFSysd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-      
+	
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_SYS__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_SYS__1up");
       }
       m_SFSysu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFSysu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-
+	
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigStatUncertainty__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigStatUncertainty__1down");
       }
       m_SFTrigStatd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFTrigStatd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-      
+	
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigStatUncertainty__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigStatUncertainty__1up");
       }
       m_SFTrigStatu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFTrigStatu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-
+	
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigSystUncertainty__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigSystUncertainty__1down");
       }
       m_SFTrigSysd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFTrigSysd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-      
+	
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_EFF_TrigSystUncertainty__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_EFF_TrigSystUncertainty__1up");
       }
       m_SFTrigSysu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFTrigSysu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-
-
+	
+	
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_STAT__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_STAT__1down");
       }
       m_SFIsoStatd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFIsoStatd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-      
+	
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_STAT__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_STAT__1up");
       }
       m_SFIsoStatu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFIsoStatu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-
+	
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_SYS__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_SYS__1down");
       }
       m_SFIsoSysd = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFIsoSysd = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
-      
+	
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("MUON_ISO_SYS__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. MUON_ISO_SYS__1up");
       }
       m_SFIsoSysu = tool_st->GetTotalMuonSF(*m_signalMuons,true,true,mu_trig_sf);
       mb_SFIsoSysu = tool_st->GetTotalMuonSF(*m_baselineMuons,true,true,mu_trig_sf);
+	
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
 
-
+    }//if Nominal
+  }//if MC
+    
+  std::string mu_trig = "HLT_mu24_imedium || HLT_mu50";
+    
+  for (unsigned int i=0; i<m_signalMuons->size(); i++){
+    if (tool_st->IsTrigMatched(m_signalMuons->at(i),mu_trig) && m_signalMuons->at(i)->pt()>26000.) m_trigger=1;
       
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-
-   
-    }
-     
-      std::string mu_trig = "HLT_mu24_imedium || HLT_mu50";
-      
-      for (unsigned int i=0; i<m_signalMuons->size(); i++){
-	if (tool_st->IsTrigMatched(m_signalMuons->at(i),mu_trig) && m_signalMuons->at(i)->pt()>26000.) m_trigger=1;
-
-      }
-  
+  }
+    
   //-- Pre-book baseline photons (after OR)
   std::vector<Particle> photonCandidates; //intermediate selection photons
   int iPh = 0;
@@ -3213,28 +3252,28 @@ EL::StatusCode chorizo :: loop ()
     for(const auto& ph_itr : *photons_sc ){
       if( dec_baseline(*ph_itr) &&
 	  ((!doOR) || (!doORphotons) || dec_passOR(*ph_itr))){
-	
+	  
 	//define preselected photon                
 	Particle recoPhoton;
 	recoPhoton.SetVector( getTLV( &(*ph_itr) ));
 	if (recoPhoton.Pt() < Ph_PreselPtCut/1000.)   continue;
 	if (fabs(recoPhoton.Eta()) > Ph_PreselEtaCut) continue;
-	
+	  
 	recoPhoton.id = iPh;
 	recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
 	recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
 	recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
 	recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
 	(*ph_itr).passSelection(recoPhoton.isTight, "Tight");
-	
+	  
 	if(iso_1->accept(*ph_itr)) recoPhoton.isoCone20 = 1.0;
 	if(iso_2->accept(*ph_itr)) recoPhoton.isoCone40CaloOnly = 1.0;
 	if(iso_3->accept(*ph_itr)) recoPhoton.isoCone40= 1.0;
-	
-	
+	  
+	  
 	recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
 	recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
-	
+	  
 	//trigger matching
 	std::vector<bool> ph_trig_pass;
 	for(const auto& t : PhTriggers){
@@ -3244,39 +3283,37 @@ EL::StatusCode chorizo :: loop ()
 	  }
 	  else
 	    ph_trig_pass.push_back( false ); //only check for HLT items at the moment
-	  
+	    
 	  recoPhoton.isTrigMatch |= ph_trig_pass.back();
 	}
 	//get photon scale factors
 	if(this->isMC){
 	  //nominal
 	  recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
+	    
+	  //fill variations only if running in nominal mode!
+	  if(isNominal){
+
+	    //+1 sys up
+	    if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
+	    if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	      Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
+	    }
+	    recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+	    
+	    //+1 sys down
+	    if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
+	    if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
+	      Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
+	    }
+	    recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
+
+	    if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };	    
+	  }//is Nominal
+	}//is MC
 	  
-	  //+1 sys up
-	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	    Error("loop()", "Cannot configure SUSYTools for default systematics");
-	  }
-	  if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	    Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
-	  }
-	  recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-	  
-	  //+1 sys down
-	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	    Error("loop()", "Cannot configure SUSYTools for default systematics");
-	  }
-	  if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	    Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
-	  }
-	  recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-	  
-	  if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	    Error("loop()", "Cannot configure SUSYTools for default systematics");
-	  }
-	}
-	
 	photonCandidates.push_back(recoPhoton);
-	
+	  
 	//save signal electrons
 	if( dec_signal(*ph_itr) ){
 	  recoPhotons.push_back(recoPhoton);
@@ -3287,16 +3324,16 @@ EL::StatusCode chorizo :: loop ()
 	    ph_SFd *= recoPhoton.SFd;
 	  }
 	}
-	
+	  
 	iPh++;
       }//if baseline 
     }//photon loop
-    
+      
     //sort the photons in Pt
     if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
     if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
   }//usephotons
-
+    
   //-- pre-book good jets now (after OR)
   auto jet_itr = jets_sc->begin();
   auto jet_end = jets_sc->end();
@@ -3366,9 +3403,9 @@ EL::StatusCode chorizo :: loop ()
 	  //   local_truth_flavor = xAOD::jetFlavourLabel(*jet_itr);
 	  // }
 	  // catch(...){ //else 
-	    Warning("loop()","Impossible to get truth label ID. (Set to 0)");
-	    local_truth_flavor = 0;
-	    //	  }
+	  Warning("loop()","Impossible to get truth label ID. (Set to 0)");
+	  local_truth_flavor = 0;
+	  //	  }
 	}
       }
     }
@@ -3458,12 +3495,12 @@ EL::StatusCode chorizo :: loop ()
 
     jetCandidates.push_back(recoJet);
     /*    
-    if (doCutFlow){
-      myfile << "baseline jet after OR: \n";      
-      myfile << "pt: " <<  recoJet.Pt() << " \n"; 
-      myfile << "eta: " << recoJet.Eta() << " \n";          
-      myfile << "phi: " << recoJet.Phi() << " \n"; 
-    }    
+	  if (doCutFlow){
+	  myfile << "baseline jet after OR: \n";      
+	  myfile << "pt: " <<  recoJet.Pt() << " \n"; 
+	  myfile << "eta: " << recoJet.Eta() << " \n";          
+	  myfile << "phi: " << recoJet.Phi() << " \n"; 
+	  }    
     */
     if(this->printJet){
       std::cout << "Jet " << iJet << ":" << endl;
@@ -3473,7 +3510,7 @@ EL::StatusCode chorizo :: loop ()
     iJet++;
 
   }  //jet loop
- // if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
+  // if (doCutFlow) myfile << "n of baseline jets after OR: " << jetCandidates.size() << " \n"; 
     
   //sort the jet candidates in Pt
   if (jetCandidates.size() > 0) std::sort(jetCandidates.begin(), jetCandidates.end());
@@ -3598,15 +3635,15 @@ EL::StatusCode chorizo :: loop ()
       if ( jetCandidates.at(iJet).Pt() < (Jet_RecoPtCut/1000.) ) continue; //comment
     }
     recoJets.push_back( jetCandidates.at(iJet) ); //Save Signal Jets
-/*    
-    if (doCutFlow){
-      myfile << "signal jet: \n";      
-      myfile << "pt: "  << jetCandidates.at(iJet).Pt() << " \n"; 
-      myfile << "eta: " << jetCandidates.at(iJet).Eta() << " \n";          
-      myfile << "phi: " << jetCandidates.at(iJet).Phi() << " \n"; 
-    } 
+    /*    
+	  if (doCutFlow){
+	  myfile << "signal jet: \n";      
+	  myfile << "pt: "  << jetCandidates.at(iJet).Pt() << " \n"; 
+	  myfile << "eta: " << jetCandidates.at(iJet).Eta() << " \n";          
+	  myfile << "phi: " << jetCandidates.at(iJet).Phi() << " \n"; 
+	  } 
 
-*/
+    */
     calibJets_pt.push_back(jetCandidates.at(iJet).Pt()*1000.);
     calibJets_eta.push_back( BtagEta( jetCandidates.at(iJet).Eta() ) ); //eta to be defined in [-2.5,2.5]
     calibJets_MV1.push_back(jetCandidates.at(iJet).MV1);
@@ -3627,8 +3664,13 @@ EL::StatusCode chorizo :: loop ()
   if(isMC){
     btag_weight_total_70fc       = GetBtagSF(m_goodJets, tool_btag70, -0.0436);   
     btag_weight_total_77fc       = tool_st->BtagSF(m_goodJets);
+    btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85, -0.7887); //CHECK! not to trust for now
+    
+    //fill variations only if running in nominal mode!
+    if(isNominal){
 
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_B_systematics__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_B_systematics__1down");
       }
@@ -3636,6 +3678,7 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_effBd       = tool_st->BtagSF(m_goodJets);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_B_systematics__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_B_systematics__1up");
       }
@@ -3643,6 +3686,7 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_effBu       = tool_st->BtagSF(m_goodJets);
       
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_C_systematics__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_C_systematics__1down");
       }
@@ -3650,13 +3694,15 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_effCd       = tool_st->BtagSF(m_goodJets);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_C_systematics__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_C_systematics__1up");
       }
       
       btag_weight_total_77fc_effCu       = tool_st->BtagSF(m_goodJets);
-
+      
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_Light_systematics__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_Light_systematics__1down");
       }
@@ -3664,14 +3710,16 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_effLd       = tool_st->BtagSF(m_goodJets);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_Light_systematics__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_Light_systematics__1up");
       }
       
       btag_weight_total_77fc_effLu       = tool_st->BtagSF(m_goodJets);
-
-
+      
+      
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation__1down");
       }
@@ -3679,13 +3727,15 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_extrd       = tool_st->BtagSF(m_goodJets);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation__1up");
       }
       
       btag_weight_total_77fc_extru       = tool_st->BtagSF(m_goodJets);
-
+      
       //+1 sys down
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation from charm__1down")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation from charm__1down");
       }
@@ -3693,20 +3743,16 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_extrchd       = tool_st->BtagSF(m_goodJets);
       
       //+1 sys up
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
       if (tool_st->applySystematicVariation( CP::SystematicSet("FT_EFF_extrapolation from charm__1up")) != CP::SystematicCode::Ok){
 	Error("loop()", "Cannot configure SUSYTools for systematic var. FT_EFF_extrapolation from charm__1up");
       }
       
       btag_weight_total_77fc_extrchu       = tool_st->BtagSF(m_goodJets);
 
-      
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-
-    
-    btag_weight_total_85fc       = GetBtagSF(m_goodJets, tool_btag85, -0.7887); //CHECK! not to trust for now
-  }
+      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };      
+    } //if isNominal
+  } //if isMC
   
   //the list of jets to smear for qcd are not the jet-candidates!
   for (unsigned int iJet=0; iJet < jetCandidates.size(); ++iJet){
@@ -3863,8 +3909,8 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Met LocHadTopo (from the branches)
   if(mtopo){
-     TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); 
-     met_obj.SetVector(v_met_lochadtopo, "met_locHadTopo");
+    TVector2 v_met_lochadtopo( mtopo->mpx(), mtopo->mpy() ); 
+    met_obj.SetVector(v_met_lochadtopo, "met_locHadTopo");
   }
 
   //--- Met RefFinal, visible muons (from the branches) [retrieved above]
@@ -4021,12 +4067,12 @@ EL::StatusCode chorizo :: loop ()
     
     
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
-                       || metmap[::MetDef::VisMu].Mod() > 100. );
+			  || metmap[::MetDef::VisMu].Mod() > 100. );
     
     bool SK_passSR = ( ((eb_N+mb_N)==0) &&  (metmap[::MetDef::InvMu].Mod() > 250. 
-                                          || metmap[::MetDef::VisMu].Mod() > 250. 
-                                          || metmap[::MetDef::InvMuTST].Mod() > 250. 
-                                          || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
+					     || metmap[::MetDef::VisMu].Mod() > 250. 
+					     || metmap[::MetDef::InvMuTST].Mod() > 250. 
+					     || metmap[::MetDef::VisMuTST].Mod() > 250. ) );
     
     bool SK_passCRe = ( (e_N>0) &&  (SK_passMETdef
                                      || metmap[::MetDef::InvMuECorr].Mod() > 100. 
@@ -4043,17 +4089,17 @@ EL::StatusCode chorizo :: loop ()
 
 
     bool SK_passAnyMet = (metmap[::MetDef::InvMu].Mod() > 100.
-                       || metmap[::MetDef::VisMu].Mod() > 100. 
-                       || metmap[::MetDef::InvMuTST].Mod() > 100. 
-                       || metmap[::MetDef::VisMuTST].Mod() > 100. 
-                       || metmap[::MetDef::InvMuECorr].Mod() > 100. 
-                       || metmap[::MetDef::VisMuECorr].Mod() > 100. 
-                       || metmap[::MetDef::InvMuTSTECorr].Mod() > 100. 
-                       || metmap[::MetDef::VisMuTSTECorr].Mod() > 100. 
-                       || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
-                       || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.);
+			  || metmap[::MetDef::VisMu].Mod() > 100. 
+			  || metmap[::MetDef::InvMuTST].Mod() > 100. 
+			  || metmap[::MetDef::VisMuTST].Mod() > 100. 
+			  || metmap[::MetDef::InvMuECorr].Mod() > 100. 
+			  || metmap[::MetDef::VisMuECorr].Mod() > 100. 
+			  || metmap[::MetDef::InvMuTSTECorr].Mod() > 100. 
+			  || metmap[::MetDef::VisMuTSTECorr].Mod() > 100. 
+			  || metmap[::MetDef::VisMuMuCorr].Mod() > 100.
+			  || metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.);
     
-     if (m_skim_met) keep_event = ( (m_skim_btag && SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph)) || (m_skim_met && SK_passAnyMet) );
+    if (m_skim_met) keep_event = ( (m_skim_btag && SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph)) || (m_skim_met && SK_passAnyMet) );
  
 
     if(!keep_event){

@@ -198,6 +198,8 @@ public:
   bool is8TeV;
   TString leptonType;
 
+  bool isNominal;
+
   bool debug;
   TString eventsFile;
 
@@ -219,7 +221,6 @@ public:
   SystErr::Syste syst_ST;    
   ScaleVariatioReweighter::variation syst_Scale;
   pileupErr::pileupSyste syst_PU;
-  JvfUncErr::JvfSyste syst_JVF;
   int  syst_JESNPset;
 
   bool printMet;

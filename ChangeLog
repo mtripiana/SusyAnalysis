@@ -1,4 +1,7 @@
 2015-09-20 Martin <tripiana@cern.ch>
+	* Fix systematics resetting
+
+2015-09-20 Martin <tripiana@cern.ch>
 	* New python/ folder
 	* Move RegionIdentifierUtil.py there
 
