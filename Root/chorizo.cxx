@@ -494,6 +494,16 @@ void chorizo :: bookTree(){
     m_atree->Branch("btag_weight_total_77fc",&btag_weight_total_77fc,"btag_weight_total_77fc/F", 10000);
     m_atree->Branch("btag_weight_total_85fc",&btag_weight_total_85fc,"btag_weight_total_85fc/F", 10000);
 
+      m_atree->Branch("btag_weight_total_77fc_effBu",&btag_weight_total_77fc_effBu,"btag_weight_total_77fc_effBu/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effBd",&btag_weight_total_77fc_effBd,"btag_weight_total_77fc_effBd/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effCu",&btag_weight_total_77fc_effCu,"btag_weight_total_77fc_effCu/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effCd",&btag_weight_total_77fc_effCd,"btag_weight_total_77fc_effCd/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effLu",&btag_weight_total_77fc_effLu,"btag_weight_total_77fc_effLu/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_effLd",&btag_weight_total_77fc_effLd,"btag_weight_total_77fc_effLd/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_extru",&btag_weight_total_77fc_extru,"btag_weight_total_77fc_extru/F", 10000);
+      m_atree->Branch("btag_weight_total_77fc_extrd",&btag_weight_total_77fc_extrd,"btag_weight_total_77fc_extrd/F", 10000);
+
+
     //// truth
     m_atree->Branch("bj_Nt_70",&bj_Nt_70,"bj_Nt_70/I", 10000);
     m_atree->Branch("bj_Nt_77",&bj_Nt_77,"bj_Nt_77/I", 10000);
@@ -1208,6 +1218,15 @@ void chorizo :: InitVars()
   btag_weight_total_70fc =1.;
   btag_weight_total_77fc =1.;
   btag_weight_total_85fc =1.;
+
+  btag_weight_total_77fc_effBu = 1.;  
+  btag_weight_total_77fc_effBd = 1.;  
+  btag_weight_total_77fc_effCu = 1.;  
+  btag_weight_total_77fc_effCd = 1.;  
+  btag_weight_total_77fc_effLu = 1.;  
+  btag_weight_total_77fc_effLd = 1.;  
+  btag_weight_total_77fc_extru = 1.;  
+  btag_weight_total_77fc_extrd = 1.;  
 
   j_btruth_70.clear();
   j_btruth_77.clear();
@@ -3117,6 +3136,19 @@ EL::StatusCode chorizo :: loop ()
     btag_weight_total_70fc = tool_st->BtagSF(m_goodJets);   //FIX_ME !!!   Function pointer-like?
     btag_weight_total_77fc = tool_st->BtagSF(m_goodJets);
     btag_weight_total_85fc = tool_st->BtagSF(m_goodJets);
+
+    if(isNominal){
+
+      btag_weight_total_77fc_effBu = tool_st->BtagSFsys(m_goodJets, "FT_EFF_B_systematics__1up");  
+      btag_weight_total_77fc_effBd = tool_st->BtagSFsys(m_goodJets, "FT_EFF_B_systematics__1down");
+      btag_weight_total_77fc_effCu = tool_st->BtagSFsys(m_goodJets, "FT_EFF_C_systematics__1up");
+      btag_weight_total_77fc_effCd = tool_st->BtagSFsys(m_goodJets, "FT_EFF_C_systematics__1down");
+      btag_weight_total_77fc_effLu = tool_st->BtagSFsys(m_goodJets, "FT_EFF_L_systematics__1up");
+      btag_weight_total_77fc_effLd = tool_st->BtagSFsys(m_goodJets, "FT_EFF_L_systematics__1down");
+      btag_weight_total_77fc_extru = tool_st->BtagSFsys(m_goodJets, "FT_EFF_extrapolation__1up");
+      btag_weight_total_77fc_extrd = tool_st->BtagSFsys(m_goodJets, "FT_EFF_extrapolation__1down");
+      
+    }
   }
   
 

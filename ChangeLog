@@ -1,3 +1,6 @@
+2015-11-11 Martin <tripiana@cern.ch>
+	* Add weights for btagging variations
+
 2015-11-02 Martin <tripiana@cern.ch>
 	* Add leptfon SF variations
 	* Move to Base,2.3.33
