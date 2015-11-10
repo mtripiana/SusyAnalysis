@@ -1,7 +1,24 @@
+2015-11-02 Martin <tripiana@cern.ch>
+	* Add leptfon SF variations
+	* Move to Base,2.3.33
+
+2015-11-02 Martin <tripiana@cern.ch>
+	* Move all PURW and TrigMatching stuff to SUSYTools
+	* Add Rucio setup to grid_up scripts.
+	* Move dq2* to rucio* in dq2get.sh script.
+
+2015-08-31 Martin <tripiana@cern.ch>
+	* Remove run_chorizo.cxx
+	* Remove unused options
+	* Add option to toggle btagging emulation on/off at truth level
+
 2015-08-28 Martin <tripiana@cern.ch>
 	* New configuration files, to fit new major version of SUSYTools (V7beta)
 	* Remove XMLReader and all xml files
 	* Merge Silvia's latest changes
+
+
+
 
 2015-08-27 Martin <tripiana@cern.ch>
 	* Add multiple GRLs in jOption
