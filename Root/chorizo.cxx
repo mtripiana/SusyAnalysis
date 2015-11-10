@@ -63,8 +63,6 @@
 #define TRIGGERTEST
 #include "TrigDecisionTool/TrigDecisionTool.h"
 #include "TrigConfxAOD/xAODConfigTool.h"
-#include "TrigEgammaMatchingTool/TrigEgammaMatchingTool.h"
-#include "TrigMuonMatching/TrigMuonMatching.h"
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(chorizo)
@@ -79,7 +77,7 @@ static SG::AuxElement::Decorator<char> dec_signal("signal");
 static SG::AuxElement::Decorator<char> dec_isol("isol");
 static SG::AuxElement::Decorator<char> dec_passOR("passOR");
 static SG::AuxElement::Decorator<char> dec_failOR("overlaps");
-static SG::AuxElement::Decorator<char> dec_badjet("bad");
+static SG::AuxElement::Decorator<char> dec_bad("bad");
 static SG::AuxElement::Decorator<char> dec_bjet("bjet");
 static SG::AuxElement::Decorator<char> dec_cosmic("cosmic");
 static SG::AuxElement::Decorator<char> dec_final("final");
@@ -102,18 +100,14 @@ static SG::AuxElement::Accessor<float> acc_e_dressed("e_dressed");
 static SG::AuxElement::Accessor<unsigned char> acc_nPixHits("numberOfPixelHits");
 static SG::AuxElement::Accessor<unsigned char> acc_nSCTHits("numberOfSCTHits");
 
-static SG::AuxElement::Accessor<double> acc_PUweight("PileupWeight");
+//static SG::AuxElement::Accessor<double> acc_PUweight("PileupWeight");
 
 chorizo :: chorizo ()
   : m_MetaData(0), 
     tool_st(0),
     tool_trigdec(0), 
     tool_trigconfig(0), 
-    tool_trig_match_el(0),
-    tool_trig_match_mu(0),
-    tool_trig_match_ph(0),    
     tool_tileTrip(0), 
-    tool_or(0), 
     tool_grl(0),
     iso_1(0),
     iso_2(0),
@@ -139,21 +133,21 @@ chorizo :: chorizo ()
   //  Info("chorizo()", "HERE");
 
   outputName="";
-
+  
   jOption = "";
-
+  
   isMC=false;
   isSignal=false;
-  isTop=false;
+  is25ns=false;
   isTruth=false;
   leptonType="";
+
+  isNominal=true;
 
   isAtlfast=false;
   isQCD=false;
   isNCBG=false; 
   doAnaTree=false;
-  doPUTree=false;
-  doFlowTree=false;
   doTrigExt=false;
 
   debug=false;
@@ -162,8 +156,6 @@ chorizo :: chorizo ()
   printJet=false;
   printElectron=false;
   printMuon=false;
-
-  isPUfile = false;
 
   syst_CP  = CP::SystematicSet();
   syst_CPstr = "";
@@ -215,494 +207,496 @@ void chorizo :: InitGHist(TH1F* h, std::string name, int nbin, float binlow, flo
 void chorizo :: bookTree(){
   //  Info("bookTree()", "HERE");  
 
+  if (!output) return;
+
+
   //add the branches to be saved
-  if (output){
-    m_atree->Branch ("RunNumber", &RunNumber, "RunNumber/I");
-    m_atree->Branch ("EventNumber", &EventNumber, "EventNumber/I");
-    m_atree->Branch ("lb", &lb, "lb/I");
-    m_atree->Branch ("bcid", &bcid, "bcid/I");
-    m_atree->Branch ("procID", &procID, "procID/I");
-    //    m_atree->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
-    m_atree->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
-    m_atree->Branch ("nVertex", &nVertex, "nVertex/I");                        
-    //common vars
-    m_atree->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
-    m_atree->Branch ("MC_w", &MC_w, "MC_w/D");                       
-
-    //presel
-    m_atree->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
-    m_atree->Branch("isTrigger",&isTrigger);
-    
-    //FlowTree
-    if (doFlowTree){
-      m_atree->Branch("isGRL",&isGRL,"isGRL/O", 10000);
-      m_atree->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
-      m_atree->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
-      m_atree->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
-      m_atree->Branch("isTileTrip",&isTileTrip,"isTileTrip/O", 10000);
-      m_atree->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
-      m_atree->Branch("isBadID",&isBadID,"isBadID/O", 10000);
-      m_atree->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
-      m_atree->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
-    }
-
-    
-    //metadata
-    m_atree->Branch ("xsec", &meta_xsec, "xsec/F");
-    m_atree->Branch ("xsec_relunc", &meta_xsec_relunc, "xsec_relunc/F");
-    m_atree->Branch ("kfactor", &meta_kfactor, "kfactor/F");
-    m_atree->Branch ("feff", &meta_feff, "feff/F");
-    m_atree->Branch ("nsim", &meta_nsim, "nsim/F");
-    m_atree->Branch ("nwsim", &meta_nwsim, "nwsim/F");
-    m_atree->Branch ("lumi", &meta_lumi, "lumi/F");
-
-
-    if(doAnaTree){ //AnalysisTree
-      //weights
-      //m_atree->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
-      m_atree->Branch ("w_average", &w_average, "w_average/F");             
-      m_atree->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
-      m_atree->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
-      m_atree->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
-      m_atree->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
-      m_atree->Branch ("e_SF", &e_SF,"e_SF/F");
-      m_atree->Branch ("e_SFu", &e_SFu,"e_SFu/F");
-      m_atree->Branch ("e_SFd", &e_SFd,"e_SFd/F");
-      m_atree->Branch ("eb_SF", &e_SF,"e_SF/F");
-      m_atree->Branch ("eb_SFu", &e_SFu,"e_SFu/F");
-      m_atree->Branch ("eb_SFd", &e_SFd,"e_SFd/F");
-      m_atree->Branch ("m_SF", &m_SF,"m_SF/F");
-      m_atree->Branch ("m_SFu", &m_SFu,"m_SFu/F");
-      m_atree->Branch ("m_SFd", &m_SFd,"m_SFd/F");
-      m_atree->Branch ("mb_SF", &m_SF,"m_SF/F");
-      m_atree->Branch ("mb_SFu", &m_SFu,"m_SFu/F");
-      m_atree->Branch ("mb_SFd", &m_SFd,"m_SFd/F");
-      m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
-      m_atree->Branch ("ph_SFu", &ph_SFu,"ph_SFu/F");
-      m_atree->Branch ("ph_SFd", &ph_SFd,"ph_SFd/F");
-      m_atree->Branch ("phb_SF", &ph_SF,"ph_SF/F");
-      m_atree->Branch ("phb_SFu", &ph_SFu,"ph_SFu/F");
-      m_atree->Branch ("phb_SFd", &ph_SFd,"ph_SFd/F");
-
-      //boson 
-      m_atree->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
-
-      m_atree->Branch ("bosonVec_reco_pt", &bosonVec_reco_pt, "bosonVec_reco_pt/F");             
-      m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
-      m_atree->Branch ("bosonVec_reco_phi", &bosonVec_reco_phi, "bosonVec_reco_phi/F");      
-      
-      m_atree->Branch ("bosonVec_reco_pt_vmu", &bosonVec_reco_pt_vmu, "bosonVec_reco_pt_vmu/F");             
-      //m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
-      m_atree->Branch ("bosonVec_reco_phi_vmu", &bosonVec_reco_phi_vmu, "bosonVec_reco_phi_vmu/F");                
-      
-      m_atree->Branch ("bosonVec_truth_pt", &bosonVec_truth_pt, "bosonVec_truth_pt/F");             
-      m_atree->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
-      m_atree->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
-
-      m_atree->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
-      m_atree->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
-      m_atree->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
-      m_atree->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
-
-      //truth
-      m_atree->Branch("truth_M",&truth_M,"truth_M/F", 10000);
-      m_atree->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
-
-
-      m_atree->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
-
-      m_atree->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
-      m_atree->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
-      m_atree->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
-      m_atree->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
-      m_atree->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
-      m_atree->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
-      m_atree->Branch("truth_met",&truth_met,"truth_met/F", 10000);
-      m_atree->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
-
-      //top
-      m_atree->Branch("Top_truth_pt",&Top_truth_pt,"Top_truth_pt/F", 10000);
-      m_atree->Branch("Topbar_truth_pt",&Topbar_truth_pt,"Topbar_truth_pt/F", 10000);
-      m_atree->Branch("avTop_truth_pt",&avTop_truth_pt,"avTop_truth_pt/F", 10000);
-      m_atree->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
-
-      //photons
-      m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
-      m_atree->Branch("ph_pt",&ph_pt);
-      m_atree->Branch("ph_eta",&ph_eta);
-      m_atree->Branch("ph_phi",&ph_phi);
-      //m_atree->Branch("ph_etiso30",&ph_etiso30);
-      //m_atree->Branch("ph_ptiso30",&ph_ptiso30);
-      m_atree->Branch("ph_tight",&ph_tight);
-      m_atree->Branch("ph_type",&ph_type);
-      m_atree->Branch("ph_origin",&ph_origin);
-      m_atree->Branch("ph_Cone20",&ph_Cone20);      
-      m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
-      m_atree->Branch("ph_Cone40",&ph_Cone40);      
-      
-
-      m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
-      m_atree->Branch("ph_SFu",&ph_SFu,"ph_SF/F");
-      m_atree->Branch("ph_SFd",&ph_SFd,"ph_SF/F");
-      
-      m_atree->Branch("ph_trigger",&ph_trigger);
-
-      //electrons
-      m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
-      m_atree->Branch("e_truth_eta",&e_truth_eta,"e_truth_eta/F", 10000);
-      m_atree->Branch("e_truth_phi",&e_truth_phi,"e_truth_phi/F", 10000);
-
-      m_atree->Branch("e_N",&e_N,"e_N/I", 10000);
-      m_atree->Branch("e_pt",&e_pt);      
-      m_atree->Branch("e_eta",&e_eta);
-      m_atree->Branch("e_phi",&e_phi);
-      m_atree->Branch("e_type",&e_type);
-      m_atree->Branch("e_origin",&e_origin);            
-      //m_atree->Branch("e_etiso30",&e_etiso30);
-      //m_atree->Branch("e_ptiso30",&e_ptiso30);
-      //m_atree->Branch("e_etiso20",&e_etiso20);
-      //m_atree->Branch("e_ptiso20",&e_ptiso20);
-      m_atree->Branch("e_isoT",&e_isoTight);
-      m_atree->Branch("e_isoL",&e_isoLoose);
-      m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
-      m_atree->Branch("e_isoG",&e_isoGradient);
-      m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
-      m_atree->Branch("e_id",&e_id);
-      //m_atree->Branch("e_d0_sig",&e_d0_sig);  
-      //m_atree->Branch("e_z0",&e_z0);      
-
-      m_atree->Branch("eb_N",&eb_N,"eb_N/I", 10000);
-      m_atree->Branch("eb_pt",&eb_pt);
-      m_atree->Branch("eb_eta",&eb_eta);
-      m_atree->Branch("eb_phi",&eb_phi);
-
-      m_atree->Branch("e_trigger",&e_trigger);
-
-      m_atree->Branch("e_MT",&e_MT,"e_MT/F", 10000);
-      m_atree->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
-      m_atree->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
-      m_atree->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
-      m_atree->Branch("e_M",&e_M,"e_M/F", 10000);
-      m_atree->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
-
-      
-      //muons
-      m_atree->Branch("m_N",&m_N,"m_N/I",10000);
-      m_atree->Branch("m_pt",&m_pt);
-      m_atree->Branch("m_eta",&m_eta);
-      m_atree->Branch("m_phi",&m_phi);      
-      m_atree->Branch("m_type",&m_type);
-      m_atree->Branch("m_origin",&m_origin);
-      //m_atree->Branch("m_etiso20",&m_etiso20);          
-      //m_atree->Branch("m_ptiso20",&m_ptiso20);          
-      //m_atree->Branch("m_etiso30",&m_etiso30);          
-      //m_atree->Branch("m_ptiso30",&m_ptiso30);          
-      m_atree->Branch("m_isoTight",&m_isoTight);
-      m_atree->Branch("m_isoLoose",&m_isoLoose);
-      m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
-      m_atree->Branch("m_isoGradient",&m_isoGradient);
-      m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
-
-      m_atree->Branch("mb_N",&mb_N,"mb_N/I",10000);
-      m_atree->Branch("mb_pt",&mb_pt);
-      m_atree->Branch("mb_eta",&mb_eta);
-      m_atree->Branch("mb_phi",&mb_phi);
-
-      m_atree->Branch("m_trigger",&m_trigger);
-
-      m_atree->Branch("m_M",&m_M,"m_M/F", 10000);                            
-      m_atree->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
-      m_atree->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
-      m_atree->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
-      m_atree->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                            
-      m_atree->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
-      m_atree->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
-
-
-      //jets
-      m_atree->Branch("j_N"   ,&j_N   ,"j_N/I"   ,10000);
-      m_atree->Branch("j_N30" ,&j_N30 ,"j_N30/I" ,10000);
-      m_atree->Branch("j_N40" ,&j_N40 ,"j_N40/I" ,10000);
-      m_atree->Branch("j_N50" ,&j_N50 ,"j_N50/I" ,10000);
-      m_atree->Branch("j_N60" ,&j_N60 ,"j_N60/I" ,10000);
-      m_atree->Branch("j_N80" ,&j_N80 ,"j_N80/I" ,10000);
-
-      m_atree->Branch("j_pt", &j_pt);
-      m_atree->Branch("j_eta",&j_eta);
-      m_atree->Branch("j_phi",&j_phi);
-      m_atree->Branch("j_m",  &j_m);
-
-      m_atree->Branch("j_chf", &j_chf);
-      m_atree->Branch("j_emf", &j_emf);
-      m_atree->Branch("j_fsm", &j_fsm);
-      m_atree->Branch("j_time",&j_time);
-      m_atree->Branch("j_nTrk",&j_nTrk);
-      m_atree->Branch("j_sumPtTrk",&j_sumPtTrk);
-      m_atree->Branch("j_jvf",&j_jvf);
-      m_atree->Branch("j_jvt",&j_jvt);
-      m_atree->Branch("j_tflavor",&j_tflavor);
-
-      m_atree->Branch("j1_mT" ,&j1_mT);
-      m_atree->Branch("j2_mT" ,&j2_mT);
-      m_atree->Branch("j3_mT" ,&j3_mT);
-      m_atree->Branch("j4_mT" ,&j4_mT);
-
-      m_atree->Branch("j_truth_N",&j_truth_N,"j_truth_N/I", 10000);
-      m_atree->Branch("j_tau_N",&j_tau_N);
-
-      m_atree->Branch("j_truth_pt1",&j_truth_pt1,"j_truth_pt1/F", 10000);
-      m_atree->Branch("j_truth_eta1",&j_truth_eta1,"j_truth_eta1/F", 10000);
-
-      //tile output
-      if(dumpTile){
-	m_atree->Branch("j_const_pt",&j_const_pt);
-	m_atree->Branch("j_const_eta",&j_const_eta);
-	m_atree->Branch("j_const_phi",&j_const_phi);
-	m_atree->Branch("j_const_m",&j_const_m);
-
-	m_atree->Branch("j1_cl_N",&j1_cl_N,"j1_cl_N/I",10000);
-	m_atree->Branch("j1_cl_pt",&j1_cl_pt);
-	m_atree->Branch("j1_cl_eta",&j1_cl_eta);
-	m_atree->Branch("j1_cl_phi",&j1_cl_phi);
-	m_atree->Branch("j1_cl_emf",&j1_cl_emf);
-
-	m_atree->Branch("j2_cl_N",&j2_cl_N,"j2_cl_N/I",10000);
-	m_atree->Branch("j2_cl_pt",&j2_cl_pt);
-	m_atree->Branch("j2_cl_eta",&j2_cl_eta);
-	m_atree->Branch("j2_cl_phi",&j2_cl_phi);
-	m_atree->Branch("j2_cl_emf",&j2_cl_emf);
-      }
-
-      //btagging
-
-      //// fixed cut 
-      m_atree->Branch("bj_Nfc_70",&bj_Nfc_70,"bj_Nfc_70/I", 10000);
-      m_atree->Branch("bj_Nfc_77",&bj_Nfc_77,"bj_Nfc_77/I", 10000);
-      m_atree->Branch("bj_Nfc_85",&bj_Nfc_85,"bj_Nfc_85/I", 10000);
-
-      //// b-flat
-      m_atree->Branch("bj_Nfb_70",&bj_Nfb_70,"bj_Nfb_70/I", 10000);
-      m_atree->Branch("bj_Nfb_77",&bj_Nfb_77,"bj_Nfb_77/I", 10000);
-      m_atree->Branch("bj_Nfb_85",&bj_Nfb_85,"bj_Nfb_85/I", 10000);
-
-      m_atree->Branch("j_bflat_70",&j_bflat_70);
-      m_atree->Branch("j_bflat_77",&j_bflat_77);
-      m_atree->Branch("j_bflat_85",&j_bflat_85);
-
-      //// weights
-      m_atree->Branch("j_tag_MV2c20",&j_tag_MV2c20);
-      m_atree->Branch("btag_weight_total_70fc",&btag_weight_total_70fc,"btag_weight_total_70fc/F", 10000);
-      m_atree->Branch("btag_weight_total_77fc",&btag_weight_total_77fc,"btag_weight_total_77fc/F", 10000);
-      m_atree->Branch("btag_weight_total_85fc",&btag_weight_total_85fc,"btag_weight_total_85fc/F", 10000);
-
-      //// truth
-      m_atree->Branch("bj_Nt_70",&bj_Nt_70,"bj_Nt_70/I", 10000);
-      m_atree->Branch("bj_Nt_77",&bj_Nt_77,"bj_Nt_77/I", 10000);
-      m_atree->Branch("bj_Nt_80",&bj_Nt_80,"bj_Nt_80/I", 10000); //no 85% available
-
-      m_atree->Branch("j_btruth_70",&j_btruth_70);
-      m_atree->Branch("j_btruth_77",&j_btruth_77);
-      m_atree->Branch("j_btruth_80",&j_btruth_80);
-
-      
-      //met 
-      m_atree->Branch("met",&met);
-      m_atree->Branch("met_phi",&met_phi);
-
-      m_atree->Branch("met_cst",&met_cst,"met_cst/f", 10000);
-      m_atree->Branch("met_tst",&met_tst,"met_tst/f", 10000);
-      
-      //m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
-      m_atree->Branch("met_top", &met_top, "met_top/F", 10000);
-
-      //met recoil system
-      //m_atree->Branch("rmet_par", &rmet_par);
-      //m_atree->Branch("rmet_norm", &rmet_norm);
-      //m_atree->Branch("rmet_par_mod", &rmet_par_mod);
-      //m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
-      //m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
-
-      //(transv. thrust and sphericity
-      //m_atree->Branch("tr_spher",&tr_spher); 
-      //m_atree->Branch("tr_thrust",&tr_thrust); 
-
-      //event variables
-      //dphi
-      //m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
-      //m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
-      //m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
-      //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
-      
-      // Max bb-system
-      m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
-      m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
-      m_atree->Branch("min_dR_bb",&min_dR_bb); 
-      m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
-      
-      m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
-      m_atree->Branch("dPhi_min",&dPhi_min);
-      m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
-      m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
+  m_atree->Branch ("RunNumber", &RunNumber, "RunNumber/I");
+  m_atree->Branch ("EventNumber", &EventNumber, "EventNumber/l");
+  m_atree->Branch ("lb", &lb, "lb/I");
+  m_atree->Branch ("bcid", &bcid, "bcid/I");
+  m_atree->Branch ("procID", &procID, "procID/I");
+  //    m_atree->Branch ("mc_channel_number", &mc_channel_number, "EventNumber/I");
+  m_atree->Branch ("averageIntPerXing", &averageIntPerXing, "averageIntPerXing/F");
+  m_atree->Branch ("nVertex", &nVertex, "nVertex/I");                        
+  //common vars
+  m_atree->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
+  m_atree->Branch ("MC_w", &MC_w, "MC_w/D");                       
   
-      m_atree->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
-      //m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
-      //m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
-      //m_atree->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
+  //presel
+  m_atree->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
+  m_atree->Branch("isTrigger",&isTrigger);
+  
+  //detailed presel
+  m_atree->Branch("isGRL",&isGRL,"isGRL/O", 10000);
+  m_atree->Branch("isVertexOk",&isVertexOk,"isVertexOk/O", 10000);
+  m_atree->Branch("isLarGood",&isLarGood,"isLarGood/O", 10000);
+  m_atree->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
+  m_atree->Branch("isTileTrip",&isTileTrip,"isTileTrip/O", 10000);
+  m_atree->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
+  m_atree->Branch("isBadID",&isBadID,"isBadID/O", 10000);
+  m_atree->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
+  m_atree->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
+  
+  
+  //metadata
+  m_atree->Branch ("xsec", &meta_xsec, "xsec/F");
+  m_atree->Branch ("xsec_relunc", &meta_xsec_relunc, "xsec_relunc/F");
+  m_atree->Branch ("kfactor", &meta_kfactor, "kfactor/F");
+  m_atree->Branch ("feff", &meta_feff, "feff/F");
+  m_atree->Branch ("nsim", &meta_nsim, "nsim/F");
+  m_atree->Branch ("nwsim", &meta_nwsim, "nwsim/F");
+  m_atree->Branch ("lumi", &meta_lumi, "lumi/F");
+  
+  
+  if(doAnaTree){ //AnalysisTree
+    //weights
+    //m_atree->Branch ("w", &w, "w/F");  // CHECK_ME For the moment we do it offline (in the merging)           
+    m_atree->Branch ("w_average", &w_average, "w_average/F");             
+    m_atree->Branch ("PDF_w", &PDF_w, "PDF_w/F");                      
+    m_atree->Branch ("bosonVect_w", &bosonVect_w, "bosonVect_w/F");                 
+    m_atree->Branch ("Trigger_w", &Trigger_w, "Trigger_w/F");                  
+    m_atree->Branch ("Trigger_w_avg", &Trigger_w_avg, "Trigger_w_avg/F");
 
-      //dR
-      m_atree->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
-      //m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
-      //m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
+    m_atree->Branch ("e_SF", &e_SF,"e_SF/F");
+    m_atree->Branch ("e_SFIDu", &e_SFIDu,"e_SFIDu/F");
+    m_atree->Branch ("e_SFIDd", &e_SFIDd,"e_SFIDd/F");
+    m_atree->Branch ("e_SFIsou", &e_SFIsou,"e_SFIsou/F");
+    m_atree->Branch ("e_SFIsod", &e_SFIsod,"e_SFIsod/F");
+    m_atree->Branch ("e_SFRecou", &e_SFRecou,"e_SFRecou/F");
+    m_atree->Branch ("e_SFRecod", &e_SFRecod,"e_SFRecod/F");
+    m_atree->Branch ("e_SFTrigu", &e_SFTrigu,"e_SFTrigu/F");
+    m_atree->Branch ("e_SFTrigd", &e_SFTrigd,"e_SFTrigd/F");
+    
+    m_atree->Branch ("m_SF", &m_SF,"m_SF/F");
+    m_atree->Branch ("m_SFStatu", &m_SFStatu,"m_SFStatu/F");      
+    m_atree->Branch ("m_SFStatd", &m_SFStatd,"m_SFStatd/F");      
+    m_atree->Branch ("m_SFSysu", &m_SFSysu,"m_SFSysu/F");      
+    m_atree->Branch ("m_SFSysd", &m_SFSysd,"m_SFSysd/F");  
+    m_atree->Branch ("m_SFTrigStatu", &m_SFTrigStatu,"m_SFTrigStatu/F");      
+    m_atree->Branch ("m_SFTrigStatd", &m_SFTrigStatd,"m_SFTrigStatd/F");      
+    m_atree->Branch ("m_SFTrigSysu", &m_SFTrigSysu,"m_SFTrigSysu/F");      
+    m_atree->Branch ("m_SFTrigSysd", &m_SFTrigSysd,"m_SFTrigSysd/F");  
+    m_atree->Branch ("m_SFIsoStatu", &m_SFIsoStatu,"m_SFIsoStatu/F");      
+    m_atree->Branch ("m_SFIsoStatd", &m_SFIsoStatd,"m_SFIsoStatd/F");      
+    m_atree->Branch ("m_SFIsoSysu", &m_SFIsoSysu,"m_SFIsoSysu/F");      
+    m_atree->Branch ("m_SFIsoSysd", &m_SFIsoSysd,"m_SFIsoSysd/F");  
+    
+    m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
 
-//       m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
-//       m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
-//       m_atree->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
-//       m_atree->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
-//       m_atree->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
-//       m_atree->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
+    
+    //boson 
+    m_atree->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
+    
+    m_atree->Branch ("bosonVec_reco_pt", &bosonVec_reco_pt, "bosonVec_reco_pt/F");             
+    m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
+    m_atree->Branch ("bosonVec_reco_phi", &bosonVec_reco_phi, "bosonVec_reco_phi/F");      
+    
+    m_atree->Branch ("bosonVec_reco_pt_vmu", &bosonVec_reco_pt_vmu, "bosonVec_reco_pt_vmu/F");             
+    //m_atree->Branch ("bosonVec_reco_eta", &bosonVec_reco_eta, "bosonVec_reco_eta/F");             
+    m_atree->Branch ("bosonVec_reco_phi_vmu", &bosonVec_reco_phi_vmu, "bosonVec_reco_phi_vmu/F");                
+    
+    m_atree->Branch ("bosonVec_truth_pt", &bosonVec_truth_pt, "bosonVec_truth_pt/F");             
+    m_atree->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
+    m_atree->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
+    
+    m_atree->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
+    m_atree->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
+    m_atree->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
+    m_atree->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
+    
+    //truth
+    m_atree->Branch("truth_M",&truth_M,"truth_M/F", 10000);
+    m_atree->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
+    
+    
+    m_atree->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
+    
+    m_atree->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
+    m_atree->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
+    m_atree->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
+    m_atree->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
+    m_atree->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
+    m_atree->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
+    m_atree->Branch("truth_met",&truth_met,"truth_met/F", 10000);
+    m_atree->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
+    
+    //top
+    m_atree->Branch("Top_truth_pt",&Top_truth_pt,"Top_truth_pt/F", 10000);
+    m_atree->Branch("Topbar_truth_pt",&Topbar_truth_pt,"Topbar_truth_pt/F", 10000);
+    m_atree->Branch("avTop_truth_pt",&avTop_truth_pt,"avTop_truth_pt/F", 10000);
+    m_atree->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
+    
+    //photons
+    m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
+    m_atree->Branch("ph_pt",&ph_pt);
+    m_atree->Branch("ph_eta",&ph_eta);
+    m_atree->Branch("ph_phi",&ph_phi);
+    //m_atree->Branch("ph_etiso30",&ph_etiso30);
+    //m_atree->Branch("ph_ptiso30",&ph_ptiso30);
+    m_atree->Branch("ph_tight",&ph_tight);
+    m_atree->Branch("ph_type",&ph_type);
+    m_atree->Branch("ph_origin",&ph_origin);
+    m_atree->Branch("ph_Cone20",&ph_Cone20);      
+    m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
+    m_atree->Branch("ph_Cone40",&ph_Cone40);      
+    
+    
+    m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
+    
+    m_atree->Branch("ph_trigger",&ph_trigger);
+    
+    //electrons
+    m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
+    m_atree->Branch("e_truth_eta",&e_truth_eta,"e_truth_eta/F", 10000);
+    m_atree->Branch("e_truth_phi",&e_truth_phi,"e_truth_phi/F", 10000);
+    
+    m_atree->Branch("e_N",&e_N,"e_N/I", 10000);
+    m_atree->Branch("e_pt",&e_pt);      
+    m_atree->Branch("e_eta",&e_eta);
+    m_atree->Branch("e_phi",&e_phi);
+    m_atree->Branch("e_type",&e_type);
+    m_atree->Branch("e_origin",&e_origin);            
+    //m_atree->Branch("e_etiso30",&e_etiso30);
+    //m_atree->Branch("e_ptiso30",&e_ptiso30);
+    //m_atree->Branch("e_etiso20",&e_etiso20);
+    //m_atree->Branch("e_ptiso20",&e_ptiso20);
+    m_atree->Branch("e_isoT",&e_isoTight);
+    m_atree->Branch("e_isoL",&e_isoLoose);
+    m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
+    m_atree->Branch("e_isoG",&e_isoGradient);
+    m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
+    m_atree->Branch("e_id",&e_id);
+    //m_atree->Branch("e_d0_sig",&e_d0_sig);  
+    //m_atree->Branch("e_z0",&e_z0);      
+    
+    m_atree->Branch("eb_N",&eb_N,"eb_N/I", 10000);
+    m_atree->Branch("eb_pt",&eb_pt);
+    m_atree->Branch("eb_eta",&eb_eta);
+    m_atree->Branch("eb_phi",&eb_phi);
+    
+    m_atree->Branch("e_trigger",&e_trigger);
+    
+    m_atree->Branch("e_MT",&e_MT,"e_MT/F", 10000);
+    m_atree->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
+    m_atree->Branch("e_MT_tst",&e_MT_tst,"e_MT_tst/F", 10000);
+    m_atree->Branch("e_MT_tst_vmu",&e_MT_tst_vmu,"e_MT_tst_vmu/F", 10000);      
+    m_atree->Branch("e_M",&e_M,"e_M/F", 10000);
+    m_atree->Branch("e_Zpt",&e_Zpt,"e_Zpt/F", 10000);
+    
+    
+    //muons
+    m_atree->Branch("m_N",&m_N,"m_N/I",10000);
+    m_atree->Branch("m_pt",&m_pt);
+    m_atree->Branch("m_eta",&m_eta);
+    m_atree->Branch("m_phi",&m_phi);      
+    m_atree->Branch("m_type",&m_type);
+    m_atree->Branch("m_origin",&m_origin);
+    //m_atree->Branch("m_etiso20",&m_etiso20);          
+    //m_atree->Branch("m_ptiso20",&m_ptiso20);          
+    //m_atree->Branch("m_etiso30",&m_etiso30);          
+    //m_atree->Branch("m_ptiso30",&m_ptiso30);          
+    m_atree->Branch("m_isoTight",&m_isoTight);
+    m_atree->Branch("m_isoLoose",&m_isoLoose);
+    m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
+    m_atree->Branch("m_isoGradient",&m_isoGradient);
+    m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
+    
+    m_atree->Branch("mb_N",&mb_N,"mb_N/I",10000);
+    m_atree->Branch("mb_pt",&mb_pt);
+    m_atree->Branch("mb_eta",&mb_eta);
+    m_atree->Branch("mb_phi",&mb_phi);
+    
+    m_atree->Branch("m_trigger",&m_trigger);
+    
+    m_atree->Branch("m_M",&m_M,"m_M/F", 10000);                            
+    m_atree->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
+    m_atree->Branch("m_MT_vmu",&m_MT_vmu,"m_MT_vmu/F", 10000);                           
+    m_atree->Branch("m_MT_tst",&m_MT_tst,"m_MT_tst/F", 10000);    
+    m_atree->Branch("m_MT_tst_vmu",&m_MT_tst_vmu,"m_MT_tst_vmu/F", 10000);                            
+    m_atree->Branch("m_Zpt",&m_Zpt,"m_Zpt/F", 10000);                      
+    m_atree->Branch("m_EM",&m_EM,"m_EM/F", 10000);                         
+    
+    
+    //jets
+    m_atree->Branch("j_N"   ,&j_N   ,"j_N/I"   ,10000);
+    m_atree->Branch("j_N30" ,&j_N30 ,"j_N30/I" ,10000);
+    m_atree->Branch("j_N40" ,&j_N40 ,"j_N40/I" ,10000);
+    m_atree->Branch("j_N50" ,&j_N50 ,"j_N50/I" ,10000);
+    m_atree->Branch("j_N60" ,&j_N60 ,"j_N60/I" ,10000);
+    m_atree->Branch("j_N80" ,&j_N80 ,"j_N80/I" ,10000);
 
-      //dEta
-      m_atree->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
+    m_atree->Branch("j_pt", &j_pt);
+    m_atree->Branch("j_eta",&j_eta);
+    m_atree->Branch("j_phi",&j_phi);
+    m_atree->Branch("j_m",  &j_m);
 
-      //Mbl_min  (for single top CR)
-      m_atree->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
-      m_atree->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
-      
-      m_atree->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
-      m_atree->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
-      m_atree->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
-      m_atree->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
-      m_atree->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
-      m_atree->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
+    m_atree->Branch("j_chf", &j_chf);
+    m_atree->Branch("j_emf", &j_emf);
+    m_atree->Branch("j_fsm", &j_fsm);
+    m_atree->Branch("j_time",&j_time);
+    m_atree->Branch("j_nTrk",&j_nTrk);
+    m_atree->Branch("j_sumPtTrk",&j_sumPtTrk);
+    m_atree->Branch("j_jvf",&j_jvf);
+    m_atree->Branch("j_jvt",&j_jvt);
+    m_atree->Branch("j_tflavor",&j_tflavor);
 
+    m_atree->Branch("j1_mT" ,&j1_mT);
+    m_atree->Branch("j2_mT" ,&j2_mT);
+    m_atree->Branch("j3_mT" ,&j3_mT);
+    m_atree->Branch("j4_mT" ,&j4_mT);
 
-      //MTs
-      m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
-      m_atree->Branch("MT_bcl_met",&MT_bcl_met);
-      m_atree->Branch("MT_bfar_met",&MT_bfar_met);
-      m_atree->Branch("MT_lcl_met",&MT_lcl_met);
-      m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
+    m_atree->Branch("j_truth_N",&j_truth_N,"j_truth_N/I", 10000);
+    m_atree->Branch("j_tau_N",&j_tau_N);
 
-      //Misc
-      m_atree->Branch("mjj",&mjj,"mjj/F", 10000);  
-      m_atree->Branch("mbb",&mbb,"mbb/F", 10000);         
-      
-      m_atree->Branch("mct",&mct,"mct/F", 10000);    
-      m_atree->Branch("mct_corr",&mct_corr);    
-      m_atree->Branch("meff",&meff);
-      m_atree->Branch("HT",&HT,"HT/F", 10000);    
-//       m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
-//       
-//       //Razor
-//       m_atree->Branch("MR",&MR,"MR/F", 10000);
-//       m_atree->Branch("MTR",&MTR);
-//       m_atree->Branch("R",&R);
-//             
-//       m_atree->Branch("shatR",&shatR);
-//       m_atree->Branch("gaminvR",&gaminvR);
-//       m_atree->Branch("mdeltaR",&mdeltaR);
-//       m_atree->Branch("cosptR",&cosptR);
-      
-      //Z candidate 
-//      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
-//      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
-//      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
-//      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
-//      m_atree->Branch("lep3_MT",&lep3_MT);
-//      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+    m_atree->Branch("j_truth_pt1",&j_truth_pt1,"j_truth_pt1/F", 10000);
+    m_atree->Branch("j_truth_eta1",&j_truth_eta1,"j_truth_eta1/F", 10000);
 
+    //tile output
+    if(dumpTile){
+      m_atree->Branch("j_const_pt",&j_const_pt);
+      m_atree->Branch("j_const_eta",&j_const_eta);
+      m_atree->Branch("j_const_phi",&j_const_phi);
+      m_atree->Branch("j_const_m",&j_const_m);
 
-      //top reconstruction
-      m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
-      m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
-      m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
-      //fat jets 
-      m_atree->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
-      m_atree->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
-      m_atree->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
-      m_atree->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
-      m_atree->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
-      m_atree->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
-      m_atree->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
-      m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
-      m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
-      m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
-      
-      //Extended trigger info
-      if(doTrigExt){
+      m_atree->Branch("j1_cl_N",&j1_cl_N,"j1_cl_N/I",10000);
+      m_atree->Branch("j1_cl_pt",&j1_cl_pt);
+      m_atree->Branch("j1_cl_eta",&j1_cl_eta);
+      m_atree->Branch("j1_cl_phi",&j1_cl_phi);
+      m_atree->Branch("j1_cl_emf",&j1_cl_emf);
 
-	m_atree->Branch("trig_l1_ex",               &trig_l1_ex 		              ,"trig_l1_ex/F"); 		            
-	m_atree->Branch("trig_l1_ey", 		   &trig_l1_ey 		    	      ,"trig_l1_ey/F"); 		    
-	m_atree->Branch("trig_l1_et", 		   &trig_l1_et 		    	      ,"trig_l1_et/F"); 		    
-	m_atree->Branch("trig_l1_sumet", 	   &trig_l1_sumet 	   	      ,"trig_l1_sumet/F"); 		    
-	m_atree->Branch("trig_l1_phi",		   &trig_l1_phi		    	      ,"trig_l1_phi/F");		    
-
-	m_atree->Branch("trig_hlt_EFJetEtSum_ex",                   &trig_hlt_EFJetEtSum_ex 		              ,"trig_hlt_EFJetEtSum_ex/F"); 		            
-	m_atree->Branch("trig_hlt_EFJetEtSum_ey", 		   &trig_hlt_EFJetEtSum_ey 		    	      ,"trig_hlt_EFJetEtSum_ey/F"); 		    
-	m_atree->Branch("trig_hlt_EFJetEtSum_et", 		   &trig_hlt_EFJetEtSum_et 		    	      ,"trig_hlt_EFJetEtSum_et/F"); 		    
-	m_atree->Branch("trig_hlt_EFJetEtSum_sumet", 		   &trig_hlt_EFJetEtSum_sumet 		    	      ,"trig_hlt_EFJetEtSum_sumet/F"); 		    
-	m_atree->Branch("trig_hlt_EFJetEtSum_phi",		   &trig_hlt_EFJetEtSum_phi		    	      ,"trig_hlt_EFJetEtSum_phi/F");		    
-									   					    	      					    
-	m_atree->Branch("trig_hlt_T2MissingET_ex", 		   &trig_hlt_T2MissingET_ex 		    	      ,"trig_hlt_T2MissingET_ex/F"); 		    
-	m_atree->Branch("trig_hlt_T2MissingET_ey", 		   &trig_hlt_T2MissingET_ey 		    	      ,"trig_hlt_T2MissingET_ey/F"); 		    
-	m_atree->Branch("trig_hlt_T2MissingET_et", 		   &trig_hlt_T2MissingET_et 		    	      ,"trig_hlt_T2MissingET_et/F"); 		    
-	m_atree->Branch("trig_hlt_T2MissingET_sumet", 		   &trig_hlt_T2MissingET_sumet 		    	      ,"trig_hlt_T2MissingET_sumet/F"); 		    
-	m_atree->Branch("trig_hlt_T2MissingET_phi",		   &trig_hlt_T2MissingET_phi		      ,"trig_hlt_T2MissingET_phi/F");		    
-
-	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex/F"); 		    
-	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey/F"); 		    
-	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et/F"); 		    
-	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet/F"); 		    
-	m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi",	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi/F");		    
-									   					    	      					    
-	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ex", 	   &trig_hlt_TrigL2MissingET_FEB_ex 		      ,"trig_hlt_TrigL2MissingET_FEB_ex/F"); 		    
-	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ey", 	   &trig_hlt_TrigL2MissingET_FEB_ey 		      ,"trig_hlt_TrigL2MissingET_FEB_ey/F"); 		    
-	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_et", 	   &trig_hlt_TrigL2MissingET_FEB_et 		      ,"trig_hlt_TrigL2MissingET_FEB_et/F"); 		    
-	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_sumet", 	   &trig_hlt_TrigL2MissingET_FEB_sumet 	    	      ,"trig_hlt_TrigL2MissingET_FEB_sumet/F"); 	    
-	m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_phi",	   &trig_hlt_TrigL2MissingET_FEB_phi	    	      ,"trig_hlt_TrigL2MissingET_FEB_phi/F");	    
-									   					    	      					    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_ex", 		   &trig_hlt_TrigEFMissingET_ex 		      ,"trig_hlt_TrigEFMissingET_ex/F"); 		    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_ey", 		   &trig_hlt_TrigEFMissingET_ey 		      ,"trig_hlt_TrigEFMissingET_ey/F"); 		    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_et", 		   &trig_hlt_TrigEFMissingET_et 		      ,"trig_hlt_TrigEFMissingET_et/F"); 		    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_sumet", 	   &trig_hlt_TrigEFMissingET_sumet 	    	      ,"trig_hlt_TrigEFMissingET_sumet/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_phi",   	   &trig_hlt_TrigEFMissingET_phi	    	      ,"trig_hlt_TrigEFMissingET_phi/F");	    
-									   					    	      					    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ex", 	   &trig_hlt_TrigEFMissingET_FEB_ex 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ex/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ey", 	   &trig_hlt_TrigEFMissingET_FEB_ey 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ey/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_et", 	   &trig_hlt_TrigEFMissingET_FEB_et 	    	      ,"trig_hlt_TrigEFMissingET_FEB_et/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_sumet", 	   &trig_hlt_TrigEFMissingET_FEB_sumet 	    	      ,"trig_hlt_TrigEFMissingET_FEB_sumet/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_phi",	   &trig_hlt_TrigEFMissingET_FEB_phi	              ,"trig_hlt_TrigEFMissingET_FEB_phi/F");	    
-
-	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ex", 	   &trig_hlt_TrigEFMissingET_mht_ex 	    	      ,"trig_hlt_TrigEFMissingET_mht_ex/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ey", 	   &trig_hlt_TrigEFMissingET_mht_ey 	    	      ,"trig_hlt_TrigEFMissingET_mht_ey/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_et", 	   &trig_hlt_TrigEFMissingET_mht_et 	    	      ,"trig_hlt_TrigEFMissingET_mht_et/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_sumet", 	   &trig_hlt_TrigEFMissingET_mht_sumet 	    	      ,"trig_hlt_TrigEFMissingET_mht_sumet/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_mht_phi",	   &trig_hlt_TrigEFMissingET_mht_phi	              ,"trig_hlt_TrigEFMissingET_mht_phi/F");	    
-									   					    	      					    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ex", 	   &trig_hlt_TrigEFMissingET_topocl_ex 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ex/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ey", 	   &trig_hlt_TrigEFMissingET_topocl_ey 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ey/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_et", 	   &trig_hlt_TrigEFMissingET_topocl_et 	    	      ,"trig_hlt_TrigEFMissingET_topocl_et/F"); 	    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_sumet",    &trig_hlt_TrigEFMissingET_topocl_sumet     	      ,"trig_hlt_TrigEFMissingET_topocl_sumet/F");     
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_phi",      &trig_hlt_TrigEFMissingET_topocl_phi   	      ,"trig_hlt_TrigEFMissingET_topocl_phi/F");   
-									   					    	      					    
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ex",    &trig_hlt_TrigEFMissingET_topocl_PS_ex     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ex/F");     
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ey",	   &trig_hlt_TrigEFMissingET_topocl_PS_ey     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ey/F");     
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_et",    &trig_hlt_TrigEFMissingET_topocl_PS_et     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_et/F");     
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_sumet", &trig_hlt_TrigEFMissingET_topocl_PS_sumet  	      ,"trig_hlt_TrigEFMissingET_topocl_PS_sumet/F");  
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_phi",   &trig_hlt_TrigEFMissingET_topocl_PS_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PS_phi/F");
-
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ex" ,    &trig_hlt_TrigEFMissingET_topocl_PUC_ex          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ex/F");     
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ey",     &trig_hlt_TrigEFMissingET_topocl_PUC_ey          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ey/F");     
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_et",     &trig_hlt_TrigEFMissingET_topocl_PUC_et          ,"trig_hlt_TrigEFMissingET_topocl_PUC_et/F");     
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_sumet",  &trig_hlt_TrigEFMissingET_topocl_PUC_sumet       ,"trig_hlt_TrigEFMissingET_topocl_PUC_sumet/F");  
-	m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_phi",    &trig_hlt_TrigEFMissingET_topocl_PUC_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PUC_phi/F");
-      }
+      m_atree->Branch("j2_cl_N",&j2_cl_N,"j2_cl_N/I",10000);
+      m_atree->Branch("j2_cl_pt",&j2_cl_pt);
+      m_atree->Branch("j2_cl_eta",&j2_cl_eta);
+      m_atree->Branch("j2_cl_phi",&j2_cl_phi);
+      m_atree->Branch("j2_cl_emf",&j2_cl_emf);
     }
-    else if(doPUTree){
+
+    //btagging
+
+    //// fixed cut 
+    m_atree->Branch("bj_Nfc_70",&bj_Nfc_70,"bj_Nfc_70/I", 10000);
+    m_atree->Branch("bj_Nfc_77",&bj_Nfc_77,"bj_Nfc_77/I", 10000);
+    m_atree->Branch("bj_Nfc_85",&bj_Nfc_85,"bj_Nfc_85/I", 10000);
+
+    //// b-flat
+    m_atree->Branch("bj_Nfb_70",&bj_Nfb_70,"bj_Nfb_70/I", 10000);
+    m_atree->Branch("bj_Nfb_77",&bj_Nfb_77,"bj_Nfb_77/I", 10000);
+    m_atree->Branch("bj_Nfb_85",&bj_Nfb_85,"bj_Nfb_85/I", 10000);
+
+    m_atree->Branch("j_bflat_70",&j_bflat_70);
+    m_atree->Branch("j_bflat_77",&j_bflat_77);
+    m_atree->Branch("j_bflat_85",&j_bflat_85);
+
+    //// weights
+    m_atree->Branch("j_tag_MV2c20",&j_tag_MV2c20);
+    m_atree->Branch("btag_weight_total_70fc",&btag_weight_total_70fc,"btag_weight_total_70fc/F", 10000);
+    m_atree->Branch("btag_weight_total_77fc",&btag_weight_total_77fc,"btag_weight_total_77fc/F", 10000);
+    m_atree->Branch("btag_weight_total_85fc",&btag_weight_total_85fc,"btag_weight_total_85fc/F", 10000);
+
+    //// truth
+    m_atree->Branch("bj_Nt_70",&bj_Nt_70,"bj_Nt_70/I", 10000);
+    m_atree->Branch("bj_Nt_77",&bj_Nt_77,"bj_Nt_77/I", 10000);
+    m_atree->Branch("bj_Nt_80",&bj_Nt_80,"bj_Nt_80/I", 10000); //no 85% available
+
+    m_atree->Branch("j_btruth_70",&j_btruth_70);
+    m_atree->Branch("j_btruth_77",&j_btruth_77);
+    m_atree->Branch("j_btruth_80",&j_btruth_80);
+
       
+    //met 
+    m_atree->Branch("met",&met);
+    m_atree->Branch("met_phi",&met_phi);
+
+    m_atree->Branch("met_cst",&met_cst,"met_cst/f", 10000);
+    m_atree->Branch("met_tst",&met_tst,"met_tst/f", 10000);
+      
+    //m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
+    m_atree->Branch("met_top", &met_top, "met_top/F", 10000);
+
+    //met recoil system
+    //m_atree->Branch("rmet_par", &rmet_par);
+    //m_atree->Branch("rmet_norm", &rmet_norm);
+    //m_atree->Branch("rmet_par_mod", &rmet_par_mod);
+    //m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
+    //m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
+
+    //(transv. thrust and sphericity
+    //m_atree->Branch("tr_spher",&tr_spher); 
+    //m_atree->Branch("tr_thrust",&tr_thrust); 
+
+    //event variables
+    //dphi
+    //m_atree->Branch("dPhi_met_j1",&dPhi_met_j1);
+    //m_atree->Branch("dPhi_met_j2",&dPhi_met_j2);
+    //m_atree->Branch("dPhi_met_j3",&dPhi_met_j3);
+    //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
+      
+    // Max bb-system
+    m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
+    m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
+    m_atree->Branch("min_dR_bb",&min_dR_bb); 
+    m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
+      
+    m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
+    m_atree->Branch("dPhi_min",&dPhi_min);
+    m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
+    m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
+  
+    m_atree->Branch("dPhi_j1_j2",&dPhi_j1_j2,"dPhi_j1_j2/f", 10000);
+    //m_atree->Branch("dPhi_j1_j3",&dPhi_j1_j3,"dPhi_j1_j3/f", 10000);
+    //m_atree->Branch("dPhi_j2_j3",&dPhi_j2_j3,"dPhi_j2_j3/f", 10000);
+    //m_atree->Branch("dPhi_b1_b2",&dPhi_b1_b2,"dPhi_b1_b2/f", 10000);
+
+    //dR
+    m_atree->Branch("dR_j1_j2",&dR_j1_j2,"dR_j1_j2/f", 10000);
+    //m_atree->Branch("dR_j1_j3",&dR_j1_j3,"dR_j1_j3/f", 10000);
+    //m_atree->Branch("dR_j2_j3",&dR_j2_j3,"dR_j2_j3/f", 10000);
+
+    //       m_atree->Branch("dR_j1_m1",&dR_j1_m1,"dR_j1_m1/f", 10000);
+    //       m_atree->Branch("dR_j1_m2",&dR_j1_m2,"dR_j1_m2/f", 10000);
+    //       m_atree->Branch("dR_j2_m1",&dR_j2_m1,"dR_j2_m1/f", 10000);
+    //       m_atree->Branch("dR_j2_m2",&dR_j2_m2,"dR_j2_m2/f", 10000);
+    //       m_atree->Branch("dR_j3_m1",&dR_j3_m1,"dR_j3_m1/f", 10000);
+    //       m_atree->Branch("dR_j3_m2",&dR_j3_m2,"dR_j3_m2/f", 10000);
+
+    //dEta
+    m_atree->Branch("dEta_j1_j2",&dEta_j1_j2,"dEta_j1_j2/f", 10000);
+
+    //Mbl_min  (for single top CR)
+    m_atree->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
+    m_atree->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
+      
+    m_atree->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
+    m_atree->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
+    m_atree->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
+    m_atree->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
+    m_atree->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
+    m_atree->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
+
+
+    //MTs
+    m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
+    m_atree->Branch("MT_bcl_met",&MT_bcl_met);
+    m_atree->Branch("MT_bfar_met",&MT_bfar_met);
+    m_atree->Branch("MT_lcl_met",&MT_lcl_met);
+    m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
+
+    //Misc
+    m_atree->Branch("mjj",&mjj,"mjj/F", 10000);  
+    m_atree->Branch("mbb",&mbb,"mbb/F", 10000);         
+      
+    m_atree->Branch("mct",&mct,"mct/F", 10000);    
+    m_atree->Branch("mct_corr",&mct_corr);    
+    m_atree->Branch("meff",&meff);
+    m_atree->Branch("HT",&HT,"HT/F", 10000);    
+    //       m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
+    //       
+    //       //Razor
+    //       m_atree->Branch("MR",&MR,"MR/F", 10000);
+    //       m_atree->Branch("MTR",&MTR);
+    //       m_atree->Branch("R",&R);
+    //             
+    //       m_atree->Branch("shatR",&shatR);
+    //       m_atree->Branch("gaminvR",&gaminvR);
+    //       m_atree->Branch("mdeltaR",&mdeltaR);
+    //       m_atree->Branch("cosptR",&cosptR);
+      
+    //Z candidate 
+    //      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+    //      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+    //      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+    //      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+    //      m_atree->Branch("lep3_MT",&lep3_MT);
+    //      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+
+
+    //top reconstruction
+    m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
+    m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
+    m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
+    //fat jets 
+    m_atree->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
+    m_atree->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
+    m_atree->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
+    m_atree->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
+    m_atree->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
+    m_atree->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
+    m_atree->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
+    m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
+    m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
+    m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
+      
+    //Extended trigger info
+    if(doTrigExt){
+
+      m_atree->Branch("trig_l1_ex",               &trig_l1_ex 		              ,"trig_l1_ex/F"); 		            
+      m_atree->Branch("trig_l1_ey", 		   &trig_l1_ey 		    	      ,"trig_l1_ey/F"); 		    
+      m_atree->Branch("trig_l1_et", 		   &trig_l1_et 		    	      ,"trig_l1_et/F"); 		    
+      m_atree->Branch("trig_l1_sumet", 	   &trig_l1_sumet 	   	      ,"trig_l1_sumet/F"); 		    
+      m_atree->Branch("trig_l1_phi",		   &trig_l1_phi		    	      ,"trig_l1_phi/F");		    
+
+      m_atree->Branch("trig_hlt_EFJetEtSum_ex",                   &trig_hlt_EFJetEtSum_ex 		              ,"trig_hlt_EFJetEtSum_ex/F"); 		            
+      m_atree->Branch("trig_hlt_EFJetEtSum_ey", 		   &trig_hlt_EFJetEtSum_ey 		    	      ,"trig_hlt_EFJetEtSum_ey/F"); 		    
+      m_atree->Branch("trig_hlt_EFJetEtSum_et", 		   &trig_hlt_EFJetEtSum_et 		    	      ,"trig_hlt_EFJetEtSum_et/F"); 		    
+      m_atree->Branch("trig_hlt_EFJetEtSum_sumet", 		   &trig_hlt_EFJetEtSum_sumet 		    	      ,"trig_hlt_EFJetEtSum_sumet/F"); 		    
+      m_atree->Branch("trig_hlt_EFJetEtSum_phi",		   &trig_hlt_EFJetEtSum_phi		    	      ,"trig_hlt_EFJetEtSum_phi/F");		    
+									   					    	      					    
+      m_atree->Branch("trig_hlt_T2MissingET_ex", 		   &trig_hlt_T2MissingET_ex 		    	      ,"trig_hlt_T2MissingET_ex/F"); 		    
+      m_atree->Branch("trig_hlt_T2MissingET_ey", 		   &trig_hlt_T2MissingET_ey 		    	      ,"trig_hlt_T2MissingET_ey/F"); 		    
+      m_atree->Branch("trig_hlt_T2MissingET_et", 		   &trig_hlt_T2MissingET_et 		    	      ,"trig_hlt_T2MissingET_et/F"); 		    
+      m_atree->Branch("trig_hlt_T2MissingET_sumet", 		   &trig_hlt_T2MissingET_sumet 		    	      ,"trig_hlt_T2MissingET_sumet/F"); 		    
+      m_atree->Branch("trig_hlt_T2MissingET_phi",		   &trig_hlt_T2MissingET_phi		      ,"trig_hlt_T2MissingET_phi/F");		    
+
+      m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ex/F"); 		    
+      m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_ey/F"); 		    
+      m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_et/F"); 		    
+      m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet", 	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet 	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_sumet/F"); 		    
+      m_atree->Branch("trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi",	&trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi	,"trig_hlt_EFMissingET_Fex_2sidednoiseSupp_PUC_phi/F");		    
+									   					    	      					    
+      m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ex", 	   &trig_hlt_TrigL2MissingET_FEB_ex 		      ,"trig_hlt_TrigL2MissingET_FEB_ex/F"); 		    
+      m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_ey", 	   &trig_hlt_TrigL2MissingET_FEB_ey 		      ,"trig_hlt_TrigL2MissingET_FEB_ey/F"); 		    
+      m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_et", 	   &trig_hlt_TrigL2MissingET_FEB_et 		      ,"trig_hlt_TrigL2MissingET_FEB_et/F"); 		    
+      m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_sumet", 	   &trig_hlt_TrigL2MissingET_FEB_sumet 	    	      ,"trig_hlt_TrigL2MissingET_FEB_sumet/F"); 	    
+      m_atree->Branch("trig_hlt_TrigL2MissingET_FEB_phi",	   &trig_hlt_TrigL2MissingET_FEB_phi	    	      ,"trig_hlt_TrigL2MissingET_FEB_phi/F");	    
+									   					    	      					    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_ex", 		   &trig_hlt_TrigEFMissingET_ex 		      ,"trig_hlt_TrigEFMissingET_ex/F"); 		    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_ey", 		   &trig_hlt_TrigEFMissingET_ey 		      ,"trig_hlt_TrigEFMissingET_ey/F"); 		    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_et", 		   &trig_hlt_TrigEFMissingET_et 		      ,"trig_hlt_TrigEFMissingET_et/F"); 		    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_sumet", 	   &trig_hlt_TrigEFMissingET_sumet 	    	      ,"trig_hlt_TrigEFMissingET_sumet/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_phi",   	   &trig_hlt_TrigEFMissingET_phi	    	      ,"trig_hlt_TrigEFMissingET_phi/F");	    
+									   					    	      					    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ex", 	   &trig_hlt_TrigEFMissingET_FEB_ex 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ex/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_ey", 	   &trig_hlt_TrigEFMissingET_FEB_ey 	    	      ,"trig_hlt_TrigEFMissingET_FEB_ey/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_et", 	   &trig_hlt_TrigEFMissingET_FEB_et 	    	      ,"trig_hlt_TrigEFMissingET_FEB_et/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_sumet", 	   &trig_hlt_TrigEFMissingET_FEB_sumet 	    	      ,"trig_hlt_TrigEFMissingET_FEB_sumet/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_FEB_phi",	   &trig_hlt_TrigEFMissingET_FEB_phi	              ,"trig_hlt_TrigEFMissingET_FEB_phi/F");	    
+
+      m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ex", 	   &trig_hlt_TrigEFMissingET_mht_ex 	    	      ,"trig_hlt_TrigEFMissingET_mht_ex/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_mht_ey", 	   &trig_hlt_TrigEFMissingET_mht_ey 	    	      ,"trig_hlt_TrigEFMissingET_mht_ey/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_mht_et", 	   &trig_hlt_TrigEFMissingET_mht_et 	    	      ,"trig_hlt_TrigEFMissingET_mht_et/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_mht_sumet", 	   &trig_hlt_TrigEFMissingET_mht_sumet 	    	      ,"trig_hlt_TrigEFMissingET_mht_sumet/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_mht_phi",	   &trig_hlt_TrigEFMissingET_mht_phi	              ,"trig_hlt_TrigEFMissingET_mht_phi/F");	    
+									   					    	      					    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ex", 	   &trig_hlt_TrigEFMissingET_topocl_ex 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ex/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_ey", 	   &trig_hlt_TrigEFMissingET_topocl_ey 	    	      ,"trig_hlt_TrigEFMissingET_topocl_ey/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_et", 	   &trig_hlt_TrigEFMissingET_topocl_et 	    	      ,"trig_hlt_TrigEFMissingET_topocl_et/F"); 	    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_sumet",    &trig_hlt_TrigEFMissingET_topocl_sumet     	      ,"trig_hlt_TrigEFMissingET_topocl_sumet/F");     
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_phi",      &trig_hlt_TrigEFMissingET_topocl_phi   	      ,"trig_hlt_TrigEFMissingET_topocl_phi/F");   
+									   					    	      					    
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ex",    &trig_hlt_TrigEFMissingET_topocl_PS_ex     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ex/F");     
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_ey",	   &trig_hlt_TrigEFMissingET_topocl_PS_ey     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_ey/F");     
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_et",    &trig_hlt_TrigEFMissingET_topocl_PS_et     	      ,"trig_hlt_TrigEFMissingET_topocl_PS_et/F");     
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_sumet", &trig_hlt_TrigEFMissingET_topocl_PS_sumet  	      ,"trig_hlt_TrigEFMissingET_topocl_PS_sumet/F");  
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PS_phi",   &trig_hlt_TrigEFMissingET_topocl_PS_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PS_phi/F");
+
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ex" ,    &trig_hlt_TrigEFMissingET_topocl_PUC_ex          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ex/F");     
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_ey",     &trig_hlt_TrigEFMissingET_topocl_PUC_ey          ,"trig_hlt_TrigEFMissingET_topocl_PUC_ey/F");     
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_et",     &trig_hlt_TrigEFMissingET_topocl_PUC_et          ,"trig_hlt_TrigEFMissingET_topocl_PUC_et/F");     
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_sumet",  &trig_hlt_TrigEFMissingET_topocl_PUC_sumet       ,"trig_hlt_TrigEFMissingET_topocl_PUC_sumet/F");  
+      m_atree->Branch("trig_hlt_TrigEFMissingET_topocl_PUC_phi",    &trig_hlt_TrigEFMissingET_topocl_PUC_phi	      ,"trig_hlt_TrigEFMissingET_topocl_PUC_phi/F");
     }
   }
-  
 }
 
 
@@ -791,6 +785,7 @@ EL::StatusCode chorizo :: histInitialize ()
 
   //Systematics (override CP set if string is given) [tmp hack]
   if(!syst_CPstr.IsNull()){
+    isNominal = false; //not-nominal run
     syst_CP  = CP::SystematicSet(); //needed?
 
     TString ctag="";
@@ -810,7 +805,7 @@ EL::StatusCode chorizo :: histInitialize ()
       syst_CP.insert( CP::SystematicVariation(std::string(syst_CPstr)));
     }
   }
-
+  
   return EL::StatusCode::SUCCESS;
 }
 
@@ -974,24 +969,34 @@ void chorizo :: InitVars()
   bosonVect_w = 1.;  
   Trigger_w = 1.;    
   Trigger_w_avg = 1.;
+
   e_SF = 1.;
-  e_SFu = 1.;
-  e_SFd = 1.;
-  eb_SF = 1.;
-  eb_SFu = 1.;
-  eb_SFd = 1.;
+  e_SFIDu = 1.;
+  e_SFIDd = 1.;
+  e_SFIsou = 1.;
+  e_SFIsod = 1.;
+  e_SFRecou = 1.;
+  e_SFRecod = 1.;
+  e_SFTrigu = 1.;
+  e_SFTrigd = 1.;
+
+
   m_SF = 1.;
-  m_SFu = 1.;
-  m_SFd = 1.;
-  mb_SF = 1.;
-  mb_SFu = 1.;
-  mb_SFd = 1.;
+  m_SFStatu   = 1.;
+  m_SFStatd   = 1.;
+  m_SFSysu  = 1.;
+  m_SFSysd  = 1.;
+  m_SFTrigStatu = 1.;
+  m_SFTrigStatd = 1.;
+  m_SFTrigSysu  = 1.;
+  m_SFTrigSysd  = 1.;
+  m_SFIsoStatu  = 1.;
+  m_SFIsoStatd  = 1.;
+  m_SFIsoSysu   = 1.;
+  m_SFIsoSysd  = 1.; 
+
   ph_SF = 1.;
-  ph_SFu = 1.;
-  ph_SFd = 1.;
-  phb_SF = 1.;
-  phb_SFu = 1.;
-  phb_SFd = 1.;
+
 
   //- Top    
   ttbar_weight = 1.;                  
@@ -1487,7 +1492,7 @@ EL::StatusCode chorizo :: ReadConfig(){
 
   //------ Define and read global variables from the XML
   Info(whereAmI, Form(" - Cut Flow") );
-  doFlowTree = (bool)rEnv.GetValue("Global.doCutFlow",0);
+  doCutFlow = (bool)rEnv.GetValue("Global.doCutFlow",0);
   
   isStopTL = (bool)rEnv.GetValue("Global.isStop0L",0);
   m_skim   = (bool)rEnv.GetValue("Global.doSkimming",0);
@@ -1546,12 +1551,11 @@ EL::StatusCode chorizo :: ReadConfig(){
 
   Info(whereAmI, Form(" - Truth") );
   dressLeptons = (bool) rEnv.GetValue("Truth.dressLep",0);
+  simBtagging  = (bool) rEnv.GetValue("Truth.simBtagging",0);
 
   Info(whereAmI, Form(" - Overlap Removal") );
   doOR = (bool) rEnv.GetValue("OR.enable",1);
-  m_or_useSigLep = (bool) rEnv.GetValue("OR.useSigLep",1);
-  m_or_useIsoLep = (bool) rEnv.GetValue("OR.useIsoLep",1);
-  m_or_bjetOR    = (bool) rEnv.GetValue("OR.doBjet"   ,1);
+  doORbjets = (bool) rEnv.GetValue("OR.doBjet",1);
   doORphotons    = (bool) rEnv.GetValue("OR.doPhoton" ,1);
   
   Info(whereAmI, Form(" - TrackVeto" ));
@@ -1587,7 +1591,6 @@ EL::StatusCode chorizo :: ReadConfig(){
   Mu_RecoPtCut     = rEnv.GetValue("Muon.Pt", 10000.);
   Mu_RecoEtaCut    = rEnv.GetValue("Muon.Eta", 2.4);
 
-  Mu_ID            = rEnv.GetValue("Muon.Id", "Medium" );
   Mu_isoWP         = rEnv.GetValue("Muon.Iso", "GradientLoose" );
 
   Info(whereAmI, Form(" - Photons") );
@@ -1661,24 +1664,24 @@ EL::StatusCode chorizo :: ReadConfig(){
 EL::StatusCode chorizo :: initialize ()
 {
   //  Info("initialize()", "HERE");
-
+  
   //Start Clock
   watch.Start();
-
+  
   m_event = wk()->xaodEvent();
   //  TEvent::kBranchAccess
-
+  
   m_store = new xAOD::TStore(); 
-
+  
   //Read XML options
   ReadConfig();
-
+  
   //Initialize event counter
   m_eventCounter=0;
   m_metwarnCounter=0;
   m_pdfwarnCounter=0;
-
-
+  
+  
   //--- Create the output tree
   // out_TFile = (TFile*) wk()->getOutputFile ("output");
   // m_atree = new TTree ("AnalysisTree", "analysis output tree");
@@ -1707,25 +1710,10 @@ EL::StatusCode chorizo :: initialize ()
     CHECK( tool_trigdec->setProperty("TrigDecisionKey","xTrigDecision") );
     //   tool_trigdec->setProperty("OutputLevel", MSG::VERBOSE);
     CHECK( tool_trigdec->initialize() );
-    
-    if(!tool_trig_match_el)    
-      tool_trig_match_el = new Trig::TrigEgammaMatchingTool("TrigEgammaMatchingTool");
-    CHECK( tool_trig_match_el->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
-    CHECK( tool_trig_match_el->initialize());
-    
-    if(!tool_trig_match_mu)    
-      tool_trig_match_mu = new Trig::TrigMuonMatching("TrigMuonMatchingTool");
-    CHECK( tool_trig_match_mu->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
-    CHECK( tool_trig_match_mu->initialize());
-   
-    if(!tool_trig_match_ph)    
-      tool_trig_match_ph = new Trig::TrigEgammaMatchingTool("TrigEgammaMatchingTool");
-    CHECK( tool_trig_match_ph->setProperty( "TriggerTool", ToolHandle< Trig::TrigDecisionTool >( tool_trigdec ) ));
-    CHECK( tool_trig_match_ph->initialize());    
   }
 #endif
-  
-  
+    
+    
   // get event info needed for tool's config
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
@@ -1748,12 +1736,7 @@ EL::StatusCode chorizo :: initialize ()
     tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
     CHECK( tool_st->setProperty("ConfigFile", "SUSYTools/SUSYTools_Default.conf") );
     CHECK( tool_st->setProperty("DataSource", datasource) );
-    CHECK(tool_st->setProperty("Is25ns", false ));
-
-    if(JetCollection.Contains("LCTopo"))
-      CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::LCTopo ));
-    else if(JetCollection.Contains("EMTopo"))
-      CHECK( tool_st->setProperty( "JetInputType",   xAOD::JetInput::EMTopo ));
+    CHECK( tool_st->setProperty("Is25ns", false ));
     
     //redefine isolation WPs (if needed)
     if(El_isoWP=="None"){      
@@ -1769,20 +1752,27 @@ EL::StatusCode chorizo :: initialize ()
       noPhIso = true;
     }
 
-    if(Mu_ID=="Loose")       CHECK( tool_st->setProperty("MuId", xAOD::Muon::Loose));
-    else if(Mu_ID=="Medium") CHECK( tool_st->setProperty("MuId", xAOD::Muon::Medium));
-    else if(Mu_ID=="Tight")  CHECK( tool_st->setProperty("MuId", xAOD::Muon::Tight));
-    else                     CHECK( tool_st->setProperty("MuId", xAOD::Muon::VeryLoose));
+    //PURW config
+    if(PURW_Folder=="default")
+      PURW_Folder = maindir + "/SusyAnalysis/PURW/";
 
+    TString prwfile = PURW_Folder+"merged_prw.root";
+    if (isSignal) prwfile = PURW_Folder+"mergedSignals_prw.root";
+    if (!is25ns && isMC) prwfile = PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+    
     std::vector<std::string> prw_conf;
-    prw_conf.push_back("/afs/cern.ch/work/k/khoo/public/SUSYTools_example/prw_week1.test.root");
+    prw_conf.push_back(prwfile.Data());
     CHECK( tool_st->setProperty("PRWConfigFiles", prw_conf) );
+    
     std::vector<std::string> prw_lumicalc;
-    prw_lumicalc.push_back("/afs/cern.ch/work/k/khoo/public/SUSYTools_example/ilumicalc_histograms_None_266904-267639.root");
+    prw_lumicalc.push_back((PURW_Folder+PURW_IlumicalcFile).Data());
     CHECK( tool_st->setProperty("PRWLumiCalcFiles", prw_lumicalc) );
 
-    // Set 0 for 14NP, 1,2,3,4 for 3NP sets                   
-    CHECK(tool_st->setProperty("JESNuisanceParameterSet",syst_JESNPset) );
+ 
+    //OR properties
+    CHECK( tool_st->setProperty("DoBjetOR", doORbjets) );
+    CHECK( tool_st->setProperty("DoPhotonOR", doORphotons) );
+    
     
     //    CHECK( tool_st->SUSYToolsInit() );
     CHECK( tool_st->initialize() );
@@ -1798,17 +1788,7 @@ EL::StatusCode chorizo :: initialize ()
     }
   }
 
-  //--- Overlap Removal
-  tool_or = new OverlapRemovalTool("OverlapRemovalTool");
-  // Turn on the object links for debugging
-  CHECK( tool_or->setProperty("InputLabel", "baseline") );
-  CHECK( tool_or->setProperty("OverlapLabel", "overlaps") );
-  CHECK( tool_or->setProperty("LinkOverlapObjects", false) );
-  tool_or->msg().setLevel(MSG::INFO);
-  CHECK( tool_or->initialize() );
   
-  
-  //--- B-tagging
   //--- B-tagging
   TString JetTagCollection = JetCollection+"Jets";
   string FlvTagCutFN = "xAODBTaggingEfficiency/13TeV/2015-PreRecomm-13TeV-MC12-CDI_August3-v1.root";
@@ -1983,7 +1963,7 @@ EL::StatusCode chorizo :: initialize ()
   
   TString input_pdfset    = "CT10"; // 10800 //CHECK_ME this was not CT10as but CT10 !!
   int input_pdfset_member = 0;     
-  if (this->isSignal || this->isTop) {
+  if (this->isSignal) {
     input_pdfset = "cteq6l1"; //10042; // cteq6L1.LHgrid 
     input_pdfset_member = 0;  
   }
@@ -2049,7 +2029,6 @@ void chorizo :: loadMetaData(){
   meta_feff        = wk()->metaData()->getDouble( SH::MetaFields::filterEfficiency );
   //  meta_nsim        = wk()->metaData()->getDouble( SH::MetaFields::numEvents );
   meta_lumi        = wk()->metaData()->getDouble( SH::MetaFields::lumi );
-  //  meta_id = (int)wk()->metaData()->getDouble( "DSID" ));
 
   //protect some samples for kfactor=0
   if(meta_kfactor==0) meta_kfactor=1.;
@@ -2068,6 +2047,15 @@ EL::StatusCode chorizo :: nextEvent(){
 
   if(m_smdJets)
     m_smdJets->clear();
+
+  if(m_goodMuons)
+    m_goodMuons->clear();
+
+  if(m_goodElectrons)
+    m_goodElectrons->clear();
+
+  if(m_goodPhotons)
+    m_goodPhotons->clear();
 
   if(m_inv_el)
     m_inv_el->clear();
@@ -2128,10 +2116,14 @@ EL::StatusCode chorizo :: loop ()
   //----------------------------
   // Event information
   //--------------------------- 
+
+  // initialize and decorate PURW stuff
+  CHECK( tool_st->ApplyPRWTool() );
+  //
+
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
 
-  //  loadMetaData();
    
   //-- Retrieve objects Containers
   m_truthE= 0;
@@ -2164,6 +2156,10 @@ EL::StatusCode chorizo :: loop ()
   m_goodJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
   m_smdJets = new xAOD::JetContainer(SG::VIEW_ELEMENTS);
 
+  m_goodMuons = new xAOD::MuonContainer(SG::VIEW_ELEMENTS);
+  m_goodElectrons = new xAOD::ElectronContainer(SG::VIEW_ELEMENTS);
+  m_goodPhotons = new xAOD::PhotonContainer(SG::VIEW_ELEMENTS);
+
   m_inv_el = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
   m_inv_mu = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
   m_inv_ph = new xAOD::IParticleContainer(SG::VIEW_ELEMENTS);
@@ -2188,10 +2184,22 @@ EL::StatusCode chorizo :: loop ()
   }
   
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
+
+  
+  // Needed by muon trigger SF tool
+  UInt_t runNumber_forMu = 0;
+  if (isMC) {
+    runNumber_forMu = eventInfo->auxdata<unsigned int>("RandomRunNumber");
+    CHECK( tool_st->setRunNumber(runNumber_forMu));
+  }
+    
   
   lb = eventInfo->lumiBlock();
   bcid = eventInfo->bcid();
-  averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
+  if(isMC)
+    averageIntPerXing = eventInfo->averageInteractionsPerCrossing();
+  else
+    averageIntPerXing = tool_st->GetCorrectedAverageInteractionsPerCrossing();
    
   //PURW
   //--- Weights for MC
@@ -2470,13 +2478,11 @@ EL::StatusCode chorizo :: loop ()
   //--- Do overlap removal   
   if(doOR){
     if(doORphotons)
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, photons_sc, 0) );
     else
-      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, m_or_useSigLep, m_or_useIsoLep, m_or_bjetOR) );
+      CHECK( tool_st->OverlapRemoval(electrons_sc, muons_sc, jets_sc, 0, 0) );
   }
 
-  // Apply the overlap removal to all objects (dumb example)
-  CHECK( tool_or->removeOverlaps(electrons_sc, muons_sc, jets_sc, 0, photons_sc) );
   
   //-- Pre-book baseline electrons (after OR)
   bool IsElectron = false; // any good not-overlapping electron in the event?
@@ -2498,10 +2504,7 @@ EL::StatusCode chorizo :: loop ()
       myfile << "phi: " << recoElectron.Phi() << " \n"; 
     }    
     
-    //TEST NEW OR tool
-    if(dec_passOR(*el_itr) && dec_failOR(*el_itr)) 
-      if(debug) Info("loop()"," Electron passed STor but not ORtool");
-    
+
     //book not-overlapping electrons
     if (doOR && !dec_passOR(*el_itr))  continue;
 
@@ -2536,50 +2539,17 @@ EL::StatusCode chorizo :: loop ()
     std::vector<bool> el_trig_pass;
     for(const auto& t : ElTriggers){
       if(t.substr(0, 4) == "HLT_"){ 
-	std::string tsub = t.substr(4);
-	el_trig_pass.push_back( tool_trig_match_el->matchHLT( el_itr, tsub ));
+	el_trig_pass.push_back( tool_st->IsTrigMatched( el_itr, t ));
       }
       else
 	el_trig_pass.push_back( false ); //only check for HLT items at the moment
      
       recoElectron.isTrigMatch |= el_trig_pass.back();
     }
-    
-    //get electron scale factors
-    if(this->isMC && 0){ //FIX_ME
 
-      //nominal
-      recoElectron.SF = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF );
-      
-      //+1 sys up
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1up");
-      }
-      recoElectron.SFu = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
-      
-      //+1 sys down
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){ //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("ELECSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	Error("loop()", "Cannot configure SUSYTools for systematic var. ELECSFSYS__1down");
-      }
-      recoElectron.SFd = tool_st->GetSignalElecSF( *el_itr, El_recoSF, El_idSF, El_triggerSF ); 
-      
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-    }
-
-    if(this->isMC){
-      eb_SF  *= recoElectron.SF;
-      eb_SFu *= recoElectron.SFu;
-      eb_SFd *= recoElectron.SFd;
-    } 
-    
+    //book good muons
+    m_goodElectrons->push_back(el_itr);
+        
     //save signal electrons
     if( dec_signal(*el_itr) ){
       recoElectrons.push_back(recoElectron);
@@ -2596,6 +2566,32 @@ EL::StatusCode chorizo :: loop ()
   if (electronCandidates.size()>0) std::sort(electronCandidates.begin(), electronCandidates.end()); //non-signal electrons
   if (recoElectrons.size()>0) std::sort(recoElectrons.begin(), recoElectrons.end()); //signal electrons
   if(debug) Info("loop()", " After booking electrons");
+
+  //get electron scale factors
+  if(this->isMC){
+
+    //nominal 
+    e_SF = tool_st->GetTotalElectronSF(*m_goodElectrons,true,true,true,true);
+          
+    //fill variations only if running in nominal mode!
+    if(isNominal){
+
+      e_SFRecou = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1up"),true,true,true,true); 
+      e_SFRecod = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1down"),true,true,true,true); 
+
+      e_SFIDu = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1up"),true,true,true,true); 
+      e_SFIDd = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1down"),true,true,true,true); 
+
+      e_SFIsou = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1up"),true,true,true,true); 
+      e_SFIsod = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1down"),true,true,true,true); 
+
+      e_SFTrigu = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1up"),true,true,true,true); 
+      e_SFTrigd = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1down"),true,true,true,true); 
+      
+    } //if Nominal
+  } //if MC
+
+
 
   //-- Pre-book baseline muons (after OR)
   bool IsMuon = false; // any good not-overlapping muon in the event?
@@ -2669,8 +2665,7 @@ EL::StatusCode chorizo :: loop ()
     std::vector<bool> mu_trig_pass;
     for(const auto& t : MuTriggers){
       if(t.substr(0, 4) == "HLT_"){ 
-	std::string tsub = t;
-	mu_trig_pass.push_back( tool_trig_match_mu->match( mu_itr, tsub ));
+	mu_trig_pass.push_back( tool_st->IsTrigMatched( mu_itr, t ));
       }
       else
 	mu_trig_pass.push_back( false ); //only check for HLT items at the moment
@@ -2678,40 +2673,7 @@ EL::StatusCode chorizo :: loop ()
       recoMuon.isTrigMatch |= mu_trig_pass.back();
     }
 
-    //get muon scale factors
-    if(this->isMC && 0){  //FIX_ME!!
- 
-      //nominal 
-      recoMuon.SF = tool_st->GetSignalMuonSF(*mu_itr);
-      
-      //+1 sys up
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1up")) != CP::SystematicCode::Ok){
-	Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1up");
-      }
-      recoMuon.SFu = tool_st->GetSignalMuonSF(*mu_itr);
-      
-      //+1 sys down
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("MUONSFSYS__1down")) != CP::SystematicCode::Ok){
-	Error("loop()", "Cannot configure SUSYTools for systematic var. MUONSFSYS__1down");
-      }
-      recoMuon.SFd = tool_st->GetSignalMuonSF(*mu_itr);
-      
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-    }
-
-    if(this->isMC){
-      mb_SF  *= recoMuon.SF;
-      mb_SFu *= recoMuon.SFu;
-      mb_SFd *= recoMuon.SFd;
-    }
+    m_goodMuons->push_back(mu_itr);
     
     //save signal muons
     if( dec_signal(*mu_itr) ){ 
@@ -2732,6 +2694,41 @@ EL::StatusCode chorizo :: loop ()
 
   this->isCosmic  = (nCosmicMuons>0);
   this->isBadMuon = (nBadMuons>0);
+
+  //get muon scale factors
+  if(this->isMC){
+
+    //Trigger expression
+    std::string mu_trig_sf = "HLT_mu24_imedium_OR_HLT_mu50";
+
+    //nominal 
+    m_SF = tool_st->GetTotalMuonSF(*m_goodMuons,true,true,mu_trig_sf);
+          
+    //fill variations only if running in nominal mode!
+    if(isNominal){
+
+      m_SFStatu = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_STAT__1up"),true,true,mu_trig_sf); 
+      m_SFStatd = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_STAT__1down"),true,true,mu_trig_sf); 
+
+      m_SFSysu = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_SYS__1up"),true,true,mu_trig_sf); 
+      m_SFSysd = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_SYS__1down"),true,true,mu_trig_sf); 
+
+      m_SFTrigStatu = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_TrigStatUncertainty__1up"),true,true,mu_trig_sf); 
+      m_SFTrigStatd = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_TrigStatUncertainty__1down"),true,true,mu_trig_sf); 
+
+      m_SFTrigSysu = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_TrigSysUncertainty__1up"),true,true,mu_trig_sf); 
+      m_SFTrigSysd = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_EFF_TrigSysUncertainty__1down"),true,true,mu_trig_sf); 
+
+      m_SFIsoStatu = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_ISO_STAT__1up"),true,true,mu_trig_sf); 
+      m_SFIsoStatd = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_ISO_STAT__1down"),true,true,mu_trig_sf); 
+
+      m_SFIsoSysu = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_ISO_SYS__1up"),true,true,mu_trig_sf); 
+      m_SFIsoSysd = tool_st->GetTotalMuonSFsys(*m_goodMuons,CP::SystematicSet("MUON_ISO_SYS__1down"),true,true,mu_trig_sf); 
+      
+    } //if Nominal
+  } //if MC
+
+
 
 
   //-- Pre-book baseline photons (after OR)
@@ -2767,8 +2764,7 @@ EL::StatusCode chorizo :: loop ()
     std::vector<bool> ph_trig_pass;
     for(const auto& t : PhTriggers){
       if(t.substr(0, 4) == "HLT_"){ 
-	std::string tsub = t.substr(4);
-	ph_trig_pass.push_back( tool_trig_match_ph->matchHLT( ph_itr, tsub ));
+	ph_trig_pass.push_back( tool_st->IsTrigMatched( ph_itr, t ));
       }
       else
 	ph_trig_pass.push_back( false ); //only check for HLT items at the moment
@@ -2810,11 +2806,6 @@ EL::StatusCode chorizo :: loop ()
     if( dec_signal(*ph_itr) ){
       recoPhotons.push_back(recoPhoton);
       ph_N++;
-      if(this->isMC){
-	ph_SF *= recoPhoton.SF;
-	ph_SFu *= recoPhoton.SFu;
-	ph_SFd *= recoPhoton.SFd;
-      }
     }
     
   }//photon loop
@@ -2823,6 +2814,14 @@ EL::StatusCode chorizo :: loop ()
   if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
   if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
   if(debug) Info("loop()", " After booking photons");
+
+  //ADD PHOTON SFs later (when available) //TODO
+  //....
+
+
+
+  //
+
 
   //-- pre-book good jets now (after OR)
   auto jet_itr = jets_sc->begin();
@@ -2833,8 +2832,11 @@ EL::StatusCode chorizo :: loop ()
     
     if( doOR && !dec_passOR(**jet_itr) ) continue;
 
+    // if( dec_bad(**jet_itr) )
+    //   cout << "BAD JET FOUND!!" << endl;
+
     //flag event if bad jet is found
-    this->isBadID |= dec_badjet(**jet_itr);
+    this->isBadID |= dec_bad(**jet_itr);
 
     if(! tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut) ) continue; //just book signal jets!
 
@@ -4388,53 +4390,55 @@ EL::StatusCode chorizo :: loop_truth()
     // recoJet.isbjet_t80 = tool_btag_truth3->performTruthTagging(tJet);
       
     //emulate btagging efficiency! (77% here)
-    float bprob = gRandom->Rndm(1);
-    if(recoJet.FlavorTruth==5){
-      if(bprob<0.77){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
+    if( simBtagging ){  
+      float bprob = gRandom->Rndm(1);
+      if(recoJet.FlavorTruth==5){
+	if(bprob<0.77){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 0;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else if (recoJet.FlavorTruth==4){
+	if(bprob<0.22){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 4;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
+      }
+      else if (recoJet.FlavorTruth==15){
+	if(bprob<0.1){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 15;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
       }
       else{
- 	recoJet.FlavorTruth = 0;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
-      }
-    }
-    else if (recoJet.FlavorTruth==4){
-      if(bprob<0.22){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
-      }
-      else{
- 	recoJet.FlavorTruth = 4;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
-      }
-    }
-    else if (recoJet.FlavorTruth==15){
-      if(bprob<0.1){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
-      }
-      else{
- 	recoJet.FlavorTruth = 15;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
-      }
-    }
-    else{
-      if(bprob<0.007){
- 	recoJet.FlavorTruth = 5;
-	recoJet.MV1 = 99.;
-	recoJet.MV2c20 = -0.1;
-      }
-      else{
- 	recoJet.FlavorTruth = 0;
-	recoJet.MV1 = -99.;
-	recoJet.MV2c20 = -99.;
+	if(bprob<0.007){
+	  recoJet.FlavorTruth = 5;
+	  recoJet.MV1 = 99.;
+	  recoJet.MV2c20 = -0.1;
+	}
+	else{
+	  recoJet.FlavorTruth = 0;
+	  recoJet.MV1 = -99.;
+	  recoJet.MV2c20 = -99.;
+	}
       }
     }
     
@@ -5189,18 +5193,22 @@ EL::StatusCode chorizo :: finalize ()
     delete m_goodJets;
   if(m_smdJets)
     delete m_smdJets;
+
+  if(m_goodMuons)
+    delete m_goodMuons;
+
+  if(m_goodElectrons)
+    delete m_goodElectrons;
+
+  if(m_goodPhotons)
+    delete m_goodPhotons;
+
   if(m_inv_el)
     delete m_inv_el;
   if(m_inv_mu)
     delete m_inv_mu;
   if(m_inv_ph)
     delete m_inv_ph;
-
-  //OverlapRemoval
-  if(tool_or){
-    delete tool_or;
-    tool_or=0;
-  }
 
   //B-tagging
   if(tool_btag70){
@@ -5268,19 +5276,6 @@ EL::StatusCode chorizo :: finalize ()
     tool_trigconfig=0;
   }
 
-  if(tool_trig_match_el){
-    delete tool_trig_match_el;
-    tool_trig_match_el=0;
-  }
-
-  if(tool_trig_match_mu){
-    delete tool_trig_match_mu;
-    tool_trig_match_mu=0;
-  }
-  if(tool_trig_match_ph){
-    delete tool_trig_match_ph;
-    tool_trig_match_ph=0;
-  }
 
   //GRL
   if( tool_grl ) {
@@ -6129,156 +6124,6 @@ float chorizo :: GetAverageWeight(){
 
 
 
-// VVFloat chorizo :: GetBTagCalibSyst(BTagCalib* calibTool){
-
-//   std::vector<float> jetWeight_B_down(recoJets.size());
-//   std::vector<float> jetWeight_B_up(recoJets.size());
-//   std::vector<float> jetWeight_C_down(recoJets.size());
-//   std::vector<float> jetWeight_C_up(recoJets.size());
-//   std::vector<float> jetWeight_L_down(recoJets.size());
-//   std::vector<float> jetWeight_L_up(recoJets.size());
-
-//   std::vector<float> wtmp;
-//   std::vector<float> v1(1,0.);
-//   std::vector<float> v2(1,0.);
-//   std::vector<float> v3(1,0.);
-//   std::vector<int>   v4(1,0.);
-
-//   for (unsigned int ij=0; ij < recoJets.size(); ij++){
-//     v1[0] = recoJets.at(ij).Pt() * 1000.;
-//     v2[0] = BtagEta( recoJets.at(ij).Eta() );
-//     v3[0] = recoJets.at(ij).MV1;
-//     v4[0] = recoJets.at(ij).FlavorTruth;
-
-//     wtmp = (calibTool->BTagCalibrationFunction(v1, v2 ,v3 ,v4, false)).first;
-
-//     jetWeight_B_down[ij] = wtmp.at(1);
-//     jetWeight_C_down[ij] = wtmp.at(2);
-//     jetWeight_L_down[ij] = wtmp.at(3);
-//     jetWeight_B_up[ij] = wtmp.at(4);
-//     jetWeight_C_up[ij] = wtmp.at(5);
-//     jetWeight_L_up[ij] = wtmp.at(6);
-
-//   }
-//   std::vector< std::vector<float> > jetWeightVectorSys;
-
-//   jetWeightVectorSys.push_back(jetWeight_B_down);
-//   jetWeightVectorSys.push_back(jetWeight_B_up);
-//   jetWeightVectorSys.push_back(jetWeight_C_down);
-//   jetWeightVectorSys.push_back(jetWeight_C_up);
-//   jetWeightVectorSys.push_back(jetWeight_L_down);
-//   jetWeightVectorSys.push_back(jetWeight_L_up);
-
-//   return VVFloat(jetWeightVectorSys);
-
-// };
-
-
-//Trigger matching
-bool chorizo :: hasTrigMatch(const xAOD::Electron& el, std::string item, double dR){
-
-  //check if at least the event passed this trigger
-  if(!tool_trigdec->isPassed(item))  return false;
-
-  TLorentzVector eloff;
-  eloff.SetPtEtaPhiE(el.pt(), el.trackParticle()->eta(), el.trackParticle()->phi(), el.e());
-
-  // Get the container of online electrons associated to passed item
-
-  // auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
-  // auto eleFeatureContainers = fc.containerFeature<TrigElectronContainer>(); 
-  // bool matched=false;
-  // for(auto elfeat : eleFeatureContainers){
-  //   cout << "taking new online electron..." << endl;
-  //   //const xAOD::ElectronContainer *elCont = elfeat.cptr();
-  //   for(const auto& eg : *elfeat.cptr()){
-  //     cout << "trying to match..." << endl;
-  //     TLorentzVector elLV;
-  //     elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
-  //     cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
-  //     cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
-  //     if(elLV.DeltaR(eloff) < dR) 
-  // 	return true;
-  //   }
-  // }
-
-  // auto cg = tool_trigdec->getChainGroup(item);
-  // auto fc = cg->features();
-  // auto elFeatureContainers = fc.containerFeature<ElectronContainer>();
-  // for(auto elcont : elFeatureContainers) {
-  //   TLorentzVector elLV;
-  //   for (auto el : *elcont.cptr()) {
-  //     elLV.SetPtEtaPhiE(el->pt(), el->trackParticle()->eta(), el->trackParticle()->phi(), el->e());
-  //     if(elLV.DeltaR(muoff) < dR) 
-  // 	return true;
-  //   }
-  // }
-
-
-  //ElectronContainer
-  //TrigElectronContainer
-  //TrigEMCluster
-
-  // auto fc = tool_trigdec->features(item, TrigDefs::alsoDeactivateTEs);
-  // auto vec_el = fc.get<xAOD::ElectronContainer>("",TrigDefs::alsoDeactivateTEs);
-  // bool matched=false;
-  // //cout << "Electron containers : " << vec_el.size() << endl;
-  // for(auto elfeat : vec_el){
-  //   //    cout << "taking new online electron..." << endl;
-  //   for(const auto& eg : *elfeat.cptr()){
-  //     cout << "trying to match..." << endl;
-  //     TLorentzVector elLV;
-  //     elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());
-  //     //elLV.SetPtEtaPhiE(eg->pt(), eg->eta(), eg->phi(), eg->e());
-  //     // cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
-  //     // cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
-  //     if(elLV.DeltaR(eloff) < dR) 
-  // 	return true;
-  //   }
-  // }
-
-
-  Trig::FeatureContainer fc = tool_trigdec->features(item);
-  const std::vector< Trig::Feature<xAOD::ElectronContainer> > vec_el = fc.get<xAOD::ElectronContainer>();
-  for(auto elfeat : vec_el){
-    const xAOD::ElectronContainer *elCont = elfeat.cptr();
-    TLorentzVector elLV;
-    for(const auto& eg : *elCont){
-      elLV.SetPtEtaPhiE(eg->pt(), eg->trackParticle()->eta(), eg->trackParticle()->phi(), eg->e());                                                                                                                                                                          
-      cout << "online " << elLV.Pt() << elLV.Eta() << elLV.Phi() << elLV.E() << endl;
-      cout << "deltaR = " << elLV.DeltaR(eloff) << endl;
-      if(elLV.DeltaR(eloff) < dR) 
-  	return true;
-    }
-  }
-
-  return false;
-}
-
-
-bool chorizo :: hasTrigMatch(const xAOD::Muon& mu, std::string item, double dR){
-
-  //check if at least the event passed this trigger
-  if(!tool_trigdec->isPassed(item))   return false;
-  
-  TLorentzVector muoff;
-  muoff.SetPtEtaPhiE(mu.pt(), mu.eta(), mu.phi(), mu.e());
-
-  auto cg = tool_trigdec->getChainGroup(item);
-  auto fc = cg->features();
-  auto muFeatureContainers = fc.containerFeature<MuonContainer>();
-  for(auto mucont : muFeatureContainers){
-    TLorentzVector muLV;
-    for (auto mu : *mucont.cptr()){
-      muLV.SetPtEtaPhiE(mu->pt(), mu->eta(), mu->phi(), mu->e());
-      if(muLV.DeltaR(muoff) < dR) 
-	return true;
-    }
-  }
-
-  return false;
-}
-
 
 
 //Calculation of extra variables
@@ -6441,7 +6286,6 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
 
 
       //book first W
-      cout << "before W1" << endl;
       TLorentzVector W1candidate = recoJets.at(Wjet1).GetVector()+recoJets.at(Wjet2).GetVector();
 
       mindr = 1000.;
@@ -6466,7 +6310,6 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
       }
 
       //book first top
-      cout << "before top1" << endl;
       TLorentzVector top1candidate = recoJets.at(bjet1).GetVector()+W1candidate;
      
       Wjet3=Wjet4=-1;
@@ -6493,7 +6336,6 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
       m_top_had1 = top1candidate.M();
       
       //book second W
-      cout << "before W2" << endl;
       TLorentzVector W2candidate = recoJets.at(Wjet3).GetVector()+recoJets.at(Wjet4).GetVector();
 
       mindr = 1000.;      
@@ -6524,7 +6366,6 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
   if(muadded)
     recoJets.pop_back();
  
-  cout << "Leaving!" << endl;
 }
 
 

@@ -1,21 +1,16 @@
-# SUSYTOOLS
+# SUSYTOOLS v7 (trunk/)
 #
-# extra packages (SUSY,2.3.24)
+# extra packages (Base,2.3.33)
 atlasoff/PhysicsAnalysis/TileID/TileTripReader/trunk
-#atlasoff/Trigger/TrigAnalysis/TrigDecisionTool/tags/TrigDecisionTool-00-02-18-28 
-atlasoff/Trigger/TrigAnalysis/TrigEgammaMatchingTool/tags/TrigEgammaMatchingTool-00-00-05
-#atlasoff/Trigger/TrigAnalysis/TrigMuonMatching/tags/TrigMuonMatching-00-00-07
+atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/xAODBTaggingEfficiency/tags/xAODBTaggingEfficiency-00-00-25
 atlasoff/PhysicsAnalysis/MCTruthClassifier/tags/MCTruthClassifier-00-01-41
-atlasoff/PhysicsAnalysis/ElectronPhotonID/ElectronPhotonFourMomentumCorrection/tags/ElectronPhotonFourMomentumCorrection-00-01-44
-atlasoff/PhysicsAnalysis/TauID/TauAnalysisTools/tags/TauAnalysisTools-00-01-07
 # FastJet
 #
-#atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet
+atlasoff/AsgExternal/Asg_FastJet/trunk Asg_FastJet
 # PdfReweighting package
-#atlasoff/AsgExternal/Asg_Lhapdf/trunk Asg_Lhapdf
+atlasoff/AsgExternal/Asg_Lhapdf/trunk Asg_Lhapdf
 # JetSmearing (It will come...)
-atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-01-00-12
+atlasoff/PhysicsAnalysis/SUSYPhys/JetSmearing/tags/JetSmearing-01-00-14
 # HistFitter
 #
-#atlasphys/Physics/SUSY/Analyses/HistFitter/tags/HistFitter-00-00-46 
 atlasphys-susy/Physics/SUSY/Analyses/HistFitter/tags/HistFitter-00-00-50

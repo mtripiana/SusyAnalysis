@@ -74,8 +74,6 @@
 #include "EventPrimitives/EventPrimitivesHelpers.h"
 
 #ifndef __MAKECINT__
-#include "AssociationUtils/OverlapRemovalTool.h"
-
 #include "xAODJet/JetContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
 #include "xAODTruth/TruthParticleContainer.h"
@@ -118,8 +116,6 @@ class BTaggingEfficiencyTool;
 
 
 namespace ST{
-  struct IsSignalElectronExpCutArgs;
-  struct IsSignalMuonExpCutArgs;
   class SUSYObjDef_xAOD;
 }
 
@@ -190,23 +186,21 @@ public:
 
   bool isQCD;
   bool isSignal;
-  bool isTop;
+  bool is25ns;
   bool isAtlfast;
   bool isNCBG;
   bool is8TeV;
   TString leptonType;
+  bool isNominal;
 
   bool debug;
   TString eventsFile;
 
   bool isTruth;
   bool dressLeptons;
+  bool simBtagging;
 
   bool doAnaTree;
-  bool doPUTree; 
-  bool doFlowTree; 
-  bool genPUfile;
-  bool isPUfile;
   bool doTrigExt;
   bool dumpTile; 
 
@@ -288,13 +282,8 @@ private:
 
   Trig::TrigDecisionTool* tool_trigdec; //! 
   TrigConf::xAODConfigTool* tool_trigconfig; //!
-
-  Trig::TrigEgammaMatchingTool* tool_trig_match_el; //!
-  Trig::TrigMuonMatching* tool_trig_match_mu; //!
-  Trig::TrigEgammaMatchingTool* tool_trig_match_ph; //! 
    
 #ifndef __CINT__  
-  OverlapRemovalTool* tool_or; //!
 
   GoodRunsListSelectionTool *tool_grl; //!
 
@@ -377,9 +366,6 @@ private:
   double  getPdfRW( LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
   double  getPdfRW( double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
 
-  //trigger matching
-  virtual bool hasTrigMatch(const xAOD::Electron& el, std::string item, double dR=0.07); 
-  virtual bool hasTrigMatch(const xAOD::Muon& mu, std::string item, double dR=0.07); 
 
   //Calculation functions
   virtual float Calc_MT(Particle p, TVector2 met);
@@ -515,9 +501,7 @@ private:
 
   //OverlapRemoval
   bool  doOR; //! 
-  bool  m_or_useSigLep; //!
-  bool  m_or_useIsoLep; //!
-  bool  m_or_bjetOR; //!
+  bool  doORbjets;  //!
   bool  doORphotons; //!
 
   //track veto
@@ -575,11 +559,6 @@ private:
   int BookMuSignal;
   int BookPhSignal;
   int BookJetSignal;
-
-#ifndef __CINT__
-  ST::IsSignalElectronExpCutArgs* elIsoArgs; //!
-  ST::IsSignalMuonExpCutArgs* muIsoArgs; //!
-#endif // not __CINT__
 
   //jets
   TString JetCollection; //!
@@ -686,24 +665,33 @@ private:
   float    bosonVect_w;
   float    Trigger_w;
   float    Trigger_w_avg;
+
   float    e_SF;
-  float    e_SFu;
-  float    e_SFd;
-  float    eb_SF;
-  float    eb_SFu;
-  float    eb_SFd;
+  float    e_SFIDu;
+  float    e_SFIDd;
+  float    e_SFIsou;
+  float    e_SFIsod;
+  float    e_SFRecou;
+  float    e_SFRecod;
+  float    e_SFTrigu;
+  float    e_SFTrigd;
+
   float    m_SF;
-  float    m_SFu;
-  float    m_SFd;
-  float    mb_SF;
-  float    mb_SFu;
-  float    mb_SFd;
+  float    m_SFStatu;
+  float    m_SFStatd;
+  float    m_SFSysu;
+  float    m_SFSysd;
+  float    m_SFTrigStatu;
+  float    m_SFTrigStatd;
+  float    m_SFTrigSysu;
+  float    m_SFTrigSysd;
+  float    m_SFIsoStatu;
+  float    m_SFIsoStatd;
+  float    m_SFIsoSysu;
+  float    m_SFIsoSysd; 
+
   float    ph_SF;
-  float    ph_SFu;
-  float    ph_SFd;
-  float    phb_SF;
-  float    phb_SFu;
-  float    phb_SFd;
+
 
   //- ttbar reweighting
   float ttbar_weight;

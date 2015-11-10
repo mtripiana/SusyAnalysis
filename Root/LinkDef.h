@@ -1,4 +1,5 @@
 #include <SusyAnalysis/chorizo.h>
+//#include <SusyAnalysis/TopReco.h>
 #include "SusyAnalysis/particles.h"
 #include "SusyAnalysis/utility.h"
 
@@ -14,6 +15,7 @@
 #ifdef __CINT__
 #pragma link C++ namespace Particles;
 #pragma link C++ class chorizo+;
+//#pragma link C++ class TopReco+;
 #pragma link C++ class Particles::Particle+;
 #pragma link C++ class Particles::Cluster+;
 #pragma link C++ class Particles::Jet+;

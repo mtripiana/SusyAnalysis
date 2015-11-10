@@ -3,6 +3,7 @@
 ## IFAE 18.nov.14
 ##
 ## @modified by Martin (tripiana@cern.ch)  June 2015
+## @modified by Martin (tripiana@cern.ch)  Nov 2015     -  Moved to RUCIO 
 ##
 ## ./dq2get.sh TAG1,TAG2,TAG3,... [output folder] [username] [merge: 0, 1] <PATTERN1,PATTERN2,...> <outputName>
 
@@ -65,7 +66,7 @@ echo "--------------------------------------------------------------------------
 echo "   Looking for samples from user: "$GRIDUSER"."
 echo "----------------------------------------------------------------------------"
 
-#--- DQ2-GET
+#--- RUCIO-GET
 cd $DIRECTORY
 for tag in $TAGLIST ;
 do
@@ -76,26 +77,26 @@ do
     
     if [ -z "$VAR" ]; then
 
-	echo "   Doing: dq2-ls user."$GRIDUSER".*"$tag"*_output.root/ > tmp_dq2ls.txt"
-	dq2-ls "user."$GRIDUSER".*"$tag"*_output.root/" >> tmp_dq2ls.txt
+	echo "   Doing: rucio list-dids user."$GRIDUSER".*"$tag"*_output.root/ > tmp_ruciols.txt"
+	rucio list-dids --short "user."$GRIDUSER".*"$tag"*_output.root/" --filter type=container >> tmp_ruciols.txt
 	
-	echo " " >> tmp_dq2ls.txt
+	echo " " >> tmp_ruciols.txt
     else
 	for pat in $PATLIST ;
 	do
 	    
 	    
-	    echo "   Doing: dq2-ls user."$GRIDUSER".*"$pat"*"$tag"*_output.root/ > tmp_dq2ls.txt"
-	    dq2-ls "user."$GRIDUSER".*"$pat"*"$tag"*_output.root/" >> tmp_dq2ls.txt
+	    echo "   Doing: rucio list-dids user."$GRIDUSER".*"$pat"*"$tag"*_output.root/ > tmp_ruciols.txt"
+	    rucio list-dids --short "user."$GRIDUSER".*"$pat"*"$tag"*_output.root/" --filter type=container >> tmp_ruciols.txt
 	    
-	    echo " " >> tmp_dq2ls.txt
+	    echo " " >> tmp_ruciols.txt
 	done
     fi
 
-    cat tmp_dq2ls.txt
+    cat tmp_ruciols.txt
     echo " "
     
-    for s in $(cat tmp_dq2ls.txt | grep -v "hist-") ;  
+    for s in $(cat tmp_ruciols.txt | grep -v "hist-") ;  
     do 
 	#create output Folder
 	sampleName=`echo $s | cut -d':' -f 2 | cut -d'_' -f 1`
@@ -109,11 +110,9 @@ do
 	
 	echo "   Downloading: "$s
 	#get all samples from the grid
-	#dq2-get -H $folderName $s
-	#dq2-get -H $folderName ${s/_output/_hist-output}
-	dq2-get -H $tmpDir $s
-	dq2-get -H $tmpDir ${s/_output/_hist-output}
-	
+	rucio download --dir $tmpDir $s
+	rucio download --dir $tmpDir ${s/_output/_hist-output}
+
 	if [ $MERGE == 1 ] 
 	then
 	    DSid=`echo $sampleName | cut -d'.' -f 4 | cut -d'_' -f 1`
@@ -126,7 +125,7 @@ do
 	echo "----------------------------------------------------------------------------"
 
     done
-    rm tmp_dq2ls.txt
+    rm tmp_ruciols.txxt
 
     echo " "
 done
