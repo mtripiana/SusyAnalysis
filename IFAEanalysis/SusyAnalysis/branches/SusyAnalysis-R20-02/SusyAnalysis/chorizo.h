@@ -917,6 +917,16 @@ private:
   float btag_weight_total_77fc;
   float btag_weight_total_85fc;
 
+  float btag_weight_total_77fc_effBu;
+  float btag_weight_total_77fc_effBd;
+  float btag_weight_total_77fc_effCu;
+  float btag_weight_total_77fc_effCd;
+  float btag_weight_total_77fc_effLu;
+  float btag_weight_total_77fc_effLd;
+  float btag_weight_total_77fc_extru;
+  float btag_weight_total_77fc_extrd;
+
+
   int bj_Nt_70;
   int bj_Nt_77;
   int bj_Nt_80;

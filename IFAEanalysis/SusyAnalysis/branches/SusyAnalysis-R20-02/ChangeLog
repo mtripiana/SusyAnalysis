@@ -1,5 +1,6 @@
 2015-11-11 Martin <tripiana@cern.ch>
 	* Add weights for btagging variations
+	* Add electron FallbackId options
 
 2015-11-02 Martin <tripiana@cern.ch>
 	* Add leptfon SF variations
