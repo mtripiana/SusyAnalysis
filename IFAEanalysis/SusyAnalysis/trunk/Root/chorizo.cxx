@@ -241,6 +241,7 @@ void chorizo :: bookTree(){
     //presel
     m_atree->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
     m_atree->Branch("isTrigger",&isTrigger);
+    m_atree->Branch("trigPS",&trigPS);
     
     //FlowTree
     if (doFlowTree){
@@ -1029,6 +1030,7 @@ void chorizo :: InitVars()
   isBadID = false;                   
   isMetCleaned = true; //CHECK_ME
   isTrigger.clear();
+  trigPS.clear();
   isVertexOk = false;                
   isLarGood = true;                 
   isTileGood = true;                
@@ -1939,8 +1941,8 @@ EL::StatusCode chorizo :: initialize ()
       
       
       TString prwfile = PURW_Folder+"merged_prw.root";
-      if (isSig) prwfile = PURW_Folder+"mergedSignals_prw.root";      
-      if (!is25ns) prwfile=PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+      if (isSig)   prwfile = PURW_Folder+"mergedSignals_prw.root";      
+      if (!is25ns) prwfile = PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
       std::ifstream test_prwfile(prwfile);
       
       // if (test_prwfile.good()) {
@@ -2028,6 +2030,7 @@ EL::StatusCode chorizo :: initialize ()
     //PURW
     CHECK(tool_st->setProperty("PRWConfigFiles", prwFiles));
     CHECK(tool_st->setProperty("PRWLumiCalcFiles", lumiFiles));
+    CHECK(tool_st->setProperty("PRWDefaultChannel", 410000));
         
     CHECK( tool_st->SUSYToolsInit() );
     CHECK( tool_st->initialize() );
@@ -2644,13 +2647,16 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Trigger 
   if(!this->isQCD){
-    for(const auto& chain : TriggerNames)
+    for(const auto& chain : TriggerNames){
       this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+      this->trigPS.push_back( tool_st->GetTrigPrescale(chain) );
+    }
   }
   else{ //-- preselection for QCD jet smearing (trigger)
     bool oktrig=false;
     for(const auto& chain : JS_triggers){
       this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+      this->trigPS.push_back( tool_st->GetTrigPrescale(chain) );
       oktrig |= this->isTrigger.back();
     }
     if(!oktrig)
@@ -2993,11 +2999,6 @@ EL::StatusCode chorizo :: loop ()
       e_SFTrigu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       eb_SFTrigu = tool_st->GetTotalElectronSF(*m_signalElectrons,true,true,true,true);
       
-      if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-      Error("loop()", "Cannot configure SUSYTools for default systematics");
-      } 
-
       if (tool_st->resetSystematics() != CP::SystematicCode::Ok){   Error("loop()", "Cannot reset systematics in SUSYTools!"); };
 
     } //if Nominal

@@ -455,6 +455,7 @@ private:
   bool isBadID; //!
   bool isMetCleaned; //!
   std::vector<int> isTrigger; 
+  std::vector<float> trigPS; 
   bool isVertexOk; //!
   bool isLarGood; //!
   bool isTileGood; //!

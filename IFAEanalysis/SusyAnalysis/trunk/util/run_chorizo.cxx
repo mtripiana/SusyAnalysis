@@ -696,6 +696,7 @@ int main( int argc, char* argv[] ) {
       std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%.%in:name[3]%")+vTag.Data());
       Pdriver.options()->setString("nc_outputSampleName", outName);
       Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
+      //      Pdriver.options()->setString( EL::Job::optSubmitFlags, "--excludedSite=EXCLUDEDSITE");
       sh.setMetaString ("nc_grid_filter", "*.root*");
  
       Pdriver.submitOnly( job, tmpdir );
