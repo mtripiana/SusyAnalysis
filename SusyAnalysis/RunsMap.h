@@ -352,6 +352,15 @@ m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SU
 
 
 
+    m_map["25ns_PowhegPythiaEvtGen_P2012radHi_ttbar_hdamp345_down_nonallhad"] = rlist( Rpair(410001, "mc15_13TeV.410001.PowhegPythiaEvtGen_P2012radHi_ttbar_hdamp345_down_nonallhad.merge.DAOD_SUSY7.e3783_a766_a767_r6264_p2419/"));
+
+    m_map["25ns_PowhegPythiaEvtGen_P2012radLo_ttbar_hdamp172_up_nonallhad"] = rlist( Rpair(410002, "mc15_13TeV.410002.PowhegPythiaEvtGen_P2012radLo_ttbar_hdamp172_up_nonallhad.merge.DAOD_SUSY7.e3783_a766_a767_r6264_p2419/"));
+
+    m_map["25ns_aMcAtNloHerwigppEvtGen_ttbar_nonallhad"] = rlist( Rpair(410003, "mc15_13TeV.410003.aMcAtNloHerwigppEvtGen_ttbar_nonallhad.merge.DAOD_SUSY7.e3964_a766_a767_r6264_p2419/"));
+
+
+
+
     m_map["25ns_Sherpa_CT10_Wenu_Pt0_70_CVetoBVeto"] = rlist( Rpair(361300, "mc15_13TeV.361300.Sherpa_CT10_Wenu_Pt0_70_CVetoBVeto.merge.DAOD_SUSY7.e3651_s2608_s2183_r6869_r6282_p2419/"));
     m_map["25ns_Sherpa_CT10_Wenu_Pt0_70_CFilterBVeto"] = rlist( Rpair(361301, "mc15_13TeV.361301.Sherpa_CT10_Wenu_Pt0_70_CFilterBVeto.merge.DAOD_SUSY7.e3651_s2586_s2174_r6869_r6282_p2419/"));
     m_map["25ns_Sherpa_CT10_Wenu_Pt70_140_CVetoBVeto"] = rlist( Rpair(361303, "mc15_13TeV.361303.Sherpa_CT10_Wenu_Pt70_140_CVetoBVeto.merge.DAOD_SUSY7.e3651_s2586_s2174_r6869_r6282_p2419/"));

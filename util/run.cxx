@@ -206,7 +206,7 @@ int main( int argc, char* argv[] ) {
   bool runGrid  = false;
 
   std::string jOption = "METbb";
-  TString queue = "at3_short";
+  TString queue = "at3"; //_short";
   bool genPU=false;
   int single_id = -1;
   bool isTruth=false;
