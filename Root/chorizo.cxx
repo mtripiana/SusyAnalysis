@@ -25,9 +25,6 @@
 //PDF Reweighting
 #include "LHAPDF/LHAPDF.h"
 
-//Jet Truth Labeling
-// #include "ParticleJetTools/JetQuarkLabel.h"
-// #include "ParticleJetTools/JetFlavourInfo.h"
 
 //CutBookkeeping
 #include "xAODCutFlow/CutBookkeeper.h"
@@ -226,6 +223,7 @@ void chorizo :: bookTree(){
   //presel
   m_atree->Branch ("passPreselectionCuts",&passPreselectionCuts,"passPreselectionCuts/O", 10000);
   m_atree->Branch("isTrigger",&isTrigger);
+  m_atree->Branch("trigPS",&trigPS);
   
   //detailed presel
   m_atree->Branch("isGRL",&isGRL,"isGRL/O", 10000);
@@ -960,6 +958,7 @@ void chorizo :: InitVars()
   isGRL = true; 
   isBadID = false;                   
   isTrigger.clear();
+  trigPS.clear();
   isVertexOk = true;                
   isLarGood = true;                 
   isTileGood = true;                
@@ -2381,13 +2380,16 @@ EL::StatusCode chorizo :: loop ()
 
   //--- Trigger 
   if(!this->isQCD){
-    for(const auto& chain : TriggerNames)
+    for(const auto& chain : TriggerNames){
       this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+      this->trigPS.push_back( tool_st->GetTrigPrescale(chain) );
+    }
   }
   else{ //-- preselection for QCD jet smearing (trigger)
     bool oktrig=false;
     for(const auto& chain : JS_triggers){
       this->isTrigger.push_back( (int)tool_trigdec->isPassed(chain) );
+      this->trigPS.push_back( tool_st->GetTrigPrescale(chain) );
       oktrig |= this->isTrigger.back();
     }
     if(!oktrig)
@@ -3137,6 +3139,60 @@ EL::StatusCode chorizo :: loop ()
     btag_weight_total_77fc = tool_st->BtagSF(m_goodJets);
     btag_weight_total_85fc = tool_st->BtagSF(m_goodJets);
 
+    // ** TODO  :  IMPLEMENT SFEIGEN SYSTEMATICS! 
+    // FT_EFF_B_systematics__1down    : affects   for ELECTRON
+    // FT_EFF_B_systematics__1up    : affects   for ELECTRON
+    // FT_EFF_C_systematics__1down    : affects   for ELECTRON
+    // FT_EFF_C_systematics__1up    : affects   for ELECTRON
+    // FT_EFF_Eigen_B_0__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_0__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_1__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_1__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_2__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_2__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_3__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_3__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_4__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_4__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_5__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_B_5__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_0__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_0__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_1__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_1__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_2__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_2__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_3__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_C_3__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_0__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_0__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_1__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_1__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_10__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_10__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_11__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_11__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_2__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_2__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_3__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_3__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_4__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_4__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_5__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_5__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_6__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_6__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_7__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_7__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_8__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_8__1up    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_9__1down    : affects weights   for BTAG
+    // FT_EFF_Eigen_Light_9__1up    : affects weights   for BTAG
+    // FT_EFF_Light_systematics__1down    : affects   for BTAG
+    // FT_EFF_Light_systematics__1up    : affects   for BTAG
+    // FT_EFF_extrapolation__1down    : affects weights   for BTAG
+    // FT_EFF_extrapolation__1up    : affects weights   for BTAG
+
     if(isNominal){
 
       btag_weight_total_77fc_effBu = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_B_systematics__1up"));  
@@ -3154,37 +3210,37 @@ EL::StatusCode chorizo :: loop ()
 
   if(debug) Info("loop()", " Before GetMET()");
   //--- Get MET
-  // For the moment only the official flavors are available.
-  // Re-computing MET will be possible in the future though, once the METUtility interface is updated!!
+  //** Met components
+  //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
 
-  const xAOD::MissingETContainer* cmet_reffinal;
-  const xAOD::MissingETContainer* cmet_lhtopo;
-  const xAOD::MissingETContainer* cmet_track;
+  const xAOD::MissingETContainer* cmet_reffinal(0);
+  const xAOD::MissingETContainer* cmet_lhtopo(0);
 
   CHECK( m_event->retrieve( cmet_reffinal, "MET_Reference_AntiKt4EMTopo") ); 
   const xAOD::MissingET* mrf    = (*cmet_reffinal)["FinalClus"];
 
   const xAOD::MissingET* mtopo(0);
-  const xAOD::MissingET* mtrack(0);
 
   if(!m_isderived){
     CHECK( m_event->retrieve( cmet_lhtopo, "MET_LocHadTopo") ); //not in MC15??
     mtopo  = (*cmet_lhtopo)["LocHadTopo"];
-  
-
-    CHECK( m_event->retrieve( cmet_track, "MET_Track") );
-    mtrack = (*cmet_track)["PVTrack_vx0"];
-    // mtrack = (*cmet_track)["Track"];
   }
+
+  //- Track MET
+  if(debug) Info("loop()", " Before Track MET");  
+  metRFC->clear(); 
+  CHECK( tool_st->GetTrackMET(*metRFC,
+			      jets_sc,
+			      electrons_sc,
+			      muons_sc) );
+
+  TVector2 v_met_trk = getMET( metRFC, "Track" );
+  met_obj.SetVector(v_met_trk, "met_trk");
   
-  
-  //** Met components
-  //** see https://twiki.cern.ch/twiki/bin/view/AtlasProtected/Run2xAODMissingET 
 
   //- Recomputed MET via SUSYTools  (Cluster Soft Term)
-  //- usually muons are treated as invisible pwarticles here! (i.e. Met_doRefMuon=Met_doMuonTotal=false, set via jOpt)
 
-  // MET (cluster soft term) -- visible muons
+  //-- MET (cluster soft term) -- visible muons
   metRFC->clear(); 
   CHECK( tool_st->GetMET(*metRFC,
 			 jets_sc,
@@ -3198,26 +3254,11 @@ EL::StatusCode chorizo :: loop ()
   met_obj.SetVector(v_met_ST_vmu,"met_vmu");  //- Copy met vector to the met data member
   sumET_cst_vmu = (*metRFC)["Final"]->sumet()*0.001;
 
-  //Calo soft terms
+  //--- Calo soft terms
   met_cst = (*metRFC)["SoftClus"]->met()*0.001;
 
-  //(OLD WAY)
-  //  TVector2 v_met_ST_vmu_MU = getMET( metRFC, "Muons"); //Muon visible Term
-  //  float sumEt_cst_muons    = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt 
-  //
-  //  TVector2 v_met_ST = v_met_ST_vmu;
-  //  v_met_ST -= v_met_ST_vmu_MU; //subtract muon term
-  //  sumET_cst = sumET_cst_vmu - sumEt_cst_muons;    
-  
-  // if(muons_sc->size()){
-  //   cout << "-----------------------------------" << endl;
-  //   cout << "N muons = " << muons_sc->size() << endl;
-  //   cout << "OLD MET  = " << v_met_ST.Mod() << endl;
-  //   cout << "NEW MET  = " << v_met_ST_vmu_NEW.Mod() << endl;
-  // }
-    
 
-  // MET (cluster soft term) -- invisible muons
+  //-- MET (cluster soft term) -- invisible muons
   metRFC->clear(); 
   CHECK( tool_st->GetMET(*metRFC,
   			 jets_sc,
@@ -3238,7 +3279,7 @@ EL::StatusCode chorizo :: loop ()
   //- Recomputed MET via SUSYTools (Track Soft Term (TST))
   if(this->isVertexOk){   //protect against crash in Data from METRebuilder  ///FIX_ME
 
-    // MET (track soft term) -- visible muons
+    //-- MET (track soft term) -- visible muons
     metRFC->clear();
     CHECK( tool_st->GetMET(*metRFC,
 			   jets_sc,
@@ -3252,20 +3293,10 @@ EL::StatusCode chorizo :: loop ()
     met_obj.SetVector( v_met_ST_vmu_tst, "met_tst_vmu");  //- Copy met vector to the met data member
     sumET_tst_vmu = (*metRFC)["Final"]->sumet()*0.001;
 
-    // track soft term
+    //--- track soft term
     met_tst = (*metRFC)["PVSoftTrk"]->met()*0.001;
 
-    //(OLD WAY)
-    // v_met_ST_vmu_MU       = getMET( metRFC, "Muons");          //Muon visible Term
-    // float sumEt_tst_muons = (*metRFC)["Muons"]->sumet()*0.001; //Muon visible sumEt
-    
-    // // MET (track soft term) -- invisible muons
-    // TVector2 v_met_ST_tst = v_met_ST_vmu_tst;
-    // v_met_ST_tst -= v_met_ST_vmu_MU; //subtract muon term
-    // met_obj.SetVector(v_met_ST_tst,"met_tst_imu");  //- Copy met vector to the met data member
-    // sumET_tst = sumET_tst_vmu - sumEt_tst_muons;
-
-    // MET (track soft term) -- invisible muons
+    //-- MET (track soft term) -- invisible muons
     metRFC->clear(); 
     CHECK( tool_st->GetMET(*metRFC,
 			   jets_sc,
@@ -3288,13 +3319,6 @@ EL::StatusCode chorizo :: loop ()
     Warning("loop()", "MET_CST assigned to MET_TST to avoid METRebuilder crash.");
   }
 
-  if(debug) Info("loop()", " Before Track MET");  
-  //- Track met
-  if(mtrack){
-    //cout << "checking MET track" << endl;
-    TVector2 v_met_trk( mtrack->mpx(), mtrack->mpy() ); 
-    met_obj.SetVector(v_met_trk, "met_trk");
-  }
 
   //--- Met LocHadTopo (from the branches)
   if(mtopo){
@@ -3385,10 +3409,8 @@ EL::StatusCode chorizo :: loop ()
   metmap[::MetDef::VisMuMuCorr] = met_obj.GetVector("met_vmu_mucorr");  
   metmap[::MetDef::InvMuPhCorr] = met_obj.GetVector("met_imu_phcorr");
   metmap[::MetDef::VisMuPhCorr] = met_obj.GetVector("met_vmu_phcorr");
-  if(mtrack)
-    metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
-  else 
-    metmap[::MetDef::Track] = TVector2((float)DUMMYDN, (float)DUMMYDN);
+  metmap[::MetDef::Track] = met_obj.GetVector("met_trk");
+  //metmap[::MetDef::Track] = TVector2((float)DUMMYDN, (float)DUMMYDN);
   metmap[::MetDef::InvMuRef] = met_obj.GetVector("met_refFinal_imu");
   metmap[::MetDef::VisMuRef] = met_obj.GetVector("met_refFinal_vmu");  
   metmap[::MetDef::InvMuTST] = met_obj.GetVector("met_tst_imu");
