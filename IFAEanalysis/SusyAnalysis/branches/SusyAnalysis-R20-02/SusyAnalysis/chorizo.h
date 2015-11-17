@@ -426,6 +426,7 @@ private:
   bool isGRL; //! //event cleaning
   bool isBadID; //!
   std::vector<int> isTrigger; 
+  std::vector<float> trigPS;
   bool isVertexOk; //!
   bool isLarGood; //!
   bool isTileGood; //!

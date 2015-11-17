@@ -87,10 +87,18 @@ m_map["Zee_cutflow"] = rlist( Rpair(361404, "/nfs/at3/scratch/sfracchia/SUSY/zee
 m_map["ttbar_cutflow"] = rlist( Rpair(410000, "/nfs/at3/scratch/sfracchia/SUSY/ttbar_cutflow/"));
 m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SUSY/singletop_cutflow/"));
 
+// ttbar+gamma samples
+  m_map["tty_noallhad_SUSY1"]     = rlist( Rpair(410082,"mc15_13TeV.410082.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_noallhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2419/"));
+  m_map["tty4080_noallhad_SUSY1"] = rlist( Rpair(410083,"mc15_13TeV.410083.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
+  m_map["tty80_noallhad_SUSY1"]   = rlist( Rpair(410084,"mc15_13TeV.410084.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
+  m_map["tty_allhad_SUSY1"]       = rlist( Rpair(410087,"mc15_13TeV.410087.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_allhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2419/"));
+  m_map["tty4080_allhad_SUSY1"]   = rlist( Rpair(410088,"mc15_13TeV.410088.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_allhad.merge.DAOD_SUSY1.e4423_a766_a777_r6282_p2419/"));
+  m_map["tty80_allhad_SUSY1"]     = rlist( Rpair(410089,"mc15_13TeV.410089.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_allhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
 
 //DEBUG STREAM
  m_map["data15_25ns_SUSY7_debugrec"] = rlist(Rpair(100000, "/nfs/atlas-data07/tripiana/xAOD/data/13TeV/debugrec/"));
 
+ m_map["data15_25ns_SUSY7_test"] = rlist(Rpair(280464, "/nfs/atlas-data07/tripiana/xAOD/data/13TeV/data15_13TeV/p2425/"));
 
 // 25ns
   m_map["data15_25ns_SUSY7_276262"] = rlist( Rpair(276262, "data15_13TeV.00276262.physics_Main.merge.DAOD_SUSY7.f620_m1480_p2425/"));

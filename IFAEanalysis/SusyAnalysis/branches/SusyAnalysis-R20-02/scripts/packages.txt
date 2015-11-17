@@ -3,6 +3,7 @@
 # extra packages (Base,2.3.33)
 atlasoff/PhysicsAnalysis/TileID/TileTripReader/trunk
 atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/xAODBTaggingEfficiency/tags/xAODBTaggingEfficiency-00-00-25
+atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/CalibrationDataInterface/tags/CalibrationDataInterface-00-05-10
 atlasoff/PhysicsAnalysis/MCTruthClassifier/tags/MCTruthClassifier-00-01-41
 # FastJet
 #
