@@ -722,7 +722,7 @@ private:
   //--- Declaration of leaf types                                                    
   //- Event Info
   UInt_t  RunNumber;        
-  UInt_t  EventNumber;
+  ULong64_t  EventNumber;
   UInt_t  lb;
   UInt_t  bcid;
   UInt_t  procID;

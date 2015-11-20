@@ -46,6 +46,8 @@ void do_sbottom_cutflow(TString sample="", bool isTruth=false){
   N_in=-1;
   N_last=-1;
 
+  bool doTrigger=false;
+
   if(sample=="")
     //sample = "/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/Nom_ttbar_cutflow.root";
     //sample = "/nfs/at3/scratch/sfracchia/SUSY/METbb_histos_STOP/Nom_PowhegPythiaEvtGen_P2012CT10_Wt_inclusive_top_MET200_tree.root";  
@@ -80,7 +82,7 @@ void do_sbottom_cutflow(TString sample="", bool isTruth=false){
   TString trigCutSR = "";
   TString trigCutCR = "";
 
-  if(!isTruth){
+  if(!isTruth && doTrigger){
     TString strig = (TString) TFile::Open(sample)->Get("Triggers")->GetTitle();
     trigchains = getTokens(strig, ",");
     

@@ -225,7 +225,7 @@ void chorizo :: bookTree(){
   //add the branches to be saved
   if (output){
     m_atree->Branch ("RunNumber", &RunNumber, "RunNumber/I");
-    m_atree->Branch ("EventNumber", &EventNumber, "EventNumber/I");
+    m_atree->Branch ("EventNumber", &EventNumber, "EventNumber/l");
     m_atree->Branch ("lb", &lb, "lb/I");
     m_atree->Branch ("bcid", &bcid, "bcid/I");
     m_atree->Branch ("procID", &procID, "procID/I");
