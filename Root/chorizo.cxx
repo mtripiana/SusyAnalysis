@@ -3199,8 +3199,8 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_effBd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_B_systematics__1down"));
       btag_weight_total_77fc_effCu = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_C_systematics__1up"));
       btag_weight_total_77fc_effCd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_C_systematics__1down"));
-      btag_weight_total_77fc_effLu = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_L_systematics__1up"));
-      btag_weight_total_77fc_effLd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_L_systematics__1down"));
+      btag_weight_total_77fc_effLu = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_Light_systematics__1up"));
+      btag_weight_total_77fc_effLd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_Light_systematics__1down"));
       btag_weight_total_77fc_extru = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_extrapolation__1up"));
       btag_weight_total_77fc_extrd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_extrapolation__1down"));
       

@@ -271,6 +271,8 @@ int main( int argc, char* argv[] ) {
   bool runPrun  = false;
   bool runGrid  = false;
 
+  bool noBuild = false;
+
   std::string jOption = "METbb";
   TString queue = "at3";
   int single_id = -1;
@@ -338,6 +340,9 @@ int main( int argc, char* argv[] ) {
     }
     if (opts[iop] == "a"){ //is AFII reco                                                                                                                                        
       isAFII = true;
+    }
+    if (opts[iop] == "r"){ //avoid rebuilding libDS 
+      noBuild = true;
     }
     else if (opts[iop] == "c" ){ //user-defined input dir
       userDir = true;
@@ -455,6 +460,22 @@ int main( int argc, char* argv[] ) {
 
   //  HandleMetadata(sh_all);
 
+  bool first = true;
+
+  // SampleHandler
+  SampleHandler sh;
+  sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
+
+  std::vector<TString> run_patterns;
+  std::vector<int>     run_ids;
+
+  // Run drivers
+  EL::DirectDriver Ddriver;
+  EL::ProofDriver  ProofDriver;
+  EL::TorqueDriver Tdriver;
+  EL::PrunDriver   Pdriver;
+  EL::GridDriver   Gdriver;
+
   //** Loop over samples  
   for(auto const& sample : samples){
 
@@ -476,8 +497,6 @@ int main( int argc, char* argv[] ) {
     isData=false;
 
     // Get patterns/paths to load for this sample
-    std::vector<TString> run_patterns;
-    std::vector<int>     run_ids;
     if(!userDir){
       run_patterns  = mapOfRuns.getPatterns( sample );
       run_ids       = mapOfRuns.getIDs( sample );
@@ -489,10 +508,7 @@ int main( int argc, char* argv[] ) {
 
     bool mgd=false;  //make grid direct (for direct access to PIC disks)
 
-    // DSID loop
-    SampleHandler sh;
-    sh.setMetaString( "nc_tree", "CollectionTree" ); //it's always the case for xAOD files
-    
+    //ID loop
     unsigned int nID=0;
     for(auto dsid : run_ids){ 
       
@@ -629,12 +645,6 @@ int main( int argc, char* argv[] ) {
 	string tmpdir = tmpdirname();
 	if(debugMode)   std::cout << "OUTPUT TMPDIR = " << tmpdir << std::endl;
 	
-	// Run the job using the appropiate driver:
-	EL::DirectDriver Ddriver;
-	EL::ProofDriver  ProofDriver;
-	EL::TorqueDriver Tdriver;
-	EL::PrunDriver   Pdriver;
-	EL::GridDriver   Gdriver;
 	
 	//submit the job
 	if(runLocal){ //local mode 
@@ -659,17 +669,24 @@ int main( int argc, char* argv[] ) {
 	  Pdriver.options()->setString("nc_outputSampleName", outName);
 	  Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
 	  sh.setMetaString ("nc_grid_filter", "*.root*");
+	  if(!first){ //noBuild
+	    cout << "LAST !!" << endl;
+	    Pdriver.options()->setString (EL::Job::optSubmitFlags, "--libDS LAST --noSubmit ");
+	  }
+	  else
+	    Pdriver.options()->setString (EL::Job::optSubmitFlags, "--noSubmit ");
+
 	  
 	  Pdriver.submitOnly( job, tmpdir );
 	  
 	  std::cout << "\n" << bold("Submitted!") << std::endl;
-	  SH::SampleHandler sh2;
-	  sh2.load(tmpdir);
+	  // SH::SampleHandler sh2;
+	  // sh2.load(tmpdir);
 	  for (unsigned int i = 0; i < sh.size(); ++i) {
 	    std::cout << "  Check it in " << link(Form("http://bigpanda.cern.ch/task/%d", (int)sh[i]->getMetaDouble("nc_jediTaskID"))) << " \n " << std::endl; //sh[i]->name()
 	  }
 	  
-	  break;
+	  first=false;
 	}
 	else if(runGrid){ //grid mode
 	  
@@ -682,7 +699,9 @@ int main( int argc, char* argv[] ) {
 	  Gdriver.submit( job, tmpdir );
 	}
 	
-	
+
+	if(!runLocal) continue;
+ 
 	//DEBUGGING	
 	std::string debout = getCmdOutput( "ls -1 "+tmpdir+"/data-output/" );
 	cout << "LS : \n " << debout << endl;
@@ -708,23 +727,26 @@ int main( int argc, char* argv[] ) {
 	    TString mergeInName  = Form("SYST_%s%s_%d.root", gSystem->BaseName(sample), vTag.Data(), dsid);
 	    mergeList.push_back(TString(TmpPath)+"/"+mergeInName);
 	  }
-	}
+
+	} //SH loop
 	
+	cout << "TMPDIR = " << tmpdir << endl;
 	system(("rm -rf "+tmpdir).c_str());
 
-	nID++;
-      }//end of DSID loop
+	nsyst++;
+      }//end systematics loop
       
       //remove sample from SH
       for(auto ss : sh)
 	sh.remove(ss);
-
-      nsyst++;
-    }//end of syst loop
+      
+      nID++;
+	
+    }//end of IDs loop
     
     
     //Done merging step only if running locally
-    if(!runLocal) return 0;
+    if(!runLocal) continue;
 
 
     //MERGING STEP!
@@ -747,7 +769,7 @@ int main( int argc, char* argv[] ) {
    
       tadd(tmp_mergeList, weights, FinalPath+"/"+mergedName, isData);
  
-    }//end of syst loop
+    }//end of syst merging loop
 
   }//end of samples loop
 

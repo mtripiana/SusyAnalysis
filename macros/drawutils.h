@@ -33,6 +33,34 @@ void myText(Double_t x,Double_t y,const char *text, Double_t tsize,Color_t color
 	l.DrawLatex(x,y,text);
 }
 
+
+void ATLASLabel(float x, float y, TString text, float luminosity, int color=1, float tsize=0.04, bool drawLumi=true){
+  TLatex* l = new TLatex();
+  l->SetNDC();
+  l->SetTextFont(72);
+  l->SetTextColor(color);
+  l->SetTextSize(tsize);
+  l->DrawLatex(x,y,"ATLAS");
+  
+  if(drawLumi){
+    TLatex* lumi = new TLatex();
+    lumi->SetNDC();
+    lumi->SetTextSize(tsize*0.8);
+    TString lstr = Form("#int L dt = %.1f fb^{-1}, #sqrt{s} = 13 TeV",luminosity);
+    lumi->DrawLatex(x, y-0.1, lstr);
+  }
+
+  float delx = 0.115*696*gPad->GetWh()/(472*gPad->GetWw());
+  if (text){
+    TLatex* p = new TLatex();
+    p->SetNDC();
+    p->SetTextFont(42);
+    p->SetTextColor(color);
+    p->SetTextSize(tsize);
+    p->DrawLatex(x+delx+0.0,y,text);
+  }
+}
+
 void SetStyle()
 {
 		//  gStyle->SetPalette(1);                                                                                                         

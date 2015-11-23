@@ -22,6 +22,8 @@ void print(TChain* ch, TString sel, TString var, TString cut);
 float N_in;
 float N_last;
 
+int NCUT=0;
+
 std::vector<TString> getTokens(TString line, TString delim){
   std::vector<TString> vtokens;
   TObjArray* tokens = line.Tokenize(delim); //delimiters                                                                                                                             
@@ -49,7 +51,7 @@ void do_sbottom_cutflow(TString sample="", bool isTruth=false){
   TString myvar   = "mct";
   //TString weights = "(20100*w*FileWeight*MC_w*pileup_w*ttbar_weight*((e_SF*(e_N>0))+(e_antiSF*(e_N==0)))*((m_SF*(m_N>0))+(m_antiSF*(m_N==0)))*btag_weight_total)";
   //TString weights = "(10000*MC_w*w)"; //*pileup_w*ttbar_weight*((e_SF*(e_N>0))+(e_antiSF*(e_N==0)))*((m_SF*(m_N>0))+(m_antiSF*(m_N==0)))*btag_weight_total)";
-  TString weights = "(10000)"; //*pileup_w*ttbar_weight*((e_SF*(e_N>0))+(e_antiSF*(e_N==0)))*((m_SF*(m_N>0))+(m_antiSF*(m_N==0)))*btag_weight_total)";
+  TString weights = "(xsec*feff*kfactor*(1./sumwAOD)*MC_w*btag_weight_total_77fc*e_SF*m_SF*10000.)";
   
   TString base    = weights+"*( 1 ";
 
@@ -62,23 +64,31 @@ void do_sbottom_cutflow(TString sample="", bool isTruth=false){
 
   //load trigger map
   std::vector<TString> trigchains;                                                                                                                                                  
-  TString strig = (TString)TFile::Open(sample)->Get("Triggers")->GetTitle();
-  trigchains = getTokens(strig, ",");
-
   std::map<int,TString> trigmap{};
   auto ic=0;
   std::vector<int> trig_idxSR; trig_idxSR.clear();
   std::vector<int> trig_idxCR; trig_idxCR.clear();
-  for(const auto& s : trigchains){
 
-    for(auto t : trigItemsSR)
-      if(t == s) trig_idxSR.push_back(ic);
-
-    for(auto t : trigItemsCR)
-      if(t == s) trig_idxCR.push_back(ic);
-    
-    trigmap[ic] = s;
-    ic++;
+  if(0){
+    try{
+      TString strig = (TString)TFile::Open(sample)->Get("Triggers")->GetTitle();
+      trigchains = getTokens(strig, ",");
+      
+      for(const auto& s : trigchains){
+	
+	for(auto t : trigItemsSR)
+	  if(t == s) trig_idxSR.push_back(ic);
+	
+	for(auto t : trigItemsCR)
+	  if(t == s) trig_idxCR.push_back(ic);
+	
+	trigmap[ic] = s;
+	ic++;
+      }
+    }
+    catch(...){
+      trig_idxSR.push_back(30);
+    }
   }
 
   //create trigger cut  
@@ -211,22 +221,46 @@ void print(TChain* ch, TString sel, TString var, TString cut){
   float releff = (N_last!=0 ? flow.first/(float)N_last : 0.);
   float abseff = (N_in!=0 ? flow.first/(float)N_in : 0.);
 
-  std::cout  << std::setw(45)
-             << std::left
-             << sel
-             << std::setiosflags(std::ios::fixed)
-             << std::setprecision(3)
-             << std::setw(18)
-             << std::left
-             << flow.first
-             << "\t\t"
-             << releff
-             << "\t\t"
-             << abseff
-             << "\t\t"
-             << flow.second
-             << std::endl;
+  std::cout  << std::setw(4)
+	     << Form("C%d",NCUT)
+	     << "| "
+	     << std::setw(45)
+	     << std::left
+	     << sel
+	     << "| "
+	     << std::setiosflags(std::ios::fixed)
+	     << std::setprecision(3)
+	     << std::setw(18)
+	     << std::left
+	     << flow.first
+	     << "\t"
+	     << " | "
+	     << releff
+	     << "\t"
+	     << " | "
+	     << abseff
+	     << "\t"
+	     << " | "
+	     << flow.second
+	     << std::endl;
+  
+  // std::cout  << std::setw(45)
+  //            << std::left
+  //            << sel
+  //            << std::setiosflags(std::ios::fixed)
+  //            << std::setprecision(3)
+  //            << std::setw(18)
+  //            << std::left
+  //            << flow.first
+  //            << "\t\t"
+  //            << releff
+  //            << "\t\t"
+  //            << abseff
+  //            << "\t\t"
+  //            << flow.second
+  //            << std::endl;
 
   N_last = flow.first;
 
+  NCUT++;
 }
