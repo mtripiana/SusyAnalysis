@@ -1,5 +1,6 @@
 2015-11-23 Martin <tripiana@cern.ch>
 	* Fix Btag sys names
+	* Fix options parser
 
 2015-11-16 Martin <tripiana@cern.ch>
 	* Move to MET Track method in SUSYTools

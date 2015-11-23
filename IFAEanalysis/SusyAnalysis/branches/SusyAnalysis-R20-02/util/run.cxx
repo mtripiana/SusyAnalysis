@@ -273,21 +273,23 @@ int main( int argc, char* argv[] ) {
 
   bool noBuild = false;
 
-  std::string jOption = "METbb";
-  TString queue = "at3";
-  int single_id = -1;
-  bool isTruth=false;
-  bool isAFII=false;
-  TString version="";
-  bool userDir=false;
-  TString eventsFile="";
+  std::string jOption    = "METbb";
+  TString     queue      = "at3";
+  int         single_id  = -1;
+  bool        isTruth    = false;
+  bool        isAFII     = false;
+  TString     version    = "";
+  bool        userDir    = false;
+  TString     eventsFile = "";
 
-  string wildcard="*";
-  bool systListOnly=false;
+  string wildcard   = "*";
+  bool systListOnly = false;
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
-    if( std::string(argv[i]).find("-") != std::string::npos )// is option
+    cout << std::string(argv[i]) << endl;
+
+    if( std::string(argv[i])[0] == '-' ) //is option
       opts.push_back( TString( strtok(argv[i],"-") ));
     else //is argument
       args.push_back( argv[i] );

@@ -156,6 +156,7 @@ enum ZDecayMode{
   Unknown,
   ee,
   mumu,
+  tautau,
   hadronic,
   invisible
 };
