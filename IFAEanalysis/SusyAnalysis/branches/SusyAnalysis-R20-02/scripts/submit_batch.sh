@@ -20,8 +20,8 @@ TESTLIST="TestWmunu167773 TestWmunu167774 TestWmunu167775 TestZnunu167818 TestZn
 
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
-source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up.sh"
-#source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up_pwin.sh"  # ! : switch to this to avoid being asked ask for the password every time you send a batch job
+#source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up.sh"
+source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up_pwin.sh"  # ! : switch to this to avoid being asked ask for the password every time you send a batch job
 source $ROOTCOREBIN"/../SusyAnalysis/scripts/export_proxy.sh"
 #------------------------------------
 
