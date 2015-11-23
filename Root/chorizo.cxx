@@ -1912,19 +1912,19 @@ EL::StatusCode chorizo :: initialize ()
   iso_1 = new CP::IsolationSelectionTool("iso_1");
   CHECK( iso_1->setProperty("ElectronWP","GradientLoose") );
   CHECK( iso_1->setProperty("MuonWP","GradientLoose") );
-  CHECK( iso_1->setProperty("PhotonWP","Cone20") );
+  CHECK( iso_1->setProperty("PhotonWP","FixedCutLoose") );
   CHECK( iso_1->initialize() );
 
   iso_2 = new CP::IsolationSelectionTool("iso_2");
   CHECK( iso_2->setProperty("ElectronWP","Loose") );
   CHECK( iso_2->setProperty("MuonWP","Loose") );
-  CHECK( iso_2->setProperty("PhotonWP","Cone40CaloOnly") );
+  CHECK( iso_2->setProperty("PhotonWP","FixedCutTightCaloOnly") );
   CHECK( iso_2->initialize() );
 
   iso_3 = new CP::IsolationSelectionTool("iso_3");
   CHECK( iso_3->setProperty("ElectronWP","LooseTrackOnly") );
   CHECK( iso_3->setProperty("MuonWP","LooseTrackOnly") );
-  CHECK( iso_3->setProperty("PhotonWP","Cone40") );
+  CHECK( iso_3->setProperty("PhotonWP","FixedCutTight") );
   CHECK( iso_3->initialize() );
 
   iso_4 = new CP::IsolationSelectionTool("iso_4");
@@ -5907,10 +5907,11 @@ std::vector<int> chorizo::GetTruthZDecay(TLorentzVector &ztlv){
 	ztlv = (*tpItr)->p4();
       
       bool badZ = false;
-      int nuZ=0;
-      int hadZ=0;
-      int eZ=0;
-      int muZ=0;
+      unsigned int nuZ=0;
+      unsigned int hadZ=0;
+      unsigned int eZ=0;
+      unsigned int muZ=0;
+      unsigned int tauZ=0;
       Zmode = ZDecayMode::Unknown;
 
       const xAOD::TruthVertex* dvtx = 0;
@@ -5940,6 +5941,7 @@ std::vector<int> chorizo::GetTruthZDecay(TLorentzVector &ztlv){
 	  hadZ += (int) is_Parton(kidIda);
 	  eZ   += (int) is_Electron(kidIda);
 	  muZ  += (int) is_Muon(kidIda);
+	  tauZ += (int) is_Tau(kidIda);
 	}
 
 	if(nuZ+hadZ+eZ+muZ != 2) Zmode = ZDecayMode::Unknown;
@@ -5947,6 +5949,7 @@ std::vector<int> chorizo::GetTruthZDecay(TLorentzVector &ztlv){
 	else if(hadZ == 2)       Zmode = ZDecayMode::hadronic;
 	else if(eZ == 2)         Zmode = ZDecayMode::ee;
 	else if(muZ == 2)        Zmode = ZDecayMode::mumu;
+	else if(tauZ == 2)       Zmode = ZDecayMode::tautau;
 	else Zmode = ZDecayMode::Unknown;
 
       }//has dcay vtx
