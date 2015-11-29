@@ -280,8 +280,6 @@ void chorizo :: bookTree(){
     m_atree->Branch ("m_SFIsoSysu", &m_SFIsoSysu,"m_SFIsoSysu/F");      
     m_atree->Branch ("m_SFIsoSysd", &m_SFIsoSysd,"m_SFIsoSysd/F");  
     
-    m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
-
     
     //boson 
     m_atree->Branch ("bos_pt", &bos_pt, "bos_pt/F");                       
@@ -338,10 +336,13 @@ void chorizo :: bookTree(){
     m_atree->Branch("ph_Cone20",&ph_Cone20);      
     m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
     m_atree->Branch("ph_Cone40",&ph_Cone40);      
-    
-    
-    m_atree->Branch("ph_SF",&ph_SF,"ph_SF/F");
-    
+        
+    m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
+    m_atree->Branch ("ph_SFIDu", &ph_SFIDu,"ph_SFIDu/F");
+    m_atree->Branch ("ph_SFIDd", &ph_SFIDd,"ph_SFIDd/F");
+    m_atree->Branch ("ph_SFIsou", &ph_SFIsou,"ph_SFIsou/F");
+    m_atree->Branch ("ph_SFIsod", &ph_SFIsod,"ph_SFIsod/F");
+
     m_atree->Branch("ph_trigger",&ph_trigger);
     
     //electrons
@@ -1005,6 +1006,10 @@ void chorizo :: InitVars()
   m_SFIsoSysd  = 1.; 
 
   ph_SF = 1.;
+  ph_SFIDu = 1.;
+  ph_SFIDd = 1.;
+  ph_SFIsou = 1.;
+  ph_SFIsod = 1.;
 
 
   //- Top    
@@ -2794,34 +2799,6 @@ EL::StatusCode chorizo :: loop ()
       
       recoPhoton.isTrigMatch |= ph_trig_pass.back();
     }
-    //get photon scale factors
-    if(this->isMC && 0){ //FIX_ME
-
-      //nominal
-      recoPhoton.SF = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF );
-      
-      //+1 sys up
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1up")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1up");
-      }
-      recoPhoton.SFu = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-      
-      //+1 sys down
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-      if (tool_st->applySystematicVariation( CP::SystematicSet("PHSFSYS__1down")) != CP::SystematicCode::Ok){ //FIX_ME // ok yes, this systematic doesn't exist yet
-	Error("loop()", "Cannot configure SUSYTools for systematic var. PHSFSYS__1down");
-      }
-      recoPhoton.SFd = tool_st->GetSignalPhotonSF( *ph_itr ); //, Ph_recoSF, Ph_idSF, Ph_triggerSF ); 
-      
-      if( tool_st->applySystematicVariation(this->syst_CP) != CP::SystematicCode::Ok){  //reset back to requested systematic!
-	Error("loop()", "Cannot configure SUSYTools for default systematics");
-      }
-    }
     
     photonCandidates.push_back(recoPhoton);
     
@@ -2829,8 +2806,26 @@ EL::StatusCode chorizo :: loop ()
     if( dec_signal(*ph_itr) ){
       recoPhotons.push_back(recoPhoton);
       ph_N++;
-    }
-    
+
+      //get photon scale factors
+      if(this->isMC){
+	
+	//nominal 
+	ph_SF *= tool_st->GetSignalPhotonSF(*ph_itr,true,true);
+          
+	//fill variations only if running in nominal mode!
+	if(isNominal){
+	  
+	  ph_SFIDu *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_ID_Uncertainty__1up"),true,true); 
+	  ph_SFIDd *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_ID_Uncertainty__1down"),true,true); 
+
+	  ph_SFIsou *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_TRKISO_Uncertainty__1up"),true,true); 
+	  ph_SFIsod *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_TRKISO_Uncertainty__1down"),true,true); 
+
+	} //if Nominal
+      } //if MC
+    } // is signal
+
   }//photon loop
 
   //sort the photons in Pt
@@ -2838,12 +2833,6 @@ EL::StatusCode chorizo :: loop ()
   if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
   if(debug) Info("loop()", " After booking photons");
 
-  //ADD PHOTON SFs later (when available) //TODO
-  //....
-
-
-
-  //
 
 
   //-- pre-book good jets now (after OR)

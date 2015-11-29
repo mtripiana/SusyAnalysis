@@ -1,6 +1,6 @@
 # SUSYTOOLS v7 (trunk/)
 #
-# extra packages (SUSY,2.3.36a)
+# extra packages (SUSY,2.3.37)
 atlasoff/PhysicsAnalysis/TileID/TileTripReader/trunk
 atlasoff/PhysicsAnalysis/MCTruthClassifier/tags/MCTruthClassifier-00-01-41
 # FastJet
