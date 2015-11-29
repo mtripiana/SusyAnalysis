@@ -1,6 +1,7 @@
 2015-11-29 Martin <tripiana@cern.ch>
 	* Move to SUSY,2.3.37
 	* Fix is25ns property in SUSYTools call
+	* Add photon scale factors
 
 2015-11-28 Martin <tripiana@cern.ch>
 	* Move to SUSY,2.3.36a

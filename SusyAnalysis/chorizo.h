@@ -693,6 +693,10 @@ private:
   float    m_SFIsoSysd; 
 
   float    ph_SF;
+  float    ph_SFIDu;
+  float    ph_SFIDd;
+  float    ph_SFIsou;
+  float    ph_SFIsod;
 
 
   //- ttbar reweighting
