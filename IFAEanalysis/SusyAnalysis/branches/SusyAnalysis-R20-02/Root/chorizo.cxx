@@ -1754,7 +1754,7 @@ EL::StatusCode chorizo :: initialize ()
     tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
     CHECK( tool_st->setProperty("ConfigFile", "SUSYTools/SUSYTools_Default.conf") );
     CHECK( tool_st->setProperty("DataSource", datasource) );
-    CHECK( tool_st->setProperty("Is25ns", false ));
+    CHECK( tool_st->setProperty("Is25ns", is25ns ));
     
     //redefine isolation WPs (if needed)
     if(El_isoWP=="None"){      
@@ -2591,23 +2591,25 @@ EL::StatusCode chorizo :: loop ()
   //get electron scale factors
   if(this->isMC){
 
+    string elTrigExpr = "e24_lhmedium_L1EM20VH_OR_e60_lhmedium_OR_e120_lhloose"; //(default)
+
     //nominal 
-    e_SF = tool_st->GetTotalElectronSF(*m_goodElectrons,true,true,true,true);
+    e_SF = tool_st->GetTotalElectronSF(*m_goodElectrons,true,true,true,true,elTrigExpr);
           
     //fill variations only if running in nominal mode!
     if(isNominal){
 
-      e_SFRecou = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1up"),true,true,true,true); 
-      e_SFRecod = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1down"),true,true,true,true); 
+      e_SFRecou = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1up"),true,true,true,true,elTrigExpr); 
+      e_SFRecod = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Reco_TotalCorrUncertainty__1down"),true,true,true,true,elTrigExpr); 
 
-      e_SFIDu = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1up"),true,true,true,true); 
-      e_SFIDd = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1down"),true,true,true,true); 
+      e_SFIDu = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1up"),true,true,true,true,elTrigExpr); 
+      e_SFIDd = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_ID_TotalCorrUncertainty__1down"),true,true,true,true,elTrigExpr); 
 
-      e_SFIsou = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1up"),true,true,true,true); 
-      e_SFIsod = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1down"),true,true,true,true); 
+      e_SFIsou = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1up"),true,true,true,true,elTrigExpr); 
+      e_SFIsod = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Iso_TotalCorrUncertainty__1down"),true,true,true,true,elTrigExpr); 
 
-      e_SFTrigu = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1up"),true,true,true,true); 
-      e_SFTrigd = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1down"),true,true,true,true); 
+      e_SFTrigu = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1up"),true,true,true,true,elTrigExpr); 
+      e_SFTrigd = tool_st->GetTotalElectronSFsys(*m_goodElectrons,CP::SystematicSet("EL_EFF_Trigger_TotalCorrUncertainty__1down"),true,true,true,true,elTrigExpr); 
       
     } //if Nominal
   } //if MC

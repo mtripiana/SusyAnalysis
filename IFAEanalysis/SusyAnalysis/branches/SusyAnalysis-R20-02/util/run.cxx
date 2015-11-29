@@ -287,8 +287,6 @@ int main( int argc, char* argv[] ) {
 
   //parse input arguments
   for (int i=1 ; i < argc ; i++) {
-    cout << std::string(argv[i]) << endl;
-
     if( std::string(argv[i])[0] == '-' ) //is option
       opts.push_back( TString( strtok(argv[i],"-") ));
     else //is argument
@@ -616,7 +614,7 @@ int main( int argc, char* argv[] ) {
 	alg->syst_Scale = syst_Scale;
 	alg->syst_PU    = syst_PU;
 	alg->syst_JVF   = syst_JVF;
-	alg->syst_JESNPset =  rEnv.GetValue("Syst.JESNPset",1);
+	alg->syst_JESNPset =  rEnv.GetValue("Syst.JESNPset",0);
 	
 	
 	//debug printing
@@ -671,12 +669,12 @@ int main( int argc, char* argv[] ) {
 	  Pdriver.options()->setString("nc_outputSampleName", outName);
 	  Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
 	  sh.setMetaString ("nc_grid_filter", "*.root*");
-	  if(!first){ //noBuild
-	    cout << "LAST !!" << endl;
-	    Pdriver.options()->setString (EL::Job::optSubmitFlags, "--libDS LAST --noSubmit ");
-	  }
-	  else
-	    Pdriver.options()->setString (EL::Job::optSubmitFlags, "--noSubmit ");
+	  // if(!first){ //noBuild
+	  //   cout << "LAST !!" << endl;
+	  //   Pdriver.options()->setString (EL::Job::optSubmitFlags, "--libDS LAST --noSubmit ");
+	  // }
+	  // else
+	  //   Pdriver.options()->setString (EL::Job::optSubmitFlags, "--noSubmit ");
 
 	  
 	  Pdriver.submitOnly( job, tmpdir );
