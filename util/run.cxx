@@ -96,7 +96,7 @@ float getECM(Sample* sample){ //in TeV
   std::string newName = stripName(sampleName).Data();
   std::string s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep ECMEnergy | awk '{print $2}'");
   if(s_ecm.empty()){
-    cout << "no ECMEnergy field. Try new convention next... " << endl;
+    //    cout << "no ECMEnergy field. Try new convention next... " << endl;
     s_ecm = getCmdOutput( "ami dataset info "+newName+" | grep beam_energy | awk '{print $2}'");
     s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), ']'), s_ecm.end());
     s_ecm.erase(std::remove(s_ecm.begin(), s_ecm.end(), '['), s_ecm.end());
@@ -212,8 +212,8 @@ void HandleMetadata(SampleHandler& sh){
       TagList tags_mc13("13TeV");
       TagList tags_mc8("8TeV");
 
-      sh.find(tags_mc8).print();
-      sh.find(tags_mc13).print();
+      // sh.find(tags_mc8).print();
+      // sh.find(tags_mc13).print();
 
       readSusyMetaDir(sh.find(tags_mc8), "$ROOTCOREBIN/data/SUSYTools/mc12_8TeV/");
       readSusyMetaDir(sh.find(tags_mc13), "$ROOTCOREBIN/data/SUSYTools/mc15_13TeV/");
@@ -477,6 +477,7 @@ int main( int argc, char* argv[] ) {
   EL::GridDriver   Gdriver;
 
   //** Loop over samples  
+  unsigned int isp=0; //sample counter
   for(auto const& sample : samples){
 
     //check if sample is mapped
@@ -547,6 +548,10 @@ int main( int argc, char* argv[] ) {
 	  nID++;
 	  cPattern = (userDir ? TString(getCmdOutput("readlink -f "+std::string(run_patterns[nID].Data()))) : run_patterns[nID]);
 	}
+	if(isp < samples.size()-1){ //if not the last sample, break and keep acumulating into same SH
+	  isp++;
+	  break;
+	}
       }    
       
       if(mgd)
@@ -574,6 +579,7 @@ int main( int argc, char* argv[] ) {
       //check if it is AFII simulation (if not explicitly said by command line) 
       if(!isAFII)
 	isAFII |= is_AtlFast(sh.at(0));
+
 
 
       //Systematics loop
