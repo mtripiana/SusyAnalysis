@@ -539,8 +539,14 @@ int main( int argc, char* argv[] ) {
 	mgd=true;
       }    
       else if(runGrid || runPrun){
+       
 	//** Run on the grid
-	scanDQ2 (sh, cPattern.Data() );
+	// When running in grid mode we add all samples in one single SH, so we speed up the submission time after the first (i.e. no rebuilding)
+	for(auto dsidb : run_ids){
+	  scanDQ2 (sh, cPattern.Data() );
+	  nID++;
+	  cPattern = (userDir ? TString(getCmdOutput("readlink -f "+std::string(run_patterns[nID].Data()))) : run_patterns[nID]);
+	}
       }    
       
       if(mgd)
@@ -680,8 +686,6 @@ int main( int argc, char* argv[] ) {
 	  Pdriver.submitOnly( job, tmpdir );
 	  
 	  std::cout << "\n" << bold("Submitted!") << std::endl;
-	  // SH::SampleHandler sh2;
-	  // sh2.load(tmpdir);
 	  for (unsigned int i = 0; i < sh.size(); ++i) {
 	    std::cout << "  Check it in " << link(Form("http://bigpanda.cern.ch/task/%d", (int)sh[i]->getMetaDouble("nc_jediTaskID"))) << " \n " << std::endl; //sh[i]->name()
 	  }
@@ -727,32 +731,36 @@ int main( int argc, char* argv[] ) {
 	    TString mergeInName  = Form("SYST_%s%s_%d.root", gSystem->BaseName(sample), vTag.Data(), dsid);
 	    mergeList.push_back(TString(TmpPath)+"/"+mergeInName);
 	  }
-
+	  
 	} //SH loop
 	
 	cout << "TMPDIR = " << tmpdir << endl;
 	system(("rm -rf "+tmpdir).c_str());
-
+	
 	nsyst++;
       }//end systematics loop
+      
+      //If running with PrunDriver we did all in one shot already, so just leave!      
+      if(runPrun)
+	break;
       
       //remove sample from SH
       for(auto ss : sh)
 	sh.remove(ss);
       
       nID++;
-	
+      
     }//end of IDs loop
     
     
     //Done merging step only if running locally
     if(!runLocal) continue;
-
-
+    
+    
     //MERGING STEP!
     //** after-burner to merge samples, add weights and anti-SF
     cout << bold("\n\n*** AFTER-BURNER *** ") << endl;
-
+    
     std::vector<TString> tmp_mergeList;
     for(const auto& syst : systematics){  //systs loop    
 
@@ -764,15 +772,15 @@ int main( int argc, char* argv[] ) {
 	cout<<"\t\t" << i << ": " << tmp_mergeList[i] << endl;
       }      
       cout << endl;
-
+      
       TString mergedName = Form("%s_%s%s.root",syst.Data(), gSystem->BaseName(sample), vTag.Data());
-   
+      
       tadd(tmp_mergeList, weights, FinalPath+"/"+mergedName, isData);
- 
+      
     }//end of syst merging loop
-
+    
   }//end of samples loop
-
+  
   return 0;
 }
 
