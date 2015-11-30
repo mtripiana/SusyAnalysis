@@ -1,3 +1,7 @@
+2015-11-30 Martin <tripiana@cern.ch>
+	* New logic for multiple submission with PrunDriver  (should speed up things considerably)
+
+
 2015-11-29 Martin <tripiana@cern.ch>
 	* Move to SUSY,2.3.37
 	* Fix is25ns property in SUSYTools call

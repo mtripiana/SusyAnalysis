@@ -682,7 +682,10 @@ m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SU
 
 
 
-
+    m_map["BB_signals"] = rlist( Rpair(387010, "mc15_13TeV.387010.MGPy8EG_A14N_BB_direct_400_1.merge.DAOD_SUSY7.e3994_a766_a768_r6282_p2419/"),
+				 Rpair(387011, "mc15_13TeV.387011.MGPy8EG_A14N_BB_direct_400_100.merge.DAOD_SUSY7.e3994_a766_a768_r6282_p2419/"),
+				 Rpair(387012, "mc15_13TeV.387012.MGPy8EG_A14N_BB_direct_400_200.merge.DAOD_SUSY7.e3994_a766_a768_r6282_p2419/"));
+    
 
 m_map["13TeV_PowhegPythiaEvtGen_P2012CT10_Wt_inclusive_tbar_MET200_SUSY1"] = rlist( Rpair(407021, "mc15_13TeV.407021.PowhegPythiaEvtGen_P2012CT10_Wt_inclusive_tbar_MET200.merge.DAOD_SUSY1.e4024_s2608_r6765_r6282_p2375/"));
 m_map["13TeV_PowhegPythiaEvtGen_P2012CT10_ttbarMET200_hdamp172p5_nonAH_SUSY1"] = rlist( Rpair(407012, "mc15_13TeV.407012.PowhegPythiaEvtGen_P2012CT10_ttbarMET200_hdamp172p5_nonAH.merge.DAOD_SUSY1.e4023_s2608_r6765_r6282_p2375/"));
