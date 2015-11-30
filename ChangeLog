@@ -1,4 +1,8 @@
 2015-11-30 Martin <tripiana@cern.ch>
+	* Move to ST-00-07-11-01
+	* Fix runNumber call for muonTriggerSF
+
+2015-11-30 Martin <tripiana@cern.ch>
 	* New logic for multiple submission with PrunDriver  (should speed up things considerably)
 	* Fix nbjets bug
 

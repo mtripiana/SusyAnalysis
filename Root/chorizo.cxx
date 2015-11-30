@@ -2207,15 +2207,6 @@ EL::StatusCode chorizo :: loop ()
   }
   
   if (doCutFlow) myfile << "EventNumber: " << EventNumber  << " \n";
-
-  
-  // Needed by muon trigger SF tool
-  UInt_t runNumber_forMu = 0;
-  if (isMC) {
-    runNumber_forMu = eventInfo->auxdata<unsigned int>("RandomRunNumber");
-    CHECK( tool_st->setRunNumber(runNumber_forMu));
-  }
-    
   
   lb = eventInfo->lumiBlock();
   bcid = eventInfo->bcid();
