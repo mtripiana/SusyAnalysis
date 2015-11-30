@@ -234,9 +234,7 @@ void do_sbottom_cutflow(TString sample="", bool isTruth=false, TString region="S
 
     print(ch, "Lepton veto", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && "+nbjvar+"==2 && (j_tag_MV2c20[0]>-0.4434 || fabs(j_eta[1])>2.5) && fabs(j_eta[1])<2.5 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && dPhi_met_j1["+metFlv+"]>2.5 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25  && (eb_N+mb_N)==0 )");    
 
-    cout <<  base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && \
-met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && "+nbjvar+"==2 && (j_tag_MV2c20[0]>-0.4434 || fabs(j_eta[1])>2.5) && fabs(j_eta[1])<2.5 && j_tag_MV2c20[1]>-0\
-.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && dPhi_met_j1["+metFlv+"]>2.5 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25  && (eb_N+mb_N)==0 )" << endl;
+    //    cout <<  base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && "+nbjvar+"==2 && (j_tag_MV2c20[0]>-0.4434 || fabs(j_eta[1])>2.5) && fabs(j_eta[1])<2.5 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && dPhi_met_j1["+metFlv+"]>2.5 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25  && (eb_N+mb_N)==0 )" << endl;
 
     print(ch, "MET", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCutSR+" && isVertexOk && !isBadID && isCosmic<2 && !isBadMuon && met["+metFlv+"]>100. && j_N>1 && j_N<5 && j_pt[1]>50. && j_pt[3]<50. && "+nbjvar+"==2 && (j_tag_MV2c20[0]>-0.4434 || fabs(j_eta[1])>2.5) && fabs(j_eta[1])<2.5 && j_tag_MV2c20[1]>-0.4434 && dPhi_min_4jets["+metFlv+"]>0.4 && dPhi_met_j1["+metFlv+"]>2.5 && met["+metFlv+"]/(met["+metFlv+"]+j_pt[0]+j_pt[1])>0.25  && (eb_N+mb_N)==0 && met["+metFlv+"]>400.)");    
 
