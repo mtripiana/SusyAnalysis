@@ -3071,9 +3071,9 @@ EL::StatusCode chorizo :: loop ()
   for (const auto& cjet : jetCandidates ){
 
     if(fabs(cjet.Eta())<2.5){
-      if ( cjet.isbjet_fb70) bj_Nfc_70++;
-      if ( cjet.isbjet_fb77) bj_Nfc_77++;
-      if ( cjet.isbjet_fb85) bj_Nfc_85++;
+      if ( cjet.isbjet_fc70) bj_Nfc_70++;
+      if ( cjet.isbjet_fc77) bj_Nfc_77++;
+      if ( cjet.isbjet_fc85) bj_Nfc_85++;
 
       if( cjet.isbjet_fb70 ) bj_Nfb_70++;
       if( cjet.isbjet_fb77 ) bj_Nfb_77++;
