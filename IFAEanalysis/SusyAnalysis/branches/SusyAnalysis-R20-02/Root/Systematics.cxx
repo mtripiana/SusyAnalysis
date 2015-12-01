@@ -42,186 +42,120 @@ void Systematics::printSystList(){
 
  
 void Systematics::LoadList(){
-
-  //CP registry
-  m_CP_list.push_back("EIGEN_B_0__1down");
-  m_CP_list.push_back("EIGEN_B_0__1up");
-  m_CP_list.push_back("EIGEN_B_1__1down");
-  m_CP_list.push_back("EIGEN_B_1__1up");
-  m_CP_list.push_back("EIGEN_B_2__1down");
-  m_CP_list.push_back("EIGEN_B_2__1up");
-  m_CP_list.push_back("EIGEN_B_3__1down");
-  m_CP_list.push_back("EIGEN_B_3__1up");
-  m_CP_list.push_back("EIGEN_B_4__1down");
-  m_CP_list.push_back("EIGEN_B_4__1up");
-  m_CP_list.push_back("EIGEN_B_5__1down");
-  m_CP_list.push_back("EIGEN_B_5__1up");
-  m_CP_list.push_back("EIGEN_B_6__1down");
-  m_CP_list.push_back("EIGEN_B_6__1up");
-  m_CP_list.push_back("EIGEN_B_7__1down");
-  m_CP_list.push_back("EIGEN_B_7__1up");
-  m_CP_list.push_back("EIGEN_B_8__1down");
-  m_CP_list.push_back("EIGEN_B_8__1up");
-  m_CP_list.push_back("EIGEN_B_9__1down");
-  m_CP_list.push_back("EIGEN_B_9__1up");
-  m_CP_list.push_back("EIGEN_C_0__1down");
-  m_CP_list.push_back("EIGEN_C_0__1up");
-  m_CP_list.push_back("EIGEN_C_1__1down");
-  m_CP_list.push_back("EIGEN_C_1__1up");
-  m_CP_list.push_back("EIGEN_C_2__1down");
-  m_CP_list.push_back("EIGEN_C_2__1up");
-  m_CP_list.push_back("EIGEN_C_3__1down");
-  m_CP_list.push_back("EIGEN_C_3__1up");
-  m_CP_list.push_back("EIGEN_Light_0__1down");
-  m_CP_list.push_back("EIGEN_Light_0__1up");
-  m_CP_list.push_back("EIGEN_Light_10__1down");
-  m_CP_list.push_back("EIGEN_Light_10__1up");
-  m_CP_list.push_back("EIGEN_Light_11__1down");
-  m_CP_list.push_back("EIGEN_Light_11__1up");
-  m_CP_list.push_back("EIGEN_Light_1__1down");
-  m_CP_list.push_back("EIGEN_Light_1__1up");
-  m_CP_list.push_back("EIGEN_Light_2__1down");
-  m_CP_list.push_back("EIGEN_Light_2__1up");
-  m_CP_list.push_back("EIGEN_Light_3__1down");
-  m_CP_list.push_back("EIGEN_Light_3__1up");
-  m_CP_list.push_back("EIGEN_Light_4__1down");
-  m_CP_list.push_back("EIGEN_Light_4__1up");
-  m_CP_list.push_back("EIGEN_Light_5__1down");
-  m_CP_list.push_back("EIGEN_Light_5__1up");
-  m_CP_list.push_back("EIGEN_Light_6__1down");
-  m_CP_list.push_back("EIGEN_Light_6__1up");
-  m_CP_list.push_back("EIGEN_Light_7__1down");
-  m_CP_list.push_back("EIGEN_Light_7__1up");
-  m_CP_list.push_back("EIGEN_Light_8__1down");
-  m_CP_list.push_back("EIGEN_Light_8__1up");
-  m_CP_list.push_back("EIGEN_Light_9__1down");
-  m_CP_list.push_back("EIGEN_Light_9__1up");
-  m_CP_list.push_back("EIGEN_T_0__1down");
-  m_CP_list.push_back("EIGEN_T_0__1up");
-  m_CP_list.push_back("EIGEN_T_1__1down");
-  m_CP_list.push_back("EIGEN_T_1__1up");
-  m_CP_list.push_back("EIGEN_T_2__1down");
-  m_CP_list.push_back("EIGEN_T_2__1up");
-  m_CP_list.push_back("EIGEN_T_3__1down");
-  m_CP_list.push_back("EIGEN_T_3__1up");
-  m_CP_list.push_back("MUONSFSTAT__1down");
-  m_CP_list.push_back("MUONSFSTAT__1up");
-  m_CP_list.push_back("MUONSFSYS__1down");
-  m_CP_list.push_back("MUONSFSYS__1up");
+  
+  m_CP_list.push_back("EG_RESOLUTION_ALL__1down"); 
+  m_CP_list.push_back("EG_RESOLUTION_ALL__1up");   
+  m_CP_list.push_back("EG_SCALE_ALL__1down");     
+  m_CP_list.push_back("EG_SCALE_ALL__1up");        
+  m_CP_list.push_back("EL_EFF_ID_TotalCorrUncertainty__1down");    
+  m_CP_list.push_back("EL_EFF_ID_TotalCorrUncertainty__1up");     
+  m_CP_list.push_back("EL_EFF_Iso_TotalCorrUncertainty__1down");   
+  m_CP_list.push_back("EL_EFF_Iso_TotalCorrUncertainty__1up");   
+  m_CP_list.push_back("EL_EFF_Reco_TotalCorrUncertainty__1down"); 
+  m_CP_list.push_back("EL_EFF_Reco_TotalCorrUncertainty__1up"); 
+  m_CP_list.push_back("EL_EFF_Trigger_TotalCorrUncertainty__1down");
+  m_CP_list.push_back("EL_EFF_Trigger_TotalCorrUncertainty__1up");
+  m_CP_list.push_back("FT_EFF_B_systematics__1down");    
+  m_CP_list.push_back("FT_EFF_B_systematics__1up");      
+  m_CP_list.push_back("FT_EFF_C_systematics__1down");     
+  m_CP_list.push_back("FT_EFF_C_systematics__1up");     
+  m_CP_list.push_back("FT_EFF_Light_systematics__1down");
+  m_CP_list.push_back("FT_EFF_Light_systematics__1up");   
+  m_CP_list.push_back("FT_EFF_extrapolation__1down");    
+  m_CP_list.push_back("FT_EFF_extrapolation__1up");     
+  m_CP_list.push_back("FT_EFF_extrapolation from charm__1down");
+  m_CP_list.push_back("FT_EFF_extrapolation from charm__1up"); 
+  m_CP_list.push_back("JET_GroupedNP_1__1up");   
+  m_CP_list.push_back("JET_GroupedNP_1__1down"); 
+  m_CP_list.push_back("JET_GroupedNP_2__1up");   
+  m_CP_list.push_back("JET_GroupedNP_2__1down"); 
+  m_CP_list.push_back("JET_GroupedNP_3__1up");  
+  m_CP_list.push_back("JET_GroupedNP_3__1down"); 
+  m_CP_list.push_back("JET_JER_SINGLE_NP__1up"); 
+  m_CP_list.push_back("MET_SoftTrk_ResoPara");  
+  m_CP_list.push_back("MET_SoftTrk_ResoPerp");   
+  m_CP_list.push_back("MET_SoftTrk_ScaleDown");  
+  m_CP_list.push_back("MET_SoftTrk_ScaleUp");   
   m_CP_list.push_back("MUONS_ID__1down");
-  m_CP_list.push_back("MUONS_ID__1up");
-  m_CP_list.push_back("MUONS_MS__1down");
-  m_CP_list.push_back("MUONS_MS__1up");
+  m_CP_list.push_back("MUONS_ID__1up");  
+  m_CP_list.push_back("MUONS_MS__1down"); 
+  m_CP_list.push_back("MUONS_MS__1up");  
   m_CP_list.push_back("MUONS_SCALE__1down");
-  m_CP_list.push_back("MUONS_SCALE__1up");
-  m_CP_list.push_back("extrapolation__1down");
-  m_CP_list.push_back("extrapolation__1up");
-  m_CP_list.push_back("EffectiveNP_1__continuous");
-  m_CP_list.push_back("EffectiveNP_2__continuous");
-  m_CP_list.push_back("EffectiveNP_3__continuous");
-  m_CP_list.push_back("EffectiveNP_4__continuous");
-  m_CP_list.push_back("EffectiveNP_5__continuous");
-  m_CP_list.push_back("EffectiveNP_6restTerm__continuous");
-  m_CP_list.push_back("EtaIntercalibration_Modelling__continuous");
-  m_CP_list.push_back("EtaIntercalibration_StatAndMethod__continuous");
-  m_CP_list.push_back("Flavor_Composition__continuous");
-  m_CP_list.push_back("Flavor_Response__continuous");
-  m_CP_list.push_back("Pileup_OffsetMu__continuous");
-  m_CP_list.push_back("Pileup_OffsetNPV__continuous");
-  m_CP_list.push_back("Pileup_PtTerm__continuous");
-  m_CP_list.push_back("Pileup_RhoTopology__continuous");
-  m_CP_list.push_back("RelativeNonClosure_MC12a__continuous");
-  m_CP_list.push_back("SingleParticle_HighPt__continuous");
-  
+  m_CP_list.push_back("MUONS_SCALE__1up");    
+  m_CP_list.push_back("MUON_EFF_STAT__1down");
+  m_CP_list.push_back("MUON_EFF_STAT__1up");  
+  m_CP_list.push_back("MUON_EFF_SYS__1down"); 
+  m_CP_list.push_back("MUON_EFF_SYS__1up");  
+  m_CP_list.push_back("MUON_EFF_TrigStatUncertainty__1down");  
+  m_CP_list.push_back("MUON_EFF_TrigStatUncertainty__1up");    
+  m_CP_list.push_back("MUON_EFF_TrigSystUncertainty__1down"); 
+  m_CP_list.push_back("MUON_EFF_TrigSystUncertainty__1up");   
+  m_CP_list.push_back("MUON_ISO_STAT__1down"); 
+  m_CP_list.push_back("MUON_ISO_STAT__1up");   
+  m_CP_list.push_back("MUON_ISO_SYS__1down");  
+  m_CP_list.push_back("MUON_ISO_SYS__1up");   
+  m_CP_list.push_back("PH_EFF_Uncertainty__1down");  
+  m_CP_list.push_back("PH_EFF_Uncertainty__1up");    
+  m_CP_list.push_back("PRW_DATASF__1down");   
+  m_CP_list.push_back("PRW_DATASF__1up");    
+  m_CP_list.push_back("TAUS_TRUEHADTAU_EFF_ELEOLR_TOTAL__1down"); 
+  m_CP_list.push_back("TAUS_TRUEHADTAU_EFF_ELEOLR_TOTAL__1up");   
+  m_CP_list.push_back("TAUS_TRUEHADTAU_EFF_JETID_TOTAL__1down"); 
+  m_CP_list.push_back("TAUS_TRUEHADTAU_EFF_JETID_TOTAL__1up");    
+  m_CP_list.push_back("TAUS_TRUEHADTAU_EFF_RECO_TOTAL__1down");   
+  m_CP_list.push_back("TAUS_TRUEHADTAU_EFF_RECO_TOTAL__1up");   
+  m_CP_list.push_back("TAUS_TRUEHADTAU_SME_TES_TOTAL__1down");    
+  m_CP_list.push_back("TAUS_TRUEHADTAU_SME_TES_TOTAL__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_B_0__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_B_0__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_B_1__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_B_1__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_B_2__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_B_2__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_B_3__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_B_3__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_B_4__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_B_4__1up"); 
+  m_CP_list.push_back("FT_EFF_Eigen_B_5__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_B_5__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_C_0__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_C_0__1up"); 
+  m_CP_list.push_back("FT_EFF_Eigen_C_1__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_C_1__1up"); 
+  m_CP_list.push_back("FT_EFF_Eigen_C_2__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_C_2__1up"); 
+  m_CP_list.push_back("FT_EFF_Eigen_C_3__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_C_3__1up"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_0__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_0__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_1__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_1__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_10__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_Light_10__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_Light_11__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_Light_11__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_Light_12__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_Light_12__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_Light_13__1down");
+  m_CP_list.push_back("FT_EFF_Eigen_Light_13__1up");  
+  m_CP_list.push_back("FT_EFF_Eigen_Light_2__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_2__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_3__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_3__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_4__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_4__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_5__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_5__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_6__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_6__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_7__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_7__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_8__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_8__1up");   
+  m_CP_list.push_back("FT_EFF_Eigen_Light_9__1down"); 
+  m_CP_list.push_back("FT_EFF_Eigen_Light_9__1up");   
 
-  //Others (pile-up, jvf, scales, BCH, ...)
-  m_user_list.push_back("PileupHigh");
-  m_user_list.push_back("PileupLow");
 
-  m_user_list.push_back("JvfUncHigh");
-  m_user_list.push_back("JvfUncLow");
-
-  m_user_list.push_back("ktfacHigh");
-  m_user_list.push_back("ktfacLow");
-  m_user_list.push_back("qfacHigh");
-  m_user_list.push_back("qfacLow");
-
-  m_user_list.push_back("BCHCorrHigh");
-  m_user_list.push_back("BCHCorrLow");
- 
-  
-  //(old)SUSYTools systematics
-  m_ST_list.push_back("JESHigh");                                           
-  m_ST_list.push_back("JESLow");                                            
-
-  m_ST_list.push_back("EffectiveNP_1Low");                                  
-  m_ST_list.push_back("EffectiveNP_1High");                                 
-  m_ST_list.push_back("EffectiveNP_2Low");                                  
-  m_ST_list.push_back("EffectiveNP_2High");                                 
-  m_ST_list.push_back("EffectiveNP_3Low");                                  
-  m_ST_list.push_back("EffectiveNP_3High");                                 
-  m_ST_list.push_back("EffectiveNP_4Low");                                  
-  m_ST_list.push_back("EffectiveNP_4High");                                 
-  m_ST_list.push_back("EffectiveNP_5Low");                                  
-  m_ST_list.push_back("EffectiveNP_5High");                                 
-  m_ST_list.push_back("EffectiveNP_6Low");                                  
-  m_ST_list.push_back("EffectiveNP_6High");                                 
-  m_ST_list.push_back("EtaIntercalibration_ModellingLow");                  
-  m_ST_list.push_back("EtaIntercalibration_ModellingHigh");                 
-  m_ST_list.push_back("EtaIntercalibration_StatAndMethodLow");              
-  m_ST_list.push_back("EtaIntercalibration_StatAndMethodHigh");             
-  m_ST_list.push_back("SingleParticle_HighPtLow");                          
-  m_ST_list.push_back("SingleParticle_HighPtHigh");                         
-  m_ST_list.push_back("RelativeNonClosure_Pythia8Low");                     
-  m_ST_list.push_back("RelativeNonClosure_Pythia8High");                    
-  m_ST_list.push_back("PileupOffsetTermMuLow");                             
-  m_ST_list.push_back("PileupOffsetTermMuHigh");                            
-  m_ST_list.push_back("PileupOffsetTermNPVLow");                            
-  m_ST_list.push_back("PileupOffsetTermNPVHigh");                           
-  m_ST_list.push_back("PileupPtTermLow");                                   
-  m_ST_list.push_back("PileupPtTermHigh");                                  
-  m_ST_list.push_back("PileupRhoTopologyLow");                              
-  m_ST_list.push_back("PileupRhoTopologyHigh");                             
-  m_ST_list.push_back("CloseByLow");                                        
-  m_ST_list.push_back("CloseByHigh");                                       
-  m_ST_list.push_back("FlavorCompUncertLow");                               
-  m_ST_list.push_back("FlavorCompUncertHigh");                              
-  m_ST_list.push_back("FlavorResponseUncertLow");                           
-  m_ST_list.push_back("FlavorResponseUncertHigh");                          
-  m_ST_list.push_back("BJesLow");                                           
-  m_ST_list.push_back("BJesHigh");                                                                                 
-
-  m_ST_list.push_back("JER");                                               
-  m_ST_list.push_back("EGZEEHigh");                                         
-  m_ST_list.push_back("EGZEELow");                                          
-  m_ST_list.push_back("EGMATHigh");                                         
-  m_ST_list.push_back("EGMATLow");                                          
-  m_ST_list.push_back("EGPSHigh");                                          
-  m_ST_list.push_back("EGPSLow");                                           
-  m_ST_list.push_back("EGLOWHigh");                                         
-  m_ST_list.push_back("EGLOWLow");                                          
-  m_ST_list.push_back("EGRESHigh");                                         
-  m_ST_list.push_back("EGRESLow");                                          
-  m_ST_list.push_back("EEFFHigh");                                          
-  m_ST_list.push_back("EEFFLow");                                           
-  m_ST_list.push_back("MSCALEHigh");                                        
-  m_ST_list.push_back("MSCALELow");                                         
-  m_ST_list.push_back("MMSHigh");                                           
-  m_ST_list.push_back("MMSLow");                                            
-  m_ST_list.push_back("MIDHigh");                                           
-  m_ST_list.push_back("MIDLow");                                            
-  m_ST_list.push_back("MEFFHigh");                                          
-  m_ST_list.push_back("MEFFLow");                                           
-  m_ST_list.push_back("SCALESTHigh");                                       
-  m_ST_list.push_back("SCALESTLow");                                        
-  m_ST_list.push_back("BJETHigh");                                          
-  m_ST_list.push_back("BJETLow");                                           
-  m_ST_list.push_back("CJETHigh");                                          
-  m_ST_list.push_back("CJETLow");                                           
-  m_ST_list.push_back("BMISTAGHigh");                                       
-  m_ST_list.push_back("BMISTAGLow");                                        
-  m_ST_list.push_back("RESOST");                                            
- 
 }
 
 bool Systematics::implemented(const TString &syst, const std::vector<TString> &Slist)
@@ -233,17 +167,13 @@ void Systematics::SystTranslate( TString syste,
 				 CP::SystematicSet &syst_CP,
 				 SystErr::Syste &syst_ST,
 				 ScaleVariatioReweighter::variation &syst_Scale,
-				 pileupErr::pileupSyste &syst_PU,
-				 JvfUncErr::JvfSyste &syst_JVF,
-				 BCHCorrMediumErr::BCHSyste &syst_BCH )
+				 pileupErr::pileupSyste &syst_PU )
 {
   //Init to Nominal per default
   syst_CP = CP::SystematicSet();
   syst_ST = SystErr::NONE;
   syst_Scale = ScaleVariatioReweighter::None;
   syst_PU = pileupErr::NONE;
-  syst_JVF = JvfUncErr::NONE;
-  syst_BCH = BCHCorrMediumErr::NONE;
 
   //Check implementation
   if(syste=="Nom")                                                    return;
@@ -327,20 +257,12 @@ void Systematics::SystTranslate( TString syste,
   else if(syste=="PileupHigh") {                                      syst_PU = pileupErr::PileupHigh;}
   else if(syste=="PileupLow")  {                                      syst_PU = pileupErr::PileupLow;}
 
-  //-- JVF
-  else if(syste=="JvfUncHigh") {                                      syst_JVF = JvfUncErr::JvfUncHigh;}
-  else if(syste=="JvfUncLow")  {                                      syst_JVF = JvfUncErr::JvfUncLow;}
-  
   //--- for Z/W+jet Sherpa                                                                                                 
   else if(syste=="ktfacHigh")  {                                      syst_Scale = ScaleVariatioReweighter::ktfacUP;}
   else if(syste=="ktfacLow")   {                                      syst_Scale = ScaleVariatioReweighter::ktfacDOWN;}
   else if(syste=="qfacHigh")   {                                      syst_Scale = ScaleVariatioReweighter::qfacUP;}
   else if(syste=="qfacLow")    {                                      syst_Scale = ScaleVariatioReweighter::qfacDOWN;}
   
-  //--- For BCH medium correction                                                                                                
-  else if(syste=="BCHCorrHigh") {                                     syst_BCH = BCHCorrMediumErr::BCHCorrHigh; }
-  else if(syste=="BCHCorrLow") {                                      syst_BCH = BCHCorrMediumErr::BCHCorrLow; }
-
   else Error("Systematics::SystTranslate()", Form("No systematic named like this: %s",syste.Data()));
 
 }
