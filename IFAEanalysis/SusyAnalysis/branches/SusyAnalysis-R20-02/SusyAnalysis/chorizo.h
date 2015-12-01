@@ -753,15 +753,18 @@ private:
   VFloat ph_pt;
   VFloat ph_eta;
   VFloat ph_phi;
-  VFloat ph_ptiso30;
-  VFloat ph_etiso30;
+  VFloat ph_ptiso40;
+  VFloat ph_etiso40; 
   VInt   ph_tight; 
   VInt   ph_type; 
   VInt   ph_origin; 
+  VInt   ph_barcode; 
+  VInt   ph_momid; 
+  VFloat ph_pt_truth;
   VInt   ph_trigger;
-  VFloat   ph_Cone20;
-  VFloat   ph_Cone40CaloOnly;  
-  VFloat   ph_Cone40;  
+  VInt   ph_isoLoose;
+  VInt   ph_isoTightCO;
+  VInt   ph_isoTight;  
   //- Electron Info
   int    e_N;
   VFloat e_pt;

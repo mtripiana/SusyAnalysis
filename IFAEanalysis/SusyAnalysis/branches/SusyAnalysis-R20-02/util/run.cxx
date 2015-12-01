@@ -422,7 +422,7 @@ int main( int argc, char* argv[] ) {
   
   TEnv rEnv;
   int success = -1;
-  success = rEnv.ReadFile((maindir+"/data/SusyAnalysis/JOpt_"+jOption+".conf").c_str(), kEnvAll);
+  success = rEnv.ReadFile((maindir+"/data/SusyAnalysis/"+jOption+".conf").c_str(), kEnvAll);
   if(success != 0){
     cout << "   CONFIG FILE NOT FOUND!  Please try again...\n" << endl;
     return -1;

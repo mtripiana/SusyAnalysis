@@ -15,6 +15,10 @@ Particle::Particle(){
   type = 0; //as defined in MCTruthClassifier::ParticleType
   origin = 0; //as defined in MCTruthClassifier::ParticleOrigin
 
+  barcode  = 0;
+  motherId = 0;
+  pt_truth = 0.;
+
   isGood = true;
   id = -1;
   isTight = false;
@@ -22,13 +26,20 @@ Particle::Particle(){
   isTrigMatch = false;
 
   isIsolated = false;
-  isoTight = 0.;
-  isoLoose = 0.;
-  isoGradient = 0.;
-  ptcone20 = 0;
-  etcone20 = 0;
-  ptcone30 = 0;
-  etcone30 = 0;
+
+  isoTight          = false;
+  isoTightCaloOnly  = false;
+  isoLoose          = false;
+  isoLooseTrackOnly = false;
+  isoGradient       = false;
+  isoGradientLoose  = false;
+  
+  ptcone20 = 0.;
+  etcone20 = 0.;
+  ptcone30 = 0.;
+  etcone30 = 0.;
+  ptcone40 = 0.;
+  etcone40 = 0.;
 
   d0_sig = 0;
   z0 = 0;

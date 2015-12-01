@@ -1,3 +1,6 @@
+2015-12-01 Martin <tripiana@cern.ch>
+	* Add photon info
+
 2015-11-30 Martin <tripiana@cern.ch>
 	* Move to ST-00-07-11-01
 	* Fix runNumber call for muonTriggerSF
