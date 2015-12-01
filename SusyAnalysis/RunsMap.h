@@ -90,7 +90,7 @@ m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SU
 // ttbar+gamma samples
   m_map["tty_noallhad_SUSY1"]     = rlist( Rpair(410082,"mc15_13TeV.410082.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_noallhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2419/"));
   m_map["tty4080_noallhad_SUSY1"] = rlist( Rpair(410083,"mc15_13TeV.410083.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
-  m_map["tty80_noallhad_SUSY1"]   = rlist( Rpair(410084,"mc15_13TeV.410084.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
+  m_map["ttyxo80_noallhad_SUSY1"]   = rlist( Rpair(410084,"mc15_13TeV.410084.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
   m_map["tty_allhad_SUSY1"]       = rlist( Rpair(410087,"mc15_13TeV.410087.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_allhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2419/"));
   m_map["tty4080_allhad_SUSY1"]   = rlist( Rpair(410088,"mc15_13TeV.410088.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_allhad.merge.DAOD_SUSY1.e4423_a766_a777_r6282_p2419/"));
   m_map["tty80_allhad_SUSY1"]     = rlist( Rpair(410089,"mc15_13TeV.410089.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_allhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));

@@ -84,8 +84,10 @@ static SG::AuxElement::ConstAccessor<float> cacc_jvt("Jvt");
 
 static SG::AuxElement::Accessor<float> acc_ptcone20("ptcone20");
 static SG::AuxElement::Accessor<float> acc_ptcone30("ptcone30");
+static SG::AuxElement::Accessor<float> acc_ptcone40("ptcone40");
 static SG::AuxElement::Accessor<float> acc_etcone20("topoetcone20");
 static SG::AuxElement::Accessor<float> acc_etcone30("topoetcone30");
+static SG::AuxElement::Accessor<float> acc_etcone40("topoetcone40");
 
 static SG::AuxElement::Accessor<float> acc_truth_etcone20("EtCone20");
 static SG::AuxElement::Accessor<float> acc_truth_ptcone30("PtCone30");
@@ -328,14 +330,18 @@ void chorizo :: bookTree(){
     m_atree->Branch("ph_pt",&ph_pt);
     m_atree->Branch("ph_eta",&ph_eta);
     m_atree->Branch("ph_phi",&ph_phi);
-    //m_atree->Branch("ph_etiso30",&ph_etiso30);
-    //m_atree->Branch("ph_ptiso30",&ph_ptiso30);
+    m_atree->Branch("ph_etiso40",&ph_etiso40);
+    m_atree->Branch("ph_ptiso40",&ph_ptiso40);
     m_atree->Branch("ph_tight",&ph_tight);
     m_atree->Branch("ph_type",&ph_type);
     m_atree->Branch("ph_origin",&ph_origin);
-    m_atree->Branch("ph_Cone20",&ph_Cone20);      
-    m_atree->Branch("ph_Cone40CaloOnly",&ph_Cone40CaloOnly);      
-    m_atree->Branch("ph_Cone40",&ph_Cone40);      
+    m_atree->Branch("ph_barcode",&ph_barcode);
+    m_atree->Branch("ph_momid",&ph_momid);
+    m_atree->Branch("ph_pt_truth",&ph_pt_truth);
+
+    m_atree->Branch("ph_isoLoose",&ph_isoLoose);      
+    m_atree->Branch("ph_isoTightCO",&ph_isoTightCO);
+    m_atree->Branch("ph_isoTight",&ph_isoTight);      
         
     m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
     m_atree->Branch ("ph_SFIDu", &ph_SFIDu,"ph_SFIDu/F");
@@ -1107,14 +1113,17 @@ void chorizo :: InitVars()
   ph_pt.clear();
   ph_eta.clear();
   ph_phi.clear();
-  ph_ptiso30.clear();
-  ph_etiso30.clear();
+  ph_ptiso40.clear();
+  ph_etiso40.clear();
   ph_tight.clear();           
   ph_type.clear();
   ph_origin.clear();
-  ph_Cone20.clear();
-  ph_Cone40CaloOnly.clear();  
-  ph_Cone40.clear();  
+  ph_barcode.clear();
+  ph_momid.clear();
+  ph_pt_truth.clear();
+  ph_isoLoose.clear();
+  ph_isoTightCO.clear();  
+  ph_isoTight.clear();  
   
   ph_trigger.clear();
   
@@ -1507,7 +1516,7 @@ EL::StatusCode chorizo :: ReadConfig(){
 
   TEnv rEnv;
   int success = -1;
-  success = rEnv.ReadFile(std::string(maindir+"/data/SusyAnalysis/JOpt_"+jOption+".conf").c_str(), kEnvAll);
+  success = rEnv.ReadFile(std::string(maindir+"/data/SusyAnalysis/"+jOption+".conf").c_str(), kEnvAll);
   if(success != 0){
     cout << "   CONFIG FILE NOT FOUND!  Please try again...\n" << endl;
     return EL::StatusCode::FAILURE;
@@ -2766,19 +2775,32 @@ EL::StatusCode chorizo :: loop ()
     recoPhoton.SetVector( getTLV( &(*ph_itr) ));
      
     recoPhoton.id = iPh;
-    recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
-    recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
-    recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
-    recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
+    // recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
+    // recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
+    // recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
+    // recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
+    recoPhoton.ptcone40 = acc_ptcone40(*ph_itr) * 0.001;
+    recoPhoton.etcone40 = acc_etcone40(*ph_itr) * 0.001;
     (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
     
-    if(iso_1->accept(*ph_itr)) recoPhoton.isoCone20 = 1.0;
-    if(iso_2->accept(*ph_itr)) recoPhoton.isoCone40CaloOnly = 1.0;
-    if(iso_3->accept(*ph_itr)) recoPhoton.isoCone40= 1.0;
+    if(iso_1->accept(*ph_itr)) recoPhoton.isoLoose         = false;
+    if(iso_2->accept(*ph_itr)) recoPhoton.isoTightCaloOnly = true;
+    if(iso_3->accept(*ph_itr)) recoPhoton.isoTight         = true;
     
     recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
     recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
+
+    if(isMC){
+      const xAOD::TruthParticle* tph = xAOD::TruthHelpers::getTruthParticle(*ph_itr);
+      if(tph){
+	if(tph->nParents())
+	  recoPhoton.motherId  = tph->parent()->pdgId();
+	recoPhoton.barcode  = tph->barcode();
+	recoPhoton.pt_truth = tph->pt() * 0.001;
+      }
+    }
     
+
     //trigger matching
     std::vector<bool> ph_trig_pass;
     for(const auto& t : PhTriggers){
@@ -5110,16 +5132,25 @@ void chorizo :: dumpPhotons(){
   for(unsigned int iph = 0; iph < BookPhSignal; iph++){
 
     fill = (iph < recoPhotons.size());
-    ph_pt.push_back( fill ?  recoPhotons.at(iph).Pt()  : DUMMYDN );
-    ph_eta.push_back( fill ?  recoPhotons.at(iph).Eta()  : DUMMYDN );
-    ph_phi.push_back( fill ?  recoPhotons.at(iph).Phi()  : DUMMYDN );
-    ph_etiso30.push_back( fill ?  recoPhotons.at(iph).etcone30  : DUMMYDN );
-    ph_ptiso30.push_back( fill ?  recoPhotons.at(iph).ptcone30  : DUMMYDN );
-    ph_tight.push_back( fill ?  (int)recoPhotons.at(iph).isTight  : DUMMYDN );
-    ph_type.push_back( fill ?  recoPhotons.at(iph).type  : DUMMYDN );
-    ph_origin.push_back( fill ?  recoPhotons.at(iph).origin  : DUMMYDN );
-    ph_trigger.push_back( fill ?  (int)recoPhotons.at(iph).isTrigMatch  : DUMMYDN );
-   
+    ph_pt.push_back(       fill ?  recoPhotons.at(iph).Pt()             : DUMMYDN );
+    ph_eta.push_back(      fill ?  recoPhotons.at(iph).Eta()            : DUMMYDN );
+    ph_phi.push_back(      fill ?  recoPhotons.at(iph).Phi()            : DUMMYDN );
+
+    ph_trigger.push_back(  fill ?  (int)recoPhotons.at(iph).isTrigMatch : DUMMYDN );
+    ph_tight.push_back(    fill ?  (int)recoPhotons.at(iph).isTight     : DUMMYDN );
+
+    ph_isoLoose.push_back(    fill ?  (int)recoPhotons.at(iph).isoLoose         : DUMMYDN );
+    ph_isoTightCO.push_back(  fill ?  (int)recoPhotons.at(iph).isoTightCaloOnly : DUMMYDN );
+    ph_isoTight.push_back(    fill ?  (int)recoPhotons.at(iph).isoTight         : DUMMYDN );
+
+    ph_etiso40.push_back(  fill ?  recoPhotons.at(iph).etcone40         : DUMMYDN );
+    ph_ptiso40.push_back(  fill ?  recoPhotons.at(iph).ptcone40         : DUMMYDN );
+
+    ph_pt_truth.push_back( fill ?  recoPhotons.at(iph).pt_truth         : DUMMYDN );
+    ph_type.push_back(     fill ?  recoPhotons.at(iph).type             : DUMMYDN );
+    ph_origin.push_back(   fill ?  recoPhotons.at(iph).origin           : DUMMYDN );
+    ph_barcode.push_back(  fill ?  recoPhotons.at(iph).barcode          : DUMMYDN );
+    ph_momid.push_back(    fill ?  recoPhotons.at(iph).motherId         : DUMMYDN );   
   }
 }
 
@@ -5135,7 +5166,7 @@ void chorizo :: dumpJets(){
 
     fill = (ijet < recoJets.size());
 
-    j_pt.push_back(  fill ?  recoJets.at(ijet).Pt()   : DUMMYDN );
+    j_pt.push_back(  fill ?  recoJets.at(ijet).Pt()  : DUMMYDN );
     j_eta.push_back( fill ?  recoJets.at(ijet).Eta() : DUMMYDN );
     j_phi.push_back( fill ?  recoJets.at(ijet).Phi() : DUMMYDN );
     j_m.push_back(   fill ?  recoJets.at(ijet).M()   : DUMMYDN );
