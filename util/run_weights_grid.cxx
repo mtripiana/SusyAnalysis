@@ -30,6 +30,7 @@ void usage(){
   cout << "       -o=<outDir>       : where all the output is saved (if left empty it is saved in $ANALYSISROOTFILES" << endl;
   cout << "       -n=<DSid>         : dataset id " << endl;
   cout << "       -m=<mergedName>   : name to be used for merged sample (so to avoid looking for it in RunsMap)" << endl;
+  cout << "       -s=<systName>     : name of systematic set for this run" << endl;
   cout << endl;
 }
 
@@ -62,6 +63,7 @@ int main( int argc, char* argv[] ) {
 
   std::string outDirectory="./";
   std::string mergedName="";
+  std::string sysName="Nom";
 
   //config options
   for( unsigned int iop=0; iop < opts.size(); iop++){
@@ -74,6 +76,9 @@ int main( int argc, char* argv[] ) {
 	
     if (opts[iop].BeginsWith("o") )
       outDirectory = opts[iop].ReplaceAll("o=","")+"/";
+
+    if (opts[iop].BeginsWith("s") )
+      sysName = opts[iop].ReplaceAll("s=","");
     
   }
 
@@ -132,7 +137,7 @@ int main( int argc, char* argv[] ) {
   delete files;
 
 
-  tadd_grid(fileNames, outDirectory+"/Nom_"+mergedName+"_tree"+tagDSid+".root", false);
+  tadd_grid(fileNames, outDirectory+"/"+sysName+"_"+mergedName+"_tree"+tagDSid+".root", false);
 
   //clean ROOTMERGE leftovers  (investigate a bit more anyways...)
   system("ls -lrt1 /tmp/ROOTMERGE* | grep $USER | rev | cut -d' ' -f 1 | rev | while read i; do rm -rf $i; done");

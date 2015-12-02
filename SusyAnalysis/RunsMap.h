@@ -88,12 +88,29 @@ m_map["ttbar_cutflow"] = rlist( Rpair(410000, "/nfs/at3/scratch/sfracchia/SUSY/t
 m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SUSY/singletop_cutflow/"));
 
 // ttbar+gamma samples
-  m_map["tty_noallhad_SUSY1"]     = rlist( Rpair(410082,"mc15_13TeV.410082.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_noallhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2419/"));
-  m_map["tty4080_noallhad_SUSY1"] = rlist( Rpair(410083,"mc15_13TeV.410083.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
-  m_map["ttyxo80_noallhad_SUSY1"]   = rlist( Rpair(410084,"mc15_13TeV.410084.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
-  m_map["tty_allhad_SUSY1"]       = rlist( Rpair(410087,"mc15_13TeV.410087.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_allhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2419/"));
-  m_map["tty4080_allhad_SUSY1"]   = rlist( Rpair(410088,"mc15_13TeV.410088.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_allhad.merge.DAOD_SUSY1.e4423_a766_a777_r6282_p2419/"));
-  m_map["tty80_allhad_SUSY1"]     = rlist( Rpair(410089,"mc15_13TeV.410089.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_allhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2419/"));
+  m_map["tty_noallhad_SUSY1"]     = rlist( Rpair(410082,"mc15_13TeV.410082.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_noallhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2452/"));
+  m_map["tty4080_noallhad_SUSY1"] = rlist( Rpair(410083,"mc15_13TeV.410083.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2452/"));
+  m_map["tty80_noallhad_SUSY1"]   = rlist( Rpair(410084,"mc15_13TeV.410084.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_noallhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2452/"));
+  m_map["tty_allhad_SUSY1"]       = rlist( Rpair(410087,"mc15_13TeV.410087.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma_allhad.merge.DAOD_SUSY1.e4404_a766_a777_r6282_p2452/"));
+  m_map["tty4080_allhad_SUSY1"]   = rlist( Rpair(410088,"mc15_13TeV.410088.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma4080_allhad.merge.DAOD_SUSY1.e4423_a766_a777_r6282_p2452/"));
+  m_map["tty80_allhad_SUSY1"]     = rlist( Rpair(410089,"mc15_13TeV.410089.MadGraphPythia8EvtGen_A14NNPDF23LO_ttgamma80_allhad.merge.DAOD_SUSY1.e4418_a766_a777_r6282_p2452/"));
+
+  m_map["ttbar_SUSY1"]       = rlist( Rpair(410000,"mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY1.e3698_s2608_s2183_r7267_r6282_p2452/"));
+  m_map["ttbarMET200_SUSY1"] = rlist( Rpair(407012,"mc15_13TeV.407012.PowhegPythiaEvtGen_P2012CT10_ttbarMET200_hdamp172p5_nonAH.merge.DAOD_SUSY1.e4023_s2608_r6765_r6282_p2452/"));
+
+
+  m_map["ttZnnqq_SUSY1"]  = rlist( Rpair(410073,"mc15_13TeV.410073.MadGraphPythia8EvtGen_A14NNPDF23LO_ttZnnqq_Np0.merge.DAOD_SUSY1.e4111_s2608_s2183_r6869_r6282_p2419/"),
+				   Rpair(410074,"mc15_13TeV.410074.MadGraphPythia8EvtGen_A14NNPDF23LO_ttZnnqq_Np1.merge.DAOD_SUSY1.e4143_s2608_s2183_r6869_r6282_p2419/"),
+				   Rpair(410075,"mc15_13TeV.410075.MadGraphPythia8EvtGen_A14NNPDF23LO_ttZnnqq_Np2.merge.DAOD_SUSY1.e4111_s2608_s2183_r6869_r6282_p2419/"));
+
+  //DATA (Stop)
+  m_map["data15_periodD_SUSY1"] = rlist( Rpair(000001, "data15_13TeV.periodD.physics_Main.PhysCont.DAOD_SUSY1.grp15_v01_p2425/"));
+  m_map["data15_periodE_SUSY1"] = rlist( Rpair(000002, "data15_13TeV.periodE.physics_Main.PhysCont.DAOD_SUSY1.grp15_v01_p2425/"));
+  m_map["data15_periodF_SUSY1"] = rlist( Rpair(000003, "data15_13TeV.periodF.physics_Main.PhysCont.DAOD_SUSY1.grp15_v01_p2425/"));
+  m_map["data15_periodG_SUSY1"] = rlist( Rpair(000004, "data15_13TeV.periodG.physics_Main.PhysCont.DAOD_SUSY1.grp15_v01_p2425/"));
+  m_map["data15_periodH_SUSY1"] = rlist( Rpair(000005, "data15_13TeV.periodH.physics_Main.PhysCont.DAOD_SUSY1.grp15_v01_p2425/"));
+  m_map["data15_periodJ_SUSY1"] = rlist( Rpair(000006, "data15_13TeV.periodJ.physics_Main.PhysCont.DAOD_SUSY1.grp15_v01_p2425/"));
+
 
 //DEBUG STREAM
  m_map["data15_25ns_SUSY7_debugrec"] = rlist(Rpair(100000, "/nfs/atlas-data07/tripiana/xAOD/data/13TeV/debugrec/"));

@@ -1,5 +1,10 @@
 2015-12-01 Martin <tripiana@cern.ch>
+	* Move to SUSY,2.3.37a
 	* Add photon info
+	* Clean systematics code
+	* Add systematics tag when running on the grid
+	* Add systematics name to merged sample during merging step
+	* Add utils for trigmap check and systematics-tag translation
 
 2015-11-30 Martin <tripiana@cern.ch>
 	* Move to ST-00-07-11-01

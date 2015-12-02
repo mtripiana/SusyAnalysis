@@ -43,7 +43,7 @@
 #include <sstream>
 
 // Tools includes
-#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
+//#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "SUSYTools/SUSYCrossSection.h"
 
 #include "SusyAnalysis/TMctLib.h"
@@ -207,10 +207,6 @@ public:
 
   CP::SystematicSet syst_CP; //!
   TString syst_CPstr;
-  SystErr::Syste syst_ST;    
-  ScaleVariatioReweighter::variation syst_Scale;
-  pileupErr::pileupSyste syst_PU;
-  JvfUncErr::JvfSyste syst_JVF;
   int  syst_JESNPset;
 
   bool printMet;

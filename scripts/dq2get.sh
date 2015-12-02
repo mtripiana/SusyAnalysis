@@ -7,7 +7,7 @@
 ##
 ## ./dq2get.sh TAG1,TAG2,TAG3,... [output folder] [username] [merge: 0, 1] <PATTERN1,PATTERN2,...> <outputName>
 
-: ${ANALYSISROOTFILES:?" You need to set ANALYSISROOTFILES before !! Please do so and try again..."}
+#: ${ANALYSISROOTFILES:?" You need to set ANALYSISROOTFILES before !! Please do so and try again..."}
 
 TAG=''
 DIRECTORY=$ANALYSISROOTFILES
@@ -22,27 +22,39 @@ optOFILE=''
 
 #------------------------------------
 ## Make sure we have grid-stuff up and the proxy available
-source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up_pwin.sh"
+#source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up_pwin.sh"
 #------------------------------------
 
 #--- Check certificate
-timeLeft=$(voms-proxy-info | grep 'timeleft' | awk {'print$3'})
-if [ "${timeLeft}" == '' ];
+TL=`voms-proxy-info | grep 'timeleft' | awk {'print$3'}`
+if [ -z "$TL" ];
 then
    source $ROOTCOREBIN"/../SusyAnalysis/scripts/grid_up_pwin.sh"
-elif [ "${timeLeft}" == '0:00:00' ];
-then
-   voms-proxy-init -voms atlas
-   clear
-else
-   echo
+#elif [ "${timeLeft}" == '0:00:00' ];
+#then
+#   voms-proxy-init -voms atlas
+#   clear
+#else
+#   echo
 fi
+
+echo 
 
 INITDIR=$PWD
 
 #--- Read input info
 if [[ $1 != "" ]]; then TAG=$1;fi
-if [[ $2 != "" ]]; then DIRECTORY=$2;fi
+if [[ $2 != "" ]]; then 
+    DIRECTORY=$2;
+else
+    if [[ ${ANALYSISROOTFILES} != "" ]]; then 
+	DIRECTORY=$ANALYSISROOTFILES
+    else
+	echo " You need to set ANALYSISROOTFILES before !! Please do so and try again..."
+	exit 0
+    fi
+fi
+
 if [[ $3 != "" ]]; then GRIDUSER=$3;fi
 if [[ $4 != "" ]]; then MERGE=$4;fi
 
@@ -62,13 +74,16 @@ TAGLIST="${TAG//,/ }"
 PATLIST="${PATTERN//,/ }"
 
 
+echo $PATLIST
+
 #--- Input info
 echo "----------------------------------------------------------------------------"
-echo "   Looking for samples from user: "$GRIDUSER"."
+echo "   Looking for samples from user: "$GRIDUSER
 echo "----------------------------------------------------------------------------"
 
 #--- RUCIO-GET
 cd $DIRECTORY
+[[ -f "tmp_ruciols.txt" ]] && rm -f tmp_ruciols.txt
 for tag in $TAGLIST ;
 do
     
@@ -76,7 +91,7 @@ do
     echo "   TAG: "$tag
     echo "----------------------------------------------------------------------------"
     
-    if [ -z "$VAR" ]; then
+    if [ -z "$PATLIST" ]; then
 
 	echo "   Doing: rucio list-dids user."$GRIDUSER".*"$tag"*_output.root/ > tmp_ruciols.txt"
 	rucio list-dids --short "user."$GRIDUSER".*"$tag"*_output.root/" --filter type=container >> tmp_ruciols.txt
@@ -126,11 +141,27 @@ do
 
 	if [ $MERGE == 1 ] 
 	then
-	    DSid=`echo $sampleName | cut -d'.' -f 4 | cut -d'_' -f 1`
+	    #new scheme
+	    DSid=`echo $sampleName | cut -d'.' -f 5 | cut -d'_' -f 1`
+	    sysName=`echo $sampleName | cut -d'.' -f 4 | cut -d'_' -f 1`
+
+	    #add protection for old name scheme
+	    re='^[0-9]+$'
+	    if [[ $sysName =~ $re ]] ; then 
+		DSid=`echo $sampleName | cut -d'.' -f 4 | cut -d'_' -f 1`
+		sysName="Nom"
+	    else
+	    #if new scheme, translate from sysID --> sysName
+		if ! [[ $sysName != "Nom" ]] ; then 
+		    sysId=`echo $sysName | cut -c 4-` 
+		    sysName=`sysname 4 | cut -f 3  | sed -e 's/^[[:space:]]*//'`
+		fi
+	    fi
+
 	    echo " "
 	    echo "   Proceed to merge files:"
-	    echo "   run_weights_grid  -i="$tmpDir" -o="$DIRECTORY"/"$folderName"/  "$optOFILE" -n="$DSid
-	    run_weights_grid "$tmpDir" -o="$DIRECTORY"/"$folderName"/  $optOFILE -n=$DSid
+	    echo "   run_weights_grid  -i="$tmpDir" -o="$DIRECTORY"/"$folderName"/  "$optOFILE" -n="$DSid" -s="$sysName
+	    run_weights_grid "$tmpDir" -o="$DIRECTORY"/"$folderName"/  $optOFILE -n=$DSid -s=$sysName
 	    #copy the files before removing
             #cp $tmpDir/* $DIRECTORY/$folderName/.
 	    rm -r $tmpDir
