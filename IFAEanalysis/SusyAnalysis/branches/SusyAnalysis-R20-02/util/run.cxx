@@ -255,6 +255,25 @@ void printSamplesList(){
   }
 }
 
+int getSystID(TString syst){
+
+  Systematics Sobj;
+  Sobj.LoadList();
+  return Sobj.getSystID(syst);
+  
+}
+
+TString getSystShort(TString syst){
+
+  if(syst=="Nom" || syst=="") return ".NOM"; //no tag for nominal run
+
+  //Get systematics ID otherwise
+  TString stag = Form(".SYS%d", getSystID(syst));
+
+  //dummy for now
+  return stag;
+}
+
 void printSystList(){
   Systematics Smap;
   Smap.LoadList();
@@ -271,7 +290,7 @@ int main( int argc, char* argv[] ) {
   bool runPrun  = false;
   bool runGrid  = false;
 
-  bool noBuild = false;
+  //  bool noBuild = false;
 
   std::string jOption    = "METbb";
   TString     queue      = "at3";
@@ -305,7 +324,7 @@ int main( int argc, char* argv[] ) {
   else if ( args[0] == "slist" ){ //just print systematics list?
     systListOnly=true;
     gErrorIgnoreLevel = kFatal;
-    args[0] = "test_ttbar_martin"; //"mc15_ttbar"; //TestDF"; //rename to test sample to get systematics list
+    args[0] = "singletop_cutflow"; //"test_ttbar_martin"; //"mc15_ttbar"; //TestDF"; //rename to test sample to get systematics list
   }
 
   //config options
@@ -341,9 +360,9 @@ int main( int argc, char* argv[] ) {
     if (opts[iop] == "a"){ //is AFII reco                                                                                                                                        
       isAFII = true;
     }
-    if (opts[iop] == "r"){ //avoid rebuilding libDS 
-      noBuild = true;
-    }
+    // if (opts[iop] == "r"){ //avoid rebuilding libDS 
+    //   noBuild = true;
+    // }
     else if (opts[iop] == "c" ){ //user-defined input dir
       userDir = true;
     }
@@ -440,11 +459,6 @@ int main( int argc, char* argv[] ) {
 
   //*** Systematics
   CP::SystematicSet syst_CP = CP::SystematicSet();
-  SystErr::Syste syst_ST = SystErr::NONE;
-  ScaleVariatioReweighter::variation syst_Scale = ScaleVariatioReweighter::None;
-  pileupErr::pileupSyste syst_PU = pileupErr::NONE;
-  JvfUncErr::JvfSyste syst_JVF = JvfUncErr::NONE;
-  BCHCorrMediumErr::BCHSyste syst_BCH = BCHCorrMediumErr::NONE;
   
   Systematics Sobj;
   Sobj.LoadList();
@@ -460,7 +474,7 @@ int main( int argc, char* argv[] ) {
 
   //  HandleMetadata(sh_all);
 
-  bool first = true;
+  //  bool first = true;
 
   // SampleHandler
   SampleHandler sh;
@@ -543,10 +557,10 @@ int main( int argc, char* argv[] ) {
        
 	//** Run on the grid
 	// When running in grid mode we add all samples in one single SH, so we speed up the submission time after the first (i.e. no rebuilding)
-	for(auto dsidb : run_ids){
+	for(auto dspn : run_patterns){
+	  cPattern = (userDir ? TString(getCmdOutput("readlink -f "+std::string(dspn.Data()))) : dspn);
 	  scanDQ2 (sh, cPattern.Data() );
 	  nID++;
-	  cPattern = (userDir ? TString(getCmdOutput("readlink -f "+std::string(run_patterns[nID].Data()))) : run_patterns[nID]);
 	}
 	if(isp < samples.size()-1){ //if not the last sample, break and keep acumulating into same SH
 	  isp++;
@@ -585,9 +599,11 @@ int main( int argc, char* argv[] ) {
       //Systematics loop
       unsigned int nsyst=0;
       for( const auto& syst : systematics){
+
+	std::cout << "RUNNING SYST = " << syst <<  std::endl;
 	
-	//fill systematics
-	Sobj.SystTranslate( syst, syst_CP, syst_ST, syst_Scale, syst_PU, syst_JVF, syst_BCH);
+	  //fill systematics
+	Sobj.SystTranslate( syst, syst_CP );
 	
 	//Create an EventLoop job:
 	EL::Job job;
@@ -622,10 +638,6 @@ int main( int argc, char* argv[] ) {
 
 	alg->syst_CP    = syst_CP;      // Systematics
 	alg->syst_CPstr = syst_CP.name();
-	alg->syst_ST    = syst_ST;      
-	alg->syst_Scale = syst_Scale;
-	alg->syst_PU    = syst_PU;
-	alg->syst_JVF   = syst_JVF;
 	alg->syst_JESNPset =  rEnv.GetValue("Syst.JESNPset",0);
 	
 	
@@ -647,7 +659,6 @@ int main( int argc, char* argv[] ) {
 	
 	//TTreeCache use
 	job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
-	
 	job.options()->setString (EL::Job::optXaodAccessMode, EL::Job::optXaodAccessMode_branch);
 
 	//Load alg to job
@@ -677,7 +688,7 @@ int main( int argc, char* argv[] ) {
 	else if(runPrun){ //Prun mode
 	  
 	  //** prun
-	  std::string outName = std::string(TString("user.%nickname%.IFAE.%in:name[2]%.%in:name[3]%")+vTag.Data());
+	  std::string outName = std::string(TString("user.%nickname%.IFAE")+getSystShort(syst).Data()+TString(".%in:name[2]%.%in:name[3]%")+vTag.Data()); 
 	  Pdriver.options()->setString("nc_outputSampleName", outName);
 	  Pdriver.options()->setDouble("nc_disableAutoRetry", 0);
 	  sh.setMetaString ("nc_grid_filter", "*.root*");
@@ -686,9 +697,8 @@ int main( int argc, char* argv[] ) {
 	  //   Pdriver.options()->setString (EL::Job::optSubmitFlags, "--libDS LAST --noSubmit ");
 	  // }
 	  // else
-	  //   Pdriver.options()->setString (EL::Job::optSubmitFlags, "--noSubmit ");
+	  //	  Pdriver.options()->setString (EL::Job::optSubmitFlags, "--noSubmit ");
 
-	  
 	  Pdriver.submitOnly( job, tmpdir );
 	  
 	  std::cout << "\n" << bold("Submitted!") << std::endl;
@@ -696,7 +706,7 @@ int main( int argc, char* argv[] ) {
 	    std::cout << "  Check it in " << link(Form("http://bigpanda.cern.ch/task/%d", (int)sh[i]->getMetaDouble("nc_jediTaskID"))) << " \n " << std::endl; //sh[i]->name()
 	  }
 	  
-	  first=false;
+	  //	  first=false;
 	}
 	else if(runGrid){ //grid mode
 	  

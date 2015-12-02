@@ -158,9 +158,6 @@ chorizo :: chorizo ()
 
   syst_CP  = CP::SystematicSet();
   syst_CPstr = "";
-  syst_ST  = SystErr::NONE;
-  syst_PU  = pileupErr::NONE; 
-  syst_JVF = JvfUncErr::NONE;
   syst_JESNPset = 1;
   
   systListOnly = false;
@@ -2027,7 +2024,6 @@ void chorizo :: printSystList(){
   vector<ST::SystInfo> systInfoList = tool_st->getSystInfoList();
   for(const auto& sysInfo : systInfoList){
     const CP::SystematicSet& sys = sysInfo.systset;
-    //    Info("", (sys.name()).c_str());
     
     string affectedType;
     switch(sysInfo.affectsType) {
@@ -2383,6 +2379,7 @@ EL::StatusCode chorizo :: loop ()
     }
   }
 
+
   //--- Trigger 
   if(!this->isQCD){
     for(const auto& chain : TriggerNames){
@@ -2727,7 +2724,7 @@ EL::StatusCode chorizo :: loop ()
   if(this->isMC){
 
     //Trigger expression
-    std::string mu_trig_sf = "HLT_mu24_imedium_OR_HLT_mu50";
+    std::string mu_trig_sf = "HLT_mu20_iloose_L1MU15_OR_HLT_mu50";
 
     //nominal 
     m_SF = tool_st->GetTotalMuonSF(*m_goodMuons,true,true,mu_trig_sf);
@@ -3481,6 +3478,10 @@ EL::StatusCode chorizo :: loop ()
 
 
     bool keep_event = (SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph));
+
+    //FIX ME! TEMPORAL SKIMMING FOR TTBARGAMMA STUDIES!
+    if(isStopTL)
+      keep_event = ((ph_N>0) && (bj_Nfc_77>1) && j_N>3);
 
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;
@@ -6059,102 +6060,7 @@ void chorizo::GetTruthShat(long int sigSamPdgId){
 double chorizo :: GetGeneratorUncertaintiesSherpa(){
   //--- Generator level uncertainites for Znunu+jet Sherpa :
 
-  // This procedure consists of applying the Alpgen scale variations to Sherpa using a reweighting based on the number of truth jets with pt > 30 GeV.
-  // https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/SUSYSystematicUncertainties2012#Sherpa_as_baseline_AN3
-  // Sherpa runs [167758 to 167844]
-  // Alpgen runs : Np0=156803 Np1=156804 Np2=156809 Np3=156814 Np4=156819 Np5=156824
-  //
-  // double GetWeight(int sampleId, variation var, mcperiod mc = mc12);
-  // enum variation{None,ktfacUP,ktfacDOWN,qfacUP,qfacDOWN,ptminUP,ptminDOWN,IqoptUP,IqoptDOWN,ScalesUP,ScalesDOWN,qfacUPktfacDOWN,qfacDOWNktfacUP};
-
-  if ( syst_Scale == ScaleVariatioReweighter::None ) return 1.;
-
-  //-- samples id
-  UInt_t wenu_ids[] = {167740, 167741, 167742, 167761, 167762, 167763, 167770, 167771, 167772, 167779, 167780, 167781, 167788, 167789, 167790};
-
-  UInt_t wmunu_ids[] = {167743, 167744, 167745, 167764, 167765, 167766, 167773, 167774, 167775, 167782, 167783, 167784, 167791, 167792, 167793};
-
-  UInt_t wtaunu_ids[] = {167746, 167747, 167748, 167767, 167768, 167769, 167776, 167777, 167778, 167785, 167786, 167787, 167794, 167795, 167796};
-
-  UInt_t zee_ids[] = {167749, 167750, 167751, 167797, 167798, 167799, 167809, 167810, 167811, 167821, 167822, 167823, 167833, 167834, 167835};
-
-  UInt_t zmumu_ids[] = {167752, 167753, 167754, 167800, 167801, 167802, 167812, 167813, 167814, 167824, 167825, 167826, 167836, 167837, 167838};
-
-  UInt_t ztautau_ids[] = {167755, 167756, 167757, 167803, 167804, 167805, 167815, 167816, 167817, 167827, 167828, 167829, 167839, 167840, 167841};
-
-  UInt_t znunu_ids[] = {167758, 167759, 167760, 167806, 167807, 167808, 167818, 167819,	167820, 167830, 167831, 167832, 167842, 167843, 167844};
-
-  //-- check sample
-  bool is_wenu = count(wenu_ids, wenu_ids+15, this->mc_channel_number) ;
-  bool is_wmunu = count(wmunu_ids, wmunu_ids+15, this->mc_channel_number) ;
-  bool is_wtaunu = count(wtaunu_ids, wtaunu_ids+15, this->mc_channel_number) ;
-
-  bool is_zee = count(zee_ids, zee_ids+15, this->mc_channel_number) ;
-  bool is_zmumu = count(zmumu_ids, zmumu_ids+15, this->mc_channel_number) ;
-  bool is_ztautau = count(ztautau_ids, ztautau_ids+15, this->mc_channel_number) ;
-  bool is_znunu = count(znunu_ids, znunu_ids+15, this->mc_channel_number) ;
-
-  bool is_other = !(is_wenu || is_wmunu || is_wtaunu || is_zee || is_zmumu || is_ztautau || is_znunu);
-
-
-  if ( is_other ) return 1.; //if not W/Z sample just leave
-
-   
-  int nTruthJets=0;
-  int sampleId=0;
-
-  xAOD::JetContainer::const_iterator tjet_itr = m_truth_jets->begin();
-  xAOD::JetContainer::const_iterator tjet_end = m_truth_jets->end();
-
-  xAOD::TruthParticleContainer::const_iterator truthP_itr;
-  xAOD::TruthParticleContainer::const_iterator truthP_end;
-
-  //loop over truth jets
-  TLorentzVector truthJet;
-  for( ; tjet_itr != tjet_end; ++tjet_itr ) {
-  
-    fillTLV( truthJet, (*tjet_itr), true);
-    
-    //look for overlapping electron
-    bool isElectronFakingJet = false;
-    truthP_itr = m_truthP->begin();
-    truthP_end = m_truthP->end();
-    for( ; truthP_itr != truthP_end; ++truthP_itr ) {
-      
-      TLorentzVector truthPart;
-      if ( isElectron( *truthP_itr ) && isStable( *truthP_itr ) ){
-  	fillTLV( truthPart, ( *truthP_itr ), true);
-  	if (truthPart.DeltaR(truthJet) < 0.1) {
-  	  isElectronFakingJet = true;
-  	  break;
-  	}
-      }
-    }
-    
-    if ( truthJet.Pt() > this->Jet_RecoPtCut && !isElectronFakingJet)
-      ++nTruthJets;
-  }
-  
-  //saturate n-jets
-  if(nTruthJets>5) nTruthJets=5;
-  
-  if (is_wenu)        sampleId = 107680+nTruthJets;
-  else if (is_wmunu)  sampleId = 107690+nTruthJets;
-  else if (is_wtaunu) sampleId = 107700+nTruthJets;
-  else if (is_zee)    sampleId = 107650+nTruthJets;
-  else if (is_zmumu)    sampleId = 107660+nTruthJets;
-  else if (is_ztautau)    sampleId = 107670+nTruthJets;
-  
-  if (is_znunu){
-    if (nTruthJets==0) sampleId=156803;
-    if (nTruthJets==1) sampleId=156804;
-    if (nTruthJets==2) sampleId=156809;
-    if (nTruthJets==3) sampleId=156814;
-    if (nTruthJets==4) sampleId=156819;
-    if (nTruthJets>=5) sampleId=156824;
-  }
-  
-  return ScaleVariatioReweighter::GetWeight(sampleId, syst_Scale );
+  return 1.;  // DUMMY YET IN RUN2
   
 }
  
