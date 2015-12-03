@@ -427,11 +427,13 @@ private:
   bool isVertexOk; //!
   bool isLarGood; //!
   bool isTileGood; //!
+  bool isSCTGood; //!  
   bool isTileTrip; //!
   bool isCoreFlag; //!
   bool isCosmic; //!
   bool isBadMuon; //!
-  
+  UInt_t CoreFlag; //!
+    
   bool passPreselectionCuts; 
 
   TNamed *meta_jOption; //!
@@ -647,7 +649,7 @@ private:
   //--- Declaration of leaf types                                                    
   //- Event Info
   UInt_t  RunNumber;        
-  UInt_t  EventNumber;
+  unsigned long long int EventNumber;
   UInt_t  lb;
   UInt_t  bcid;
   UInt_t  procID;
@@ -660,6 +662,7 @@ private:
   double   MC_w;
   float    PDF_w;
   float    pileup_w;
+  unsigned long long PRWHash; 
   float    bosonVect_w;
   float    Trigger_w;
   float    Trigger_w_avg;
@@ -790,7 +793,9 @@ private:
   float  e_truth_eta;
   float  e_truth_phi;
 
-  VInt   e_trigger; 
+  int e_trigger_HLT_e24_lhmedium_L1EM18VH;
+  int e_trigger_HLT_e60_lhmedium;
+  int e_trigger_HLT_e120_lhloose;
 
   //- Muon Info
   int    m_N;
@@ -814,8 +819,9 @@ private:
   VFloat mb_eta;
   VFloat mb_phi;
 
-  VInt   m_trigger; 
-
+  int   m_trigger_HLT_mu20_iloose_L1MU15; 
+  int   m_trigger_HLT_mu50; 
+  
   // Max bb-system  
   VInt index_min_dR_bb;
   VInt index_min_dR_pt_bb;  
@@ -911,7 +917,7 @@ private:
 
   //- Btagging
   int   bj_Nfc_70;
-  int   bj_Nfc_77;
+  int   bj_N;
   int   bj_Nfc_85;
 
   int   bj_Nfb_70;
