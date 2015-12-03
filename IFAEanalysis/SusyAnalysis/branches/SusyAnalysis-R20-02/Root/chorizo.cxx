@@ -208,7 +208,7 @@ void chorizo :: bookTree(){
 
   //add the branches to be saved
   m_atree->Branch ("RunNumber", &RunNumber, "RunNumber/I");
-  m_atree->Branch ("EventNumber", &EventNumber, "EventNumber/l");
+  m_atree->Branch ("EventNumber", &EventNumber);
   m_atree->Branch ("lb", &lb, "lb/I");
   m_atree->Branch ("bcid", &bcid, "bcid/I");
   m_atree->Branch ("procID", &procID, "procID/I");
@@ -231,9 +231,12 @@ void chorizo :: bookTree(){
   m_atree->Branch("isTileGood",&isTileGood,"isTileGood/O", 10000);
   m_atree->Branch("isTileTrip",&isTileTrip,"isTileTrip/O", 10000);
   m_atree->Branch("isCoreFlag",&isCoreFlag,"isCoreFlag/O", 10000);
+  m_atree->Branch("isSCTGood",&isSCTGood,"isSCTGood/O", 10000);  
   m_atree->Branch("isBadID",&isBadID,"isBadID/O", 10000);
   m_atree->Branch("isCosmic",&isCosmic,"isCosmic/O", 10000);
   m_atree->Branch("isBadMuon",&isBadMuon,"isBadMuon/O", 10000); 
+  m_atree->Branch("CoreFlag",&CoreFlag);
+  m_atree->Branch ("PRWHash", &PRWHash);                      
   
   
   //metadata
@@ -323,6 +326,7 @@ void chorizo :: bookTree(){
     m_atree->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
     
     //photons
+    /*
     m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
     m_atree->Branch("ph_pt",&ph_pt);
     m_atree->Branch("ph_eta",&ph_eta);
@@ -347,6 +351,7 @@ void chorizo :: bookTree(){
     m_atree->Branch ("ph_SFIsod", &ph_SFIsod,"ph_SFIsod/F");
 
     m_atree->Branch("ph_trigger",&ph_trigger);
+    */
     
     //electrons
     m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -363,12 +368,12 @@ void chorizo :: bookTree(){
     //m_atree->Branch("e_ptiso30",&e_ptiso30);
     //m_atree->Branch("e_etiso20",&e_etiso20);
     //m_atree->Branch("e_ptiso20",&e_ptiso20);
-    m_atree->Branch("e_isoT",&e_isoTight);
-    m_atree->Branch("e_isoL",&e_isoLoose);
-    m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
-    m_atree->Branch("e_isoG",&e_isoGradient);
-    m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
-    m_atree->Branch("e_id",&e_id);
+    //m_atree->Branch("e_isoT",&e_isoTight);
+    //m_atree->Branch("e_isoL",&e_isoLoose);
+    //m_atree->Branch("e_isoLTO",&e_isoLooseTrackOnly);
+    //m_atree->Branch("e_isoG",&e_isoGradient);
+    //m_atree->Branch("e_isoGLoose",&e_isoGradientLoose);
+    //m_atree->Branch("e_id",&e_id);
     //m_atree->Branch("e_d0_sig",&e_d0_sig);  
     //m_atree->Branch("e_z0",&e_z0);      
     
@@ -377,7 +382,9 @@ void chorizo :: bookTree(){
     m_atree->Branch("eb_eta",&eb_eta);
     m_atree->Branch("eb_phi",&eb_phi);
     
-    m_atree->Branch("e_trigger",&e_trigger);
+    m_atree->Branch("e_trigger_HLT_e24_lhmedium_L1EM18VH",&e_trigger_HLT_e24_lhmedium_L1EM18VH,"e_trigger_HLT_e24_lhmedium_L1EM18VH/I", 10000);
+    m_atree->Branch("e_trigger_HLT_e60_lhmedium",&e_trigger_HLT_e60_lhmedium,"e_trigger_HLT_e60_lhmedium/I", 10000);
+    m_atree->Branch("e_trigger_HLT_e120_lhloose",&e_trigger_HLT_e120_lhloose,"e_trigger_HLT_e120_lhloose/I", 10000);
     
     m_atree->Branch("e_MT",&e_MT,"e_MT/F", 10000);
     m_atree->Branch("e_MT_vmu",&e_MT_vmu,"e_MT_vmu/F", 10000);      
@@ -398,18 +405,19 @@ void chorizo :: bookTree(){
     //m_atree->Branch("m_ptiso20",&m_ptiso20);          
     //m_atree->Branch("m_etiso30",&m_etiso30);          
     //m_atree->Branch("m_ptiso30",&m_ptiso30);          
-    m_atree->Branch("m_isoTight",&m_isoTight);
-    m_atree->Branch("m_isoLoose",&m_isoLoose);
-    m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
-    m_atree->Branch("m_isoGradient",&m_isoGradient);
-    m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
+    //m_atree->Branch("m_isoTight",&m_isoTight);
+    //m_atree->Branch("m_isoLoose",&m_isoLoose);
+    //m_atree->Branch("m_isoLooseTrackOnly",&m_isoLooseTrackOnly);
+    //m_atree->Branch("m_isoGradient",&m_isoGradient);
+    //m_atree->Branch("m_isoGradientLoose",&m_isoGradientLoose);
     
     m_atree->Branch("mb_N",&mb_N,"mb_N/I",10000);
     m_atree->Branch("mb_pt",&mb_pt);
     m_atree->Branch("mb_eta",&mb_eta);
     m_atree->Branch("mb_phi",&mb_phi);
     
-    m_atree->Branch("m_trigger",&m_trigger);
+    m_atree->Branch("m_trigger_HLT_mu20_iloose_L1MU15",&m_trigger_HLT_mu20_iloose_L1MU15,"m_trigger_HLT_mu20_iloose_L1MU15/I", 10000);
+    m_atree->Branch("m_trigger_HLT_mu50",&m_trigger_HLT_mu50,"m_trigger_HLT_mu50/I", 10000);
     
     m_atree->Branch("m_M",&m_M,"m_M/F", 10000);                            
     m_atree->Branch("m_MT",&m_MT,"m_MT/F", 10000);    
@@ -478,7 +486,7 @@ void chorizo :: bookTree(){
 
     //// fixed cut 
     m_atree->Branch("bj_Nfc_70",&bj_Nfc_70,"bj_Nfc_70/I", 10000);
-    m_atree->Branch("bj_Nfc_77",&bj_Nfc_77,"bj_Nfc_77/I", 10000);
+    m_atree->Branch("bj_N",&bj_N,"bj_N/I", 10000);
     m_atree->Branch("bj_Nfc_85",&bj_Nfc_85,"bj_Nfc_85/I", 10000);
 
     //// b-flat
@@ -545,12 +553,12 @@ void chorizo :: bookTree(){
     //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
       
     // Max bb-system
-    m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
-    m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
-    m_atree->Branch("min_dR_bb",&min_dR_bb); 
-    m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
+    //m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
+    //m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
+    //m_atree->Branch("min_dR_bb",&min_dR_bb); 
+    //m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
       
-    m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
+    //m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
     m_atree->Branch("dPhi_min",&dPhi_min);
     m_atree->Branch("dPhi_min_alljets",&dPhi_min_alljets);
     m_atree->Branch("dPhi_min_4jets",&dPhi_min_4jets);
@@ -579,20 +587,21 @@ void chorizo :: bookTree(){
     m_atree->Branch("Melb_min",&Melb_min,"Melb_min/f", 10000);   
     m_atree->Branch("Mmub_min",&Mmub_min,"Mmub_min/f", 10000);         
       
+    /*
     m_atree->Branch("sumET_cst",&sumET_cst,"sumET_cst/f", 10000);
     m_atree->Branch("sumET_cst_vmu",&sumET_cst_vmu,"sumET_cst_vmu/f", 10000);
     m_atree->Branch("sumET_tst",&sumET_tst,"sumET_tst/f", 10000);
     m_atree->Branch("sumET_tst_vmu",&sumET_tst_vmu,"sumET_tst_vmu/f", 10000);
     m_atree->Branch("sumET_truth",&sumET_truth,"sumET_truth/f", 10000);
     m_atree->Branch("sumET_truth_vmu",&sumET_truth_vmu,"sumET_truth_vmu/f", 10000);
-
+    */
 
     //MTs
-    m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
-    m_atree->Branch("MT_bcl_met",&MT_bcl_met);
-    m_atree->Branch("MT_bfar_met",&MT_bfar_met);
-    m_atree->Branch("MT_lcl_met",&MT_lcl_met);
-    m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
+    //m_atree->Branch("MT_min_jet_met",&MT_min_jet_met);
+    //m_atree->Branch("MT_bcl_met",&MT_bcl_met);
+    //m_atree->Branch("MT_bfar_met",&MT_bfar_met);
+    //m_atree->Branch("MT_lcl_met",&MT_lcl_met);
+    //m_atree->Branch("MT_jsoft_met",&MT_jsoft_met);
 
     //Misc
     m_atree->Branch("mjj",&mjj,"mjj/F", 10000);  
@@ -622,7 +631,7 @@ void chorizo :: bookTree(){
     //      m_atree->Branch("lep3_MT",&lep3_MT);
     //      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
 
-
+/*
     //top reconstruction
     m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
     m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
@@ -638,7 +647,7 @@ void chorizo :: bookTree(){
     m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
     m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
     m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
-      
+*/      
     //Extended trigger info
     if(doTrigExt){
 
@@ -965,11 +974,14 @@ void chorizo :: InitVars()
   trigPS.clear();
   isVertexOk = true;                
   isLarGood = true;                 
-  isTileGood = true;                
+  isTileGood = true;  
+  isSCTGood = true;                  
   isTileTrip = false;                
   isCoreFlag = false;          
   isCosmic = false;          
   isBadMuon = false;          
+  CoreFlag = 0;  
+  PRWHash = 0;
       
   passPreselectionCuts = false;
 
@@ -982,6 +994,7 @@ void chorizo :: InitVars()
   bosonVect_w = 1.;  
   Trigger_w = 1.;    
   Trigger_w_avg = 1.;
+  
 
   e_SF = 1.;
   e_SFIDu = 1.;
@@ -1096,8 +1109,10 @@ void chorizo :: InitVars()
   e_truth_eta = DUMMYDN;       
   e_truth_phi = DUMMYDN;       
 
-  e_trigger.clear();
-  
+  e_trigger_HLT_e24_lhmedium_L1EM18VH = 0;
+  e_trigger_HLT_e60_lhmedium = 0; 
+  e_trigger_HLT_e120_lhloose = 0; 
+ 
   e_M = DUMMYDN;      
   e_MT = DUMMYDN;   
   e_MT_vmu = DUMMYDN;     
@@ -1146,8 +1161,9 @@ void chorizo :: InitVars()
   mb_eta.clear();
   mb_phi.clear();
 
-  m_trigger.clear();
-
+  m_trigger_HLT_mu20_iloose_L1MU15 = 0;
+  m_trigger_HLT_mu50 = 0;
+  
   m_M = DUMMYDN;                
   m_MT = DUMMYDN;  
   m_MT_vmu = DUMMYDN;                
@@ -1214,7 +1230,7 @@ void chorizo :: InitVars()
                                                
   //- Btagging  
   bj_Nfc_70 =0;
-  bj_Nfc_77 =0;
+  bj_N =0;
   bj_Nfc_85 =0;
 
   bj_Nfb_70 =0;
@@ -1641,7 +1657,7 @@ EL::StatusCode chorizo :: ReadConfig(){
   Jet_TaggerOp     = TString( rEnv.GetValue("BJet.op1","FixedCutBEff_77") );
   Jet_TaggerOp2    = TString( rEnv.GetValue("BJet.op2","FixedCutBEff_85") );
   
-  Jet_PreselPtCut  = rEnv.GetValue("Jet.Pt", 20000.);
+  Jet_PreselPtCut  = rEnv.GetValue("Jet.Pt", 35000.);
   Jet_PreselEtaCut = rEnv.GetValue("Jet.Eta", 2.8);
   Jet_RecoPtCut    = rEnv.GetValue("SignalJet.Pt", 35000.);
   Jet_RecoEtaCut   = rEnv.GetValue("SignalJet.Eta", 2.8);
@@ -1763,7 +1779,8 @@ EL::StatusCode chorizo :: initialize ()
   if(!this->isTruth){
 
     tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
-    CHECK( tool_st->setProperty("ConfigFile", "SUSYTools/SUSYTools_Default.conf") );
+    //CHECK( tool_st->setProperty("ConfigFile", "SUSYTools/SUSYTools_Default.conf") );
+    CHECK( tool_st->setProperty("ConfigFile", "SUSYTools/SUSYTools_Default.conf") );    
     CHECK( tool_st->setProperty("DataSource", datasource) );
     CHECK( tool_st->setProperty("Is25ns", is25ns ));
     
@@ -1786,7 +1803,7 @@ EL::StatusCode chorizo :: initialize ()
       PURW_Folder = maindir + "/SusyAnalysis/PURW/";
 
     TString prwfile = PURW_Folder+"merged_prw.root";
-    if (isSignal) prwfile = PURW_Folder+"mergedSignals_prw.root";
+    if ((eventInfo->mcChannelNumber()>=387000 && eventInfo->mcChannelNumber()<=387127) || eventInfo->mcChannelNumber()==406003) prwfile = PURW_Folder+"mergedSignals_prw.root";
     if (!is25ns && isMC) prwfile = PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
     
     std::vector<std::string> prw_conf;
@@ -2415,6 +2432,9 @@ EL::StatusCode chorizo :: loop ()
     this->isTileGood = (eventInfo->errorState(xAOD::EventInfo::Tile) != xAOD::EventInfo::Error);
     this->isTileTrip = !tool_tileTrip->checkEvent(RunNumber,  lb,  EventNumber); //--- Does not depend on the definition of the objects.
     this->isCoreFlag = !(eventInfo->eventFlags(xAOD::EventInfo::Core) & 0x40000);
+    this->isSCTGood = ( eventInfo->errorState(xAOD::EventInfo::SCT) != xAOD::EventInfo::Error );
+    this->CoreFlag = eventInfo->eventFlags(xAOD::EventInfo::Core);
+    
   }
 
   //--- Preselection flag
@@ -2616,7 +2636,25 @@ EL::StatusCode chorizo :: loop ()
     } //if Nominal
   } //if MC
 
+  std::string el_trig1 = "HLT_e24_lhmedium_L1EM18VH";
+  std::string el_trig1_data = "HLT_e24_lhmedium_L1EM20VH";
+  std::string el_trig2 = "HLT_e60_lhmedium";
+  std::string el_trig3 = "HLT_e120_lhloose";
+    
+  for (unsigned int i=0; i<m_goodElectrons->size(); i++){
+    if (this->isMC){
+      if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig1) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e24_lhmedium_L1EM18VH=1;
+    }
+    
+    else {
+      if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig1_data) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e24_lhmedium_L1EM18VH=1;
+  }
+  
+       if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig2) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e60_lhmedium=1;
+       if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig3) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e120_lhloose=1;
 
+  
+  }
 
   //-- Pre-book baseline muons (after OR)
   bool IsMuon = false; // any good not-overlapping muon in the event?
@@ -2754,7 +2792,14 @@ EL::StatusCode chorizo :: loop ()
   } //if MC
 
 
-
+  std::string mu_trig1 = "HLT_mu20_iloose_L1MU15";
+  std::string mu_trig2 = "HLT_mu50";  
+ 
+  for (unsigned int i=0; i<m_goodMuons->size(); i++){
+    if (tool_st->IsTrigMatched(m_goodMuons->at(i),mu_trig1) && m_goodMuons->at(i)->pt()>26000.) m_trigger_HLT_mu20_iloose_L1MU15=1;
+    if (tool_st->IsTrigMatched(m_goodMuons->at(i),mu_trig2) && m_goodMuons->at(i)->pt()>26000.) m_trigger_HLT_mu50=1;    
+      
+  }
 
   //-- Pre-book baseline photons (after OR)
   std::vector<Particle> photonCandidates; //intermediate selection photons
@@ -2860,7 +2905,9 @@ EL::StatusCode chorizo :: loop ()
     //flag event if bad jet is found
     this->isBadID |= dec_bad(**jet_itr);
 
-    if(! tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut) ) continue; //just book signal jets!
+    //if(! tool_st->IsSignalJet( **jet_itr, Jet_RecoPtCut, Jet_RecoEtaCut, Jet_RecoJVTCut) ) continue; //just book signal jets!
+    if(! (*jet_itr)->auxdata< char >("signal") ) continue; //just book signal jets!
+
 
     if(isStopTL) {
       if( fabs((*jet_itr)->eta()) > Jet_RecoEtaCut ) continue; 
@@ -3071,7 +3118,7 @@ EL::StatusCode chorizo :: loop ()
 
       if ( tJet->pt() > 20000. )
 	jb_truth_N++;
-      if ( tJet->pt() > 50000. && fabs(tJet->eta()) < Jet_RecoEtaCut ) j_truth_N++;
+      if ( tJet->pt() > 20000. && fabs(tJet->eta()) < Jet_RecoEtaCut ) j_truth_N++;
 
     }
   }
@@ -3082,7 +3129,7 @@ EL::StatusCode chorizo :: loop ()
 
     if(fabs(cjet.Eta())<2.5){
       if ( cjet.isbjet_fc70) bj_Nfc_70++;
-      if ( cjet.isbjet_fc77) bj_Nfc_77++;
+      if ( cjet.isbjet_fc77) bj_N++;
       if ( cjet.isbjet_fc85) bj_Nfc_85++;
 
       if( cjet.isbjet_fb70 ) bj_Nfb_70++;
@@ -3132,7 +3179,7 @@ EL::StatusCode chorizo :: loop ()
   j_N  = recoJets.size();
   
   if (doCutFlow) myfile << "n of signal jets: " << j_N << " \n"; 
-  if (doCutFlow) myfile << "n of signal b-jets (77% fc): " << bj_Nfc_77 << " \n"; 
+  if (doCutFlow) myfile << "n of signal b-jets (77% fc): " << bj_N << " \n"; 
 
   //** btagging weights
   if(isMC){
@@ -3453,7 +3500,30 @@ EL::StatusCode chorizo :: loop ()
   //*** Event Skimming (if requested)
   if(m_skim){
     
-    bool SK_passBtagging = (bj_Nfc_77>0 || bj_Nfb_77);
+    
+    bool SK_pass1B = (bj_N==1 && mct>150 && metmap[::MetDef::VisMuTST].Mod() > 100.);
+    
+    bool SK_pass2B = (bj_N==2 && e_N!=2 && m_N!=2 && metmap[::MetDef::VisMuTST].Mod() > 100.);    
+                    
+    //bool SK_passSR_sbot = ( ((eb_N+mb_N)==0) &&  (metmap[::MetDef::VisMuTST].Mod() > 250. ) );
+ 
+    bool SK_passCRee = ( bj_N==2 && e_N==2 &&  (metmap[::MetDef::VisMuTSTECorr].Mod() > 100.) );
+   
+    bool SK_passCRmm = ( bj_N==2 && m_N==2 &&  (metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.) );
+    
+    //bool SK_passCRee = ( (e_N==2) );
+   
+    //bool SK_passCRmm = ( (m_N==2));    
+    
+    bool SK_jetpt = (j_N>1 && recoJets.at(0).Pt()>50. && recoJets.at(1).Pt()>50.);
+    
+    bool keep_event = true;
+    
+    if (m_skim) keep_event = ( SK_jetpt && (SK_pass1B || SK_pass2B || SK_passCRee || SK_passCRmm));
+    
+    
+    /*
+    bool SK_passBtagging = (bj_N>0);
     
     bool SK_passMETdef = (metmap[::MetDef::InvMu].Mod() > 100. 
 			  || metmap[::MetDef::VisMu].Mod() > 100. );
@@ -3478,10 +3548,11 @@ EL::StatusCode chorizo :: loop ()
 
 
     bool keep_event = (SK_passBtagging && (SK_passSR || SK_passCRe || SK_passCRmu || SK_passCRph));
-
+    */
+    
     //FIX ME! TEMPORAL SKIMMING FOR TTBARGAMMA STUDIES!
     if(isStopTL)
-      keep_event = ((ph_N>0) && (bj_Nfc_77>1) && j_N>3);
+      keep_event = ((ph_N>0) && (bj_N>1) && j_N>3);
 
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;
@@ -3686,7 +3757,7 @@ EL::StatusCode chorizo :: loop ()
     met_lochadtopo = met_obj.GetVector("met_locHadTopo").Mod();    
 
   //Truth Filter MET (all neutrinos from top)
-  UInt_t MET_ids[] = {410000, 410013, 410014, 407012, 407019, 407021}; //nominal   //filtered : 407012, 407019, 407021;
+  UInt_t MET_ids[] = {410000, 410013, 410014}; //407012, 407019, 407021}; //nominal   //filtered : 407012, 407019, 407021;
   if ( this->isMC && count(MET_ids, MET_ids+84, this->mc_channel_number) ){
     met_top = (float) Calc_TruthNuMET()*0.001;  // this cast is actually needed to reproduce what the filter does
   }
@@ -4019,8 +4090,8 @@ EL::StatusCode chorizo :: loop ()
 
   
   //--- Boson Pt   <---  V(lv).Pt()
-  TVector2 V_lnu = met_obj.GetVector("met_imu");
-  TVector2 V_lnu_vmu = met_obj.GetVector("met_vmu");  
+  TVector2 V_lnu = met_obj.GetVector("met_tst_imu");
+  TVector2 V_lnu_vmu = met_obj.GetVector("met_tst_vmu");  
   for (unsigned int iEl=0; iEl < recoElectrons.size(); iEl++){
     TVector2 electron_vector2(recoElectrons.at(iEl).GetVector().Px(), recoElectrons.at(iEl).GetVector().Py());
     V_lnu += electron_vector2;
@@ -4512,7 +4583,7 @@ EL::StatusCode chorizo :: loop_truth()
 
     if ( recoJet.isbjet ){
       bj_Nfc_70++;
-      bj_Nfc_77++;
+      bj_N++;
       bj_Nfc_85++;
     }
 
@@ -5079,7 +5150,7 @@ void chorizo :: dumpLeptons(){
     e_id.push_back( fill ?   recoElectrons.at(iel).id  : DUMMYDN );
     e_d0_sig.push_back( fill ?  recoElectrons.at(iel).d0_sig  : DUMMYDN );
     e_z0.push_back( fill ?  recoElectrons.at(iel).z0  : DUMMYDN );
-    e_trigger.push_back( fill ?  (int)recoElectrons.at(iel).isTrigMatch : DUMMYDN );
+    //e_trigger.push_back( fill ?  (int)recoElectrons.at(iel).isTrigMatch : DUMMYDN );
   }
   
   e_truth_pt  = (truthElectrons.size()>0) ? truthElectrons.at(0).Pt()  : DUMMYDN;
@@ -5117,7 +5188,7 @@ void chorizo :: dumpLeptons(){
     m_isoLooseTrackOnly.push_back( fill ?  recoMuons.at(imu).isoLooseTrackOnly  : DUMMYDN );
     m_isoGradient.push_back( fill ?  recoMuons.at(imu).isoGradient  : DUMMYDN );
     m_isoGradientLoose.push_back( fill ?  recoMuons.at(imu).isoGradientLoose  : DUMMYDN );
-    m_trigger.push_back( fill ?  (int)recoMuons.at(imu).isTrigMatch  : DUMMYDN );
+    //m_trigger.push_back( fill ?  (int)recoMuons.at(imu).isTrigMatch  : DUMMYDN );
   }
   
 }
@@ -6238,7 +6309,7 @@ void chorizo :: RecoHadTops(int ibtop1, int ibtop2){
     m_top_had2 = DUMMYDN;
   }
 
-  if (bj_Nfc_77>=2 && recoJets.size()>=6){
+  if (bj_N>=2 && recoJets.size()>=6){
        
       Wjet1=Wjet2=-1;
        
