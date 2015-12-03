@@ -1,4 +1,7 @@
 2015-12-01 Martin <tripiana@cern.ch>
+	* Fix config settings for Jets
+
+2015-12-01 Martin <tripiana@cern.ch>
 	* Move to SUSY,2.3.37a
 	* Add photon info
 	* Clean systematics code

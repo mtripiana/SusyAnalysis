@@ -1657,11 +1657,11 @@ EL::StatusCode chorizo :: ReadConfig(){
   Jet_TaggerOp     = TString( rEnv.GetValue("BJet.op1","FixedCutBEff_77") );
   Jet_TaggerOp2    = TString( rEnv.GetValue("BJet.op2","FixedCutBEff_85") );
   
-  Jet_PreselPtCut  = rEnv.GetValue("Jet.Pt", 35000.);
-  Jet_PreselEtaCut = rEnv.GetValue("Jet.Eta", 2.8);
-  Jet_RecoPtCut    = rEnv.GetValue("SignalJet.Pt", 35000.);
-  Jet_RecoEtaCut   = rEnv.GetValue("SignalJet.Eta", 2.8);
-  Jet_RecoJVTCut   = rEnv.GetValue("Jet.jvt", 0.64);
+  Jet_PreselPtCut  = rEnv.GetValue("JetBaseline.Pt", 20000.);
+  Jet_PreselEtaCut = rEnv.GetValue("JetBaseline.Eta", 2.8);
+  Jet_RecoPtCut    = rEnv.GetValue("Jet.Pt", 35000.);
+  Jet_RecoEtaCut   = rEnv.GetValue("Jet.Eta", 2.8);
+  Jet_RecoJVTCut   = rEnv.GetValue("Jet.Jvt", 0.64);
   
 
   Info(whereAmI, Form("- QCD") );
@@ -2898,9 +2898,6 @@ EL::StatusCode chorizo :: loop ()
   for( ; jet_itr != jet_end; ++jet_itr ){
     
     if( doOR && !dec_passOR(**jet_itr) ) continue;
-
-    // if( dec_bad(**jet_itr) )
-    //   cout << "BAD JET FOUND!!" << endl;
 
     //flag event if bad jet is found
     this->isBadID |= dec_bad(**jet_itr);
