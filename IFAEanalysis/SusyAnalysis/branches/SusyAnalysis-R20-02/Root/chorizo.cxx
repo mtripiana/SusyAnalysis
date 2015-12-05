@@ -138,6 +138,7 @@ chorizo :: chorizo ()
   isMC=false;
   isSignal=false;
   is25ns=false;
+  isMC15b=false;
   isTruth=false;
   leptonType="";
 
@@ -512,6 +513,8 @@ void chorizo :: bookTree(){
     m_atree->Branch("btag_weight_total_77fc_effLd",&btag_weight_total_77fc_effLd,"btag_weight_total_77fc_effLd/F", 10000);
     m_atree->Branch("btag_weight_total_77fc_extru",&btag_weight_total_77fc_extru,"btag_weight_total_77fc_extru/F", 10000);
     m_atree->Branch("btag_weight_total_77fc_extrd",&btag_weight_total_77fc_extrd,"btag_weight_total_77fc_extrd/F", 10000);
+    m_atree->Branch("btag_weight_total_77fc_extrcu",&btag_weight_total_77fc_extrcu,"btag_weight_total_77fc_extrcu/F", 10000);
+    m_atree->Branch("btag_weight_total_77fc_extrcd",&btag_weight_total_77fc_extrcd,"btag_weight_total_77fc_extrcd/F", 10000);
     
     
     //// truth
@@ -1253,6 +1256,8 @@ void chorizo :: InitVars()
   btag_weight_total_77fc_effLd = 1.;  
   btag_weight_total_77fc_extru = 1.;  
   btag_weight_total_77fc_extrd = 1.;  
+  btag_weight_total_77fc_extrcu = 1.;  
+  btag_weight_total_77fc_extrcd = 1.;  
 
   j_btruth_70.clear();
   j_btruth_77.clear();
@@ -1803,8 +1808,9 @@ EL::StatusCode chorizo :: initialize ()
       PURW_Folder = maindir + "/SusyAnalysis/PURW/";
 
     TString prwfile = PURW_Folder+"merged_prw.root";
-    if ((eventInfo->mcChannelNumber()>=387000 && eventInfo->mcChannelNumber()<=387127) || eventInfo->mcChannelNumber()==406003) prwfile = PURW_Folder+"mergedSignals_prw.root";
+    if (isMC && ((eventInfo->mcChannelNumber()>=387000 && eventInfo->mcChannelNumber()<=387127) || eventInfo->mcChannelNumber()==406003)) prwfile = PURW_Folder+"mergedSignals_prw.root";
     if (!is25ns && isMC) prwfile = PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+    if (isMC15b && isMC) prwfile = PURW_Folder+"MC15b.prw.ttbar.root";    
     
     std::vector<std::string> prw_conf;
     prw_conf.push_back(prwfile.Data());
@@ -1819,7 +1825,31 @@ EL::StatusCode chorizo :: initialize ()
     CHECK( tool_st->setProperty("DoBjetOR", doORbjets) );
     CHECK( tool_st->setProperty("DoPhotonOR", doORphotons) );
     
+    int m_showerType;
     
+    
+    if (isMC) { 
+      if ((eventInfo->mcChannelNumber()>=387000 && eventInfo->mcChannelNumber()<=387127) || eventInfo->mcChannelNumber()==406003) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
+      else if (eventInfo->mcChannelNumber()>=361063 && eventInfo->mcChannelNumber()<=361068) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
+      else if (eventInfo->mcChannelNumber()>=361081 && eventInfo->mcChannelNumber()<=361087) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
+      else if (eventInfo->mcChannelNumber()>=361300 && eventInfo->mcChannelNumber()<=361467) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
+      else if (eventInfo->mcChannelNumber()>=410011 && eventInfo->mcChannelNumber()<=410014) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
+      else if (eventInfo->mcChannelNumber()==410000 || eventInfo->mcChannelNumber()==410025 || eventInfo->mcChannelNumber()==410026 || eventInfo->mcChannelNumber()==407012 || eventInfo->mcChannelNumber()==407019 || eventInfo->mcChannelNumber()==407021) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
+      else if (eventInfo->mcChannelNumber()>=410066 && eventInfo->mcChannelNumber()<=410068) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
+      else if (eventInfo->mcChannelNumber()>=410073 && eventInfo->mcChannelNumber()<=410075) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
+      else if (eventInfo->mcChannelNumber()>=410080 && eventInfo->mcChannelNumber()<=410081) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
+      else if (eventInfo->mcChannelNumber()>=410111 && eventInfo->mcChannelNumber()<=410116) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );    
+      else if (eventInfo->mcChannelNumber()>=407010 && eventInfo->mcChannelNumber()<=407011) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
+      else if (eventInfo->mcChannelNumber()>=342282 && eventInfo->mcChannelNumber()<=342285) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
+      else if (eventInfo->mcChannelNumber()>=361020 && eventInfo->mcChannelNumber()<=361032) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
+      else if (eventInfo->mcChannelNumber()>=410001 && eventInfo->mcChannelNumber()<=410002) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
+      else if (eventInfo->mcChannelNumber()==410006) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
+      else if (eventInfo->mcChannelNumber()>=410021 && eventInfo->mcChannelNumber()<=410023) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
+      else if (eventInfo->mcChannelNumber()==410015 || eventInfo->mcChannelNumber()==410016 || eventInfo->mcChannelNumber()==410062 || eventInfo->mcChannelNumber()==410063 || eventInfo->mcChannelNumber()==410064 || eventInfo->mcChannelNumber()==410065) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );   
+      else if (eventInfo->mcChannelNumber()==410003 || eventInfo->mcChannelNumber()==410004 || eventInfo->mcChannelNumber()==341270) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 1) );   
+      else CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
+    }
+   
     //    CHECK( tool_st->SUSYToolsInit() );
     CHECK( tool_st->initialize() );
     tool_st->msg().setLevel( MSG::ERROR ); //set message level 
@@ -1833,7 +1863,6 @@ EL::StatusCode chorizo :: initialize ()
       }
     }
   }
-
   
   //--- B-tagging
   TString JetTagCollection = JetCollection+"Jets";
@@ -3248,7 +3277,8 @@ EL::StatusCode chorizo :: loop ()
       btag_weight_total_77fc_effLd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_Light_systematics__1down"));
       btag_weight_total_77fc_extru = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_extrapolation__1up"));
       btag_weight_total_77fc_extrd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_extrapolation__1down"));
-      
+      btag_weight_total_77fc_extrcu = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_extrapolation from charm__1up"));         
+      btag_weight_total_77fc_extrcd = tool_st->BtagSFsys(m_goodJets, CP::SystematicSet("FT_EFF_extrapolation from charm__1down"));    
     }
   }
   
@@ -5096,7 +5126,7 @@ EL::StatusCode chorizo :: loop_truth()
 
 
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
-  RunNumber = mc_channel_number;
+  if (isMC) RunNumber = mc_channel_number;
   
   //---Fill missing data members 
   this->dumpLeptons();
