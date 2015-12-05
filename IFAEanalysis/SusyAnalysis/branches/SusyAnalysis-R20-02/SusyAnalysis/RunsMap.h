@@ -814,8 +814,12 @@ m_map["singletop_cutflow"] = rlist( Rpair(410013, "/nfs/at3/scratch/sfracchia/SU
     m_map["mc15b_PowhegPythiaEvtGen_P2012CT10_ttbarHT1k_1k5_hdamp172p5_nonAH"] = rlist( Rpair(407010, "mc15_13TeV.407010.PowhegPythiaEvtGen_P2012CT10_ttbarHT1k_1k5_hdamp172p5_nonAH.merge.DAOD_SUSY7.e4023_s2608_r7326_r6282_p2470/"));
     m_map["mc15b_PowhegPythiaEvtGen_P2012CT10_ttbarHT1k5_hdamp172p5_nonAH"] = rlist( Rpair(407011, "mc15_13TeV.407011.PowhegPythiaEvtGen_P2012CT10_ttbarHT1k5_hdamp172p5_nonAH.merge.DAOD_SUSY7.e4023_s2608_r7326_r6282_p2470/"));
 
+    m_map["mc15b_PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad"] = rlist( Rpair(410000, "mc15_13TeV.410000.PowhegPythiaEvtGen_P2012_ttbar_hdamp172p5_nonallhad.merge.DAOD_SUSY7.e3698_s2608_s2183_r6765_r6282_p2452"));
 
-
+    m_map["mc15b_PowhegPythiaEvtGen_P2012CT10_ttbarHT6c_1k_hdamp172p5_nonAH"] = rlist( Rpair(407009, "mc15_13TeV.407009.PowhegPythiaEvtGen_P2012CT10_ttbarHT6c_1k_hdamp172p5_nonAH.merge.DAOD_SUSY7.e4023_s2608_r7326_r6282_p2470"));
+    m_map["mc15b_PowhegPythiaEvtGen_P2012radHi_ttbar_hdamp345_down_nonallhad"] = rlist( Rpair(410001, "mc15_13TeV.410001.PowhegPythiaEvtGen_P2012radHi_ttbar_hdamp345_down_nonallhad.merge.DAOD_SUSY7.e3783_s2608_r7326_r6282_p2470"));
+    m_map["mc15b_PowhegPythiaEvtGen_P2012radLo_ttbar_hdamp172_up_nonallhad"] = rlist( Rpair(410002, "mc15_13TeV.410002.PowhegPythiaEvtGen_P2012radLo_ttbar_hdamp172_up_nonallhad.merge.DAOD_SUSY7.e3783_s2608_r7326_r6282_p2470"));
+    m_map["mc15b_aMcAtNloHerwigppEvtGen_ttbar_nonallhad"] = rlist( Rpair(410003, "mc15_13TeV.410003.aMcAtNloHerwigppEvtGen_ttbar_nonallhad.merge.DAOD_SUSY7.e3964_a766_a810_r6282_p2470"));
 };
 
 VRpair RunsMap :: rlist( Rpair run1, Rpair run2, Rpair run3, Rpair run4, Rpair run5,
