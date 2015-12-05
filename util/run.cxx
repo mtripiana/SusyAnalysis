@@ -622,7 +622,8 @@ int main( int argc, char* argv[] ) {
 	alg->jOption = jOption;
 	
 	alg->isSignal   = (bool) rEnv.GetValue("Global.isSignal",0);
-	alg->is25ns     = (bool) rEnv.GetValue("Global.is25ns",1);
+	alg->is25ns     = (bool) rEnv.GetValue("Global.is25ns",1);	
+	alg->isMC15b     = (bool) rEnv.GetValue("Global.isMC15b",0);
 	alg->isQCD      = (bool) rEnv.GetValue("Tools.JetSmear.enable",0);
 	alg->isAtlfast  = isAFII; 
 	alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)

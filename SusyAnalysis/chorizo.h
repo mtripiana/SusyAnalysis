@@ -188,6 +188,7 @@ public:
   bool isQCD;
   bool isSignal;
   bool is25ns;
+  bool isMC15b;  
   bool isAtlfast;
   bool isNCBG;
   bool is8TeV;
@@ -936,6 +937,8 @@ private:
   float btag_weight_total_77fc_effLd;
   float btag_weight_total_77fc_extru;
   float btag_weight_total_77fc_extrd;
+  float btag_weight_total_77fc_extrcu;
+  float btag_weight_total_77fc_extrcd;
 
 
   int bj_Nt_70;
