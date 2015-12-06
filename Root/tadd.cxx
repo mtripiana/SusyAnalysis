@@ -128,6 +128,141 @@ void AddNewBranch(TString fileName, Float_t FileWeight, float nsimAOD, float sum
   f->Close();
 }
 
+void findDuplicates(TString fileName, float nsim, float sumw, bool isData){
+  TFile *f3 = new TFile(fileName.Data(),"update");
+  TTree *t3 = (TTree*)f3->Get("AnalysisTree");
+ 
+  Int_t nentries = (Int_t)t3->GetEntries();
+ 
+  //set to store the list of duplicate entries
+  set<unsigned long long> dups;
+  set<unsigned long long> type4;  
+  //pair containing the eventnumber, truth variable 
+  set<std::pair<unsigned long long, float> > eventIds;
+  set<std::pair<unsigned long long, float> > eventIds_reco;  
+  
+  unsigned long long event;
+  float truth_pt;
+  float MCT;
+  unsigned long long ndup=0;
+  float wdup=0;  
+  double MC_w;
+  
+  TBranch *b_event;
+  TBranch *b_truth_pt;
+  TBranch *b_MCT;  
+  TBranch *b_MCw;  
+  
+  t3->SetBranchAddress("EventNumber",&event, &b_event);
+  t3->SetBranchAddress("j_truth_pt1",&truth_pt, &b_truth_pt); 
+  t3->SetBranchAddress("MC_w",&MC_w, &b_MCw); 
+  t3->SetBranchAddress("mct",&MCT, &b_MCT);   
+  
+  bool isDuplicated = false; 
+  bool isDup =false;
+  bool isType4=false;
+  float nsim_dupcorr;
+  float sumw_dupcorr;
+  
+  if (isData) {
+    nsim_dupcorr=1.;
+    sumw_dupcorr=1.;       
+  }
+  else {
+    nsim_dupcorr=nsim;
+    sumw_dupcorr=sumw;       
+  }  
+  
+    
+  std::pair<unsigned long long,float> my_pair;
+  std::pair<unsigned long long,float> my_pair_reco;  
+   
+  
+  TBranch *b_dup = t3-> Branch("isDuplicated",&isDuplicated,"isDuplicated/O");
+  TBranch *b_dup_type4 = t3-> Branch("isDuplicated_type4",&isType4,"isType4/O");
+ 
+  TBranch *b_nsim_dupcorr = t3-> Branch("nsimAOD_dupcorr",&nsim_dupcorr,"nsimAOD_dupcorr/F");  
+  TBranch *b_sumw_dupcorr = t3-> Branch("sumwAOD_dupcorr",&sumw_dupcorr,"sumwAOD_dupcorr/F");  
+     
+   for(unsigned long long j=0;j<nentries;j++)
+     {
+       b_event->GetEntry(j);
+       b_truth_pt->GetEntry(j);
+       b_MCw->GetEntry(j);     
+       b_MCT->GetEntry(j);         
+   
+       
+       //if(int(10*j/nentries) > flast)
+       //  {
+       //    cout << j << " / " << nentries <<  " ( " << 100*j/nentries << " % ) checked for duplicates " <<   endl;
+       //    flast=int(10*j/nentries);
+       //  }
+       if (!isData) {
+         my_pair = std::make_pair(event,truth_pt);
+         my_pair_reco = std::make_pair(event,MCT);	 
+       }
+       else my_pair = std::make_pair(event,MCT);
+       // check to see if an eventnumber with a met value has already been seen
+       if(eventIds.count(my_pair) ==0)
+         {
+	   // record the eventnumber and met of that event if not seen before
+           eventIds.insert(my_pair);
+         }
+       else
+         {
+           // if already seen, then duplicate event!!!!
+           //cout << event << " " << truth_pt << endl;	   
+           dups.insert(j);
+	   isDup=true;
+           std::cout << "duplicate at entry.." << j << " " << event << " " << truth_pt << std::endl;
+
+         }
+        
+	if (!isData){
+	   
+	   if(eventIds_reco.count(my_pair_reco) ==0){	
+              
+	      eventIds_reco.insert(my_pair_reco);
+	      if (isDup){  
+	        
+	        type4.insert(j);
+	        if (!isData){
+	          ndup++;
+	          wdup+=MC_w;
+	   
+	       } 
+
+	      }
+
+	    }
+	 }  
+      }  
+
+   for(unsigned long long j=0;j<nentries;j++)
+     {
+         isDuplicated = dups.count(j);
+	 isType4 = type4.count(j);	
+	 
+	 if(isDuplicated && isType4) {
+	    
+          nsim_dupcorr=nsim - ndup;
+          sumw_dupcorr=sumw -wdup; 	    
+	   
+	 }
+	  
+	 b_dup->Fill();
+	 b_dup_type4->Fill();	 
+	 b_nsim_dupcorr->Fill();
+	 b_sumw_dupcorr->Fill();
+	 	 
+     }
+      
+
+  t3->Write("",TObject::kOverwrite);
+  f3->Close();     
+     
+}
+
 void addAverageWeight(TString fileName){
 
   TFile *f3 = new TFile(fileName.Data(),"update");
@@ -445,6 +580,7 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
 
   cout<<"\nAdding anti_e_SF and anti_m_SF..."<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
+  findDuplicates(outfile.Data(),nsim_total, nweight_total, isData); 
 
   cout << endl;
   cout << bold("Target file : \n                    ") << outfile  << endl;
@@ -482,6 +618,7 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   addAverageWeight(outfile.Data());
   cout<<"\nAdding anti_e_SF and anti_m_SF ..."<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
+  findDuplicates(outfile.Data(),nsim_total, nweight_total, isData); 
 
   cout << endl;
   cout << bold("Target file : \n                    ") << outfile  << endl;
