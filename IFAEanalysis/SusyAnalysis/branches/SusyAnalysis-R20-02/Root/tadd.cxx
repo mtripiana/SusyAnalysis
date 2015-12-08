@@ -299,7 +299,8 @@ void addAverageWeight(TString fileName){
 
   }
 
-  cout<<"Total events: "<<TotalEvents<<endl;
+  cout << "Total events: " << nentries << endl;
+  cout << "Total events (weighted): " << TotalEvents << endl;
   //cout<<"Total events_noPU: "<<TotalEvents_noPU<<endl; 
   
   average_w = TotalEvents/nentries;
