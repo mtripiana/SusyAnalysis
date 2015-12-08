@@ -529,7 +529,7 @@ int main( int argc, char* argv[] ) {
       
       if(!userDir && single_id>=0 && dsid != single_id) continue; //pick only chosen DSID (if given)
       
-      TString cPattern = (userDir ? TString(getCmdOutput("readlink -f "+std::string(run_patterns[nID].Data()))) : run_patterns[nID]);
+      TString cPattern = (userDir && !runPrun && !runGrid ? TString(getCmdOutput("readlink -f "+std::string(run_patterns[nID].Data()))) : run_patterns[nID]);
       
       //** Run on local samples
       if(runLocal){ // || userDir){
@@ -558,7 +558,7 @@ int main( int argc, char* argv[] ) {
 	//** Run on the grid
 	// When running in grid mode we add all samples in one single SH, so we speed up the submission time after the first (i.e. no rebuilding)
 	for(auto dspn : run_patterns){
-	  cPattern = (userDir ? TString(getCmdOutput("readlink -f "+std::string(dspn.Data()))) : dspn);
+	  cPattern = dspn.Data(); //(userDir ? TString(getCmdOutput("readlink -f "+std::string(dspn.Data()))) : dspn);
 	  scanDQ2 (sh, cPattern.Data() );
 	  nID++;
 	}
@@ -623,11 +623,10 @@ int main( int argc, char* argv[] ) {
 	
 	alg->isSignal   = (bool) rEnv.GetValue("Global.isSignal",0);
 	alg->is25ns     = (bool) rEnv.GetValue("Global.is25ns",1);	
-	alg->isMC15b     = (bool) rEnv.GetValue("Global.isMC15b",0);
 	alg->isQCD      = (bool) rEnv.GetValue("Tools.JetSmear.enable",0);
 	alg->isAtlfast  = isAFII; 
 	alg->leptonType = "";      //get it from D3PDReader-like code (add metadata to SH)
-	alg->isNCBG     = false;   //get it from the XML!!
+	//	alg->isNCBG     = false;   //get it from the XML!!
 	
 	alg->isTruth    = isTruth;   //to run over truth xAOD (e.g. TRUTH1 derivation)
 	
@@ -698,8 +697,8 @@ int main( int argc, char* argv[] ) {
 	  //   Pdriver.options()->setString (EL::Job::optSubmitFlags, "--libDS LAST --noSubmit ");
 	  // }
 	  // else
-	  //	  Pdriver.options()->setString (EL::Job::optSubmitFlags, "--noSubmit ");
-
+	  // Pdriver.options()->setString (EL::Job::optSubmitFlags, "--noSubmit ");
+	  
 	  Pdriver.submitOnly( job, tmpdir );
 	  
 	  std::cout << "\n" << bold("Submitted!") << std::endl;

@@ -138,7 +138,6 @@ chorizo :: chorizo ()
   isMC=false;
   isSignal=false;
   is25ns=false;
-  isMC15b=false;
   isTruth=false;
   leptonType="";
 
@@ -218,6 +217,8 @@ void chorizo :: bookTree(){
   m_atree->Branch ("nVertex", &nVertex, "nVertex/I");                        
   //common vars
   m_atree->Branch ("pileup_w", &pileup_w, "pileup_w/F");                  
+  // m_atree->Branch ("pileup_DSFu_w", &pileup_DSFu_w, "pileup_DSFu_w/F");                  
+  // m_atree->Branch ("pileup_DSFd_w", &pileup_DSFd_w, "pileup_DSFd_w/F");                  
   m_atree->Branch ("MC_w", &MC_w, "MC_w/D");                       
   
   //presel
@@ -298,28 +299,30 @@ void chorizo :: bookTree(){
     m_atree->Branch ("bosonVec_truth_pt", &bosonVec_truth_pt, "bosonVec_truth_pt/F");             
     m_atree->Branch ("bosonVec_truth_eta", &bosonVec_truth_eta, "bosonVec_truth_eta/F");             
     m_atree->Branch ("bosonVec_truth_phi", &bosonVec_truth_phi, "bosonVec_truth_phi/F");             
-    
-    m_atree->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
-    m_atree->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
-    m_atree->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
-    m_atree->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
-    
+    if(m_xdoZdecay){   
+      m_atree->Branch ("Z_decay", &Z_decay, "Z_decay/I");             
+      m_atree->Branch ("Z_pt", &Z_pt, "Z_pt/F");             
+      m_atree->Branch ("Z_eta", &Z_eta, "Z_eta/F");             
+      m_atree->Branch ("Z_phi", &Z_phi, "Z_phi/F");             
+    }
+
     //truth
     m_atree->Branch("truth_M",&truth_M,"truth_M/F", 10000);
     m_atree->Branch("truth_MT",&truth_MT,"truth_MT/F", 10000);
     
-    
-    m_atree->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
-    
-    m_atree->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
-    m_atree->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
-    m_atree->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
-    m_atree->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
-    m_atree->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
-    m_atree->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
-    m_atree->Branch("truth_met",&truth_met,"truth_met/F", 10000);
-    m_atree->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
-    
+    if(m_xdoTruthN){    
+      m_atree->Branch("truth_n_HFjets",&truth_n_HFjets,"truth_n_HFjets/I", 10000);
+      
+      m_atree->Branch("truth_n_leptons",&truth_n_leptons,"truth_n_leptons/I", 10000); 
+      m_atree->Branch("truth_Lep1_pt",&truth_Lep1_pt,"truth_Lep1_pt/F", 10000);
+      m_atree->Branch("truth_Lep2_pt",&truth_Lep2_pt,"truth_Lep2_pt/F", 10000);
+      m_atree->Branch("truth_m_fiducial",&truth_m_fiducial,"truth_m_fiducial/B", 10000);
+      m_atree->Branch("truth_shat",&truth_shat,"truth_shat/F", 10000);
+      m_atree->Branch("truth_shat_pt",&truth_shat_pt,"truth_shat_pt/F", 10000);
+      m_atree->Branch("truth_met",&truth_met,"truth_met/F", 10000);
+      m_atree->Branch("truth_met_noEle",&truth_met_noEle,"truth_met_noEle/F", 10000);
+    }
+
     //top
     m_atree->Branch("Top_truth_pt",&Top_truth_pt,"Top_truth_pt/F", 10000);
     m_atree->Branch("Topbar_truth_pt",&Topbar_truth_pt,"Topbar_truth_pt/F", 10000);
@@ -327,32 +330,32 @@ void chorizo :: bookTree(){
     m_atree->Branch("ttbar_weight",&ttbar_weight,"ttbar_weight/F", 10000);
     
     //photons
-    /*
-    m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
-    m_atree->Branch("ph_pt",&ph_pt);
-    m_atree->Branch("ph_eta",&ph_eta);
-    m_atree->Branch("ph_phi",&ph_phi);
-    m_atree->Branch("ph_etiso40",&ph_etiso40);
-    m_atree->Branch("ph_ptiso40",&ph_ptiso40);
-    m_atree->Branch("ph_tight",&ph_tight);
-    m_atree->Branch("ph_type",&ph_type);
-    m_atree->Branch("ph_origin",&ph_origin);
-    m_atree->Branch("ph_barcode",&ph_barcode);
-    m_atree->Branch("ph_momid",&ph_momid);
-    m_atree->Branch("ph_pt_truth",&ph_pt_truth);
-
-    m_atree->Branch("ph_isoLoose",&ph_isoLoose);      
-    m_atree->Branch("ph_isoTightCO",&ph_isoTightCO);
-    m_atree->Branch("ph_isoTight",&ph_isoTight);      
-        
-    m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
-    m_atree->Branch ("ph_SFIDu", &ph_SFIDu,"ph_SFIDu/F");
-    m_atree->Branch ("ph_SFIDd", &ph_SFIDd,"ph_SFIDd/F");
-    m_atree->Branch ("ph_SFIsou", &ph_SFIsou,"ph_SFIsou/F");
-    m_atree->Branch ("ph_SFIsod", &ph_SFIsod,"ph_SFIsod/F");
-
-    m_atree->Branch("ph_trigger",&ph_trigger);
-    */
+    if(m_xdoPhotons){
+      m_atree->Branch("ph_N",&ph_N,"ph_N/I", 10000);
+      m_atree->Branch("ph_pt",&ph_pt);
+      m_atree->Branch("ph_eta",&ph_eta);
+      m_atree->Branch("ph_phi",&ph_phi);
+      m_atree->Branch("ph_etiso40",&ph_etiso40);
+      m_atree->Branch("ph_ptiso40",&ph_ptiso40);
+      m_atree->Branch("ph_tight",&ph_tight);
+      m_atree->Branch("ph_type",&ph_type);
+      m_atree->Branch("ph_origin",&ph_origin);
+      m_atree->Branch("ph_barcode",&ph_barcode);
+      m_atree->Branch("ph_momid",&ph_momid);
+      m_atree->Branch("ph_pt_truth",&ph_pt_truth);
+      
+      m_atree->Branch("ph_isoLoose",&ph_isoLoose);      
+      m_atree->Branch("ph_isoTightCO",&ph_isoTightCO);
+      m_atree->Branch("ph_isoTight",&ph_isoTight);      
+      
+      m_atree->Branch ("ph_SF", &ph_SF,"ph_SF/F");
+      m_atree->Branch ("ph_SFIDu", &ph_SFIDu,"ph_SFIDu/F");
+      m_atree->Branch ("ph_SFIDd", &ph_SFIDd,"ph_SFIDd/F");
+      m_atree->Branch ("ph_SFIsou", &ph_SFIsou,"ph_SFIsou/F");
+      m_atree->Branch ("ph_SFIsod", &ph_SFIsod,"ph_SFIsod/F");
+      
+      m_atree->Branch("ph_trigger",&ph_trigger);
+    }
     
     //electrons
     m_atree->Branch("e_truth_pt",&e_truth_pt,"e_truth_pt/F", 10000);
@@ -537,16 +540,18 @@ void chorizo :: bookTree(){
     //m_atree->Branch("met_lochadtopo", &met_lochadtopo, "met_lochadtopo/F", 10000);
     m_atree->Branch("met_top", &met_top, "met_top/F", 10000);
 
+    if(m_xdoEventTopo){
     //met recoil system
-    //m_atree->Branch("rmet_par", &rmet_par);
-    //m_atree->Branch("rmet_norm", &rmet_norm);
-    //m_atree->Branch("rmet_par_mod", &rmet_par_mod);
-    //m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
-    //m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
-
-    //(transv. thrust and sphericity
-    //m_atree->Branch("tr_spher",&tr_spher); 
-    //m_atree->Branch("tr_thrust",&tr_thrust); 
+      m_atree->Branch("rmet_par", &rmet_par);
+      m_atree->Branch("rmet_norm", &rmet_norm);
+      m_atree->Branch("rmet_par_mod", &rmet_par_mod);
+      m_atree->Branch("rmet_norm_mod", &rmet_norm_mod);
+      m_atree->Branch("rmet_dPhi_met_jetsys", &rmet_dPhi_met_jetsys);
+      
+      //(transv. thrust and sphericity
+      m_atree->Branch("tr_spher",&tr_spher); 
+      m_atree->Branch("tr_thrust",&tr_thrust); 
+    }
 
     //event variables
     //dphi
@@ -556,10 +561,12 @@ void chorizo :: bookTree(){
     //m_atree->Branch("dPhi_met_j4",&dPhi_met_j4);
       
     // Max bb-system
-    //m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
-    //m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
-    //m_atree->Branch("min_dR_bb",&min_dR_bb); 
-    //m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
+    if(m_xdoTopReco){
+      m_atree->Branch("index_min_dR_bb",&index_min_dR_bb); 
+      m_atree->Branch("index_min_dR_pt_bb",&index_min_dR_pt_bb);      
+      m_atree->Branch("min_dR_bb",&min_dR_bb); 
+      m_atree->Branch("min_dR_pt_bb",&min_dR_pt_bb);      
+    }
       
     //m_atree->Branch("dPhi_met_mettrk",&dPhi_met_mettrk); //recompute from mini-ntuples? //CHECK_ME
     m_atree->Branch("dPhi_min",&dPhi_min);
@@ -614,43 +621,48 @@ void chorizo :: bookTree(){
     m_atree->Branch("mct_corr",&mct_corr);    
     m_atree->Branch("meff",&meff);
     m_atree->Branch("HT",&HT,"HT/F", 10000);    
-    //       m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
-    //       
-    //       //Razor
-    //       m_atree->Branch("MR",&MR,"MR/F", 10000);
-    //       m_atree->Branch("MTR",&MTR);
-    //       m_atree->Branch("R",&R);
-    //             
-    //       m_atree->Branch("shatR",&shatR);
-    //       m_atree->Branch("gaminvR",&gaminvR);
-    //       m_atree->Branch("mdeltaR",&mdeltaR);
-    //       m_atree->Branch("cosptR",&cosptR);
-      
-    //Z candidate 
-    //      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
-    //      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
-    //      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
-    //      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
-    //      m_atree->Branch("lep3_MT",&lep3_MT);
-    //      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
 
-/*
+    if(m_xdoRazor){
+      //Razor
+      m_atree->Branch("AlphaT",&AlphaT,"AlphaT/F", 10000);
+      m_atree->Branch("MR",&MR,"MR/F", 10000);
+      m_atree->Branch("MTR",&MTR);
+      m_atree->Branch("R",&R);
+      
+      m_atree->Branch("shatR",&shatR);
+      m_atree->Branch("gaminvR",&gaminvR);
+      m_atree->Branch("mdeltaR",&mdeltaR);
+      m_atree->Branch("cosptR",&cosptR);
+    }
+
+    //Z candidate 
+    if(m_xdoZdecay){
+      m_atree->Branch("Z_flav",&Z_flav,"Z_flav/I", 10000);
+      m_atree->Branch("Z_lep1",&Z_lep1,"Z_lep1/I", 10000);
+      m_atree->Branch("Z_lep2",&Z_lep2,"Z_lep2/I", 10000);
+      m_atree->Branch("Z_m",&Z_m,"Z_m/F", 10000);
+      m_atree->Branch("lep3_MT",&lep3_MT);
+      m_atree->Branch("lep_mct",&lep_mct,"lep_mct/F", 10000);
+    }
+
     //top reconstruction
-    m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
-    m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
-    m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
-    //fat jets 
-    m_atree->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
-    m_atree->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
-    m_atree->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
-    m_atree->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
-    m_atree->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
-    m_atree->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
-    m_atree->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
-    m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
-    m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
-    m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
-*/      
+    if(m_xdoTopReco){
+      m_atree->Branch("MtTop",&MtTop,"MtTop/F", 10000);     
+      m_atree->Branch("m_top_had1",&m_top_had1,"m_top_had1/F", 10000);     
+      m_atree->Branch("m_top_had2",&m_top_had2,"m_top_had2/F", 10000);      
+      //fat jets 
+      m_atree->Branch("m0_antikt12",&m0_antikt12,"m0_antikt12/F", 10000);  
+      m_atree->Branch("m1_antikt12",&m1_antikt12,"m1_antikt12/F", 10000);  
+      m_atree->Branch("m0_antikt08",&m0_antikt08,"m0_antikt08/F", 10000); 
+      m_atree->Branch("m1_antikt08",&m1_antikt08,"m1_antikt08/F", 10000);  
+      m_atree->Branch("pt0_antikt12",&pt0_antikt12,"pt0_antikt12/F", 10000);
+      m_atree->Branch("pt1_antikt12",&pt1_antikt12,"pt1_antikt12/F", 10000);
+      m_atree->Branch("pt0_antikt08",&pt0_antikt08,"pt0_antikt08/F", 10000);
+      m_atree->Branch("pt1_antikt08",&pt1_antikt08,"pt1_antikt08/F", 10000);
+      m_atree->Branch("mtasym12",&mtasym12,"mtasym12/F", 10000);        
+      m_atree->Branch("mtasym08",&mtasym08,"mtasym08/F", 10000);        
+    }
+
     //Extended trigger info
     if(doTrigExt){
 
@@ -994,6 +1006,8 @@ void chorizo :: InitVars()
   MC_w = 1.;         
   PDF_w = 1.;        
   pileup_w = 1.;        
+  // pileup_DSFu_w = 1.;        
+  // pileup_DSFd_w = 1.;        
   bosonVect_w = 1.;  
   Trigger_w = 1.;    
   Trigger_w_avg = 1.;
@@ -1704,6 +1718,20 @@ EL::StatusCode chorizo :: ReadConfig(){
   BookPhSignal  = (unsigned int) rEnv.GetValue("Booking.PhSig",1);
   BookJetSignal = (unsigned int) rEnv.GetValue("Booking.JetSig",6);
 
+
+  //Extra variables 
+  Info(whereAmI, Form(" - Extras" ));     
+  m_xdoPhotons     = (bool)rEnv.GetValue("Extra.doPhotons",0);
+  m_xdoZdecay      = (bool)rEnv.GetValue("Extra.doZdecay",0);
+  m_xdoTopReco     = (bool)rEnv.GetValue("Extra.doTopReco",0);
+  m_xdoTruthN      = (bool)rEnv.GetValue("Extra.doTruthN",0);
+  m_xdoEventTopo   = (bool)rEnv.GetValue("Extra.doEventTopo",0);
+  m_xdoRazor       = (bool)rEnv.GetValue("Extra.doRazor",0);
+  m_xdoBpartons    = (bool)rEnv.GetValue("Extra.doBpartons",0);
+  m_xdoTruthTaus   = (bool)rEnv.GetValue("Extra.doTruthTaus",0);
+  m_xdoTrackVeto   = (bool)rEnv.GetValue("Extra.doTrackVeto",0);
+  
+
   //--- Systematics
   //...
   
@@ -1768,8 +1796,10 @@ EL::StatusCode chorizo :: initialize ()
   const xAOD::EventInfo* eventInfo = 0;
   CHECK( m_event->retrieve( eventInfo, "EventInfo") );
   
-  isMC = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
-  
+  isMC    = eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION );
+  bool isMC15b = ( eventInfo->runNumber() == 222526 );
+
+
   //--- Corrected mct calculator
   tool_mct = new TMctLib();
 
@@ -1780,14 +1810,15 @@ EL::StatusCode chorizo :: initialize ()
   ST::SettingDataSource datasource = !this->isMC ? ST::Data : (this->isAtlfast ? ST::AtlfastII : ST::FullSim);
   //  m_isderived = isDerived(); //should be filled in already!
 
+
   //--- SUSYTools
   if(!this->isTruth){
 
     tool_st = new ST::SUSYObjDef_xAOD( "SUSYObjDef_xAOD" );
-    //CHECK( tool_st->setProperty("ConfigFile", "SUSYTools/SUSYTools_Default.conf") );
-    CHECK( tool_st->setProperty("ConfigFile", "SUSYTools/SUSYTools_Default.conf") );    
-    CHECK( tool_st->setProperty("DataSource", datasource) );
+    CHECK( tool_st->setProperty("ConfigFile", maindir + "/SusyAnalysis/"+jOption+".conf"));
+    CHECK( tool_st->setProperty("DataSource", datasource));
     CHECK( tool_st->setProperty("Is25ns", is25ns ));
+    CHECK( tool_st->setProperty("IsMC15b", isMC15b ));
     
     //redefine isolation WPs (if needed)
     if(El_isoWP=="None"){      
@@ -1808,9 +1839,11 @@ EL::StatusCode chorizo :: initialize ()
       PURW_Folder = maindir + "/SusyAnalysis/PURW/";
 
     TString prwfile = PURW_Folder+"merged_prw.root";
-    if (isMC && ((eventInfo->mcChannelNumber()>=387000 && eventInfo->mcChannelNumber()<=387127) || eventInfo->mcChannelNumber()==406003)) prwfile = PURW_Folder+"mergedSignals_prw.root";
-    if (!is25ns && isMC) prwfile = PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
-    if (isMC15b && isMC) prwfile = PURW_Folder+"MC15b.prw.ttbar.root";    
+    if (isMC){
+      if(isMC15b) prwfile = PURW_Folder+"MC15b.prw.ttbar.root";    
+      else if( ((eventInfo->mcChannelNumber()>=387000 && eventInfo->mcChannelNumber()<=387127) || eventInfo->mcChannelNumber()==406003)) prwfile = PURW_Folder+"mergedSignals_prw.root";
+      else if(!is25ns) prwfile = PURW_Folder+Form("%i",  eventInfo->mcChannelNumber())+".prw.root";
+    }
     
     std::vector<std::string> prw_conf;
     prw_conf.push_back(prwfile.Data());
@@ -1825,29 +1858,31 @@ EL::StatusCode chorizo :: initialize ()
     CHECK( tool_st->setProperty("DoBjetOR", doORbjets) );
     CHECK( tool_st->setProperty("DoPhotonOR", doORphotons) );
     
-    int m_showerType;
     
-    
-    if (isMC) { 
-      if ((eventInfo->mcChannelNumber()>=387000 && eventInfo->mcChannelNumber()<=387127) || eventInfo->mcChannelNumber()==406003) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
-      else if (eventInfo->mcChannelNumber()>=361063 && eventInfo->mcChannelNumber()<=361068) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
-      else if (eventInfo->mcChannelNumber()>=361081 && eventInfo->mcChannelNumber()<=361087) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
-      else if (eventInfo->mcChannelNumber()>=361300 && eventInfo->mcChannelNumber()<=361467) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
-      else if (eventInfo->mcChannelNumber()>=410011 && eventInfo->mcChannelNumber()<=410014) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
-      else if (eventInfo->mcChannelNumber()==410000 || eventInfo->mcChannelNumber()==410025 || eventInfo->mcChannelNumber()==410026 || eventInfo->mcChannelNumber()==407012 || eventInfo->mcChannelNumber()==407019 || eventInfo->mcChannelNumber()==407021) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
-      else if (eventInfo->mcChannelNumber()>=410066 && eventInfo->mcChannelNumber()<=410068) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
-      else if (eventInfo->mcChannelNumber()>=410073 && eventInfo->mcChannelNumber()<=410075) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
-      else if (eventInfo->mcChannelNumber()>=410080 && eventInfo->mcChannelNumber()<=410081) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
-      else if (eventInfo->mcChannelNumber()>=410111 && eventInfo->mcChannelNumber()<=410116) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );    
-      else if (eventInfo->mcChannelNumber()>=407010 && eventInfo->mcChannelNumber()<=407011) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
-      else if (eventInfo->mcChannelNumber()>=342282 && eventInfo->mcChannelNumber()<=342285) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
-      else if (eventInfo->mcChannelNumber()>=361020 && eventInfo->mcChannelNumber()<=361032) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
-      else if (eventInfo->mcChannelNumber()>=410001 && eventInfo->mcChannelNumber()<=410002) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
-      else if (eventInfo->mcChannelNumber()==410006) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 2) );
-      else if (eventInfo->mcChannelNumber()>=410021 && eventInfo->mcChannelNumber()<=410023) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 3) );
-      else if (eventInfo->mcChannelNumber()==410015 || eventInfo->mcChannelNumber()==410016 || eventInfo->mcChannelNumber()==410062 || eventInfo->mcChannelNumber()==410063 || eventInfo->mcChannelNumber()==410064 || eventInfo->mcChannelNumber()==410065) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );   
-      else if (eventInfo->mcChannelNumber()==410003 || eventInfo->mcChannelNumber()==410004 || eventInfo->mcChannelNumber()==341270) CHECK( tool_st->declareProperty("ShowerType", m_showerType = 1) );   
-      else CHECK( tool_st->declareProperty("ShowerType", m_showerType = 0) );
+    if (isMC) {
+      unsigned int mcn = (eventInfo->mcChannelNumber());
+      unsigned int showerType=0;
+
+      if ((mcn>=387000 && mcn<=387127) || mcn==406003) showerType=0;
+      else if (mcn>=361063 && mcn<=361068) showerType = 3;
+      else if (mcn>=361081 && mcn<=361087) showerType = 3;
+      else if (mcn>=361300 && mcn<=361467) showerType = 3;
+      else if (mcn>=410011 && mcn<=410014) showerType = 0;
+      else if (mcn==410000 || mcn==410025 || mcn==410026 || mcn==407012 || mcn==407019 || mcn==407021) showerType = 0;
+      else if (mcn>=410066 && mcn<=410068) showerType = 2;
+      else if (mcn>=410073 && mcn<=410075) showerType = 2;
+      else if (mcn>=410080 && mcn<=410081) showerType = 2;
+      else if (mcn>=410111 && mcn<=410116) showerType = 2;    
+      else if (mcn>=407010 && mcn<=407011) showerType = 0;
+      else if (mcn>=342282 && mcn<=342285) showerType = 2;
+      else if (mcn>=361020 && mcn<=361032) showerType = 2;
+      else if (mcn>=410001 && mcn<=410002) showerType = 0;
+      else if (mcn==410006) showerType = 2;
+      else if (mcn>=410021 && mcn<=410023) showerType = 3;
+      else if (mcn==410015 || mcn==410016 || mcn==410062 || mcn==410063 || mcn==410064 || mcn==410065) showerType = 0;   
+      else if (mcn==410003 || mcn==410004 || mcn==341270) showerType = 1;   
+      
+      CHECK( tool_st->declareProperty("ShowerType", showerType ));
     }
    
     //    CHECK( tool_st->SUSYToolsInit() );
@@ -2205,9 +2240,9 @@ EL::StatusCode chorizo :: loop ()
   m_truth_jets= 0;
 
   //  -- Truth Particles
-  const xAOD::MissingETContainer* cmet_truth;    
-  const xAOD::MissingET* mtruth_inv;
-  const xAOD::MissingET* mtruth_vis;
+  const xAOD::MissingETContainer* cmet_truth(0);    
+  const xAOD::MissingET* mtruth_inv(0);
+  const xAOD::MissingET* mtruth_vis(0);
   if(this->isMC){
         
     CHECK( m_event->retrieve( m_truthE,     "TruthEvents" ) );
@@ -2252,7 +2287,6 @@ EL::StatusCode chorizo :: loop ()
   //EventList
   if(m_eventList.size()){
     if( !inEventList(RunNumber, EventNumber) ){
-      //      output->setFilterPassed (false);    
       return nextEvent();
     } 
   }
@@ -2351,8 +2385,9 @@ EL::StatusCode chorizo :: loop ()
     return nextEvent();
   }
 
+ 
   //------------------------ ttbar reweighting ---------------------------
-  if (isMC) {
+  if (isMC && m_xdoTruthN) {
     if (mc_channel_number==117050 || mc_channel_number==110401) {
       ttbar_weight = this->GetTTbarReweight(Top_truth_pt, Topbar_truth_pt, avTop_truth_pt);
     }     
@@ -2455,6 +2490,7 @@ EL::StatusCode chorizo :: loop ()
     return nextEvent(); //skip event
   }
 
+
   //--- Quality cuts applied only on data
   if (!this->isMC) {
     this->isLarGood  = (eventInfo->errorState(xAOD::EventInfo::LAr) != xAOD::EventInfo::Error);
@@ -2488,6 +2524,7 @@ EL::StatusCode chorizo :: loop ()
     if(debug) Info("loop()", Form("NCBG run %d\t%d", RunNumber, EventNumber));
   }
 
+
   //--- Get Electrons
   if(debug) Info("loop()", " Before GetElectrons()");
   xAOD::ElectronContainer* electrons_sc(0);
@@ -2516,11 +2553,14 @@ EL::StatusCode chorizo :: loop ()
   if(debug) Info("loop()", " Before GetPhotons()");
   xAOD::PhotonContainer* photons_sc(0);
   xAOD::ShallowAuxContainer* photons_scaux(0);
-  CHECK( tool_st->GetPhotons(photons_sc, photons_scaux) ); //'baseline' decoration
 
-  //redefine iso decoration if needed
-  for(const auto& ph_itr : *photons_sc){ 
-    if(noPhIso) dec_isol(*ph_itr) = true;
+  if(m_xdoPhotons){
+    CHECK( tool_st->GetPhotons(photons_sc, photons_scaux) ); //'baseline' decoration
+    
+    //redefine iso decoration if needed
+    for(const auto& ph_itr : *photons_sc){ 
+      if(noPhIso) dec_isol(*ph_itr) = true;
+    }
   }
 
 
@@ -2619,7 +2659,7 @@ EL::StatusCode chorizo :: loop ()
       recoElectron.isTrigMatch |= el_trig_pass.back();
     }
 
-    //book good muons
+    //book good electrons
     m_goodElectrons->push_back(el_itr);
         
     //save signal electrons
@@ -2671,18 +2711,17 @@ EL::StatusCode chorizo :: loop ()
   std::string el_trig3 = "HLT_e120_lhloose";
     
   for (unsigned int i=0; i<m_goodElectrons->size(); i++){
-    if (this->isMC){
-      if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig1) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e24_lhmedium_L1EM18VH=1;
-    }
-    
-    else {
-      if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig1_data) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e24_lhmedium_L1EM18VH=1;
-  }
-  
-       if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig2) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e60_lhmedium=1;
-       if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig3) && m_goodElectrons->at(i)->pt()>26000.) e_trigger_HLT_e120_lhloose=1;
+    if (m_goodElectrons->at(i)->pt() < 26000.) continue;
 
-  
+    if (this->isMC){
+      if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig1)) e_trigger_HLT_e24_lhmedium_L1EM18VH=1;
+    }
+    else {
+      if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig1_data)) e_trigger_HLT_e24_lhmedium_L1EM18VH=1;
+    }
+
+    if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig2)) e_trigger_HLT_e60_lhmedium=1;
+    if (tool_st->IsTrigMatched(m_goodElectrons->at(i),el_trig3)) e_trigger_HLT_e120_lhloose=1;
   }
 
   //-- Pre-book baseline muons (after OR)
@@ -2821,102 +2860,107 @@ EL::StatusCode chorizo :: loop ()
   } //if MC
 
 
+  //Check trigger matching 
   std::string mu_trig1 = "HLT_mu20_iloose_L1MU15";
   std::string mu_trig2 = "HLT_mu50";  
  
-  for (unsigned int i=0; i<m_goodMuons->size(); i++){
-    if (tool_st->IsTrigMatched(m_goodMuons->at(i),mu_trig1) && m_goodMuons->at(i)->pt()>26000.) m_trigger_HLT_mu20_iloose_L1MU15=1;
-    if (tool_st->IsTrigMatched(m_goodMuons->at(i),mu_trig2) && m_goodMuons->at(i)->pt()>26000.) m_trigger_HLT_mu50=1;    
-      
+  for (unsigned int i=0; i < m_goodMuons->size(); i++){
+    if (m_goodMuons->at(i)->pt() < 26000.) continue;
+    if (tool_st->IsTrigMatched(m_goodMuons->at(i),mu_trig1) ) m_trigger_HLT_mu20_iloose_L1MU15=1;
+    if (tool_st->IsTrigMatched(m_goodMuons->at(i),mu_trig2) ) m_trigger_HLT_mu50=1;    
   }
 
   //-- Pre-book baseline photons (after OR)
   std::vector<Particle> photonCandidates; //intermediate selection photons
-  int iPh = -1;
-  ph_N=0; //signal photons
-  for(const auto& ph_itr : *photons_sc ){
+  if(m_xdoPhotons){
+    int iPh = -1;
+    ph_N=0; //signal photons
+    for(const auto& ph_itr : *photons_sc ){
 
-    iPh++;
+      iPh++;
 
-    if( ! dec_baseline(*ph_itr) ) continue;
-    if( doOR  && doORphotons && !dec_passOR(*ph_itr) ) continue;
+      if( ! dec_baseline(*ph_itr) ) continue;
+      if( doOR  && doORphotons && !dec_passOR(*ph_itr) ) continue;
       
-    //define preselected photon                
-    Particle recoPhoton;
-    recoPhoton.SetVector( getTLV( &(*ph_itr) ));
+      //define preselected photon                
+      Particle recoPhoton;
+      recoPhoton.SetVector( getTLV( &(*ph_itr) ));
      
-    recoPhoton.id = iPh;
-    // recoPhoton.ptcone20 = acc_ptcone20(*ph_itr) * 0.001;
-    // recoPhoton.etcone20 = acc_etcone20(*ph_itr) * 0.001;
-    // recoPhoton.ptcone30 = acc_ptcone30(*ph_itr) * 0.001;
-    // recoPhoton.etcone30 = acc_etcone30(*ph_itr) * 0.001;
-    recoPhoton.ptcone40 = acc_ptcone40(*ph_itr) * 0.001;
-    recoPhoton.etcone40 = acc_etcone40(*ph_itr) * 0.001;
-    (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
+      recoPhoton.id = iPh;
+      recoPhoton.ptcone40 = acc_ptcone40(*ph_itr) * 0.001;
+      recoPhoton.etcone40 = acc_etcone40(*ph_itr) * 0.001;
+      (*ph_itr).passSelection(recoPhoton.isTight, "Tight");
     
-    if(iso_1->accept(*ph_itr)) recoPhoton.isoLoose         = false;
-    if(iso_2->accept(*ph_itr)) recoPhoton.isoTightCaloOnly = true;
-    if(iso_3->accept(*ph_itr)) recoPhoton.isoTight         = true;
+      if(iso_1->accept(*ph_itr)) recoPhoton.isoLoose         = false;
+      if(iso_2->accept(*ph_itr)) recoPhoton.isoTightCaloOnly = true;
+      if(iso_3->accept(*ph_itr)) recoPhoton.isoTight         = true;
     
-    recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
-    recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
+      recoPhoton.type   = xAOD::TruthHelpers::getParticleTruthType( *ph_itr );
+      recoPhoton.origin = xAOD::TruthHelpers::getParticleTruthOrigin( *ph_itr );
 
-    if(isMC){
-      const xAOD::TruthParticle* tph = xAOD::TruthHelpers::getTruthParticle(*ph_itr);
-      if(tph){
-	if(tph->nParents())
-	  recoPhoton.motherId  = tph->parent()->pdgId();
-	recoPhoton.barcode  = tph->barcode();
-	recoPhoton.pt_truth = tph->pt() * 0.001;
+      if(isMC){
+	const xAOD::TruthParticle* tph = xAOD::TruthHelpers::getTruthParticle(*ph_itr);
+	if(tph){
+	  if(tph->nParents())
+	    recoPhoton.motherId  = tph->parent()->pdgId();
+	  recoPhoton.barcode  = tph->barcode();
+	  recoPhoton.pt_truth = tph->pt() * 0.001;
+	}
       }
-    }
     
 
-    //trigger matching
-    std::vector<bool> ph_trig_pass;
-    for(const auto& t : PhTriggers){
-      if(t.substr(0, 4) == "HLT_"){ 
-	ph_trig_pass.push_back( tool_st->IsTrigMatched( ph_itr, t ));
-      }
-      else
-	ph_trig_pass.push_back( false ); //only check for HLT items at the moment
+      //trigger matching
+      std::vector<bool> ph_trig_pass;
+      for(const auto& t : PhTriggers){
+	if(t.substr(0, 4) == "HLT_"){ 
+	  ph_trig_pass.push_back( tool_st->IsTrigMatched( ph_itr, t ));
+	}
+	else
+	  ph_trig_pass.push_back( false ); //only check for HLT items at the moment
       
-      recoPhoton.isTrigMatch |= ph_trig_pass.back();
-    }
+	recoPhoton.isTrigMatch |= ph_trig_pass.back();
+      }
     
-    photonCandidates.push_back(recoPhoton);
-    
-    //save signal electrons
-    if( dec_signal(*ph_itr) ){
-      recoPhotons.push_back(recoPhoton);
-      ph_N++;
+      photonCandidates.push_back(recoPhoton);
 
-      //get photon scale factors
-      if(this->isMC){
+      //book good photons
+      m_goodPhotons->push_back(ph_itr);
+
+      //save signal electrons
+      if( dec_signal(*ph_itr) ){
+	recoPhotons.push_back(recoPhoton);
+	ph_N++;
+      } // is signal
+
+    }//photon loop
+
+    //sort the photons in Pt
+    if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
+    if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
+    if(debug) Info("loop()", " After booking photons");
+
+
+
+    //get photon scale factors
+    if(this->isMC){
+      
+      //nominal 
+      ph_SF = tool_st->GetTotalPhotonSF(*m_goodPhotons,true,true);
+      
+      //fill variations only if running in nominal mode!
+      if(isNominal){
 	
-	//nominal 
-	ph_SF *= tool_st->GetSignalPhotonSF(*ph_itr,true,true);
-          
-	//fill variations only if running in nominal mode!
-	if(isNominal){
-	  
-	  ph_SFIDu *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_ID_Uncertainty__1up"),true,true); 
-	  ph_SFIDd *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_ID_Uncertainty__1down"),true,true); 
+	ph_SFIDu = tool_st->GetTotalPhotonSFsys(*m_goodPhotons,CP::SystematicSet("PH_EFF_ID_Uncertainty__1up"),true,true); 
+	ph_SFIDd = tool_st->GetTotalPhotonSFsys(*m_goodPhotons,CP::SystematicSet("PH_EFF_ID_Uncertainty__1down"),true,true); 
+	
+	ph_SFIsou = tool_st->GetTotalPhotonSFsys(*m_goodPhotons,CP::SystematicSet("PH_EFF_TRKISO_Uncertainty__1up"),true,true); 
+	ph_SFIsod = tool_st->GetTotalPhotonSFsys(*m_goodPhotons,CP::SystematicSet("PH_EFF_TRKISO_Uncertainty__1down"),true,true); 
+	
+      } //if Nominal
+    } //if MC
+    
 
-	  ph_SFIsou *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_TRKISO_Uncertainty__1up"),true,true); 
-	  ph_SFIsod *= tool_st->GetSignalPhotonSFsys(*ph_itr,CP::SystematicSet("PH_EFF_TRKISO_Uncertainty__1down"),true,true); 
-
-	} //if Nominal
-      } //if MC
-    } // is signal
-
-  }//photon loop
-
-  //sort the photons in Pt
-  if (photonCandidates.size()>0) std::sort(photonCandidates.begin(), photonCandidates.end());
-  if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
-  if(debug) Info("loop()", " After booking photons");
-
+  } // m_xdoPhotons
 
 
   //-- pre-book good jets now (after OR)
@@ -3005,7 +3049,7 @@ EL::StatusCode chorizo :: loop ()
       recoJet.isbjet_t80 = tool_btag_truth3->performTruthTagging(*jet_itr);
     }
 
-   //fix cut btagging
+    //fix cut btagging
     recoJet.isbjet_fc70 = recoJet.isBTagged_70fc(Jet_Tagger) && fabs((*jet_itr)->eta())<2.5;
     recoJet.isbjet_fc77 = recoJet.isBTagged_77fc(Jet_Tagger) && fabs((*jet_itr)->eta())<2.5;
     recoJet.isbjet_fc85 = recoJet.isBTagged_85fc(Jet_Tagger) && fabs((*jet_itr)->eta())<2.5;
@@ -3466,11 +3510,13 @@ EL::StatusCode chorizo :: loop ()
   
   // truth met
   if(this->isMC){
-    TVector2 v_met_truth_imu(mtruth_inv->mpx(), mtruth_inv->mpy()); 
-    TVector2 v_met_truth_vmu(mtruth_vis->mpx(), mtruth_vis->mpy());   
-    
-    met_obj.SetVector(v_met_truth_imu, "met_truth_imu");  //- Copy met vector to the met data member
-    met_obj.SetVector(v_met_truth_vmu, "met_truth_vmu");  //- Copy met vector to the met data member 
+    if(mtruth_inv && mtruth_vis){
+      TVector2 v_met_truth_imu(mtruth_inv->mpx(), mtruth_inv->mpy()); 
+      TVector2 v_met_truth_vmu(mtruth_vis->mpx(), mtruth_vis->mpy());   
+      
+      met_obj.SetVector(v_met_truth_imu, "met_truth_imu");  //- Copy met vector to the met data member
+      met_obj.SetVector(v_met_truth_vmu, "met_truth_vmu");  //- Copy met vector to the met data member 
+    }
   }
 
   if(debug) Info("loop()", " Before metmap filling");
@@ -3538,10 +3584,6 @@ EL::StatusCode chorizo :: loop ()
    
     bool SK_passCRmm = ( bj_N==2 && m_N==2 &&  (metmap[::MetDef::VisMuTSTMuCorr].Mod() > 100.) );
     
-    //bool SK_passCRee = ( (e_N==2) );
-   
-    //bool SK_passCRmm = ( (m_N==2));    
-    
     bool SK_jetpt = (j_N>1 && recoJets.at(0).Pt()>50. && recoJets.at(1).Pt()>50.);
     
     bool keep_event = true;
@@ -3579,7 +3621,7 @@ EL::StatusCode chorizo :: loop ()
     
     //FIX ME! TEMPORAL SKIMMING FOR TTBARGAMMA STUDIES!
     if(isStopTL)
-      keep_event = ((ph_N>0) && (bj_N>1) && j_N>3);
+      keep_event = ((ph_N>0) && (bj_N>1) && j_N>3 );
 
     if(!keep_event){
       delete jets_sc;              delete jets_scaux;
@@ -3604,7 +3646,15 @@ EL::StatusCode chorizo :: loop ()
     cout<<endl;
   }
 
+
+  //*** EXTRA VARIABLES
+
+  //Z(ll) candidate
+  if(m_xdoZdecay){
+    Zll_candidate();
+  }
   
+
   //Recoiling system against MET (prebooking)
   TLorentzVector sjet(0.,0.,0.,0.);
   bool LeadOnly=true; //use only the leading jet 
@@ -3619,31 +3669,31 @@ EL::StatusCode chorizo :: loop ()
   TVector2 sjet2(sjet.Px(), sjet.Py());
 
 
-  //Z(ll) candidate
-  Zll_candidate();
-
   //--- Fill MET related variables  -  vectorized now!
   for (auto& mk : metmap) {
 
     met.push_back(mk.second.Mod());
     met_phi.push_back( TVector2::Phi_mpi_pi( mk.second.Phi() ) ); //--- Phi defined between -pi and pi
     
-    //Recoiling system against MET (prebooking)
-    rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) ); //leading jet only
-    rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
-    rmet_par_mod.push_back( TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
-    rmet_norm_mod.push_back( TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
-    rmet_dPhi_met_jetsys.push_back( deltaPhi(sjet2.Phi(), mk.second.Phi()) ); 
+    if(m_xdoEventTopo){
 
+      //Recoiling system against MET (prebooking)
+      rmet_par.push_back( sjet2.Mod() * TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) ); //leading jet only
+      rmet_norm.push_back( sjet2.Mod() * TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+      rmet_par_mod.push_back( TMath::Cos(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+      rmet_norm_mod.push_back( TMath::Sin(deltaPhi(sjet2.Phi(), mk.second.Rotate(TMath::Pi()).Phi())) );
+      rmet_dPhi_met_jetsys.push_back( deltaPhi(sjet2.Phi(), mk.second.Phi()) ); 
 
-    //sphericity and thrust
-    thrust_jets.push_back( makeTLV(mk.second) ); //add met to jet vectors
+      
+      //sphericity and thrust
+      thrust_jets.push_back( makeTLV(mk.second) ); //add met to jet vectors
+      
+      tr_spher.push_back( Calc_Sphericity(thrust_jets, true) );
+      tr_thrust.push_back( Calc_Thrust(thrust_jets) );
+      
+      thrust_jets.pop_back(); //remove met from jet vectors
+    }
 
-    tr_spher.push_back( Calc_Sphericity(thrust_jets, true) );
-    tr_thrust.push_back( Calc_Thrust(thrust_jets) );
-
-    thrust_jets.pop_back(); //remove met from jet vectors
-    
     dPhi_met_mettrk.push_back( deltaPhi( metmap[MetDef::Track].Phi(), mk.second.Phi()) );	
 
     //some extra variables
@@ -3766,8 +3816,19 @@ EL::StatusCode chorizo :: loop ()
     j_tau_N.push_back( ntaujs );
 
     //==== Razor ====
-    fillRazor( makeV3( mk.second ) );
+    if(m_xdoRazor)
+      fillRazor( makeV3( mk.second ) );
 
+    //Dijet Mass
+    if (j_N>1){  
+      mjj = Calc_Mjj();
+      if( recoJets.at(0).isbjet_fc77 && recoJets.at(1).isbjet_fc77 )
+	mbb = mjj;
+    }
+    
+    //Mct
+    mct = Calc_mct();
+    
     //==== Corrected mct ====
     if (j_N>1) 
       mct_corr.push_back(Calc_mct_corr(recoJets.at(0), recoJets.at(1), mk.second));
@@ -3775,7 +3836,8 @@ EL::StatusCode chorizo :: loop ()
       mct_corr.push_back(DUMMYUP);
     
     //==== Z-related vars
-    Zll_extra(mk.second); //be sure to call Zll_candidate() before!
+    if(m_xdoZdecay)
+      Zll_extra(mk.second); //be sure to call Zll_candidate() before!
 
   }//end of met flavor loop
 
@@ -3789,53 +3851,59 @@ EL::StatusCode chorizo :: loop ()
     met_top = (float) Calc_TruthNuMET()*0.001;  // this cast is actually needed to reproduce what the filter does
   }
 
+
   if(debug) Info("loop()", " Before track veto");
   //--- Track Veto
-  //init vars
-  std::vector<float> dR_jet_track_min;                    
-  float              dR_jet_track_min_event;              
-  std::vector<int>   dR_jet_track_min_flavor;            
-   
-  //--- Tracks
-  unsigned int iTrack=0;
-  for(const auto& track : RecoUnmatchedTracksElMu){
-    float dR_jet_track_min_float = -1;
-    int dR_jet_track_min_flavor_float = -1;
-    for (const auto& jet : recoJets){
-      
-      if (dR_jet_track_min_float < 0 || track.DeltaR(jet) < dR_jet_track_min_float) {
-	dR_jet_track_min_float = track.DeltaR(jet);
-	dR_jet_track_min_flavor_float = jet.FlavorTruth;
+  if(m_xdoTrackVeto){
+    //init vars
+    std::vector<float> dR_jet_track_min;                    
+    float              dR_jet_track_min_event;              
+    std::vector<int>   dR_jet_track_min_flavor;            
+    
+    //--- Tracks
+    unsigned int iTrack=0;
+    for(const auto& track : RecoUnmatchedTracksElMu){
+      float dR_jet_track_min_float = -1;
+      int dR_jet_track_min_flavor_float = -1;
+      for (const auto& jet : recoJets){
+	
+	if (dR_jet_track_min_float < 0 || track.DeltaR(jet) < dR_jet_track_min_float) {
+	  dR_jet_track_min_float = track.DeltaR(jet);
+	  dR_jet_track_min_flavor_float = jet.FlavorTruth;
+	}
       }
+      
+      dR_jet_track_min.push_back(dR_jet_track_min_float);
+      dR_jet_track_min_flavor.push_back(dR_jet_track_min_flavor_float);
+      
+      if (dR_jet_track_min_float < 0.4) {
+	isolatedTrack_MatchedJet.at(RecoUnmatchedTracksIdx.at(iTrack)) = 1;
+      }
+      iTrack++;
+    } // end of unmatched tracks
+    //--- If size of dR_jet_track_min==0, means all tracks are matched to leptons. I fill them with dummy info, to plot well.
+    if (dR_jet_track_min.size()==0) {
+      dR_jet_track_min.push_back(10);
+      dR_jet_track_min_flavor.push_back(10);
     }
-    
-    dR_jet_track_min.push_back(dR_jet_track_min_float);
-    dR_jet_track_min_flavor.push_back(dR_jet_track_min_flavor_float);
-    
-    if (dR_jet_track_min_float < 0.4) {
-      isolatedTrack_MatchedJet.at(RecoUnmatchedTracksIdx.at(iTrack)) = 1;
-    }
-    iTrack++;
-  } // end of unmatched tracks
-  //--- If size of dR_jet_track_min==0, means all tracks are matched to leptons. I fill them with dummy info, to plot well.
-  if (dR_jet_track_min.size()==0) {
-    dR_jet_track_min.push_back(10);
-    dR_jet_track_min_flavor.push_back(10);
-  }
   
-  dR_jet_track_min_event = -1;
-  for (unsigned int it=0; it < dR_jet_track_min.size(); ++it){
-    if (dR_jet_track_min.at(it) > 9.9) continue; //this never happens no? O.o
-    if (dR_jet_track_min_event < 0 || dR_jet_track_min.at(it) < dR_jet_track_min_event)
-      dR_jet_track_min_event = dR_jet_track_min.at(it);
-    if (dR_jet_track_min.at(it) > 0.4){
-      m_isolatedUnmatchedTracksPlusJets += 1;
-    }
-  } 
-  //--- Some other event variables
+    dR_jet_track_min_event = -1;
+    for (unsigned int it=0; it < dR_jet_track_min.size(); ++it){
+      if (dR_jet_track_min.at(it) > 9.9) continue; //this never happens no? O.o
+      if (dR_jet_track_min_event < 0 || dR_jet_track_min.at(it) < dR_jet_track_min_event)
+	dR_jet_track_min_event = dR_jet_track_min.at(it);
+      if (dR_jet_track_min.at(it) > 0.4){
+	m_isolatedUnmatchedTracksPlusJets += 1;
+      }
+    } 
+  }
+
+
+  //--- Some other event variables ***
   
   //fill info for truth b-sb decay
-  findBparton();  //FIX_ME  //needed?
+  if(m_xdoBpartons)
+    findBparton();
   //*** otherwise t_b_*** variables are not filled !
   
   //--- Invariant mass of the 2 first jets (M12)
@@ -3849,11 +3917,13 @@ EL::StatusCode chorizo :: loop ()
   
   if (j_N>0){
     
-    dPhi_j1_bp1 = deltaPhi(recoJets.at(0).Phi(), t_b_phi1);
-    dPhi_j1_bp2 = deltaPhi(recoJets.at(0).Phi(), t_b_phi2);
-    dR_j1_bp1   = deltaR(recoJets.at(0).Phi(), recoJets.at(0).Eta(), t_b_phi1, t_b_eta1);
-    dR_j1_bp2   = deltaR(recoJets.at(0).Phi(), recoJets.at(0).Eta(), t_b_phi2, t_b_eta2);
-    
+    if(m_xdoBpartons){
+      dPhi_j1_bp1 = deltaPhi(recoJets.at(0).Phi(), t_b_phi1);
+      dPhi_j1_bp2 = deltaPhi(recoJets.at(0).Phi(), t_b_phi2);
+      dR_j1_bp1   = deltaR(recoJets.at(0).Phi(), recoJets.at(0).Eta(), t_b_phi1, t_b_eta1);
+      dR_j1_bp2   = deltaR(recoJets.at(0).Phi(), recoJets.at(0).Eta(), t_b_phi2, t_b_eta2);
+    }
+
     if (recoMuons.size()>0){
       dR_j1_m1 = recoJets.at(0).DeltaR(recoMuons.at(0));
       if (recoMuons.size()>1) 
@@ -3863,13 +3933,15 @@ EL::StatusCode chorizo :: loop ()
     if (j_N>1){
       
       dPhi_j1_j2  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(1).Phi());
-      dPhi_j2_bp1 = deltaPhi(recoJets.at(1).Phi(), t_b_phi1);
-      dPhi_j2_bp2 = deltaPhi(recoJets.at(1).Phi(), t_b_phi2);
       dEta_j1_j2  = fabs(recoJets.at(0).Eta()-recoJets.at(1).Eta());
-      
       dR_j1_j2    = recoJets.at(0).DeltaR(recoJets.at(1));
-      dR_j2_bp1   = deltaR(recoJets.at(1).Phi(),recoJets.at(1).Eta(),t_b_phi1,t_b_eta1);
-      dR_j2_bp2   = deltaR(recoJets.at(1).Phi(),recoJets.at(1).Eta(),t_b_phi2,t_b_eta2);
+
+      if(m_xdoBpartons){
+	dPhi_j2_bp1 = deltaPhi(recoJets.at(1).Phi(), t_b_phi1);
+	dPhi_j2_bp2 = deltaPhi(recoJets.at(1).Phi(), t_b_phi2);
+	dR_j2_bp1   = deltaR(recoJets.at(1).Phi(),recoJets.at(1).Eta(),t_b_phi1,t_b_eta1);
+	dR_j2_bp2   = deltaR(recoJets.at(1).Phi(),recoJets.at(1).Eta(),t_b_phi2,t_b_eta2);
+      }
 
       if (recoMuons.size()>0){
 	dR_j2_m1 = recoJets.at(1).DeltaR(recoMuons.at(0));
@@ -3899,13 +3971,15 @@ EL::StatusCode chorizo :: loop ()
       if (j_N>2){
 	dPhi_j1_j3  = deltaPhi(recoJets.at(0).Phi(), recoJets.at(2).Phi());
 	dPhi_j2_j3  = deltaPhi(recoJets.at(1).Phi(), recoJets.at(2).Phi());
-	dPhi_j3_bp1 = deltaPhi(recoJets.at(2).Phi(), t_b_phi1);
-	dPhi_j3_bp2 = deltaPhi(recoJets.at(2).Phi(), t_b_phi2);
-
 	dR_j1_j3    = recoJets.at(0).DeltaR(recoJets.at(2));
 	dR_j2_j3    = recoJets.at(1).DeltaR(recoJets.at(2));
-	dR_j3_bp1   = deltaR(recoJets.at(2).Phi(),recoJets.at(2).Eta(),t_b_phi1,t_b_eta1);
-	dR_j3_bp2   = deltaR(recoJets.at(2).Phi(),recoJets.at(2).Eta(),t_b_phi2,t_b_eta2);
+
+	if(m_xdoBpartons){
+	  dPhi_j3_bp1 = deltaPhi(recoJets.at(2).Phi(), t_b_phi1);
+	  dPhi_j3_bp2 = deltaPhi(recoJets.at(2).Phi(), t_b_phi2);
+	  dR_j3_bp1   = deltaR(recoJets.at(2).Phi(),recoJets.at(2).Eta(),t_b_phi1,t_b_eta1);
+	  dR_j3_bp2   = deltaR(recoJets.at(2).Phi(),recoJets.at(2).Eta(),t_b_phi2,t_b_eta2);
+	}
 
 	if(recoMuons.size()>0){
 	  dR_j3_m1  = recoJets.at(2).DeltaR(recoMuons.at(0));
@@ -3915,34 +3989,36 @@ EL::StatusCode chorizo :: loop ()
       }
     }
   }    
-  //Do we need this?? //CHECK_ME
-  float dPhi_bp1_bp2     = deltaPhi(t_b_phi1, t_b_phi2);
-  float dPhi_bp1_met     = deltaPhi(t_b_phi1, met_obj.Phi("met"));
-  float dPhi_bp2_met     = deltaPhi(t_b_phi2, met_obj.Phi("met"));
-  float dPhi_sbp1_sbp2   = deltaPhi(t_sb_phi1,t_sb_phi2);
-  float dPhi_neutr1_sbp1 = deltaPhi(t_neutr_phi1,t_sb_phi1);
-  float dPhi_neutr2_sbp2 = deltaPhi(t_neutr_phi2,t_sb_phi2);
-  float dPhi_neutr1_bp1  = deltaPhi(t_neutr_phi1,t_b_phi1);
-  float dPhi_neutr2_bp2  = deltaPhi(t_neutr_phi2,t_b_phi2);
-  float dR_bp1_bp2       = deltaR(t_b_phi1,t_b_eta1,t_b_phi2,t_b_eta2);
-  float dR_sbp1_sbp2     = deltaR(t_sb_phi1,t_sb_eta1,t_sb_phi2,t_sb_eta2);
-  
-  
-  //Do we need this??
-  //- (truth) Tau veto for 3rd- and 4th leading jet
-  float dR_truthTau_j3=999.;
-  float dR_truthTau_j4=999.;
-  
-  if (this->isMC){
-    if (j_N>2){
-      
-      TLorentzVector TruthTau(0.,0.,0.,0.);
-      
-      if(recoJets.at(2).nTrk>0 && recoJets.at(2).nTrk<5 && dPhi_met_j3[0] < TMath::Pi()/5. && j3_mT[0]<100.){
-	
-	for(const xAOD::TruthParticle* tp : *m_truthP) {
 
-	  if ( isHard( tp ) && isTau( tp ) ){
+  if(m_xdoBpartons){
+    float dPhi_bp1_bp2     = deltaPhi(t_b_phi1, t_b_phi2);
+    float dPhi_bp1_met     = deltaPhi(t_b_phi1, met_obj.Phi("met"));
+    float dPhi_bp2_met     = deltaPhi(t_b_phi2, met_obj.Phi("met"));
+    float dPhi_sbp1_sbp2   = deltaPhi(t_sb_phi1,t_sb_phi2);
+    float dPhi_neutr1_sbp1 = deltaPhi(t_neutr_phi1,t_sb_phi1);
+    float dPhi_neutr2_sbp2 = deltaPhi(t_neutr_phi2,t_sb_phi2);
+    float dPhi_neutr1_bp1  = deltaPhi(t_neutr_phi1,t_b_phi1);
+    float dPhi_neutr2_bp2  = deltaPhi(t_neutr_phi2,t_b_phi2);
+    float dR_bp1_bp2       = deltaR(t_b_phi1,t_b_eta1,t_b_phi2,t_b_eta2);
+    float dR_sbp1_sbp2     = deltaR(t_sb_phi1,t_sb_eta1,t_sb_phi2,t_sb_eta2);
+  }
+  
+
+  if(m_xdoTruthTaus){
+    //- (truth) Tau veto for 3rd- and 4th leading jet
+    float dR_truthTau_j3=999.;
+    float dR_truthTau_j4=999.;
+    
+    if (this->isMC){
+      if (j_N>2){
+      
+	TLorentzVector TruthTau(0.,0.,0.,0.);
+	
+	if(recoJets.at(2).nTrk>0 && recoJets.at(2).nTrk<5 && dPhi_met_j3[0] < TMath::Pi()/5. && j3_mT[0]<100.){
+	  
+	  for(const xAOD::TruthParticle* tp : *m_truthP) {
+	    
+	    if ( isHard( tp ) && isTau( tp ) ){
 	    fillTLV(TruthTau, tp);
 	    
  	    float tmpDR = TruthTau.DeltaR(recoJets.at(2));
@@ -3950,43 +4026,36 @@ EL::StatusCode chorizo :: loop ()
 	      dR_truthTau_j3 = tmpDR;
 	  }
 
-	  if (j_N>3){
-	    if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4[0] < TMath::Pi()/5. && j4_mT[0]<100.){
-
+	    if (j_N>3){
+	      if(recoJets.at(3).nTrk>0 && recoJets.at(3).nTrk < 5 && dPhi_met_j4[0] < TMath::Pi()/5. && j4_mT[0]<100.){
+		
 	      float tmpDR = TruthTau.DeltaR(recoJets.at(3));
 	      if(dR_truthTau_j4 > tmpDR)
 		dR_truthTau_j4 = tmpDR;
+	      }
 	    }
-	  }
 	}
-      } 
-      
+	} 
+	
+      }
     }
   }
   
 
-  //Dijet Mass
-  if (j_N>1){  
-    mjj = Calc_Mjj();
-    if( recoJets.at(0).isbjet_fc77 && recoJets.at(1).isbjet_fc77 )
-      mbb = mjj;
-  }
-
-  //Mct
-  mct = Calc_mct();
   
   if(debug) Info("loop()", " Before Reco had");  
   //==== Hadronic top reconstruction ====
-  int ibtop1=-1; //book two highest btag-weight jets for later use
-  int ibtop2=-1;
-  int iblead1=-1;
-  int iblead2=-1;
-  float maxbw1=-99;
-  float maxbw2=-99;
-  auto ijet=0;
-  for( auto& jet : recoJets ){  //jet loop
+  if(m_xdoTopReco){
+    int ibtop1=-1; //book two highest btag-weight jets for later use
+    int ibtop2=-1;
+    int iblead1=-1;
+    int iblead2=-1;
+    float maxbw1=-99;
+    float maxbw2=-99;
+    auto ijet=0;
+    for( auto& jet : recoJets ){  //jet loop
 
-    if( jet.isbjet_fc77 ){
+      if( jet.isbjet_fc77 ){
 	
 	if(iblead1<0)//leadings
 	  iblead1=ijet;
@@ -4008,60 +4077,62 @@ EL::StatusCode chorizo :: loop ()
 
       ijet++;
  
-  }
-  RecoHadTops(ibtop1, ibtop2);
+    }
+    RecoHadTops(ibtop1, ibtop2);
 
-  if(debug) Info("loop()", " After RecoHadTops()");  
-  // ------ Max bb-system variables  
-  if (ibtop1!=-1 && ibtop2!=-1)
-  {
-    std::vector<unsigned int> leadB_index;
-    leadB_index.push_back(ibtop1);
-    leadB_index.push_back(ibtop2);  
+    if(debug) Info("loop()", " After RecoHadTops()");  
+    // ------ Max bb-system variables  
+    if (ibtop1!=-1 && ibtop2!=-1)
+      {
+	std::vector<unsigned int> leadB_index;
+	leadB_index.push_back(ibtop1);
+	leadB_index.push_back(ibtop2);  
 
-    std::vector<pair<unsigned int, double> > dR_Max;
-    std::vector<pair<unsigned int, double> > dR_pt_Max;
-    TLorentzVector refVector;  
+	std::vector<pair<unsigned int, double> > dR_Max;
+	std::vector<pair<unsigned int, double> > dR_pt_Max;
+	TLorentzVector refVector;  
   
-    refVector = recoJets.at(ibtop1).GetVector() + recoJets.at(ibtop2).GetVector();           
-    dR_Max = GetOrderedJetIndexdR(refVector, leadB_index);
-    dR_pt_Max = GetOrderedJetIndexAntiKtd(refVector, leadB_index);      
+	refVector = recoJets.at(ibtop1).GetVector() + recoJets.at(ibtop2).GetVector();           
+	dR_Max = GetOrderedJetIndexdR(refVector, leadB_index);
+	dR_pt_Max = GetOrderedJetIndexAntiKtd(refVector, leadB_index);      
 
-    for (unsigned int i=0; i<dR_Max.size(); i++)
-    {
-	  index_min_dR_bb.push_back(dR_Max.at(i).first);
-	  min_dR_bb.push_back(dR_Max.at(i).second);
+	for (unsigned int i=0; i<dR_Max.size(); i++)
+	  {
+	    index_min_dR_bb.push_back(dR_Max.at(i).first);
+	    min_dR_bb.push_back(dR_Max.at(i).second);
 	  
-    } 
+	  } 
 
-    for (unsigned int i=0; i<dR_pt_Max.size(); i++)
-    {
-	  index_min_dR_pt_bb.push_back(dR_pt_Max.at(i).first);
-	  min_dR_pt_bb.push_back(dR_pt_Max.at(i).second);
-    }   
-  }
-  // -----------------------------  
+	for (unsigned int i=0; i<dR_pt_Max.size(); i++)
+	  {
+	    index_min_dR_pt_bb.push_back(dR_pt_Max.at(i).first);
+	    min_dR_pt_bb.push_back(dR_pt_Max.at(i).second);
+	  }   
+      }
+    // -----------------------------  
 
-  if(debug) Info("loop()", " Before dPhi_b1_b2");
-  //dPhi_b1_b2  
-  dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
+    if(debug) Info("loop()", " Before dPhi_b1_b2");
+    //dPhi_b1_b2  
+    dPhi_b1_b2 = (iblead1>=0 && iblead2>=0 ? deltaPhi( recoJets.at(iblead1).Phi(), recoJets.at(iblead2).Phi() ) : 0.);
 
-  //==== Fat Jets building ==============
-  //run algo_jet algorithm over RecoJets collection to build new-R jets
-  std::vector<TLorentzVector> jets_R_12 = getFatJets(1.2);
-  m0_antikt12  = (jets_R_12.size()>0 ? jets_R_12.at(0).M() : 0.);
-  m1_antikt12  = (jets_R_12.size()>1 ? jets_R_12.at(1).M() : 0.);
-  pt0_antikt12 = (jets_R_12.size()>0 ? jets_R_12.at(0).Pt() : 0.);
-  pt1_antikt12 = (jets_R_12.size()>1 ? jets_R_12.at(1).Pt() : 0.);
-  mtasym12     = getAsymmetry( m0_antikt12, m1_antikt12 );
+    //==== Fat Jets building ==============
+    //run algo_jet algorithm over RecoJets collection to build new-R jets
+    std::vector<TLorentzVector> jets_R_12 = getFatJets(1.2);
+    m0_antikt12  = (jets_R_12.size()>0 ? jets_R_12.at(0).M() : 0.);
+    m1_antikt12  = (jets_R_12.size()>1 ? jets_R_12.at(1).M() : 0.);
+    pt0_antikt12 = (jets_R_12.size()>0 ? jets_R_12.at(0).Pt() : 0.);
+    pt1_antikt12 = (jets_R_12.size()>1 ? jets_R_12.at(1).Pt() : 0.);
+    mtasym12     = getAsymmetry( m0_antikt12, m1_antikt12 );
   
-  std::vector<TLorentzVector> jets_R_08 = getFatJets(0.8);
-  m0_antikt08  = (jets_R_08.size()>0 ? jets_R_08.at(0).M() : 0.);
-  m1_antikt08  = (jets_R_08.size()>1 ? jets_R_08.at(1).M() : 0.);
-  pt0_antikt08 = (jets_R_08.size()>0 ? jets_R_08.at(0).Pt() : 0.);
-  pt1_antikt08 = (jets_R_08.size()>1 ? jets_R_08.at(1).Pt() : 0.);
-  mtasym08     = getAsymmetry( m0_antikt08, m1_antikt08 );
+    std::vector<TLorentzVector> jets_R_08 = getFatJets(0.8);
+    m0_antikt08  = (jets_R_08.size()>0 ? jets_R_08.at(0).M() : 0.);
+    m1_antikt08  = (jets_R_08.size()>1 ? jets_R_08.at(1).M() : 0.);
+    pt0_antikt08 = (jets_R_08.size()>0 ? jets_R_08.at(0).Pt() : 0.);
+    pt1_antikt08 = (jets_R_08.size()>1 ? jets_R_08.at(1).Pt() : 0.);
+    mtasym08     = getAsymmetry( m0_antikt08, m1_antikt08 );
   
+  }// m_xdoTopReco
+
   
   //--- Inv masses involving leptons
   //- Define the invariant mass mu-mu (m_M) and the Pt of the mu-mu system (m_Zpt)
@@ -4140,7 +4211,7 @@ EL::StatusCode chorizo :: loop ()
     
   //Z decay mode 
   TLorentzVector Ztlv(0.,0.,0.,0.);
-  if( this->isMC ){
+  if( this->isMC && m_xdoZdecay ){
     std::vector<int> zdecays =  this->GetTruthZDecay(Ztlv);
     if(zdecays.size()){
       Z_decay  = zdecays.at(0);
@@ -4291,8 +4362,9 @@ EL::StatusCode chorizo :: loop ()
 
   //---Fill missing data members 
   this->dumpLeptons();
-  this->dumpPhotons();
   this->dumpJets();
+  if(m_xdoPhotons)  this->dumpPhotons();
+
   
   //Redefine run number for MC, to reflect the channel_number instead //CHECK_ME
   if(isMC) RunNumber = mc_channel_number;
@@ -4307,6 +4379,7 @@ EL::StatusCode chorizo :: loop ()
 
   if(myfile.is_open())
     myfile.close();
+
 
   //output->setFilterPassed (true);
   m_atree->Fill();
@@ -4705,13 +4778,6 @@ EL::StatusCode chorizo :: loop_truth()
   }  
   //sort the photons in Pt (they should be already, but anyways)
   if (recoPhotons.size()>0) std::sort(recoPhotons.begin(), recoPhotons.end());
-
-  //just to TEST directHG thing
-  // if(recoPhotons.size()>1){
-  //   double mgg = (recoPhotons.at(0).GetVector()+recoPhotons.at(1).GetVector()).M();
-  //   //cout << "INV MGG = " << mgg << endl;
-  //   pileup_w = mgg;   //TAKE THIS OUT!!
-  // }
 
   for(const auto& c_mu : muonCandidates){
 
@@ -7051,7 +7117,7 @@ void chorizo :: Zll_candidate(){
 	     Z_m = m_ll_tmp;
 	     Z_lep1 = iEl;
 	     Z_lep2 = jEl;	   
-	     Z_flav = 0;
+	     Z_flav = ZDecayMode::ee;
 	   }
 	 }
        }
@@ -7070,7 +7136,7 @@ void chorizo :: Zll_candidate(){
 	     Z_m = m_ll_tmp;
 	     Z_lep1 = iMu;
 	     Z_lep2 = jMu;
-	     Z_flav = 1;		
+	     Z_flav = ZDecayMode::mumu;		
 	   }
 	 }
        }  
@@ -7083,7 +7149,7 @@ void chorizo :: Zll_candidate(){
      
      for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
        
-       if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+       if(Z_flav==ZDecayMode::ee && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
        extra_lep.push_back(recoElectrons.at(iEl));
        
      } 	
@@ -7091,7 +7157,7 @@ void chorizo :: Zll_candidate(){
      
      for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
        
-       if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+       if(Z_flav==ZDecayMode::mumu && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
        extra_lep.push_back(recoMuons.at(iMu));
        
      }  
@@ -7110,14 +7176,14 @@ void chorizo :: Zll_extra(TVector2 met){
     
     for (unsigned int iEl=0; iEl<recoElectrons.size(); iEl++){
       
-      if(Z_flav==0 && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
+      if(Z_flav==ZDecayMode::ee && ((int)Z_lep1==iEl || (int)Z_lep2==iEl)) continue; 
       lep3_MT.push_back( Calc_MT(recoElectrons.at(iEl), met) );
       
     } 	
     
     for (unsigned int iMu=0; iMu<recoMuons.size(); iMu++){
       
-      if(Z_flav==1 && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
+      if(Z_flav==ZDecayMode::mumu && ((int)Z_lep1==iMu || (int)Z_lep2==iMu)) continue;	      
       lep3_MT.push_back( Calc_MT(recoMuons.at(iMu), met) );
       
     }  

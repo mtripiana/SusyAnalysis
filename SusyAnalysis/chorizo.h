@@ -188,7 +188,6 @@ public:
   bool isQCD;
   bool isSignal;
   bool is25ns;
-  bool isMC15b;  
   bool isAtlfast;
   bool isNCBG;
   bool is8TeV;
@@ -205,6 +204,18 @@ public:
   bool doAnaTree;
   bool doTrigExt;
   bool dumpTile; 
+
+  //extra variables
+  bool m_xdoPhotons;
+  bool m_xdoZdecay;
+  bool m_xdoTopReco;
+  bool m_xdoTruthN;
+  bool m_xdoEventTopo;
+  bool m_xdoRazor;
+  bool m_xdoBpartons;
+  bool m_xdoTruthTaus;
+  bool m_xdoTrackVeto;
+
 
   CP::SystematicSet syst_CP; //!
   TString syst_CPstr;

@@ -1,3 +1,8 @@
+2015-12-08 Martin <tripiana@cern.ch>
+	* Move to Base,2.3.38+ST-00-07-15
+	* Fix -c option for grid running
+	* Add flags to toggle some extra variables from jOption
+
 2015-12-01 Martin <tripiana@cern.ch>
 	* Fix config settings for Jets
 
