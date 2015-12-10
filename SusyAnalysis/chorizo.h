@@ -27,9 +27,10 @@
 #include <TRandom.h>
 #include <TTreeFormula.h>
 #include "TStopwatch.h"
+#include "TEnv.h"
+#include "TMatrixD.h"
 
 // code includes
-#include "SusyAnalysis/XMLReader.h"
 #include "SusyAnalysis/utility.h"
 #include "SusyAnalysis/particles.h"
 #include "SusyAnalysis/Systematics.h"
@@ -42,7 +43,7 @@
 #include <sstream>
 
 // Tools includes
-#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
+//#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "SUSYTools/SUSYCrossSection.h"
 
 #include "SusyAnalysis/TMctLib.h"
@@ -73,8 +74,6 @@
 #include "EventPrimitives/EventPrimitivesHelpers.h"
 
 #ifndef __MAKECINT__
-#include "AssociationUtils/OverlapRemovalTool.h"
-
 #include "xAODJet/JetContainer.h"
 #include "xAODMissingET/MissingETContainer.h"
 #include "xAODTruth/TruthParticleContainer.h"
@@ -115,13 +114,8 @@ class GoodRunsListSelectionTool;
 
 class BTaggingEfficiencyTool;
 
-namespace CP{
-  class PileupReweightingTool;
-}
 
 namespace ST{
-  struct IsSignalElectronExpCutArgs;
-  struct IsSignalMuonExpCutArgs;
   class SUSYObjDef_xAOD;
 }
 
@@ -162,6 +156,7 @@ enum ZDecayMode{
   Unknown,
   ee,
   mumu,
+  tautau,
   hadronic,
   invisible
 };
@@ -192,12 +187,11 @@ public:
 
   bool isQCD;
   bool isSignal;
-  bool isTop;
+  bool is25ns;
   bool isAtlfast;
   bool isNCBG;
   bool is8TeV;
   TString leptonType;
-
   bool isNominal;
 
   bool debug;
@@ -208,19 +202,23 @@ public:
   bool simBtagging;
 
   bool doAnaTree;
-  bool doPUTree; 
-  bool doFlowTree; 
-  bool genPUfile;
-  bool isPUfile;
   bool doTrigExt;
   bool dumpTile; 
+
+  //extra variables
+  bool m_xdoPhotons;
+  bool m_xdoZdecay;
+  bool m_xdoTopReco;
+  bool m_xdoTruthN;
+  bool m_xdoEventTopo;
+  bool m_xdoRazor;
+  bool m_xdoBpartons;
+  bool m_xdoTruthTaus;
+  bool m_xdoTrackVeto;
 
 
   CP::SystematicSet syst_CP; //!
   TString syst_CPstr;
-  SystErr::Syste syst_ST;    
-  ScaleVariatioReweighter::variation syst_Scale;
-  pileupErr::pileupSyste syst_PU;
   int  syst_JESNPset;
 
   bool printMet;
@@ -281,7 +279,6 @@ private:
   TH1F* h_cut_var; //!
 
   //--- Tools
-  XMLReader*     xmlReader; //!
 #ifndef __CINT__
   ST::SUSYObjDef_xAOD* tool_st; //!
 
@@ -290,21 +287,13 @@ private:
 #endif // not __CINT__
   std::string smetmap=""; //!
 
-  JetCleaningTool* tool_jClean; //!  
   Root::TTileTripReader* tool_tileTrip; //!
 
   Trig::TrigDecisionTool* tool_trigdec; //! 
   TrigConf::xAODConfigTool* tool_trigconfig; //!
-
-  Trig::TrigEgammaMatchingTool* tool_trig_match_el; //!
-  Trig::TrigMuonMatching* tool_trig_match_mu; //!
-  Trig::TrigEgammaMatchingTool* tool_trig_match_ph; //! 
    
 #ifndef __CINT__  
-  OverlapRemovalTool* tool_or; //!
 
-  CP::PileupReweightingTool *tool_purw; //! 
-  
   GoodRunsListSelectionTool *tool_grl; //!
 
   LHAPDF::PDF* m_PDF; //!
@@ -315,7 +304,7 @@ private:
 
   BTaggingEfficiencyTool* tool_btag70;  //! //70%op
   BTaggingEfficiencyTool* tool_btag77;  //! //77%op
-  BTaggingEfficiencyTool* tool_btag85;  //! //85%op  
+  BTaggingEfficiencyTool* tool_btag85;  //! //85%op
 
   BTagEfficiencyReader* tool_btag_truth1; //!
   BTagEfficiencyReader* tool_btag_truth2; //!
@@ -343,7 +332,7 @@ private:
 
   //Member Functions
   virtual void InitVars();
-  virtual void ReadXML();
+  EL::StatusCode ReadConfig();
 
   virtual CutflowInfo getNinfo();
   virtual bool  isDerived();
@@ -386,9 +375,6 @@ private:
   double  getPdfRW( LHAPDF::PDF* pdfTo, double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
   double  getPdfRW( double rwScale=1., double pdf_scale2=0., double pdf_x1=0., double pdf_x2=0., int pdf_id1=0, int pdf_id2=0 );
 
-  //trigger matching
-  virtual bool hasTrigMatch(const xAOD::Electron& el, std::string item, double dR=0.07); 
-  virtual bool hasTrigMatch(const xAOD::Muon& mu, std::string item, double dR=0.07); 
 
   //Calculation functions
   virtual float Calc_MT(Particle p, TVector2 met);
@@ -407,10 +393,7 @@ private:
   virtual float Calc_Sphericity(std::vector<TLorentzVector> pvectors,
 				bool IsTransverseSphericity=false);
   
-  virtual float amt2_calc(TLorentzVector b1v, TLorentzVector b2v, TLorentzVector lepton,TVector2 EtMissVec, double cut);
-  
   virtual double Calc_TruthNuMET();
-  virtual double Calc_TruthNuMET_fix();  
 
   virtual double epsilon(double x);
   virtual double thrustService(TVector2 &n, std::vector<TVector2> &obj);
@@ -430,7 +413,6 @@ private:
 #ifndef __MAKECINT__
   TVector2 getMET( const xAOD::MissingETContainer* METcon, TString name );
 
-  float GetBtagSF(xAOD::JetContainer* goodJets, BTaggingEfficiencyTool* btagTool, float btag_op);
 #endif // not __MAKECINT__
 
 
@@ -451,19 +433,19 @@ private:
   int  m_pdfwarnCounter; //!
 
   bool isGRL; //! //event cleaning
-  bool isFakeMet; //!
   bool isBadID; //!
-  bool isMetCleaned; //!
   std::vector<int> isTrigger; 
-  std::vector<float> trigPS; 
+  std::vector<float> trigPS;
   bool isVertexOk; //!
   bool isLarGood; //!
   bool isTileGood; //!
+  bool isSCTGood; //!  
   bool isTileTrip; //!
   bool isCoreFlag; //!
   bool isCosmic; //!
   bool isBadMuon; //!
-  
+  UInt_t CoreFlag; //!
+    
   bool passPreselectionCuts; 
 
   TNamed *meta_jOption; //!
@@ -478,16 +460,13 @@ private:
   TString QCD_bvetoFileMap; //!
   TString QCD_btagMap; //!
   TString QCD_bvetoMap; //!
-  float   QCD_JetsPtPreselection; //!
-  float   QCD_JetsEtaPreselection; //!
-  float   QCD_JetsPtSelection; //! //taken from the jets section
-  float   QCD_JetsEtaSelection; //! //taken from the jets section
+  float   QCD_JetsPtPresel; //!
+  float   QCD_JetsEtaPresel; //!
   float   QCD_METSig; //!
   TString QCD_LeadJetPreSel; //!
   int     QCD_RandomSeedOffset; //!
   TString QCD_SmearType; //!
   bool    QCD_SmearUseBweight; //!
-  double  QCD_SmearBtagWeight; //!
   TString QCD_SmearMeanShift; //!
   bool    QCD_SmearExtraSmr; //!
   bool    QCD_DoPhiSmearing; //!
@@ -498,11 +477,6 @@ private:
   bool    doPDFrw; //!
   float   beamE_from; //!
   float   beamE_to; //!
-  
-  //---objects options
-  bool isoSignalLep;
-  bool useTrueJets;
-  bool usePhotons;
 
   //----- Truth-->Reco smearing
   bool doTTR; //!  // do truth to reco smearing ? 
@@ -522,16 +496,13 @@ private:
 
   bool doCutFlow; //! 
   bool isStopTL; //!  
-  bool m_skim_btag; //! 
-  bool m_skim_met; //!
-  bool is25ns; //!
-  bool isSig; //!
+  bool m_skim; //! 
+
 
   TString GRLxmlFile; //!
   bool    applyPURW;
   TString PURW_Folder; //!
   TString PURW_IlumicalcFile; //!
-  bool    leptonEfficiencyUnitarity; //!
 
   std::vector<std::string> TriggerNames; //!
   std::vector<std::string> ElTriggers; //!
@@ -542,14 +513,11 @@ private:
 
   //OverlapRemoval
   bool  doOR; //! 
-  bool  m_or_useSigLep; //!
-  bool  m_or_useIsoLep; //!
-  bool  m_or_bjetOR; //!
+  bool  doORbjets;  //!
   bool  doORphotons; //!
 
   //track veto
   bool  tVeto_Enable; //! 
-  int   nTracks; //! 
   float tVeto_Pt; //!
   float tVeto_Eta; //!
   float tVeto_d0; //!
@@ -557,7 +525,7 @@ private:
   float tVeto_ndof; //!
   float tVeto_chi2OverNdof_min; //!
   float tVeto_chi2OverNdof_max; //!
-  float PixHitsAndSCTHits; //!
+  float tVeto_PixSCTHits; //!
   float tVeto_TrackIso; //!
 
   //electrons
@@ -568,8 +536,6 @@ private:
   string El_baseID; //!
   string El_ID; //!
   string El_isoWP; //!
-  float El_d0sigcut; //!
-  float El_z0cut; //!
   bool El_recoSF; //!
   bool El_idSF; //!
   bool El_triggerSF; //!  
@@ -581,8 +547,6 @@ private:
   float Mu_RecoEtaCut; //!
   string Mu_ID; //!
   string Mu_isoWP; //!
-  float Mu_d0sigcut; //!
-  float Mu_z0cut; //!
 
   //photons
   float Ph_PreselPtCut; //!
@@ -608,11 +572,6 @@ private:
   int BookPhSignal;
   int BookJetSignal;
 
-#ifndef __CINT__
-  ST::IsSignalElectronExpCutArgs* elIsoArgs; //!
-  ST::IsSignalMuonExpCutArgs* muIsoArgs; //!
-#endif // not __CINT__
-
   //jets
   TString JetCollection; //!
   float Jet_PreselPtCut; //!
@@ -621,29 +580,9 @@ private:
   float Jet_RecoEtaCut; //!
   float Jet_RecoJVTCut; //!
   bool  Jet_DoOR; //! 
-
   TString Jet_Tagger; //!
-  TString Jet_Btag_WP; //!
-  TString Jet_Btag_WP_OR; //!
-
-  TString Jet_TaggerOp70;   //!
-  TString Jet_TaggerOp77;   //!
-  TString Jet_TaggerOp85;   //!  
-
-
-  //met
-  TString METCollection; //!
-  TString Met_FakeMetEstimator; //! 
-  bool Met_doFakeEtmiss; //!
-  bool Met_doMetCleaning; //!
-
-  //met recalculation
-  bool Met_doRefEle; //!
-  bool Met_doRefGamma; //!
-  bool Met_doRefTau; //!
-  bool Met_doRefJet; //!
-  bool Met_doMuons; //!
-  bool Met_doSoftTerms; //!
+  TString Jet_TaggerOp; //!
+  TString Jet_TaggerOp2;   //!
 
 
   //Particle collections
@@ -722,14 +661,12 @@ private:
   //--- Declaration of leaf types                                                    
   //- Event Info
   UInt_t  RunNumber;        
-  ULong64_t  EventNumber;
+  unsigned long long int EventNumber;
   UInt_t  lb;
   UInt_t  bcid;
   UInt_t  procID;
   UInt_t  mc_channel_number;//!
   float   averageIntPerXing;
-  float   sumwPURW;
-  float   nsimPURW;
   
   //- Weights  
   double   w;
@@ -737,74 +674,41 @@ private:
   double   MC_w;
   float    PDF_w;
   float    pileup_w;
-  unsigned long long PRWHash;
+  unsigned long long PRWHash; 
   float    bosonVect_w;
   float    Trigger_w;
   float    Trigger_w_avg;
+
   float    e_SF;
+  float    e_SFIDu;
+  float    e_SFIDd;
+  float    e_SFIsou;
+  float    e_SFIsod;
+  float    e_SFRecou;
+  float    e_SFRecod;
+  float    e_SFTrigu;
+  float    e_SFTrigd;
+
   float    m_SF;
+  float    m_SFStatu;
+  float    m_SFStatd;
+  float    m_SFSysu;
+  float    m_SFSysd;
+  float    m_SFTrigStatu;
+  float    m_SFTrigStatd;
+  float    m_SFTrigSysu;
+  float    m_SFTrigSysd;
+  float    m_SFIsoStatu;
+  float    m_SFIsoStatd;
+  float    m_SFIsoSysu;
+  float    m_SFIsoSysd; 
+
   float    ph_SF;
-  float    e_SFu;
-  float    m_SFu;
-  float    ph_SFu;
-  float    e_SFd;
-  float    m_SFd;
-  float    ph_SFd;
-  float   eb_SF;
-  float   mb_SF;
-  float   phb_SF;
-  float   eb_SFu;
-  float   mb_SFu;
-  float   phb_SFu;
-  float   eb_SFd;
-  float   mb_SFd;
-  float   phb_SFd;
-  float   eb_trigSF;
-  float   mb_trigSF;
-  float   e_trigSF;
-  float   m_trigSF;
+  float    ph_SFIDu;
+  float    ph_SFIDd;
+  float    ph_SFIsou;
+  float    ph_SFIsod;
 
-  float   e_SFIDu;
-  float   e_SFIDd;
-  float   e_SFIsou;
-  float   e_SFIsod;
-  float   e_SFRecou;
-  float   e_SFRecod;
-  float   e_SFTrigu;
-  float   e_SFTrigd;
-  float   eb_SFIDu;
-  float   eb_SFIDd;
-  float   eb_SFIsou;
-  float   eb_SFIsod;
-  float   eb_SFRecou;
-  float   eb_SFRecod;
-  float   eb_SFTrigu;
-  float   eb_SFTrigd;
-
-  float   m_SFStatu;
-  float   m_SFStatd;
-  float   m_SFSysu;
-  float   m_SFSysd;
-  float   m_SFTrigStatu;
-  float   m_SFTrigStatd;
-  float   m_SFTrigSysu;
-  float   m_SFTrigSysd;
-  float   m_SFIsoStatu;
-  float   m_SFIsoStatd;
-  float   m_SFIsoSysu;
-  float   m_SFIsoSysd; 
-  float   mb_SFStatu;   
-  float   mb_SFStatd;  
-  float   mb_SFSysu;   
-  float   mb_SFSysd;  
-  float   mb_SFTrigStatu;
-  float   mb_SFTrigStatd;
-  float   mb_SFTrigSysu;
-  float   mb_SFTrigSysd;
-  float   mb_SFIsoStatu;
-  float   mb_SFIsoStatd;
-  float   mb_SFIsoSysu;
-  float   mb_SFIsoSysd;
 
   //- ttbar reweighting
   float ttbar_weight;
@@ -860,15 +764,18 @@ private:
   VFloat ph_pt;
   VFloat ph_eta;
   VFloat ph_phi;
-  VFloat ph_ptiso30;
-  VFloat ph_etiso30;
+  VFloat ph_ptiso40;
+  VFloat ph_etiso40; 
   VInt   ph_tight; 
   VInt   ph_type; 
   VInt   ph_origin; 
+  VInt   ph_barcode; 
+  VInt   ph_momid; 
+  VFloat ph_pt_truth;
   VInt   ph_trigger;
-  VFloat   ph_Cone20;
-  VFloat   ph_Cone40CaloOnly;  
-  VFloat   ph_Cone40;  
+  VInt   ph_isoLoose;
+  VInt   ph_isoTightCO;
+  VInt   ph_isoTight;  
   //- Electron Info
   int    e_N;
   VFloat e_pt;
@@ -876,7 +783,6 @@ private:
   VFloat e_phi;
   VFloat e_type;    
   VFloat e_origin;
-  VFloat e_charge;
   VFloat e_ptiso30;
   VFloat e_etiso30;
   VFloat e_ptiso20;
@@ -899,7 +805,9 @@ private:
   float  e_truth_eta;
   float  e_truth_phi;
 
-  int   e_trigger; 
+  int e_trigger_HLT_e24_lhmedium_L1EM18VH;
+  int e_trigger_HLT_e60_lhmedium;
+  int e_trigger_HLT_e120_lhloose;
 
   //- Muon Info
   int    m_N;
@@ -908,7 +816,6 @@ private:
   VFloat m_phi;
   VFloat m_type;
   VFloat m_origin;
-  VFloat m_charge;
   VFloat m_ptiso20;
   VFloat m_etiso20;
   VFloat m_ptiso30;
@@ -924,8 +831,9 @@ private:
   VFloat mb_eta;
   VFloat mb_phi;
 
-  int   m_trigger; 
-
+  int   m_trigger_HLT_mu20_iloose_L1MU15; 
+  int   m_trigger_HLT_mu50; 
+  
   // Max bb-system  
   VInt index_min_dR_bb;
   VInt index_min_dR_pt_bb;  
@@ -996,7 +904,7 @@ private:
   VFloat j_tag_MV2c20;
   VInt   j_btruth_70;
   VInt   j_btruth_77;
-  VInt   j_btruth_85;
+  VInt   j_btruth_80;
   VInt   j_bflat_70;
   VInt   j_bflat_77;
   VInt   j_bflat_85;
@@ -1020,31 +928,33 @@ private:
   VFloat j2_cl_emf;
 
   //- Btagging
-  int   bj_N_77fc;
-  int   bj_N_70fc;
-  int   bj_N_85fc;  
-  float btag_weight_total_70fc;  
+  int   bj_Nfc_70;
+  int   bj_N;
+  int   bj_Nfc_85;
+
+  int   bj_Nfb_70;
+  int   bj_Nfb_77;
+  int   bj_Nfb_85;
+
+  float btag_weight_total_70fc;
   float btag_weight_total_77fc;
   float btag_weight_total_85fc;
-  float btag_weight_total_77fc_effBu;  
-  float btag_weight_total_77fc_effBd;  
-  float btag_weight_total_77fc_effCu;  
-  float btag_weight_total_77fc_effCd;  
-  float btag_weight_total_77fc_effLu;  
-  float btag_weight_total_77fc_effLd;  
-  float btag_weight_total_77fc_extru;  
-  float btag_weight_total_77fc_extrd;  
-  float btag_weight_total_77fc_extrchu;  
-  float btag_weight_total_77fc_extrchd;
-  
-  int bj_Nt70;
-  int bj_Nt77;
-  int bj_Nt80;
-  
-  int bj_Nf70;
-  int bj_N;
-  int bj_Nf85;  
-  
+
+  float btag_weight_total_77fc_effBu;
+  float btag_weight_total_77fc_effBd;
+  float btag_weight_total_77fc_effCu;
+  float btag_weight_total_77fc_effCd;
+  float btag_weight_total_77fc_effLu;
+  float btag_weight_total_77fc_effLd;
+  float btag_weight_total_77fc_extru;
+  float btag_weight_total_77fc_extrd;
+  float btag_weight_total_77fc_extrcu;
+  float btag_weight_total_77fc_extrcd;
+
+
+  int bj_Nt_70;
+  int bj_Nt_77;
+  int bj_Nt_80;
   
   //- MET
   VFloat met; 
@@ -1075,11 +985,6 @@ private:
   std::vector<float>  tr_spher;
   std::vector<double> tr_thrust; 
 
-  VFloat amt2_0;
-  VFloat amt2_1;  
-  VFloat amt2_2;
-  VFloat amt2_3;   
-   
   //- Topologic variables
   VFloat dPhi_met_j1;
   VFloat dPhi_met_j2;

@@ -1,45 +1,67 @@
-2015-11-12 Martin <tripiana@cern.ch>
-	* Add trigger prescales
+2015-12-08 Martin <tripiana@cern.ch>
+	* Move to Base,2.3.38+ST-00-07-15
+	* Fix -c option for grid running
+	* Add flags to toggle some extra variables from jOption
 
-2015-09-20 Martin <tripiana@cern.ch>
-	* Fix systematics resetting
+2015-12-01 Martin <tripiana@cern.ch>
+	* Fix config settings for Jets
 
-2015-09-20 Martin <tripiana@cern.ch>
-	* New python/ folder
-	* Move RegionIdentifierUtil.py there
+2015-12-01 Martin <tripiana@cern.ch>
+	* Move to SUSY,2.3.37a
+	* Add photon info
+	* Clean systematics code
+	* Add systematics tag when running on the grid
+	* Add systematics name to merged sample during merging step
+	* Add utils for trigmap check and systematics-tag translation
 
-2015-09-20 Martin <tripiana@cern.ch>
-	* Move to SUSY,2.3.28  (ST-00-06-24-01)
-	* Remove obsolete OR config options
+2015-11-30 Martin <tripiana@cern.ch>
+	* Move to ST-00-07-11-01
+	* Fix runNumber call for muonTriggerSF
 
-2015-09-17 Martin <tripiana@cern.ch>
-	* Updated truth code and cutflow.
+2015-11-30 Martin <tripiana@cern.ch>
+	* New logic for multiple submission with PrunDriver  (should speed up things considerably)
+	* Fix nbjets bug
 
-2015-09-04 Martin <tripiana@cern.ch>
-	* Merge R20-01 dev branch into trunk!
+2015-11-29 Martin <tripiana@cern.ch>
+	* Move to SUSY,2.3.37
+	* Fix is25ns property in SUSYTools call
+	* Add photon scale factors
 
-2015-09-04 Martin <tripiana@cern.ch>
-	* Add -a option to pick AFII calibration (it is guessed from the sample name otherwise)
+2015-11-28 Martin <tripiana@cern.ch>
+	* Move to SUSY,2.3.36a
 
-2015-09-03 Martin <tripiana@cern.ch>
-        * Add option to toggle btagging emulation on/off at truth level
-	* Update do_sbottom_cutflow macro
-	* Add options for Btag (_OR) WP
+2015-11-23 Martin <tripiana@cern.ch>
+	* Fix Btag sys names
+	* Fix options parser
 
-2015-09-03 Arely <arelycg@cern.ch>
-	* Added a flag to *not* use photons, and true jets (EXOT5).
-        * call isbadjets before isgoodjet.
-        * added d0 and z0 cut to job options.
-        * used two flags for skimming (btag+met or met-only). Also, fixed a bug in the btag+met skimming.
+2015-11-16 Martin <tripiana@cern.ch>
+	* Move to MET Track method in SUSYTools
+
+2015-11-11 Martin <tripiana@cern.ch>
+	* Add weights for btagging variations
+	* Add electron FallbackId options
+
+2015-11-02 Martin <tripiana@cern.ch>
+	* Add leptfon SF variations
+	* Move to Base,2.3.33
+
+2015-11-02 Martin <tripiana@cern.ch>
+	* Move all PURW and TrigMatching stuff to SUSYTools
+	* Add Rucio setup to grid_up scripts.
+	* Move dq2* to rucio* in dq2get.sh script.
 
 2015-08-31 Martin <tripiana@cern.ch>
-	* Fix btag tools init
-	* New mu value in data (from PURW tool)
+	* Remove run_chorizo.cxx
+	* Remove unused options
+	* Add option to toggle btagging emulation on/off at truth level
 
-2015-08-27 Silvia <silvia.fracchia@cern.ch>
-	* Added b-tagging SFs for three working points (70, 77, 85%)
-	* Added lepton SF for baseline leptons
-	* Modified tadd.cxx for computing antiSF using baseline leptons
+2015-08-28 Martin <tripiana@cern.ch>
+	* New configuration files, to fit new major version of SUSYTools (V7beta)
+	* Remove XMLReader and all xml files
+	* Merge Silvia's latest changes
+
+
+
 
 2015-08-27 Martin <tripiana@cern.ch>
 	* Add multiple GRLs in jOption

@@ -15,6 +15,10 @@ Particle::Particle(){
   type = 0; //as defined in MCTruthClassifier::ParticleType
   origin = 0; //as defined in MCTruthClassifier::ParticleOrigin
 
+  barcode  = 0;
+  motherId = 0;
+  pt_truth = 0.;
+
   isGood = true;
   id = -1;
   isTight = false;
@@ -22,13 +26,20 @@ Particle::Particle(){
   isTrigMatch = false;
 
   isIsolated = false;
-  isoTight = 0.;
-  isoLoose = 0.;
-  isoGradient = 0.;
-  ptcone20 = 0;
-  etcone20 = 0;
-  ptcone30 = 0;
-  etcone30 = 0;
+
+  isoTight          = false;
+  isoTightCaloOnly  = false;
+  isoLoose          = false;
+  isoLooseTrackOnly = false;
+  isoGradient       = false;
+  isoGradientLoose  = false;
+  
+  ptcone20 = 0.;
+  etcone20 = 0.;
+  ptcone30 = 0.;
+  etcone30 = 0.;
+  ptcone40 = 0.;
+  etcone40 = 0.;
 
   d0_sig = 0;
   z0 = 0;
@@ -39,7 +50,6 @@ Particle::Particle(){
   SF = 1;
   SFu = 0;
   SFd = 0;
-  trigSF = 1;
 }
 
 Particle::~Particle(){}
@@ -139,6 +149,9 @@ Jet::Jet(){
   failBCHMedium=false;
   BCH_CORR_CELL=-100;
   BCH_CORR_JET=-100;
+  isbjet_fc70=false;
+  isbjet_fc77=false;
+  isbjet_fc85=false;
   isbjet_fb70=false;
   isbjet_fb77=false;
   isbjet_fb85=false;
@@ -150,27 +163,38 @@ Jet::Jet(){
 
 Jet::~Jet(){}
 
+bool Jet::isBTagged(TString Tagger, float op){ 
+  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
+  if      (Tagger=="MV1")            return (this->MV1 > op);
+  else if (Tagger=="MV2c20")         return (this->MV2c20 > op);
+  else if (Tagger=="IP3DSV1")        return (this->SV1plusIP3D > op);
+  else if (Tagger=="Truth")          return (abs(this->FlavorTruth)==5);
+  // else if (Tagger=="JetFitterCombNN"  && (this->JetFitterCombNN > op && this->JetFitterCombNNc < 1.0)) {return true;}//57-80% b eff 
+  // else if (Tagger=="JetFitterCombNNc" && (this->JetFitterCombNNc > -3.8 && this->JetFitterCombNNc < 2.2))  {return true;}
+ 
+  return false;
+}
 
 
 bool Jet::isBTagged_70fc(TString Tagger){ 
-  
-  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.0436); //80% b eff  
+  //from https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/BTaggingBenchmarks
+  if      (Tagger=="MV1")              return (this->MV1 > 0.7892); //70% b eff  
+  else if (Tagger=="MV2c20")           return (this->MV2c20 > -0.0436 ); //70% b eff  
+  else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > 1.85); //70% b eff 
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
 bool Jet::isBTagged_77fc(TString Tagger){ 
   
-  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.4434); //77% b eff  
+  if (Tagger=="MV2c20")                return (this->MV2c20 > -0.4434); //77% b eff  
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
 
 
 bool Jet::isBTagged_85fc(TString Tagger){ 
-  //if      (Tagger=="MV1")              return (this->MV1 > 0.3511); //80% b eff  
-  if (Tagger=="MV2c20")           return (this->MV2c20 > -0.7887); //85% b eff  
-  //else if (Tagger=="IP3DSV1")          return (this->SV1plusIP3D > -0.70); //80% b eff 
+  if (Tagger=="MV2c20")                return (this->MV2c20 > -0.7887); //85% b eff  
   else if (Tagger=="Truth")            return (abs(this->FlavorTruth)==5); 
   return false;
 }
@@ -183,9 +207,6 @@ bool Jet::isTauJet(float metphi, TString Tagger){ //--- Check!!!
   if (this->nTrk >= 5) return false;
   if (deltaPhi(metphi, this->Phi())>=TMath::Pi()/5.0) return false; //CHANGED BEFORE 0.2
   return true;
-
-
-
 
 }
 

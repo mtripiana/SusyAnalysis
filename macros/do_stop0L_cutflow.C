@@ -40,8 +40,7 @@ std::vector<TString> getTokens(TString line, TString delim){
 void do_stop0L_cutflow(TString sample=""){
   
   if(sample=="")
-    sample = "/nfs/at3/scratch2/arodriguez/Outputs//Nom_stop_cutflow_andrea.root";
-  //    sample = "/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/Nom_13TeV_Stop_800_1_cutflow.root";
+    sample = "/nfs/at3/scratch/sfracchia/SUSY/METbb_histos/Nom_13TeV_Stop_800_1_cutflow.root";
   //    sample = "/nfs/at3/scratch/tripiana/StopAnalysis/anafiles/DC14/Nom_test_sbottom.root";
 
   //--- Config
@@ -127,7 +126,7 @@ void do_stop0L_cutflow(TString sample=""){
   print(ch, "m1_antikt12 ", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCut+" && isVertexOk && !isBadID && !isCosmic && !isBadMuon && eb_N==0 && mb_N==0 && j_pt[0]>80. && j_pt[1]>80. && met[11]>250. && j_N>5 && dPhi_min[11]>TMath::Pi()/5. && met[7]>30. && dPhi_met_mettrk[11]<TMath::Pi()/3. && bj_N>1 && j_tau_N[11]==0 && MT_bcl_met[11]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200.)"); 
   print(ch, "m0_antikt08 ", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCut+" && isVertexOk && !isBadID && !isCosmic && !isBadMuon && eb_N==0 && mb_N==0 && j_pt[0]>80. && j_pt[1]>80. && met[11]>250. && j_N>5 && dPhi_min[11]>TMath::Pi()/5. && met[7]>30. && dPhi_met_mettrk[11]<TMath::Pi()/3. && bj_N>1 && j_tau_N[11]==0 && MT_bcl_met[11]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200. && m0_antikt08>50.)"); 
   print(ch, "MT_lcl_met ", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCut+" && isVertexOk && !isBadID && !isCosmic && !isBadMuon && eb_N==0 && mb_N==0 && j_pt[0]>80. && j_pt[1]>80. && met[11]>250. && j_N>5 && dPhi_min[11]>TMath::Pi()/5. && met[7]>30. && dPhi_met_mettrk[11]<TMath::Pi()/3. && bj_N>1 && j_tau_N[11]==0 && MT_bcl_met[11]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200. && m0_antikt08>50. && MT_lcl_met[11]>175.)"); 
-  print(ch, "HT ", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCut+" && isVertexOk && !isBadID && !isCosmic && !isBadMuon && eb_N==0 && mb_N==0 && j_pt[0]>80. && j_pt[1]>80. && met[11]>250. && j_N>5 && dPhi_min[11]>TMath::Pi()/5. && met[7]>30. && dPhi_met_mettrk[11]<TMath::Pi()/3. && bj_N>1 && j_tau_N[11]==0 && MT_bcl_met[11]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200. && m0_antikt08>50. && MT_lcl_met[11]>175.  && (met[11]/TMath::Sqrt(HT))>17)"); 
+  print(ch, "HT ", myvar, base+" && isGRL && isLarGood && isTileGood && !isTileTrip && !isCoreFlag "+trigCut+" && isVertexOk && !isBadID && !isCosmic && !isBadMuon && eb_N==0 && mb_N==0 && j_pt[0]>80. && j_pt[1]>80. && met[11]>250. && j_N>5 && dPhi_min[11]>TMath::Pi()/5. && met[7]>30. && dPhi_met_mettrk[11]<TMath::Pi()/3. && bj_N>1 && j_tau_N[11]==0 && MT_bcl_met[11]>175. && mtasym12<0.5 && m0_antikt12>80. && m1_antikt12>60. && m1_antikt12<200. && m0_antikt08>50. && HT>170.)"); 
 
 
 

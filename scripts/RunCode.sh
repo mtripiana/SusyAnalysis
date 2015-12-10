@@ -24,10 +24,6 @@ if [ -z "$ROOTCOREDIR" ]; then
     echo "new ROOTCOREBIN = "$ROOTCOREBIN
     echo "new ROOTCOREDIR = "$ROOTCOREDIR
 
-    #no need to re-compile (save time) . But make sure you do so before submission...
-    #    $ROOTCOREDIR/scripts/find_packages.sh
-    #    $ROOTCOREDIR/scripts/compile.sh
-
     if [ -z "$LHAPDF_DATA_PATH" ]; then
 	export LHAPDF_DATA_PATH=$ROOTCOREBIN/data/Asg_Lhapdf_LHAPDF:/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current/:
     fi
@@ -38,8 +34,8 @@ export ROOTENV_NO_HOME=1  #--- To be able to read correctly the TEnv class in RO
 
 echo "===============  Run the code  ================"
 
-source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up_pwin.sh
+source $ROOTCOREBIN/../SusyAnalysis/scripts/grid_up.sh
 run -l -j=$jop -s=$syst $1 
-#run -y -l -j=$jop -s=$syst $1 
+#-y
 
 

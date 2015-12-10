@@ -1,0 +1,32 @@
+Index: TrigDecisionTool/Root/DecisionUnpackerStandalone.cxx
+===================================================================
+--- TrigDecisionTool/Root/DecisionUnpackerStandalone.cxx	(revision 643677)
++++ TrigDecisionTool/Root/DecisionUnpackerStandalone.cxx	(working copy)
+@@ -75,6 +75,7 @@
+     
+     const xAOD::TrigDecision* xaoddec = m_handle->getDecision();
+ 
++    // The decision must be present - we can't deal with it being dropped.
+     if(!xaoddec){
+       ATH_MSG_ERROR("xAOD decision is null");
+       return StatusCode::FAILURE;
+@@ -116,15 +117,17 @@
+     return StatusCode::SUCCESS;
+   }
+ 
++  // Unpack the navagation.
++  // nav will be returned empty if there is no handle in the event.
+   StatusCode DecisionUnpackerStandalone::unpackNavigation(HLT::TrigNavStructure* nav){
+     ATH_MSG_DEBUG("Unpacking Navigation");
+     if (nav) {
+       nav->reset();
+       
++      // It is ok for the navagation not to be present.
+       const xAOD::TrigNavigation* serializedNav = m_handle->getNavigation();
+       if(!serializedNav){
+-	ATH_MSG_ERROR("serialized navigation points to null");
+-	return StatusCode::FAILURE;
++	return StatusCode::SUCCESS;
+       }
+ 
+       // try to get navigation from EF/HLT 

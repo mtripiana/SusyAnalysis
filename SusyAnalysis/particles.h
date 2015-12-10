@@ -24,6 +24,10 @@ namespace Particles{
     int    type;
     int    origin;
 
+    long   barcode;
+    int    motherId;
+    float  pt_truth;
+
     bool   isGood;
     int    id;
     bool   isTight;
@@ -31,18 +35,20 @@ namespace Particles{
     bool   isTrigMatch;
 
     bool   isIsolated;
-    float  isoTight;
-    float  isoLoose;
-    float  isoLooseTrackOnly;
-    float  isoGradient;
-    float  isoGradientLoose;
-    float  isoCone20;
-    float  isoCone40CaloOnly;     
-    float  isoCone40;   
+
+    bool   isoTight;
+    bool   isoTightCaloOnly;
+    bool   isoLoose;
+    bool   isoLooseTrackOnly;
+    bool   isoGradient;
+    bool   isoGradientLoose;
+
     float  ptcone20;
     float  etcone20;
     float  ptcone30;
     float  etcone30;
+    float  ptcone40;
+    float  etcone40;
 
     float  d0_sig;
     float  z0;    
@@ -51,8 +57,6 @@ namespace Particles{
     float  SF;
     float  SFu;
     float  SFd;
-    
-    float  trigSF;
 
     float  Pt_up;
     float  Pt_down;
@@ -131,6 +135,9 @@ namespace Particles{
     bool                    isbjet_t70;
     bool                    isbjet_t77;
     bool                    isbjet_t80;
+    bool                    isbjet_fc70;
+    bool                    isbjet_fc77;
+    bool                    isbjet_fc85;
     bool                    isbjet_fb70;
     bool                    isbjet_fb77;
     bool                    isbjet_fb85;

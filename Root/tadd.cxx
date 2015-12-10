@@ -110,7 +110,7 @@ void AddNewBranch(TString fileName, Float_t FileWeight, float nsimAOD, float sum
 
   TTree *t3 = (TTree*)f->Get("AnalysisTree");
   Int_t nentries = (Int_t)t3->GetEntries();
-  
+
   if(nentries){
     //TBranch *newBranch = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
     TBranch *b_nsimAOD = t3-> Branch("nsimAOD",&nsimAOD,"nsimAOD/F"); 
@@ -126,6 +126,141 @@ void AddNewBranch(TString fileName, Float_t FileWeight, float nsimAOD, float sum
   }
 
   f->Close();
+}
+
+void findDuplicates(TString fileName, float nsim, float sumw, bool isData){
+  TFile *f3 = new TFile(fileName.Data(),"update");
+  TTree *t3 = (TTree*)f3->Get("AnalysisTree");
+ 
+  Int_t nentries = (Int_t)t3->GetEntries();
+ 
+  //set to store the list of duplicate entries
+  set<unsigned long long> dups;
+  set<unsigned long long> type4;  
+  //pair containing the eventnumber, truth variable 
+  set<std::pair<unsigned long long, float> > eventIds;
+  set<std::pair<unsigned long long, float> > eventIds_reco;  
+  
+  unsigned long long event;
+  float truth_pt;
+  float MCT;
+  unsigned long long ndup=0;
+  float wdup=0;  
+  double MC_w;
+  
+  TBranch *b_event;
+  TBranch *b_truth_pt;
+  TBranch *b_MCT;  
+  TBranch *b_MCw;  
+  
+  t3->SetBranchAddress("EventNumber",&event, &b_event);
+  t3->SetBranchAddress("j_truth_pt1",&truth_pt, &b_truth_pt); 
+  t3->SetBranchAddress("MC_w",&MC_w, &b_MCw); 
+  t3->SetBranchAddress("mct",&MCT, &b_MCT);   
+  
+  bool isDuplicated = false; 
+  bool isDup =false;
+  bool isType4=false;
+  float nsim_dupcorr;
+  float sumw_dupcorr;
+  
+  if (isData) {
+    nsim_dupcorr=1.;
+    sumw_dupcorr=1.;       
+  }
+  else {
+    nsim_dupcorr=nsim;
+    sumw_dupcorr=sumw;       
+  }  
+  
+    
+  std::pair<unsigned long long,float> my_pair;
+  std::pair<unsigned long long,float> my_pair_reco;  
+   
+  
+  TBranch *b_dup = t3-> Branch("isDuplicated",&isDuplicated,"isDuplicated/O");
+  TBranch *b_dup_type4 = t3-> Branch("isDuplicated_type4",&isType4,"isType4/O");
+ 
+  TBranch *b_nsim_dupcorr = t3-> Branch("nsimAOD_dupcorr",&nsim_dupcorr,"nsimAOD_dupcorr/F");  
+  TBranch *b_sumw_dupcorr = t3-> Branch("sumwAOD_dupcorr",&sumw_dupcorr,"sumwAOD_dupcorr/F");  
+     
+   for(unsigned long long j=0;j<nentries;j++)
+     {
+       b_event->GetEntry(j);
+       b_truth_pt->GetEntry(j);
+       b_MCw->GetEntry(j);     
+       b_MCT->GetEntry(j);         
+   
+       
+       //if(int(10*j/nentries) > flast)
+       //  {
+       //    cout << j << " / " << nentries <<  " ( " << 100*j/nentries << " % ) checked for duplicates " <<   endl;
+       //    flast=int(10*j/nentries);
+       //  }
+       if (!isData) {
+         my_pair = std::make_pair(event,truth_pt);
+         my_pair_reco = std::make_pair(event,MCT);	 
+       }
+       else my_pair = std::make_pair(event,MCT);
+       // check to see if an eventnumber with a met value has already been seen
+       if(eventIds.count(my_pair) ==0)
+         {
+	   // record the eventnumber and met of that event if not seen before
+           eventIds.insert(my_pair);
+         }
+       else
+         {
+           // if already seen, then duplicate event!!!!
+           //cout << event << " " << truth_pt << endl;	   
+           dups.insert(j);
+	   isDup=true;
+           std::cout << "duplicate at entry.." << j << " " << event << " " << truth_pt << std::endl;
+
+         }
+        
+	if (!isData){
+	   
+	   if(eventIds_reco.count(my_pair_reco) ==0){	
+              
+	      eventIds_reco.insert(my_pair_reco);
+	      if (isDup){  
+	        
+	        type4.insert(j);
+	        if (!isData){
+	          ndup++;
+	          wdup+=MC_w;
+	   
+	       } 
+
+	      }
+
+	    }
+	 }  
+      }  
+
+   for(unsigned long long j=0;j<nentries;j++)
+     {
+         isDuplicated = dups.count(j);
+	 isType4 = type4.count(j);	
+	 
+	 if(isDuplicated && isType4) {
+	    
+          nsim_dupcorr=nsim - ndup;
+          sumw_dupcorr=sumw -wdup; 	    
+	   
+	 }
+	  
+	 b_dup->Fill();
+	 b_dup_type4->Fill();	 
+	 b_nsim_dupcorr->Fill();
+	 b_sumw_dupcorr->Fill();
+	 	 
+     }
+      
+
+  t3->Write("",TObject::kOverwrite);
+  f3->Close();     
+     
 }
 
 void addAverageWeight(TString fileName){
@@ -164,7 +299,8 @@ void addAverageWeight(TString fileName){
 
   }
 
-  cout<<"Total events: "<<TotalEvents<<endl;
+  cout << "Total events: " << nentries << endl;
+  cout << "Total events (weighted): " << TotalEvents << endl;
   //cout<<"Total events_noPU: "<<TotalEvents_noPU<<endl; 
   
   average_w = TotalEvents/nentries;
@@ -188,26 +324,24 @@ void ComputeNewBranch(TString fileName, float nsimAOD, float sumwAOD){
 
   TFile *f4= new TFile(fileName.Data(),"update");
   TTree *t3 = (TTree*)f4->Get("AnalysisTree");
-   
+
   TBranch *b_xsec;
   TBranch *b_feff;
-  TBranch *b_kfactor; 
+  TBranch *b_kfactor;
 
   float xsec = 0.0;
   float feff = 0.0;
   float kfactor = 1.0;
-  unsigned long long PRWHash =0; 
-  
+ 
   t3->SetBranchAddress("xsec",&xsec,&b_xsec);
   t3->SetBranchAddress("feff",&feff,&b_feff);
   t3->SetBranchAddress("kfactor",&kfactor,&b_kfactor);
-  
+ 
   //float FileWeight = 1.;
 
   //TBranch *b_FileWeight = t3-> Branch("FileWeight",&FileWeight,"FileWeight/F");
   TBranch *b_nsimAOD = t3-> Branch("nsimAOD",&nsimAOD,"nsimAOD/F");  
-  TBranch *b_sumwAOD = t3-> Branch("sumwAOD",&sumwAOD,"sumwAOD/F");
-  TBranch *b_PRWHash = t3-> Branch("PRWHash",&PRWHash);   
+  TBranch *b_sumwAOD = t3-> Branch("sumwAOD",&sumwAOD,"sumwAOD/F"); 
 
   b_xsec->GetEntry(0);
   b_feff->GetEntry(0);
@@ -218,8 +352,7 @@ void ComputeNewBranch(TString fileName, float nsimAOD, float sumwAOD){
   for (int i = 0; i< t3->GetEntries();i++){  
     //b_FileWeight->Fill();
     b_sumwAOD->Fill();    
-    b_nsimAOD->Fill();   
-    b_PRWHash->Fill();        
+    b_nsimAOD->Fill();    
   }
   t3->Write("",TObject::kOverwrite);
   f4->Close();
@@ -233,211 +366,158 @@ void addAntiWeightToTree(TString fileName, bool isData){
   TFile *f5 = new TFile(fileName.Data(),"update");
   TTree *t3 = (TTree*)f5->Get("AnalysisTree");
 
-  float eb_antiSF=1.;
-  float mb_antiSF=1.;
-  float ph_antiSF=1.;
+  float e_antiSF=1.;
+  float m_antiSF=1.;
+  //float ph_antiSF=1.;
   
-  //float eb_antitrigSF=1.;
-  //float mb_antitrigSF=1.;  
-
-  TBranch *b_eb_antiSF = t3-> Branch("eb_antiSF",&eb_antiSF,"eb_antiSF/F");
-  TBranch *b_mb_antiSF = t3-> Branch("mb_antiSF",&mb_antiSF,"mb_antiSF/F");
-  TBranch *b_ph_antiSF = t3-> Branch("ph_antiSF",&ph_antiSF,"ph_antiSF/F");
+  TBranch *b_e_antiSF = t3-> Branch("e_antiSF",&e_antiSF,"e_antiSF/F");
+  TBranch *b_m_antiSF = t3-> Branch("m_antiSF",&m_antiSF,"m_antiSF/F");
+  //TBranch *b_ph_antiSF = t3-> Branch("ph_antiSF",&ph_antiSF,"ph_antiSF/F");
   
-  //TBranch *b_eb_antitrigSF = t3-> Branch("eb_antitrigSF",&eb_antitrigSF,"eb_antitrigSF/F");
-  //TBranch *b_mb_antitrigSF = t3-> Branch("mb_antitrigSF",&mb_antitrigSF,"mb_antitrigSF/F");  
-
-  TBranch *b_eb_SF;
-  TBranch *b_mb_SF;
-  TBranch *b_ph_SF;
-  TBranch *b_eb_N;
-  TBranch *b_mb_N;
-  TBranch *b_ph_N;
+  TBranch *b_e_SF;
+  TBranch *b_m_SF;
+  //TBranch *b_ph_SF;
+  TBranch *b_e_N;
+  TBranch *b_m_N;
+  //TBranch *b_ph_N;
   TBranch *b_w;
   //TBranch *b_MC_w;
   TBranch *b_pileup_w;
-  
-  //TBranch *b_eb_trigSF;
-  //TBranch *b_mb_trigSF;  
 
-  float eb_SF_loc=1.;
-  float mb_SF_loc=1.;
-  float ph_SF_loc=1.;
-  int   eb_N_loc=0;
-  int   mb_N_loc=0;
-  int   ph_N_loc=0;
+  float e_SF_loc=1.;
+  float m_SF_loc=1.;
+  //float ph_SF_loc=1.;
+  int   e_N_loc=0;
+  int   m_N_loc=0;
+  //int   ph_N_loc=0;
   float w_loc=1.;
   //float MC_w_loc=1.;
   float pileup_w_loc=1.;
-  //float eb_trigSF_loc=1.;
-  //float mb_trigSF_loc=1.;
-  
-  t3->SetBranchAddress("eb_SF", &eb_SF_loc, &b_eb_SF);
-  t3->SetBranchAddress("mb_SF", &mb_SF_loc, &b_mb_SF);
-  t3->SetBranchAddress("ph_SF", &ph_SF_loc, &b_ph_SF);
-  t3->SetBranchAddress("eb_N", &eb_N_loc, &b_eb_N);
-  t3->SetBranchAddress("mb_N", &mb_N_loc, &b_mb_N);
-  t3->SetBranchAddress("ph_N", &ph_N_loc, &b_ph_N);
+
+  t3->SetBranchAddress("e_SF", &e_SF_loc, &b_e_SF);
+  t3->SetBranchAddress("m_SF", &m_SF_loc, &b_m_SF);
+  //t3->SetBranchAddress("ph_SF", &ph_SF_loc, &b_ph_SF);
+  t3->SetBranchAddress("e_N", &e_N_loc, &b_e_N);
+  t3->SetBranchAddress("m_N", &m_N_loc, &b_m_N);
+  //t3->SetBranchAddress("ph_N", &ph_N_loc, &b_ph_N);
   t3->SetBranchAddress("w", &w_loc, &b_w);
   //t3->SetBranchAddress("MC_w", &MC_w_loc, &b_MC_w);
   t3->SetBranchAddress("pileup_w", &pileup_w_loc, &b_pileup_w);
- 
-  //t3->SetBranchAddress("eb_trigSF", &eb_trigSF_loc, &b_eb_trigSF);
-  //t3->SetBranchAddress("mb_trigSF", &mb_trigSF_loc, &b_mb_trigSF);
 
   Float_t EventsWithElec = 0.;
   Float_t EventsWithMuon = 0.;
-  Float_t EventsWithPhoton = 0.;
+  //Float_t EventsWithPhoton = 0.;
   Float_t TotalEvents = 0.;
   Int_t nentries = (Int_t)t3->GetEntries();
 
   for (Int_t i = 0; i < nentries; i++){
-    b_eb_N->GetEntry(i);
-    b_mb_N->GetEntry(i);
-    b_ph_N->GetEntry(i);
+    b_e_N->GetEntry(i);
+    b_m_N->GetEntry(i);
+    //b_ph_N->GetEntry(i);
     b_w->GetEntry(i);
     //b_MC_w->GetEntry(i);
     b_pileup_w->GetEntry(i);
-    
+
     TotalEvents += w_loc*pileup_w_loc; //--- It's done independently for each NPx (so same FileWeight), and the luminosity is global.                                      
-    if(eb_N_loc>0){
+    if(e_N_loc>0){
       //EventsWithElec += w_loc*MC_w_loc*pileup_w_loc;
       EventsWithElec += w_loc*pileup_w_loc;      
     }
-    if(mb_N_loc>0){
+    if(m_N_loc>0){
       //EventsWithMuon += w_loc*MC_w_loc*pileup_w_loc;
       EventsWithMuon += w_loc*pileup_w_loc;      
     }
+    /*
     if(ph_N_loc>0){
       //EventsWithPhoton += w_loc*MC_w_loc*pileup_w_loc;
       EventsWithPhoton += w_loc*pileup_w_loc;      
       
-    }
+    }*/
 
   }
 
   std::cout<<"Total events with electrons : "<<EventsWithElec<<std::endl;
   std::cout<<"Total events with muons     : "<<EventsWithMuon<<std::endl;
-  std::cout<<"Total events with photons   : "<<EventsWithPhoton<<std::endl;
+  //std::cout<<"Total events with photons   : "<<EventsWithPhoton<<std::endl;
   std::cout<<"Total events: "<<TotalEvents<<std::endl;
 
-  Float_t eb_SF_mean=0.;
-  Float_t mb_SF_mean=0.;
-  Float_t ph_SF_mean=0.;
-  //Float_t eb_trigSF_mean=0.;
-  //Float_t mb_trigSF_mean=0.;  
- 
-  TH1F *h_eb_SF_loc = new TH1F("h_eb_SF_loc", "h_eb_SF_loc", 400,0.0,2.0);
-  TH1F *h_mb_SF_loc = new TH1F("h_mb_SF_loc", "h_mb_SF_loc", 400,0.0,2.0);
-  TH1F *h_ph_SF_loc = new TH1F("h_ph_SF_loc", "h_ph_SF_loc", 400,0.0,2.0);
-  
-  //TH1F *h_eb_trigSF_loc = new TH1F("h_eb_trigSF_loc", "h_eb_trigSF_loc", 400,0.0,2.0);
-  //TH1F *h_mb_trigSF_loc = new TH1F("h_mb_trigSF_loc", "h_mb_trigSF_loc", 400,0.0,2.0);  
+  Float_t e_SF_mean=0.;
+  Float_t m_SF_mean=0.;
+  //Float_t ph_SF_mean=0.;
+  TH1F *h_e_SF_loc = new TH1F("h_e_SF_loc", "h_e_SF_loc", 400,0.0,2.0);
+  TH1F *h_m_SF_loc = new TH1F("h_m_SF_loc", "h_m_SF_loc", 400,0.0,2.0);
+  //TH1F *h_ph_SF_loc = new TH1F("h_ph_SF_loc", "h_ph_SF_loc", 400,0.0,2.0);
 
   for (Int_t i = 0; i < nentries; i++){
-    b_eb_SF->GetEntry(i);
-    b_mb_SF->GetEntry(i);
-    b_ph_SF->GetEntry(i);
-    b_eb_N->GetEntry(i);
-    b_mb_N->GetEntry(i);
-    b_ph_N->GetEntry(i);
+    b_e_SF->GetEntry(i);
+    b_m_SF->GetEntry(i);
+    //b_ph_SF->GetEntry(i);
+    b_e_N->GetEntry(i);
+    b_m_N->GetEntry(i);
+    //b_ph_N->GetEntry(i);
     b_w->GetEntry(i);
     //b_MC_w->GetEntry(i);
     b_pileup_w->GetEntry(i);
-    //b_eb_trigSF->GetEntry(i);
-    //b_mb_trigSF->GetEntry(i);    
 
-    //if(eb_N_loc>0) {h_eb_SF_loc->Fill(eb_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
-    //if(mb_N_loc>0) {h_mb_SF_loc->Fill(mb_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
+    //if(e_N_loc>0) {h_e_SF_loc->Fill(e_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
+    //if(m_N_loc>0) {h_m_SF_loc->Fill(m_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
     //if(ph_N_loc>0) {h_ph_SF_loc->Fill(ph_SF_loc, w_loc*MC_w_loc*pileup_w_loc);}
-    if(eb_N_loc>0) {
-      h_eb_SF_loc->Fill(eb_SF_loc, w_loc*pileup_w_loc);
-      //h_eb_trigSF_loc->Fill(eb_trigSF_loc, w_loc*pileup_w_loc);      
-    }
-    if(mb_N_loc>0) {
-      h_mb_SF_loc->Fill(mb_SF_loc, w_loc*pileup_w_loc);    
-      //h_mb_trigSF_loc->Fill(mb_trigSF_loc, w_loc*pileup_w_loc);
-    }
-    if(ph_N_loc>0) {h_ph_SF_loc->Fill(ph_SF_loc, w_loc*pileup_w_loc);}	 
+    if(e_N_loc>0) {h_e_SF_loc->Fill(e_SF_loc, w_loc*pileup_w_loc);}
+    if(m_N_loc>0) {h_m_SF_loc->Fill(m_SF_loc, w_loc*pileup_w_loc);}
+    //if(ph_N_loc>0) {h_ph_SF_loc->Fill(ph_SF_loc, w_loc*pileup_w_loc);}	 
   }
-  eb_SF_mean = h_eb_SF_loc->GetMean(); //--- Both have w, so it cancels.                                                                                                              
-  mb_SF_mean = h_mb_SF_loc->GetMean();
-  ph_SF_mean = h_ph_SF_loc->GetMean();
-  
-  //eb_trigSF_mean = h_eb_trigSF_loc->GetMean(); //--- Both have w, so it cancels.                                                                                                              
-  //mb_trigSF_mean = h_mb_trigSF_loc->GetMean();  
+  e_SF_mean  = h_e_SF_loc->GetMean(); //--- Both have w, so it cancels.                                                                                                          
+  m_SF_mean  = h_m_SF_loc->GetMean();
+  //ph_SF_mean = h_ph_SF_loc->GetMean();
 
-  h_eb_SF_loc->Delete();
-  h_mb_SF_loc->Delete();
-  h_ph_SF_loc->Delete();
-  //h_eb_trigSF_loc->Delete();
-  //h_mb_trigSF_loc->Delete();  
+  h_e_SF_loc->Delete();
+  h_m_SF_loc->Delete();
+  //h_ph_SF_loc->Delete();
 
-  if(eb_SF_mean==0.) { eb_SF_mean=1.;} //--- Just in case                                                                                                                              
-  if(mb_SF_mean==0.) { mb_SF_mean=1.;}
-  if(ph_SF_mean==0.) { ph_SF_mean=1.;}
-  //if(eb_trigSF_mean==0.) { eb_trigSF_mean=1.;} //--- Just in case                                                                                                                              
-  //if(mb_trigSF_mean==0.) { mb_trigSF_mean=1.;}
-  std::cout<<"Mean electron SF : "<<eb_SF_mean<<std::endl;
-  std::cout<<"Mean muon SF     : "<<mb_SF_mean<<std::endl;
-  std::cout<<"Mean photon SF   : "<<ph_SF_mean<<std::endl;
+  if(e_SF_mean==0.) { e_SF_mean=1.;} //--- Just in case                                                                                                                          
+  if(m_SF_mean==0.) { m_SF_mean=1.;}
+  //if(ph_SF_mean==0.) { ph_SF_mean=1.;}
 
-  //std::cout<<"Mean electron trigger SF : "<<eb_trigSF_mean<<std::endl;
-  //std::cout<<"Mean muon trigger SF     : "<<mb_trigSF_mean<<std::endl;
+  std::cout<<"Mean electron SF : "<<e_SF_mean<<std::endl;
+  std::cout<<"Mean muon SF     : "<<m_SF_mean<<std::endl;
+  //std::cout<<"Mean photon SF   : "<<ph_SF_mean<<std::endl;
+
+  std::cout<<"Mean electron SF : "<<e_SF_mean<<std::endl;
+  std::cout<<"Mean muon SF     : "<<m_SF_mean<<std::endl;
+  //std::cout<<"Mean photon SF   : "<<ph_SF_mean<<std::endl;
 
   if (!isData){
-    eb_antiSF = 1 + (1-eb_SF_mean)*((Float_t)EventsWithElec/((Float_t)TotalEvents-(Float_t)EventsWithElec));
-    mb_antiSF = 1 + (1-mb_SF_mean)*((Float_t)EventsWithMuon/((Float_t)TotalEvents-(Float_t)EventsWithMuon));
-    ph_antiSF = 1 + (1-ph_SF_mean)*((Float_t)EventsWithPhoton/((Float_t)TotalEvents-(Float_t)EventsWithPhoton));
-    
-    //eb_antitrigSF = 1 + (1-eb_trigSF_mean)*((Float_t)EventsWithElec/((Float_t)TotalEvents-(Float_t)EventsWithElec));
-    //mb_antitrigSF = 1 + (1-mb_trigSF_mean)*((Float_t)EventsWithMuon/((Float_t)TotalEvents-(Float_t)EventsWithMuon));
-    
+    e_antiSF = 1 + (1-e_SF_mean)*((Float_t)EventsWithElec/((Float_t)TotalEvents-(Float_t)EventsWithElec));
+    m_antiSF = 1 + (1-m_SF_mean)*((Float_t)EventsWithMuon/((Float_t)TotalEvents-(Float_t)EventsWithMuon));
+    //ph_antiSF = 1 + (1-ph_SF_mean)*((Float_t)EventsWithPhoton/((Float_t)TotalEvents-(Float_t)EventsWithPhoton));
 
-    if((eb_antiSF < -1000 || eb_antiSF > 1000) || (TotalEvents-EventsWithElec==0)) {
-      eb_antiSF=1; //--- To avoid nan or inf                                                                                                                                          
+    if((e_antiSF < -1000 || e_antiSF > 1000) || (TotalEvents-EventsWithElec==0)) {
+      e_antiSF=1; //--- To avoid nan or inf                                                                                                                                          
       std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
-    if((mb_antiSF < -1000 || mb_antiSF > 1000) || (TotalEvents-EventsWithMuon==0)) {
-      mb_antiSF=1;
+    if((m_antiSF < -1000 || m_antiSF > 1000) || (TotalEvents-EventsWithMuon==0)) {
+      m_antiSF=1;
       std::cout<<"nan or inf found. I'll correct it."<<std::endl;
     }
-    if((ph_antiSF < -1000 || ph_antiSF > 1000) || (TotalEvents-EventsWithPhoton==0)) {
-      ph_antiSF=1;
-      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
-    }
-    /*
-    if((eb_antitrigSF < -1000 || eb_antitrigSF > 1000) || (TotalEvents-EventsWithElec==0)) {
-      eb_antitrigSF=1; //--- To avoid nan or inf                                                                                                                                          
-      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
-    }
-    if((mb_antitrigSF < -1000 || mb_antitrigSF > 1000) || (TotalEvents-EventsWithMuon==0)) {
-      mb_antitrigSF=1;
-      std::cout<<"nan or inf found. I'll correct it."<<std::endl;
-    }    
-    
-   */ 
+    //if((ph_antiSF < -1000 || ph_antiSF > 1000) || (TotalEvents-EventsWithPhoton==0)) {
+    //  ph_antiSF=1;
+    //  std::cout<<"nan or inf found. I'll correct it."<<std::endl;
+    //}
   }
   else{
-    eb_antiSF = 1;
-    mb_antiSF = 1;
-    ph_antiSF = 1;
-    //eb_antitrigSF = 1;
-    //mb_antitrigSF = 1;    
+    e_antiSF = 1;
+    m_antiSF = 1;
+    //ph_antiSF = 1;
   }
 
-  std::cout<<"Electron anti-SF : "<<eb_antiSF<<std::endl;
-  std::cout<<"Muon anti-SF     : "<<mb_antiSF<<std::endl;
-  std::cout<<"Photon anti-SF   : "<<ph_antiSF<<std::endl;
-  //std::cout<<"Electron trigger anti-SF : "<<eb_antitrigSF<<std::endl;
-  //std::cout<<"Muon trigger anti-SF     : "<<mb_antitrigSF<<std::endl;  
+  std::cout<<"Electron anti-SF : "<<e_antiSF<<std::endl;
+  std::cout<<"Muon anti-SF     : "<<m_antiSF<<std::endl;
+  //std::cout<<"Photon anti-SF   : "<<ph_antiSF<<std::endl;
 
   for (Int_t i = 0; i < nentries; i++){
-    b_eb_antiSF->Fill();
-    b_mb_antiSF->Fill();
-    b_ph_antiSF->Fill();
-    //b_eb_antitrigSF->Fill();
-    //b_mb_antitrigSF->Fill();    
+    b_e_antiSF->Fill();
+    b_m_antiSF->Fill();
+    //b_ph_antiSF->Fill();
   }
 
   t3->Write("",TObject::kOverwrite);
@@ -501,6 +581,7 @@ void tadd(std::vector< TString> filelist, std::vector< Double_t> weights, TStrin
 
   cout<<"\nAdding anti_e_SF and anti_m_SF..."<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
+  findDuplicates(outfile.Data(),nsim_total, nweight_total, isData); 
 
   cout << endl;
   cout << bold("Target file : \n                    ") << outfile  << endl;
@@ -538,6 +619,7 @@ void tadd_grid(std::vector< TString> filelist, TString outfile, bool isData ){
   addAverageWeight(outfile.Data());
   cout<<"\nAdding anti_e_SF and anti_m_SF ..."<<endl;
   addAntiWeightToTree(outfile.Data(), isData);  
+  findDuplicates(outfile.Data(),nsim_total, nweight_total, isData); 
 
   cout << endl;
   cout << bold("Target file : \n                    ") << outfile  << endl;

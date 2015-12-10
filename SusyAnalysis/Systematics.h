@@ -2,6 +2,7 @@
 #define SYSTEMATICS_H
 
 #include <stdio.h>
+#include <iostream>
 #include <stdarg.h>
 #include <algorithm>  
 
@@ -12,28 +13,10 @@
 #include "TError.h"
 
 //#include "SUSYTools/ScaleVariatioReweighter.hpp"
-#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
+//#include "SusyAnalysis/ScaleVariatioReweighter.hpp"
 #include "PATInterfaces/SystematicSet.h"
 
-namespace pileupErr
-{
-  typedef enum  {
-    NONE,
-    PileupHigh,
-    PileupLow
-  } pileupSyste;
-}
-
-
-//ported (partially) from old SUSYObjDef class 
-//@todo get rid of this once we have the correspendent implementation in CP
-namespace SystErr
-{
-  typedef enum  {
-    NONE,                          
-    BJETDOWN, BJETUP, CJETDOWN, CJETUP, BMISTAGDOWN, BMISTAGUP  
-  } Syste;
-}
+using namespace std;
 
 class Systematics {
 
@@ -42,17 +25,14 @@ public:
   ~Systematics();
 
  void SystTranslate(   TString syste,
-		       CP::SystematicSet& syst_CP,
-		       SystErr::Syste &syst_ST,
-		       ScaleVariatioReweighter::variation &syst_Scale,
-		       pileupErr::pileupSyste &syst_PU);
- 
+		       CP::SystematicSet& syst_CP );
 
   void LoadList();
   std::vector<TString> getSystList();
-  std::vector<TString> getSystListUser(){return m_user_list;};
-  std::vector<TString> getSystListST(){return m_ST_list;};
   std::vector<TString> getSystListCP(){return m_CP_list;};
+
+  int     getSystID(TString name);
+  TString getSystName(int id);
 
   void printSystList();
 
@@ -61,8 +41,6 @@ private:
 
   std::vector<TString> m_list;    // the whole list of systematics
   std::vector<TString> m_CP_list; // just the registered ones (recommended by CP groups)
-  std::vector<TString> m_ST_list; // just the SUSYTools ones (old, deprecated!)
-  std::vector<TString> m_user_list; // just the user defined ones (PU, scale, BCH, JVF)
 
 };
 #endif  

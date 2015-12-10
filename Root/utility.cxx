@@ -93,11 +93,6 @@ TString stripName(TString name){ //remove not-official tags for AMI search (so t
   return new_name;
 }
 
-double getRatio(double a, double b){
-  if(fabs(b)>0.) return a/b;
-  return 0.;
-}
-
 float MinimumOf(float a, float b){
   float min=0.;
   (a < b) ? min=a : min=b;
@@ -248,7 +243,7 @@ TLorentzVector makeTLV(TVector2 v2){
 float getAsymmetry(float a, float b){
   if( ! (a+b > 0)) return -1;
 
-  return fabs(a-b) / (a+b);
+  return (a-b) / (a+b);
 };
 
 bool isBeamHalo(int run=0,int event=0){ //CHECK_ME
