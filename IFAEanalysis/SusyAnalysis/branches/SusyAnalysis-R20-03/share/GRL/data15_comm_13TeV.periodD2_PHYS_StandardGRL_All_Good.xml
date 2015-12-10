@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE LumiRangeCollection SYSTEM "http://atlas-runquery.cern.ch/LumiRangeCollection.dtd">
+<!--This document is created by hand by the IFAE group.-->
+<?xml-stylesheet type="text/xsl" href="/atlasdqm/grlview/grl.xsl" title="grlview" ?>
+<LumiRangeCollection>
+<NamedLumiRange>
+<Name>PHYS_StandardGRL_All_Good</Name>
+<Version>2.1</Version>
+<Metadata Name="ARQEquivalentQuery">find run periodD2 </Metadata>
+<Metadata Name="Query">Period: data15_comm_13TeV.D2 </Metadata>
+<Metadata Name="RQTSVNVersion"> Unknown </Metadata>
+<Metadata Name="RunList">265532,265545,265743</Metadata>
+<LumiBlockCollection>
+<Run>265532</Run>
+<LBRange Start="146" End="318"/>
+</LumiBlockCollection>
+<LumiBlockCollection>
+<Run>265545</Run>
+<LBRange Start="70" End="112"/>
+<LBRange Start="119" End="133"/>
+</LumiBlockCollection>
+<LumiBlockCollection>
+<Run>265573</Run>
+<LBRange Start="1" End="150"/>
+</LumiBlockCollection>
+</NamedLumiRange>
+</LumiRangeCollection>
